@@ -1,6 +1,7 @@
 /** Pure RoomSpot search-result parser and incremental merge helpers. */
 import * as cheerio from "cheerio";
 import type { RawListing } from "../../src/types";
+import type { ListingObservationBatch } from "../../src/data-layer/contracts";
 import { trackingKey } from "./lifecycle";
 import { isExplicitNone, parseYen } from "./parseJa";
 
@@ -107,6 +108,46 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
     });
   });
   return listings;
+}
+
+export function roomspotObservationBatch(input: {
+  previous: readonly RawListing[];
+  current: readonly RawListing[];
+  expectedRevision: string | null;
+  observedAt: string;
+  observedAtByKey: Readonly<Record<string, string>>;
+  provenance: Readonly<Record<string, unknown>>;
+  completeness?: "incremental" | "complete";
+}): ListingObservationBatch {
+  const currentIds = new Set(input.current.map((listing) => listing.id).filter((id): id is string => Boolean(id)));
+  const currentAliases = new Set(input.current.flatMap(roomspotMatchKeys));
+  const retirements = input.previous
+    .filter((listing) =>
+      listing.id && !currentIds.has(listing.id) && roomspotMatchKeys(listing).some((key) => currentAliases.has(key)),
+    )
+    .map((listing) => ({
+      id: listing.id!,
+      effectiveAt: input.observedAt,
+      reason: "Superseded by a newer RoomSpot advertisement with matching unit aliases",
+    }));
+
+  return {
+    source: "roomspot",
+    expectedRevision: input.expectedRevision,
+    observedAt: input.observedAt,
+    completeness: input.completeness ?? "incremental",
+    observations: input.current.map((listing) => {
+      if (!listing.id) throw new Error(`RoomSpot listing has no stable source ID: ${listing.name}`);
+      return {
+        source: "roomspot",
+        sourceListingId: listing.id,
+        observedAt: input.observedAtByKey[trackingKey(listing)] ?? input.observedAt,
+        listing,
+      };
+    }),
+    retirements,
+    provenance: input.provenance,
+  };
 }
 
 export function mergeRoomspotIncremental(

@@ -1,5 +1,6 @@
 /** Incremental newest-first RoomSpot collector for Soka, Koshigaya and Kawaguchi 2K+. */
-import { readSource, ShrinkGuardError, writeSource } from "./lib/dataStore";
+import { BACKUP_DIR, JsonSourceStore, readSource, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
+import { JsonListingRepository } from "./lib/jsonListingRepository";
 import { trackingKey } from "./lib/lifecycle";
 import { cachedPage } from "./lib/captureStore";
 import {
@@ -7,10 +8,13 @@ import {
   mergeRoomspotIncremental,
   parseRoomspotPage,
   roomspotMatchKeys,
+  roomspotObservationBatch,
 } from "./lib/roomspot";
 import { RoomspotBrowser } from "./lib/roomspotBrowser";
 import type { RawListing } from "../src/types";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
+
+const listingRepository = new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR));
 
 const CITIES = [
   { code: "221", city: "Soka", address: "埼玉県草加市" },
@@ -81,21 +85,29 @@ async function main(): Promise<void> {
   const merged = FULL
     ? { ...mergedHistory, listings: mergedHistory.listings.filter((listing) => discovered.some((fresh) => isRoomspotOverlap(fresh, listing))) }
     : mergedHistory;
-  const result = await writeSource(
-    {
-      source: "roomspot", scrapedAt: new Date().toISOString(), completeSnapshot: FULL,
-      provenance: {
-        mode: FULL ? "full audit" : deep ? "deep newest-first" : "incremental newest-first",
-        pagesFetched, cities: CITIES.map((city) => city.city), newListings: merged.added,
-        observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
-        observedAtByKey,
-        capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome",
-      }, listings: merged.listings,
-    },
-    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
-  );
-  console.log(`\nWrote ${merged.listings.length} RoomSpot listings (was ${result.previousCount})`);
-  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlaps; fetched ${pagesFetched} pages.`);
+  const observedAt = new Date().toISOString();
+  const provenance = {
+    ...previous?.provenance,
+    mode: FULL ? "full audit" : deep ? "deep newest-first" : "incremental newest-first",
+    pagesFetched,
+    cities: CITIES.map((city) => city.city),
+    newListings: merged.added,
+    observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
+    observedAtByKey,
+    capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome",
+  };
+  const batch = roomspotObservationBatch({
+    previous: previous?.listings ?? [],
+    current: merged.listings,
+    expectedRevision: previous?.revision ?? null,
+    observedAt,
+    observedAtByKey,
+    completeness: FULL ? "complete" : "incremental",
+    provenance,
+  });
+  const result = await listingRepository.ingest(batch, { allowShrink: process.argv.includes("--force") });
+  console.log(`\nWrote ${merged.listings.length} RoomSpot listings (was ${previous?.count ?? 0})`);
+  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlaps; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
 }
 
 main().catch((error) => {

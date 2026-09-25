@@ -61,6 +61,28 @@ export function defineListingRepositoryContract(
       }
     });
 
+    it("allows explicit incremental retirement without treating other absences as deletion", async () => {
+      const harness = await createHarness();
+      try {
+        const initial = await harness.repository.ingest(
+          makeBatch(null, "incremental", [listing("one"), listing("two"), listing("three")], "2026-09-25T00:00:00.000Z"),
+        );
+        const retired = await harness.repository.ingest({
+          ...makeBatch(initial.revision, "incremental", [listing("one")], "2026-09-25T00:01:00.000Z"),
+          retirements: [{ id: "two", effectiveAt: "2026-09-25T00:01:00.000Z", reason: "Superseded duplicate" }],
+        });
+        const snapshot = await harness.repository.readSource("fixture");
+
+        expect(retired.retired).toBe(1);
+        expect(snapshot?.listings.map((row) => row.id)).toEqual(["one", "three"]);
+        expect(snapshot?.archivedListings).toContainEqual(
+          expect.objectContaining({ sourceListingId: "two", reason: "Superseded duplicate" }),
+        );
+      } finally {
+        await harness.cleanup();
+      }
+    });
+
     it("archives records absent from a complete snapshot instead of deleting them", async () => {
       const harness = await createHarness();
       try {

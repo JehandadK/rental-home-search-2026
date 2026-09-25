@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isFamilyLayout, mergeRoomspotIncremental, parseRoomspotPage, roomspotKey } from "./roomspot";
+import { isFamilyLayout, mergeRoomspotIncremental, parseRoomspotPage, roomspotKey, roomspotObservationBatch } from "./roomspot";
 import type { RawListing } from "../../src/types";
 
 const fixture = `<article class="data"><h2>テストハイツ</h2><table class="spec">
@@ -29,6 +29,39 @@ describe("RoomSpot parser", () => {
       keyMoneyYen: 0, advertisedStation: "谷塚駅", stationWalkMin: 5,
     });
   });
+  it("retires an old source ID only when the merge proves a superseding alias", () => {
+    const old = make();
+    const replacement = make({ id: "roomspot-67890", url: "https://www.roomspot.net/rent/67890", rent: 88_000 });
+    const merged = mergeRoomspotIncremental([old], [replacement]);
+    const batch = roomspotObservationBatch({
+      previous: [old],
+      current: merged.listings,
+      expectedRevision: "revision-1",
+      observedAt: "2026-09-25T00:00:00.000Z",
+      observedAtByKey: {},
+      provenance: {},
+    });
+    expect(batch.observations.map((observation) => observation.sourceListingId)).toEqual(["roomspot-67890"]);
+    expect(batch.retirements).toEqual([expect.objectContaining({
+      id: "roomspot-12345",
+      reason: expect.stringContaining("matching unit aliases"),
+    })]);
+  });
+
+  it("does not infer retirement from an incremental absence without a matching alias", () => {
+    const old = make();
+    const other = make({ id: "roomspot-2", name: "Other", address: "埼玉県越谷市蒲生", url: "https://www.roomspot.net/rent/2" });
+    const batch = roomspotObservationBatch({
+      previous: [old, other],
+      current: [other],
+      expectedRevision: "revision-1",
+      observedAt: "2026-09-25T00:00:00.000Z",
+      observedAtByKey: {},
+      provenance: {},
+    });
+    expect(batch.retirements).toEqual([]);
+  });
+
   it("uses stable ids and preserves unseen history", () => {
     expect(roomspotKey(make())).toBe("roomspot:12345");
     const other = make({ id: "roomspot-2", name: "Other", address: "埼玉県越谷市蒲生", url: "https://www.roomspot.net/rent/2" });

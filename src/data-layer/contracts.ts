@@ -157,6 +157,8 @@ export interface ListingObservationBatch {
   observedAt: string;
   completeness: "incremental" | "complete";
   observations: readonly ListingObservation[];
+  /** Explicitly retire source IDs only when an ingestion rule can explain why. */
+  retirements?: readonly Retirement[];
   provenance?: Readonly<Record<string, unknown>>;
 }
 
@@ -188,7 +190,8 @@ export interface ListingIngestionResult {
 /**
  * Listing writes enter through source-scoped observation batches. Implementations
  * must be idempotent and preserve history; absence from an incremental batch is
- * not a deletion signal. Canonical merge/lifecycle decisions belong to use cases.
+ * not a deletion signal. Incremental retirements require explicit reasons.
+ * Canonical merge/lifecycle decisions belong to use cases.
  */
 export interface ListingRepository {
   readSource(source: string): Promise<ListingSourceSnapshot | null>;
