@@ -110,6 +110,7 @@ describe("public scrape ingestion boundary", () => {
     ["invalid capture time", { capturedAt: "not-a-date" }],
     ["missing scope", { scope: undefined }],
     ["reserved provenance", { provenance: { ingestionJournal: {} } }],
+    ["reserved correction audit", { provenance: { correctionJournal: {} } }],
   ])("rejects %s before accessing storage", async (_, overrides) => {
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "ingest");
     await expect(service.ingestScrape({ ...request(), ...overrides } as ScrapeBatch)).rejects.toBeInstanceOf(InvalidScrapeBatchError);

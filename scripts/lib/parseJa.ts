@@ -8,14 +8,8 @@
  *   null    — the source did not say (unknown ≠ free)
  */
 
-/** Full-width digits/punctuation → ASCII, so one set of regexes works. */
-export function toHalfWidth(text: string): string {
-  return text
-    .normalize("NFKC")
-    .replace(/[，、]/g, ",")
-    .replace(/[／]/g, "/")
-    .replace(/[　]/g, " ");
-}
+import { toHalfWidth } from "../../src/domain/japaneseText";
+export { toHalfWidth, parseFloors } from "../../src/domain/japaneseText";
 
 const NONE_MARKERS = ["-", "－", "ー", "なし", "無", "無し", "不要"];
 
@@ -91,22 +85,6 @@ export function parseLease(text: string | undefined | null): {
       : null;
   const leaseType = fixed ? "fixed-term" : leaseMonths !== null || t.includes("普通") ? "regular" : null;
   return { leaseType, leaseMonths };
-}
-
-/** "4階/8階建" → { floor: "4階", totalFloors: 8 } · "1-2階/地上2階建" → 2 */
-export function parseFloors(text: string | undefined | null): {
-  floor: string | null;
-  totalFloors: number | null;
-} {
-  if (!text) return { floor: null, totalFloors: null };
-  const t = toHalfWidth(text).trim();
-  const [left, right] = t.split("/");
-  const total = (right ?? t).match(/(?:地上)?(\d+)\s*階建/);
-  const floor = left && left !== t.split("/")[1] ? left.trim() : null;
-  return {
-    floor: floor && floor !== "" ? floor : null,
-    totalFloors: total ? parseInt(total[1], 10) : null,
-  };
 }
 
 /**

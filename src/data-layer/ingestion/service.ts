@@ -1,4 +1,6 @@
 import type { ListingRepository } from "../contracts";
+import { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
+export { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 import { MANAGED_INGESTION_PROVENANCE_KEYS } from "../sourceProvenance";
 import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt } from "./contracts";
 import { prepareNiftyBatch } from "./niftyPolicy";
@@ -48,17 +50,6 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
       added: prepared.added, updated: prepared.updated, ignored: prepared.ignored, novel: prepared.novel,
       previousCount: prepared.previousCount, currentCount: prepared.currentCount };
   }
-}
-
-/** Deterministic content identity: object key order is irrelevant; array order is not. */
-export function canonicalJson(value: unknown): string {
-  return JSON.stringify(value, (_, item) => item && typeof item === "object" && !Array.isArray(item)
-    ? Object.fromEntries(Object.keys(item).sort().map((key) => [key, item[key]])) : item);
-}
-
-export async function scrapeFingerprint(value: unknown): Promise<string> {
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonicalJson(value)));
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function nonempty(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0; }

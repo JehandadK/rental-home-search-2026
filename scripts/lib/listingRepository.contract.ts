@@ -114,7 +114,7 @@ export function defineListingRepositoryContract(
     it("retains application replay metadata when a compatibility collector replaces capture provenance", async () => {
       const harness = await createHarness();
       try {
-        const managed = { ingestionJournal: { schemaVersion: 1, batches: [] }, detailObservedAtByUrl: { "https://example.test/one": "2026-09-24T00:00:00.000Z" } };
+        const managed = { ingestionJournal: { schemaVersion: 1, batches: [] }, correctionJournal: { schemaVersion: 1, operations: [] }, detailObservedAtByUrl: { "https://example.test/one": "2026-09-24T00:00:00.000Z" } };
         const initial = await harness.repository.ingest({
           ...makeBatch(null, "incremental", [listing("one")], "2026-09-25T00:00:00.000Z"),
           provenance: { ...managed, newListingIds: ["one"], capturedBy: "original" },

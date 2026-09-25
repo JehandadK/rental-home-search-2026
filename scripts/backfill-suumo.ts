@@ -1,67 +1,43 @@
 /**
- * Backfills structured fields on SUUMO records captured before the scraper
- * emitted them, reusing the `notes` string it already wrote
- * ("築5年・1階・管理費込").
- *
- * The admin fee is not recoverable from notes — SUUMO folded it into `rent`
- * — so it stays null (unknown) rather than being invented. A fresh
- * `npm run scrape` fills it in properly.
+ * Backfills structured SUUMO fields from previously stored notes.
+ * This is a versioned data-layer correction, not evidence of a new scrape.
  *
  * Run with: npm run data:backfill
  */
-import { ShrinkGuardError, readSource, writeSource } from "./lib/dataStore";
-import { parseFloors } from "./lib/parseJa";
-import type { RawListing } from "../src/types";
+import { randomUUID } from "node:crypto";
+import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
+import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { SourceCorrectionService } from "../src/data-layer/corrections/service";
+import type { SourceCorrections } from "../src/data-layer/corrections/contracts";
 
-/** "築5年・1階・管理費込" → the floor segment, if present. */
-function floorFromNotes(notes: string | null | undefined): string | null {
-  if (!notes) return null;
-  const segment = notes.split("・").find((part) => /階/.test(part) && !/階建/.test(part));
-  return segment?.trim() || null;
-}
-
-function backfill(listing: RawListing): RawListing {
-  const floor = listing.building?.floor ?? floorFromNotes(listing.notes);
-  const { totalFloors } = parseFloors(floor ?? undefined);
-  const next: RawListing = { ...listing };
-
-  if (floor) {
-    next.building = { ...listing.building, floor, ...(totalFloors ? { totalFloors } : {}) };
+/** CLI adapter: requests a reviewed recipe, never reads source files or constructs replacement rows. */
+export async function runSuumoBackfill(client: SourceCorrections, log: (message: string) => void = console.log) {
+  const result = await client.applyCorrection({ schemaVersion: 1, source: "suumo",
+    rule: { name: "suumo-notes-backfill", version: "1" }, operationId: randomUUID(),
+    actor: "scripts/backfill-suumo.ts", reason: "Recover structured floors and unknown included admin fees from stored SUUMO notes",
+  });
+  if (result.status === "missing") {
+    log("No suumo source file — run `npm run scrape` first.");
+    return result;
   }
-  // `管理費込` confirms the fee is inside `rent`, but not its value.
-  if (listing.notes?.includes("管理費込") && listing.costs?.adminFeeYen === undefined) {
-    next.costs = { ...listing.costs, adminFeeYen: null };
-  }
-  return next;
+  log(`Backfilled ${result.count} suumo listings: ${result.withFloor} now carry a structured floor.`);
+  log("Admin fee stays unknown until the next `npm run scrape`.");
+  log("\nNext: npm run data:build && npm run enrich");
+  return result;
 }
 
 async function main(): Promise<void> {
-  const source = await readSource("suumo");
-  if (!source) {
-    console.log("No suumo source file — run `npm run scrape` first.");
-    return;
-  }
-
-  const listings = source.listings.map(backfill);
-  const withFloor = listings.filter((l) => l.building?.floor).length;
-
-  await writeSource({
-    source: source.source,
-    scrapedAt: source.scrapedAt,
-    provenance: { ...source.provenance, backfilledAt: new Date().toISOString() },
-    listings,
-  }, { expectedRevision: source.revision ?? null });
-
-  console.log(`Backfilled ${listings.length} suumo listings: ${withFloor} now carry a structured floor.`);
-  console.log("Admin fee stays unknown until the next `npm run scrape`.");
-  console.log("\nNext: npm run data:build && npm run enrich");
+  const repository = new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR));
+  await runSuumoBackfill(new SourceCorrectionService(repository));
 }
 
-main().catch((err) => {
-  if (err instanceof ShrinkGuardError) {
-    console.error(`\n${err.message}`);
-    process.exit(2);
-  }
-  console.error(err);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith("backfill-suumo.ts")) {
+  main().catch((err) => {
+    if (err instanceof ShrinkGuardError) {
+      console.error(`\n${err.message}`);
+      process.exit(2);
+    }
+    console.error(err);
+    process.exit(1);
+  });
+}

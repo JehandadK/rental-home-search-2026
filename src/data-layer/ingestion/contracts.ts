@@ -18,7 +18,7 @@ export interface ScrapeBatch {
   /** Omitted on legacy full-listing submissions. */
   observationKind?: "listing";
   observations: readonly ScrapeObservation[];
-  /** Additional capture metadata; ingestionJournal and detailObservedAtByUrl are reserved. */
+  /** Additional capture metadata; ingestionJournal, detailObservedAtByUrl and correctionJournal are reserved. */
   provenance?: Readonly<Record<string, unknown>>;
 }
 
