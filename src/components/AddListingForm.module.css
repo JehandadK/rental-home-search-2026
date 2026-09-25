@@ -1,0 +1,45 @@
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.form input {
+  width: 100%;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.submit {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.ok {
+  color: #15803d;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.busy {
+  color: var(--muted);
+}
+
+.idle {
+  display: none;
+}

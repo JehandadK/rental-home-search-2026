@@ -1,0 +1,262 @@
+.wrap {
+  position: relative;
+}
+
+.canvas {
+  width: 100%;
+  border-radius: 8px;
+  background: #f4f8fd;
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas.dragging {
+  cursor: grabbing;
+}
+
+.popup {
+  position: absolute;
+  z-index: 3;
+  left: 12px;
+  bottom: 12px;
+  width: min(390px, calc(100% - 70px));
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.popupClose {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  padding: 1px 7px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.popupHeader {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-right: 20px;
+}
+
+.popupHeader strong,
+.popupHeader small {
+  display: block;
+}
+
+.popupHeader strong {
+  max-width: 290px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #172033;
+  font-size: 14px;
+}
+
+.popupHeader small {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 10px;
+}
+
+.popupScore {
+  display: grid;
+  place-items: center;
+  flex: 0 0 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+}
+
+.popupFacts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 9px 0 7px;
+}
+
+.popupFacts strong {
+  padding: 5px 3px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  color: #1e293b;
+  text-align: center;
+  font-size: 11px;
+}
+
+.popupFacts small {
+  display: block;
+  margin-top: 1px;
+  color: #64748b;
+  font-size: 8.5px;
+  font-weight: 400;
+}
+
+.popupBreakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  padding: 5px 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.popupBreakdown > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: #475569;
+  font-size: 9.5px;
+}
+
+.popupBreakdown small {
+  color: #94a3b8;
+}
+
+.popupAddress {
+  overflow: hidden;
+  margin: 6px 0;
+  color: #64748b;
+  font-size: 9.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clusterNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 5px 0;
+  color: #475569;
+  font-size: 10px;
+}
+
+.clusterNav button {
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+
+/* Decision-mark picker inside the selected-listing popup. */
+.popupMark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.popupMark label {
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popupMark select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #1e293b;
+  font-size: 11px;
+}
+
+.popupActions {
+  display: flex;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.popupActions a {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.popupActions a:last-child {
+  background: #475569;
+}
+
+.controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.controls button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.controls button:hover {
+  background: #fff;
+  border-color: #b8c6dd;
+}
+
+.controls .reset {
+  font-size: 12px;
+}
+
+@media (max-width: 650px) {
+  .popup {
+    left: 6px;
+    bottom: 6px;
+    width: calc(100% - 52px);
+    padding: 9px;
+  }
+
+  .popupFacts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .popupBreakdown {
+    display: none;
+  }
+}
+
+.info {
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 18px;
+  margin-top: 6px;
+}

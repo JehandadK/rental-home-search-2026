@@ -1,0 +1,281 @@
+.headingActions {
+  float: right;
+  display: inline-flex;
+  gap: 5px;
+}
+
+.reset,
+.zeroAll {
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.zeroAll {
+  color: #9f1239;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.zeroAll:hover {
+  background: #ffe4e6;
+}
+
+.modeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0 10px;
+}
+
+.modeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.modeToggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.modeToggle button {
+  padding: 3px 10px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+}
+
+.modeToggle button.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.alert {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.alert strong {
+  display: block;
+  font-size: 12px;
+  color: #9a3412;
+}
+
+.alert p {
+  margin: 4px 0 7px;
+  font-size: 11.5px;
+  color: #7c2d12;
+  line-height: 1.4;
+}
+
+.fitAll {
+  font-size: 11.5px;
+  padding: 3px 10px;
+  background: #ea580c;
+}
+
+.warn {
+  margin-left: 5px;
+  color: #ea580c;
+  cursor: help;
+}
+
+.diagnosis {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: #9a3412;
+  background: #fff7ed;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.fit {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #ea580c;
+}
+
+.row {
+  border-bottom: 1px solid #f0f3f9;
+  padding: 2px 0;
+}
+
+.row summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  padding: 3px 0;
+}
+
+.row summary::-webkit-details-marker {
+  display: none;
+}
+
+.row summary::before {
+  content: "▸";
+  color: var(--muted);
+  font-size: 10px;
+  margin-right: 4px;
+}
+
+.row[open] summary::before {
+  content: "▾";
+}
+
+.label {
+  flex: 1;
+  font-size: 13px;
+}
+
+.row input {
+  width: 48px;
+  text-align: right;
+  padding: 2px 4px;
+}
+
+.anchors {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 2px 0 8px 18px;
+}
+
+.anchor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.anchor input {
+  width: 70px;
+  font-size: 11px;
+}
+
+.featureSection {
+  margin-top: 10px;
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+}
+
+.featureSection > summary {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  color: #334155;
+  font-size: 12px;
+}
+
+.featureSection > summary span {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.featureIntro {
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.4;
+  margin: 7px 0;
+}
+
+.featureGroup {
+  margin: 9px 0;
+}
+
+.featureGroup h3 {
+  color: #475569;
+  font-size: 11.5px;
+  margin-bottom: 4px;
+}
+
+.featureGroup h3 small,
+.featureRow > span small {
+  display: block;
+  color: #94a3b8;
+  font-size: 9.5px;
+  font-weight: 400;
+}
+
+.featureRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px 48px;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 11px;
+}
+
+.featureRow select {
+  min-width: 0;
+  padding: 2px;
+  font-size: 10px;
+}
+
+.featureRow label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+}
+
+.featureRow input {
+  width: 34px;
+  padding: 2px;
+  text-align: right;
+}
+
+.options {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.options label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.options input[type="number"] {
+  width: 60px;
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.note {
+  flex-basis: 100%;
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 2px 0 4px;
+}
+
+.note strong {
+  color: #b45309;
+}
