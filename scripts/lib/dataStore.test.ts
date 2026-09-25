@@ -90,6 +90,19 @@ describe("JSON source-store revision safety", () => {
     await expect(readFile(path, "utf8")).resolves.toContain(`"revision": "${result.revision}"`);
   });
 
+  it("preserves unknown legacy fields when an older writer updates a source", async () => {
+    const store = await makeStore();
+    const path = store.sourcePath("fixture");
+    const legacy = { ...source([listing("1")], "legacy"), count: 1, sourceSpecificExtension: { retained: true } };
+    await writeFile(path, `${JSON.stringify(legacy, null, 2)}\n`, "utf8");
+    const previous = await store.readSource("fixture");
+
+    await store.writeSource(source([listing("1"), listing("2")], "updated"), {
+      expectedRevision: previous!.revision!,
+    });
+    await expect(readFile(path, "utf8")).resolves.toContain('"sourceSpecificExtension": {\n    "retained": true');
+  });
+
   it("keeps the source unchanged when the shrink guard rejects a write", async () => {
     const store = await makeStore();
     const initial = await store.writeSource(
