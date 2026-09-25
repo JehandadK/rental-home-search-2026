@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RawListing } from "../../src/types";
 import { RevisionConflictError } from "../../src/data-layer/errors";
+import { ListingIngestionService } from "../../src/data-layer/ingestion/service";
 import type { PageCapture } from "./captureStore";
 import { JsonSourceStore } from "./dataStore";
 import { JsonListingRepository } from "./jsonListingRepository";
@@ -35,10 +36,12 @@ describe("Nifty list-page ingestion", () => {
   let root: string;
   let store: JsonSourceStore;
   let repository: JsonListingRepository;
+  let service: ListingIngestionService;
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), "nifty-ingestion-"));
     store = new JsonSourceStore(join(root, "sources"), join(root, "backups"));
     repository = new JsonListingRepository(store);
+    service = new ListingIngestionService(repository);
   });
   afterEach(async () => {
     vi.restoreAllMocks();
@@ -73,7 +76,14 @@ describe("Nifty list-page ingestion", () => {
     const parsed = parseNiftyPage(page.html, page.city, 2026);
     const merged = mergeNiftyIncremental(previous, parsed);
     const ingest = vi.spyOn(repository, "ingest");
-    const result = await ingestNiftyListPage(repository, page);
+    const submit = vi.spyOn(service, "ingestScrape");
+    const result = await ingestNiftyListPage(service, page);
+    expect(submit.mock.calls[0][0]).toMatchObject({
+      scraper: { name: "nifty-list", version: "1", parserVersion: "1" },
+      mode: "discovery", observations: parsed.map((listing) => expect.objectContaining({ listing })),
+    });
+    expect(submit.mock.calls[0][0].observations).toHaveLength(2); // not merged history
+    expect(submit.mock.calls[0][0]).not.toHaveProperty("expectedRevision");
     const saved = (await store.readSource("nifty"))!;
 
     expect(result).toMatchObject({ parsedCount: 2, novel: 1, added: merged.added, updated: merged.updated, ingestion: { retired: 1 } });
@@ -85,7 +95,9 @@ describe("Nifty list-page ingestion", () => {
     });
     expect(saved.listings).toContainEqual(unseen);
     expect(saved).toMatchObject({ source: "nifty", count: 3, scrapedAt: capturedAt, completeSnapshot: false, futureMetadata: { preserve: true } });
-    expect(saved.provenance).toEqual({
+    const { ingestionJournal, ...savedProvenance } = saved.provenance!;
+    expect(ingestionJournal).toBeDefined();
+    expect(savedProvenance).toEqual({
       ...provenance, mode: "verified newest-first list discovery", capturedBy: "scripts/crawl-nifty.ts",
       observedTrackingKeys: parsed.map(trackingKey),
       observedAtByKey: { ...priorTimes, ...Object.fromEntries(parsed.map((listing) => [trackingKey(listing), capturedAt])) },
@@ -104,19 +116,19 @@ describe("Nifty list-page ingestion", () => {
     expect(await readFile(userPath, "utf8")).toBe(userBytes);
     expect(await readFile(canonicalPath, "utf8")).toBe(canonicalBytes);
 
-    const replay = await ingestNiftyListPage(repository, page);
-    expect(replay).toMatchObject({ novel: 0, added: 0, ingestion: { accepted: 0, retired: 0, revision: saved.revision } });
+    const replay = await ingestNiftyListPage(service, page);
+    expect(replay).toMatchObject({ novel: 0, added: 0, ingestion: { replayed: true, retired: 0, revision: saved.revision } });
     expect((await store.readSource("nifty"))!.archivedListings).toEqual(saved.archivedListings);
     expect(await readdir(store.backupDir)).toEqual(backups);
   });
 
   it("bootstraps and replays the same capture without changing the revision or adding a backup", async () => {
-    const first = await ingestNiftyListPage(repository, capture);
+    const first = await ingestNiftyListPage(service, capture);
     const bytes = await readFile(store.sourcePath("nifty"), "utf8");
-    expect(first).toMatchObject({ parsedCount: 1, novel: 1, added: 1, ingestion: { accepted: 1 } });
-    const replay = await ingestNiftyListPage(repository, capture);
+    expect(first).toMatchObject({ parsedCount: 1, novel: 1, added: 1, ingestion: { replayed: false } });
+    const replay = await ingestNiftyListPage(service, { ...capture, sha256: "optional-spool-checksum" });
     expect(replay).toMatchObject({ parsedCount: 1, novel: 0, added: 0,
-      ingestion: { accepted: 0, unchanged: 1, retired: 0, revision: first.ingestion.revision } });
+      ingestion: { replayed: true, retired: 0, revision: first.ingestion.revision } });
     expect(await readFile(store.sourcePath("nifty"), "utf8")).toBe(bytes);
     await expect(readdir(store.backupDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -128,19 +140,19 @@ describe("Nifty list-page ingestion", () => {
     ["invalid capture time", { capturedAt: "invalid" }],
     ["wrong source", { source: "suumo" as const }],
   ])("retains the last page checkpoint after a %s", async (_, changes) => {
-    await ingestNiftyListPage(repository, capture);
+    await ingestNiftyListPage(service, capture);
     const checkpoint = await readFile(store.sourcePath("nifty"), "utf8");
     const ingest = vi.spyOn(repository, "ingest");
-    await expect(ingestNiftyListPage(repository, { ...capture, page: 2, ...changes })).rejects.toThrow();
+    await expect(ingestNiftyListPage(service, { ...capture, page: 2, ...changes })).rejects.toThrow();
     expect(ingest).not.toHaveBeenCalled();
     expect(await readFile(store.sourcePath("nifty"), "utf8")).toBe(checkpoint);
     await expect(readdir(store.backupDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
 
   it("never treats a page without family layouts as a complete snapshot or all-known page", async () => {
-    await ingestNiftyListPage(repository, capture);
+    await ingestNiftyListPage(service, capture);
     const previous = (await repository.readSource("nifty"))!;
-    const result = await ingestNiftyListPage(repository, {
+    const result = await ingestNiftyListPage(service, {
       ...capture, page: 2, capturedAt: "2026-09-25T00:01:00.000Z", html: html.replace("2LDK", "1K"),
     });
     expect(result).toMatchObject({ parsedCount: 0, novel: 0, added: 0, ingestion: { retired: 0 } });
@@ -150,8 +162,20 @@ describe("Nifty list-page ingestion", () => {
     });
   });
 
+  it("does not let a previously unseen older cached page roll back newer price evidence", async () => {
+    await ingestNiftyListPage(service, capture);
+    const newerAt = "2026-09-25T01:00:00.000Z";
+    await ingestNiftyListPage(service, { ...capture, capturedAt: newerAt, html: html.replace("8万円", "9万円") });
+    const older = await ingestNiftyListPage(service, { ...capture, capturedAt: priorAt, html: html.replace("8万円", "7万円") });
+    expect(older).toMatchObject({ added: 0, updated: 0, ingestion: { ignored: 1, retired: 0 } });
+    const saved = (await repository.readSource("nifty"))!;
+    expect(saved.scrapedAt).toBe(newerAt);
+    expect(saved.listings[0].rent).toBe(95000);
+    expect(saved.provenance!.observedAtByKey).toEqual({ [trackingKey(saved.listings[0])]: newerAt });
+  });
+
   it("surfaces a stale revision without retrying or overwriting the winning writer", async () => {
-    await ingestNiftyListPage(repository, capture);
+    await ingestNiftyListPage(service, capture);
     const realIngest = repository.ingest.bind(repository);
     const ingest = vi.spyOn(repository, "ingest").mockImplementationOnce(async (batch) => {
       await realIngest({ ...batch, observations: batch.observations.map((observation) => ({
@@ -159,7 +183,7 @@ describe("Nifty list-page ingestion", () => {
       })) });
       return realIngest(batch);
     });
-    await expect(ingestNiftyListPage(repository, capture)).rejects.toBeInstanceOf(RevisionConflictError);
+    await expect(ingestNiftyListPage(service, { ...capture, capturedAt: "2026-09-25T00:01:00.000Z" })).rejects.toBeInstanceOf(RevisionConflictError);
     expect(ingest).toHaveBeenCalledTimes(1);
     expect((await repository.readSource("nifty"))!.listings[0].rent).toBe(99000);
   });

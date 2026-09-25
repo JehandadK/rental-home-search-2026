@@ -1,36 +1,36 @@
-import type { ListingRepository } from "../../src/data-layer/contracts";
+import type { ScrapeBatch, ScrapeIngestion } from "../../src/data-layer/ingestion/contracts";
+import { scrapeFingerprint } from "../../src/data-layer/ingestion/service";
 import { type PageCapture, validateCapture } from "./captureStore";
-import { trackingKey } from "./lifecycle";
-import { mergeNiftyIncremental, niftyMatchKeys, parseNiftyPage } from "./nifty";
-import { sourceObservationBatch } from "./sourceObservationBatch";
+import { parseNiftyPage } from "./nifty";
 
-/** Checkpoint one validated list page; neither canonical builds nor browser IO belong here. */
-export async function ingestNiftyListPage(repository: ListingRepository, capture: PageCapture) {
+/** Scraper adapter: capture validation/parsing only. Source reads/merges belong to the data layer. */
+export async function ingestNiftyListPage(service: ScrapeIngestion, capture: PageCapture) {
   if (capture.source !== "nifty") throw new Error("Expected a Nifty list capture");
   validateCapture(capture);
-  const previous = await repository.readSource("nifty");
   const parsed = parseNiftyPage(capture.html, capture.city, new Date(capture.capturedAt).getFullYear());
-  const known = new Set((previous?.listings ?? []).flatMap(niftyMatchKeys));
-  const novel = parsed.filter((listing) => !niftyMatchKeys(listing).some((key) => known.has(key))).length;
-  const merged = mergeNiftyIncremental(previous?.listings ?? [], parsed);
-  const observedAtByKey = { ...(previous?.provenance?.observedAtByKey as Record<string, string> ?? {}) };
-  for (const listing of parsed) observedAtByKey[trackingKey(listing)] = capture.capturedAt;
-
-  const ingestion = await repository.ingest(sourceObservationBatch({
+  // Do not depend on the optional spool checksum; freshly fetched and cached
+  // versions of the same capture must produce the same batch identity.
+  const captureId = await scrapeFingerprint({ url: capture.url, html: capture.html, capturedAt: capture.capturedAt });
+  const batch: ScrapeBatch = {
+    schemaVersion: 1,
     source: "nifty",
-    previous: previous?.listings ?? [],
-    current: merged.listings,
-    expectedRevision: previous?.revision ?? null,
-    observedAt: capture.capturedAt,
-    observedAtByKey,
+    scraper: { name: "nifty-list", version: "1", parserVersion: "1" },
+    runId: `nifty-list-capture:${capture.capturedAt}`,
+    batchId: captureId,
+    mode: "discovery",
+    capturedAt: capture.capturedAt,
+    scope: { urls: [capture.url], cities: [capture.city], filters: { minRooms: 2, sort: "regDate-desc", page: capture.page } },
+    observations: parsed.map((listing) => ({
+      sourceListingId: listing.id ?? listing.url!,
+      observedAt: capture.capturedAt,
+      evidence: { url: capture.url, captureId },
+      listing,
+    })),
     provenance: {
-      ...previous?.provenance,
       mode: "verified newest-first list discovery",
       capturedBy: "scripts/crawl-nifty.ts",
-      observedTrackingKeys: parsed.map(trackingKey),
-      observedAtByKey,
     },
-    matchKeys: niftyMatchKeys,
-  }));
-  return { parsedCount: parsed.length, novel, added: merged.added, updated: merged.updated, ingestion };
+  };
+  const ingestion = await service.ingestScrape(batch);
+  return { parsedCount: parsed.length, novel: ingestion.novel, added: ingestion.added, updated: ingestion.updated, ingestion };
 }
