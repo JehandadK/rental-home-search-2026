@@ -19,7 +19,8 @@
  *   - a shrink guard that refuses to persist a scrape that lost a large
  *     share of its listings (parser broke, site redesign, network failure)
  */
-import { copyFile, mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { copyFile, mkdir, readFile, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,6 +28,11 @@ import type { RawListing } from "../../src/types";
 import { reconcileLifecycle, trackingKey, type LifecycleStats } from "./lifecycle";
 import { deduplicateListings, isSameUnit } from "../../src/domain/listingDedup";
 import { restoreObservedLifecycle } from "./observations";
+import {
+  withFileLock,
+  writeJsonAtomically as atomicWriteJson,
+  writeJsonAtomicallyUnlocked,
+} from "./jsonFile";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const DATA_DIR = join(HERE, "..", "..", "src", "data");
@@ -47,6 +53,8 @@ const SHRINK_GUARD = 0.5;
 /** One source's data plus the provenance needed to judge it later. */
 export interface SourceFile {
   source: string;
+  /** Revision of the committed source contents; legacy files are hashed on read. */
+  revision?: string;
   scrapedAt: string;
   count: number;
   /**
@@ -80,79 +88,132 @@ export interface BuildManifest {
   lifecycle?: LifecycleStats;
 }
 
-/** Write JSON via temp file + rename so readers never see a partial file. */
-export async function atomicWriteJson(path: string, value: unknown): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp`;
-  await writeFile(tmp, JSON.stringify(value, null, 2) + "\n", "utf8");
-  await rename(tmp, path);
-}
+/** Write JSON under a per-file lock using a unique temp file and atomic rename. */
+export { atomicWriteJson };
 
-/** Copy a file into .backups/ before it is replaced, pruning old copies. */
-export async function backupFile(path: string): Promise<string | null> {
+/** Copy a file into a backup directory before it is replaced, pruning old copies. */
+async function backupFileIn(path: string, backupDir: string): Promise<string | null> {
   if (!existsSync(path)) return null;
-  await mkdir(BACKUP_DIR, { recursive: true });
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  await mkdir(backupDir, { recursive: true });
+  const stamp = `${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}-${randomUUID()}`;
   const name = basename(path, ".json");
-  const dest = join(BACKUP_DIR, `${name}-${stamp}.json`);
+  const dest = join(backupDir, `${name}-${stamp}.json`);
   await copyFile(path, dest);
 
-  const stale = (await readdir(BACKUP_DIR))
+  const stale = (await readdir(backupDir))
     .filter((f) => f.startsWith(`${name}-`) && f.endsWith(".json"))
     .sort()
     .slice(0, -BACKUPS_PER_FILE);
-  for (const file of stale) await unlink(join(BACKUP_DIR, file));
+  for (const file of stale) await unlink(join(backupDir, file));
   return dest;
 }
 
-export function sourcePath(source: string): string {
-  return join(SOURCES_DIR, `${source}.json`);
-}
-
-export async function readSource(source: string): Promise<SourceFile | null> {
-  const path = sourcePath(source);
-  if (!existsSync(path)) return null;
-  return JSON.parse(await readFile(path, "utf8")) as SourceFile;
-}
-
-export async function listSources(): Promise<SourceFile[]> {
-  if (!existsSync(SOURCES_DIR)) return [];
-  const files = (await readdir(SOURCES_DIR)).filter((f) => f.endsWith(".json") && !f.startsWith("_"));
-  const sources: SourceFile[] = [];
-  for (const file of files.sort()) {
-    sources.push(JSON.parse(await readFile(join(SOURCES_DIR, file), "utf8")) as SourceFile);
-  }
-  return sources;
+/** Copy a file into the repository's standard .backups/ directory. */
+export async function backupFile(path: string): Promise<string | null> {
+  return backupFileIn(path, BACKUP_DIR);
 }
 
 export class ShrinkGuardError extends Error {}
 
-/**
- * Replace one source's data. Refuses to shrink the file dramatically
- * unless forced, so a broken parser cannot quietly wipe good data.
- */
-export async function writeSource(
-  file: Omit<SourceFile, "count">,
-  options: { force?: boolean } = {},
-): Promise<{ path: string; previousCount: number; backup: string | null }> {
-  const previous = await readSource(file.source);
-  const previousCount = previous?.count ?? 0;
-  const nextCount = file.listings.length;
+function hashRevision(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
 
-  if (!options.force && previousCount > 0 && nextCount < previousCount * SHRINK_GUARD) {
-    throw new ShrinkGuardError(
-      `Refusing to overwrite ${file.source}: ${nextCount} listings is a ${Math.round(
-        (1 - nextCount / previousCount) * 100,
-      )}% drop from ${previousCount}. The parser or the site probably changed. ` +
-        `Existing data left untouched — re-run with --force if the drop is real.`,
-    );
+export class RevisionConflictError extends Error {
+  constructor(readonly expected: string | null, readonly actual: string | null, path: string) {
+    super(`Revision conflict for ${path}: expected ${expected ?? "<missing>"}, found ${actual ?? "<missing>"}. Re-read and reconcile before retrying.`);
+    this.name = "RevisionConflictError";
+  }
+}
+
+/** JSON-backed source repository, parameterized for isolated contract tests. */
+export class JsonSourceStore {
+  constructor(readonly sourcesDir: string, readonly backupDir: string) {}
+
+  sourcePath(source: string): string {
+    return join(this.sourcesDir, `${source}.json`);
   }
 
-  const path = sourcePath(file.source);
-  const backup = await backupFile(path);
-  const payload: SourceFile = { ...file, count: nextCount };
-  await atomicWriteJson(path, payload);
-  return { path, previousCount, backup };
+  async readSource(source: string): Promise<SourceFile | null> {
+    const path = this.sourcePath(source);
+    if (!existsSync(path)) return null;
+    const raw = await readFile(path, "utf8");
+    const parsed = JSON.parse(raw) as Omit<SourceFile, "revision"> & { revision?: string };
+    return { ...parsed, revision: parsed.revision ?? hashRevision(raw) };
+  }
+
+  async listSources(): Promise<SourceFile[]> {
+    if (!existsSync(this.sourcesDir)) return [];
+    const files = (await readdir(this.sourcesDir)).filter((f) => f.endsWith(".json") && !f.startsWith("_"));
+    const sources: SourceFile[] = [];
+    for (const file of files.sort()) {
+      const source = await this.readSource(basename(file, ".json"));
+      if (source) sources.push(source);
+    }
+    return sources;
+  }
+
+  async writeSource(
+    file: Omit<SourceFile, "count" | "revision">,
+    options: { force?: boolean; expectedRevision: string | null },
+  ): Promise<{ path: string; previousCount: number; backup: string | null; revision: string }> {
+    const path = this.sourcePath(file.source);
+    return withFileLock(path, async () => {
+      // Read and compare only after acquiring the lock. Two writers based on
+      // the same revision cannot both commit; the loser receives a conflict.
+      const previous = await this.readSource(file.source);
+      const actualRevision = previous?.revision ?? null;
+      if (options.expectedRevision !== actualRevision) {
+        throw new RevisionConflictError(options.expectedRevision, actualRevision, path);
+      }
+
+      const previousCount = previous?.count ?? 0;
+      const nextCount = file.listings.length;
+      if (!options.force && previousCount > 0 && nextCount < previousCount * SHRINK_GUARD) {
+        throw new ShrinkGuardError(
+          `Refusing to overwrite ${file.source}: ${nextCount} listings is a ${Math.round(
+            (1 - nextCount / previousCount) * 100,
+          )}% drop from ${previousCount}. The parser or the site probably changed. ` +
+            `Existing data left untouched — re-run with --force if the drop is real.`,
+        );
+      }
+
+      const backup = await backupFileIn(path, this.backupDir);
+      const body = {
+        source: file.source,
+        scrapedAt: file.scrapedAt,
+        count: nextCount,
+        completeSnapshot: file.completeSnapshot,
+        provenance: file.provenance,
+        listings: file.listings,
+      };
+      const revision = hashRevision(JSON.stringify(body));
+      const payload: SourceFile = { ...body, revision };
+      await writeJsonAtomicallyUnlocked(path, payload);
+      return { path, previousCount, backup, revision };
+    });
+  }
+}
+
+const defaultSourceStore = new JsonSourceStore(SOURCES_DIR, BACKUP_DIR);
+
+export function sourcePath(source: string): string {
+  return defaultSourceStore.sourcePath(source);
+}
+
+export async function readSource(source: string): Promise<SourceFile | null> {
+  return defaultSourceStore.readSource(source);
+}
+
+export async function listSources(): Promise<SourceFile[]> {
+  return defaultSourceStore.listSources();
+}
+
+export async function writeSource(
+  file: Omit<SourceFile, "count" | "revision">,
+  options: { force?: boolean; expectedRevision: string | null },
+): Promise<{ path: string; previousCount: number; backup: string | null; revision: string }> {
+  return defaultSourceStore.writeSource(file, options);
 }
 
 /**

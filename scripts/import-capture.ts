@@ -55,7 +55,8 @@ try {
     const observedAtByKey = { ...(previous?.provenance?.observedAtByKey as Record<string, string> ?? {}) };
     for (const l of listings) observedAtByKey[trackingKey(l)] = c.capturedAt;
     await writeSource({ source: c.source, scrapedAt: [previous?.scrapedAt ?? "", c.capturedAt].sort().at(-1)!, completeSnapshot: false,
-      provenance: { ...previous?.provenance, mode: "bounded native-browser discovery", capturedBy: "scripts/import-capture.ts (native browser export)", observedTrackingKeys: listings.map(trackingKey), observedAtByKey }, listings: merged.listings });
+      provenance: { ...previous?.provenance, mode: "bounded native-browser discovery", capturedBy: "scripts/import-capture.ts (native browser export)", observedTrackingKeys: listings.map(trackingKey), observedAtByKey }, listings: merged.listings },
+      { expectedRevision: previous?.revision ?? null });
     const knownPages = c.sortedNewest && listings.length > 0 && novel === 0 ? (prior?.knownPages ?? 0) + 1 : 0;
     progress.cities[key] = { pages: (prior?.pages ?? 0) + 1, knownPages, added: (prior?.added ?? 0) + merged.added, updatedAt: c.capturedAt, done: knownPages >= 2 || c.page >= maxPages };
     progress.imported.push(receipt);
@@ -72,7 +73,9 @@ try {
     // Detail enrichment now has its own durable queue; a historical new-ID list
     // from an earlier collector is misleading and must not leak into this run.
     delete (provenance as Record<string, unknown>).newListingIds;
-    if (JSON.stringify(file.provenance) !== JSON.stringify(provenance)) await writeSource({ ...file, provenance });
+    if (JSON.stringify(file.provenance) !== JSON.stringify(provenance)) {
+      await writeSource({ ...file, provenance }, { expectedRevision: file.revision ?? null });
+    }
   }
   if (run) {
     const groups: Array<[string, string[]]> = [["suumo", ["suumo/Soka", "suumo/Koshigaya", "suumo/Kawaguchi"]], ["athome", ["athome/Soka", "athome/Koshigaya", "athome/Kawaguchi"]], ["roomspot", ["roomspot/Soka", "roomspot/Koshigaya", "roomspot/Kawaguchi"]], ...["Soka", "Koshigaya", "Kawaguchi"].map((c): [string, string[]] => [`nifty-${c.toLowerCase()}`, [`nifty/${c}`]])];

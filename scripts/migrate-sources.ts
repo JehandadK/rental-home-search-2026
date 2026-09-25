@@ -33,7 +33,7 @@ async function main(): Promise<void> {
       scrapedAt: new Date().toISOString(),
       provenance: { migratedFrom: "listings_raw.json", note: "captured before the per-source store existed" },
       listings: group,
-    });
+    }, { expectedRevision: null });
     console.log(`  ${source}: ${group.length} listings → src/data/sources/${source}.json`);
   }
   console.log("\nNext: npm run data:build");

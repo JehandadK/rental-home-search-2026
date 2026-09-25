@@ -76,7 +76,10 @@ export async function enrichDetails(): Promise<void> {
     await atomicWriteJson(QUEUE, queue);
   }
   if (details.size) {
-    await writeSource({ ...source, listings: source.listings.map((l) => l.url && details.has(l.url) ? applyDetail(l, details.get(l.url)!) : l) });
+    await writeSource(
+      { ...source, listings: source.listings.map((l) => l.url && details.has(l.url) ? applyDetail(l, details.get(l.url)!) : l) },
+      { expectedRevision: source.revision ?? null },
+    );
   }
   console.log(`Details: ${requests}/${limit} requests; ${reused} cache replays; ${details.size} applied; ${failed} failures; queue retained (${queue.length} URLs).`);
   if (failed) process.exitCode = 2;

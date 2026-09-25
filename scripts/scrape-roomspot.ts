@@ -92,7 +92,7 @@ async function main(): Promise<void> {
         capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome",
       }, listings: merged.listings,
     },
-    { force: process.argv.includes("--force") },
+    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
   );
   console.log(`\nWrote ${merged.listings.length} RoomSpot listings (was ${result.previousCount})`);
   console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlaps; fetched ${pagesFetched} pages.`);

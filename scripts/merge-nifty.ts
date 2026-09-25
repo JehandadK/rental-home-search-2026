@@ -269,7 +269,7 @@ async function main(): Promise<void> {
       },
       listings: merged.listings,
     },
-    { force: process.argv.includes("--force") },
+    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
   );
 
   const delta = previousCount ? ` (was ${previousCount})` : "";

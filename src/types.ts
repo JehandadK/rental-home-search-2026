@@ -20,7 +20,8 @@ export interface NamedPlace extends GeoPoint {
 
 /** One of the user-defined points of interest. */
 export interface PointOfInterest extends NamedPlace {
-  id: "poi1" | "poi2";
+  /** Stable catalog identity; POI count and IDs are data, not a fixed tuple. */
+  id: string;
   nameJa: string;
   address: string;
 }

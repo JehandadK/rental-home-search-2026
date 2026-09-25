@@ -128,7 +128,7 @@ async function main(): Promise<void> {
       },
       listings: merged.listings,
     },
-    { force: process.argv.includes("--force") },
+    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
   );
   console.log(`\nWrote ${merged.listings.length} AtHome listings (was ${result.previousCount}) to ${result.path}`);
   console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlaps; fetched ${pagesFetched} pages.`);

@@ -31,7 +31,8 @@ try {
     const times = { ...(previous?.provenance?.observedAtByKey as Record<string, string> ?? {}) };
     for (const l of parsed) times[trackingKey(l)] = capture.capturedAt;
     await writeSource({ source: "nifty", scrapedAt: capture.capturedAt, completeSnapshot: false,
-      provenance: { ...previous?.provenance, mode: "verified newest-first list discovery", capturedBy: "scripts/crawl-nifty.ts", observedTrackingKeys: parsed.map(trackingKey), observedAtByKey: times }, listings: merged.listings });
+      provenance: { ...previous?.provenance, mode: "verified newest-first list discovery", capturedBy: "scripts/crawl-nifty.ts", observedTrackingKeys: parsed.map(trackingKey), observedAtByKey: times }, listings: merged.listings },
+      { expectedRevision: previous?.revision ?? null });
     totalAdded += merged.added; pages++;
     knownPages = parsed.length > 0 && novel === 0 ? knownPages + 1 : 0;
     if (!deep && knownPages >= 2) break;

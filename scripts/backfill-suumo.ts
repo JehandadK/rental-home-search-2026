@@ -50,7 +50,7 @@ async function main(): Promise<void> {
     scrapedAt: source.scrapedAt,
     provenance: { ...source.provenance, backfilledAt: new Date().toISOString() },
     listings,
-  });
+  }, { expectedRevision: source.revision ?? null });
 
   console.log(`Backfilled ${listings.length} suumo listings: ${withFloor} now carry a structured floor.`);
   console.log("Admin fee stays unknown until the next `npm run scrape`.");

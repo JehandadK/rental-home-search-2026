@@ -304,7 +304,7 @@ async function main(): Promise<void> {
       },
       listings: merged.listings,
     },
-    { force: process.argv.includes("--force") },
+    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
   );
 
   console.log(`\nWrote ${merged.listings.length} listings (was ${previousCount}) to ${path}`);
