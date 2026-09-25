@@ -108,6 +108,8 @@ export interface ReferenceDataSnapshot {
 
 export interface ReferenceCatalogManifest {
   schemaVersion: 1;
+  /** Root revision algorithm; missing means legacy algorithm v1. */
+  revisionAlgorithm?: 1 | 2;
   revision: string;
   migratedAt: string;
   updatedAt?: string;

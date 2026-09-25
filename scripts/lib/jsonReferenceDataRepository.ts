@@ -15,7 +15,9 @@ import type {
   Retirement,
   VersionedDataset,
 } from "../../src/data-layer/contracts";
-import { DatasetMigrationRegistry } from "../../src/data-layer/migrations/registry";
+import { REFERENCE_MIGRATION_REGISTRY, CURRENT_REFERENCE_SCHEMA_VERSIONS } from "../../src/data-layer/migrations/referenceSchemas";
+import { catalogRevision, CURRENT_CATALOG_REVISION_ALGORITHM, legacyCatalogRevision } from "./referenceCatalog";
+import type { DatasetMigrationRegistry } from "../../src/data-layer/migrations/registry";
 import { RevisionConflictError } from "../../src/data-layer/errors";
 import { atomicWriteJson } from "./dataStore";
 import { withFileLock } from "./jsonFile";
@@ -54,7 +56,8 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
 
   constructor(
     private readonly directory: string,
-    private readonly migrations = new DatasetMigrationRegistry([]),
+    private readonly migrations: DatasetMigrationRegistry = REFERENCE_MIGRATION_REGISTRY,
+    private readonly schemaVersions: Record<DatasetId, number> = CURRENT_REFERENCE_SCHEMA_VERSIONS,
   ) {
     this.manifestPath = join(directory, "manifest.json");
     this.transactionLockPath = join(directory, ".catalog-transaction");
@@ -85,6 +88,65 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
     return this.updateDataset("places", changes, options);
   }
 
+  /** Explicitly persist any in-memory schema migrations as a new catalog revision. */
+  async upgradePersistedSchemas(): Promise<{ upgraded: DatasetId[]; formatUpgraded: boolean; revision: string }> {
+    return withFileLock(this.transactionLockPath, async () => {
+      const { manifest, snapshot } = await this.readCatalog();
+      const outdated = DATASET_IDS.filter((id) => manifest.datasets[id].schemaVersion !== this.schemaVersions[id]);
+      const algorithmUpgrade = manifest.revisionAlgorithm !== CURRENT_CATALOG_REVISION_ALGORITHM;
+      if (outdated.length === 0 && !algorithmUpgrade) {
+        return { upgraded: [], formatUpgraded: false, revision: manifest.revision };
+      }
+
+      const updatedAt = new Date().toISOString();
+      const nextManifest: ReferenceCatalogManifest = {
+        ...manifest,
+        revisionAlgorithm: CURRENT_CATALOG_REVISION_ALGORITHM,
+        datasets: { ...manifest.datasets },
+        updatedAt,
+      };
+      const nextSnapshot = { ...snapshot };
+      for (const datasetId of outdated) {
+        const current = nextSnapshot[datasetId] as VersionedDataset<DatasetRecordMap[typeof datasetId]>;
+        if (current.schemaVersion !== this.schemaVersions[datasetId]) {
+          throw new ReferenceDataIntegrityError(`No migration reached ${datasetId} schema v${this.schemaVersions[datasetId]}`);
+        }
+        const revision = digest(JSON.stringify(current.records));
+        const dataset: VersionedDataset<DatasetRecordMap[typeof datasetId]> = {
+          ...current,
+          schemaVersion: this.schemaVersions[datasetId],
+          revision,
+          updatedAt,
+          provenance: {
+            ...current.provenance,
+            schemaMigration: {
+              fromVersion: manifest.datasets[datasetId].schemaVersion,
+              toVersion: this.schemaVersions[datasetId],
+              updatedAt,
+            },
+          },
+        };
+        validateRecords(datasetId, dataset.records);
+        const filename = `${datasetId}.${revision}.json`;
+        await writeImmutableDataset(join(this.directory, filename), dataset);
+        nextManifest.datasets[datasetId] = {
+          file: filename,
+          schemaVersion: dataset.schemaVersion,
+          revision,
+          count: dataset.records.length,
+        };
+        (nextSnapshot as Record<DatasetId, VersionedDataset<ManagedRecord>>)[datasetId] =
+          dataset as VersionedDataset<ManagedRecord>;
+      }
+
+      nextManifest.counts = countsFor(nextSnapshot);
+      nextManifest.revision = catalogRevision(nextManifest);
+      await preserveManifest(this.directory, manifest);
+      await atomicWriteJson(this.manifestPath, nextManifest);
+      return { upgraded: outdated, formatUpgraded: algorithmUpgrade, revision: nextManifest.revision };
+    });
+  }
+
   private async updateDataset<K extends DatasetId>(
     datasetId: K,
     changes: DatasetChangeSet<DatasetRecordMap[K]>,
@@ -93,8 +155,11 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
     validateWriteOptions(options);
     return withFileLock(this.transactionLockPath, async () => {
       const { manifest, snapshot } = await this.readCatalog();
+      if (manifest.revisionAlgorithm !== CURRENT_CATALOG_REVISION_ALGORITHM) {
+        throw new ReferenceDataIntegrityError("Catalog revision format migration is pending; run the explicit reference catalog upgrade command");
+      }
       for (const id of DATASET_IDS) {
-        if (manifest.datasets[id].schemaVersion !== CURRENT_SCHEMA_VERSION) {
+        if (manifest.datasets[id].schemaVersion !== this.schemaVersions[id]) {
           throw new ReferenceDataIntegrityError(
             `Catalog schema migration is pending for ${id}; persist all dataset migrations before applying updates`,
           );
@@ -107,7 +172,7 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
 
       const records = applyChanges(current.records, changes);
       if (
-        current.schemaVersion === CURRENT_SCHEMA_VERSION &&
+        current.schemaVersion === this.schemaVersions[datasetId] &&
         JSON.stringify(records) === JSON.stringify(current.records)
       ) return current;
 
@@ -115,7 +180,7 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
       const revision = digest(JSON.stringify(records));
       const dataset: VersionedDataset<DatasetRecordMap[K]> = {
         datasetId,
-        schemaVersion: CURRENT_SCHEMA_VERSION,
+        schemaVersion: this.schemaVersions[datasetId],
         revision,
         updatedAt,
         provenance: {
@@ -148,7 +213,8 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
         },
         counts: countsFor({ ...snapshot, [datasetId]: dataset }),
       };
-      nextManifest.revision = snapshotRevision(nextManifest);
+      nextManifest.revision = catalogRevision(nextManifest);
+      await preserveManifest(this.directory, manifest);
       await atomicWriteJson(this.manifestPath, nextManifest);
       return dataset;
     });
@@ -202,9 +268,9 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
     const migrated = this.migrations.migrate<VersionedDataset<DatasetRecordMap[K]>>(
       datasetId,
       raw.schemaVersion,
-      CURRENT_SCHEMA_VERSION,
+      this.schemaVersions[datasetId],
       raw,
-      (value) => validateMigratedDataset(datasetId, value),
+      (value) => validateMigratedDataset(datasetId, this.schemaVersions[datasetId], value),
     );
     // Revision remains the committed storage token until an explicit write
     // publishes the migrated representation at the current schema version.
@@ -215,8 +281,6 @@ export class JsonReferenceDataRepository implements ReferenceDataRepository {
   }
 }
 
-const CURRENT_SCHEMA_VERSION = 1;
-
 async function readJson<T>(path: string): Promise<T> {
   try {
     return JSON.parse(await readFile(path, "utf8")) as T;
@@ -225,6 +289,18 @@ async function readJson<T>(path: string): Promise<T> {
       `Cannot read ${path}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+}
+
+async function preserveManifest(directory: string, manifest: ReferenceCatalogManifest): Promise<void> {
+  const path = join(directory, `manifest.${manifest.revision}.json`);
+  if (existsSync(path)) {
+    const existing = await readJson<ReferenceCatalogManifest>(path);
+    if (existing.revision !== manifest.revision) {
+      throw new ReferenceDataIntegrityError(`Manifest history collision for revision ${manifest.revision}`);
+    }
+    return;
+  }
+  await atomicWriteJson(path, manifest);
 }
 
 async function writeImmutableDataset(path: string, dataset: VersionedDataset<unknown>): Promise<void> {
@@ -311,8 +387,12 @@ function validateRetirement(retirement: Retirement): void {
   validateTimestamp(retirement.effectiveAt, `${retirement.id}.effectiveAt`);
 }
 
-function validateMigratedDataset<K extends DatasetId>(datasetId: K, value: unknown): VersionedDataset<DatasetRecordMap[K]> {
-  if (!isObject(value) || value.datasetId !== datasetId || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !Array.isArray(value.records)) {
+function validateMigratedDataset<K extends DatasetId>(
+  datasetId: K,
+  targetVersion: number,
+  value: unknown,
+): VersionedDataset<DatasetRecordMap[K]> {
+  if (!isObject(value) || value.datasetId !== datasetId || value.schemaVersion !== targetVersion || !Array.isArray(value.records)) {
     throw new ReferenceDataIntegrityError(`Migration output for ${datasetId} has an invalid envelope`);
   }
   validateRecords(datasetId, value.records as ManagedRecord[]);
@@ -388,7 +468,12 @@ function validateRelationships(snapshot: ReferenceDataSnapshot): void {
 }
 
 function validateManifest(manifest: ReferenceCatalogManifest): void {
-  if (manifest.schemaVersion !== 1 || !manifest.datasets || !manifest.counts) {
+  if (
+    manifest.schemaVersion !== 1 ||
+    !manifest.datasets ||
+    !manifest.counts ||
+    (manifest.revisionAlgorithm != null && manifest.revisionAlgorithm !== 1 && manifest.revisionAlgorithm !== 2)
+  ) {
     throw new ReferenceDataIntegrityError("Unsupported or malformed reference catalog manifest");
   }
   for (const id of DATASET_IDS) {
@@ -438,7 +523,9 @@ function sameCounts(
 }
 
 function snapshotRevision(manifest: ReferenceCatalogManifest): string {
-  return digest(DATASET_IDS.map((id) => manifest.datasets[id].revision).join("\n"));
+  return manifest.revisionAlgorithm === CURRENT_CATALOG_REVISION_ALGORITHM
+    ? catalogRevision(manifest)
+    : legacyCatalogRevision(manifest);
 }
 
 function validateTimestamp(value: unknown, field: string): void {

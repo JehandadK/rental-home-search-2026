@@ -1,20 +1,25 @@
-import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { RevisionConflictError } from "../../src/data-layer/errors";
+import type { ReferenceCatalogManifest, ReferencePlaceRecord, VersionedDataset } from "../../src/data-layer/contracts";
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
+import { DatasetMigrationRegistry } from "../../src/data-layer/migrations/registry";
+import { legacyCatalogRevision } from "./referenceCatalog";
 
 const roots: string[] = [];
 const projectRoot = fileURLToPath(new URL("../../", import.meta.url));
 
-async function makeRepository(): Promise<{ repo: JsonReferenceDataRepository; directory: string }> {
+async function makeRepository(upgrade = true): Promise<{ repo: JsonReferenceDataRepository; directory: string }> {
   const root = await mkdtemp(join(tmpdir(), "reference-repository-test-"));
   roots.push(root);
   const directory = join(root, "catalog");
   await cp(join(projectRoot, "data", "reference", "v1"), directory, { recursive: true });
-  return { repo: new JsonReferenceDataRepository(directory), directory };
+  const repo = new JsonReferenceDataRepository(directory);
+  if (upgrade) await repo.upgradePersistedSchemas();
+  return { repo, directory };
 }
 
 afterEach(async () => {
@@ -40,6 +45,68 @@ function newPoi(id: string) {
 }
 
 describe("JSON reference-data repository", () => {
+  it("upgrades the catalog revision format with a retained manifest checkpoint", async () => {
+    const { repo, directory } = await makeRepository(false);
+    const manifestPath = join(directory, "manifest.json");
+    const legacyManifest = JSON.parse(await readFile(manifestPath, "utf8")) as {
+      revision: string;
+      revisionAlgorithm?: number;
+      datasets: ReferenceCatalogManifest["datasets"];
+    };
+    delete legacyManifest.revisionAlgorithm;
+    legacyManifest.revision = legacyCatalogRevision(legacyManifest);
+    await writeFile(manifestPath, `${JSON.stringify(legacyManifest, null, 2)}\n`, "utf8");
+    const before = legacyManifest;
+    const result = await repo.upgradePersistedSchemas();
+    const after = JSON.parse(await readFile(join(directory, "manifest.json"), "utf8")) as {
+      revision: string;
+      revisionAlgorithm: number;
+    };
+
+    expect(result.formatUpgraded).toBe(true);
+    expect(result.upgraded).toEqual([]);
+    expect(after.revisionAlgorithm).toBe(2);
+    expect(after.revision).not.toBe(before.revision);
+    await expect(readFile(join(directory, `manifest.${before.revision}.json`), "utf8")).resolves.toContain(before.revision);
+  });
+
+  it("applies schema migrations in memory and persists them only via the explicit upgrade", async () => {
+    const { directory } = await makeRepository();
+    const migration = new DatasetMigrationRegistry([{
+      datasetId: "places",
+      fromVersion: 1,
+      toVersion: 2,
+      up: (value) => {
+        const dataset = value as VersionedDataset<ReferencePlaceRecord>;
+        return {
+          ...dataset,
+          schemaVersion: 2,
+          records: dataset.records.map((place) => ({
+            ...place,
+            attributes: { ...place.attributes, migratedToV2: true },
+          })),
+        };
+      },
+    }]);
+    const versions = { cities: 1, boundaries: 1, places: 2 };
+    const repository = new JsonReferenceDataRepository(directory, migration, versions);
+    const inMemory = await repository.loadSnapshot();
+    const originalManifest = JSON.parse(await readFile(join(directory, "manifest.json"), "utf8")) as ReferenceCatalogManifest;
+    expect(inMemory.places.schemaVersion).toBe(2);
+    expect(originalManifest.datasets.places.schemaVersion).toBe(1);
+
+    const result = await repository.upgradePersistedSchemas();
+    const upgraded = await repository.loadSnapshot();
+    const newManifest = JSON.parse(await readFile(join(directory, "manifest.json"), "utf8")) as ReferenceCatalogManifest;
+    expect(result.upgraded).toEqual(["places"]);
+    expect(upgraded.places.schemaVersion).toBe(2);
+    expect(upgraded.places.records.every((place) => place.attributes?.migratedToV2 === true)).toBe(true);
+    expect(newManifest.datasets.places.schemaVersion).toBe(2);
+    expect(newManifest.datasets.places.file).not.toBe("places.json");
+    await expect(readFile(join(directory, "places.json"), "utf8")).resolves.toContain('"schemaVersion": 1');
+    await expect(readFile(join(directory, `manifest.${originalManifest.revision}.json`), "utf8")).resolves.toContain(originalManifest.revision);
+  });
+
   it("loads all managed datasets with the manifest and checksums intact", async () => {
     const { repo } = await makeRepository();
     const snapshot = await repo.loadSnapshot();

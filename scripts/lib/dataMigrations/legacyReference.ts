@@ -7,6 +7,7 @@ import type {
   ReferencePlaceRecord,
   VersionedDataset,
 } from "../../../src/data-layer/contracts";
+import { catalogRevision } from "../referenceCatalog";
 import type {
   ChildcareFacility,
   Mosque,
@@ -101,7 +102,13 @@ export function migrateLegacyReferenceData(
   const placeDataset = dataset("places", sortedPlaces, updatedAt, provenance);
 
   return {
-    revision: digest([cityDataset.revision, boundaryDataset.revision, placeDataset.revision].join("\n")),
+    revision: catalogRevision({
+      datasets: {
+        cities: { file: "cities.json", schemaVersion: cityDataset.schemaVersion, revision: cityDataset.revision, count: cityDataset.records.length },
+        boundaries: { file: "boundaries.json", schemaVersion: boundaryDataset.schemaVersion, revision: boundaryDataset.revision, count: boundaryDataset.records.length },
+        places: { file: "places.json", schemaVersion: placeDataset.schemaVersion, revision: placeDataset.revision, count: placeDataset.records.length },
+      },
+    }),
     cities: cityDataset,
     boundaries: boundaryDataset,
     places: placeDataset,

@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readFile, rename, rm } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { DATA_DIR, atomicWriteJson } from "./lib/dataStore";
 import { withFileLock } from "./lib/jsonFile";
+import { catalogRevision, CURRENT_CATALOG_REVISION_ALGORITHM, legacyCatalogRevision } from "./lib/referenceCatalog";
 import { migrateLegacyReferenceData, type LegacyReferenceData } from "./lib/dataMigrations/legacyReference";
 import type { ReferenceCatalogManifest, ReferenceDataSnapshot, VersionedDataset } from "../src/data-layer/contracts";
 
@@ -89,6 +90,7 @@ async function existingOutputMatches(output: string, sourceFiles: Record<string,
     const manifest = JSON.parse(await readFile(join(output, "manifest.json"), "utf8")) as ReferenceCatalogManifest;
     if (
       manifest.schemaVersion !== 1 ||
+      (manifest.revisionAlgorithm != null && manifest.revisionAlgorithm !== 1 && manifest.revisionAlgorithm !== 2) ||
       JSON.stringify(manifest.sourceFiles) !== JSON.stringify(sourceFiles) ||
       !manifest.counts?.placesByCategory
     ) return false;
@@ -108,7 +110,22 @@ async function existingOutputMatches(output: string, sourceFiles: Record<string,
         dataset.revision !== manifest.datasets[datasetId]?.revision
       ) return false;
     }
-    return manifest.revision === digest(`${cities.revision}\n${boundaries.revision}\n${places.revision}`);
+    const placesByCategory: Record<string, number> = {};
+    for (const value of places.records) {
+      if (!value || typeof value !== "object" || typeof (value as { category?: unknown }).category !== "string") return false;
+      const category = (value as { category: string }).category;
+      placesByCategory[category] = (placesByCategory[category] ?? 0) + 1;
+    }
+    if (
+      manifest.counts.cities !== cities.records.length ||
+      manifest.counts.boundaries !== boundaries.records.length ||
+      manifest.counts.places !== places.records.length ||
+      JSON.stringify(Object.entries(manifest.counts.placesByCategory).sort()) !== JSON.stringify(Object.entries(placesByCategory).sort())
+    ) return false;
+    const expectedRevision = manifest.revisionAlgorithm === CURRENT_CATALOG_REVISION_ALGORITHM
+      ? catalogRevision(manifest)
+      : legacyCatalogRevision(manifest);
+    return manifest.revision === expectedRevision;
   } catch {
     return false;
   }
@@ -129,6 +146,7 @@ function makeManifest(
   }
   return {
     schemaVersion: 1,
+    revisionAlgorithm: CURRENT_CATALOG_REVISION_ALGORITHM,
     revision: snapshot.revision,
     migratedAt,
     datasets: {
