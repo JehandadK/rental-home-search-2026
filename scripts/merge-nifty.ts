@@ -1,6 +1,6 @@
 /**
- * Converts Nifty (myhome.nifty.com) detail-page scrapes into RawListing[]
- * and merges them into src/data/listings_raw.json.
+ * Converts Nifty (myhome.nifty.com) detail-page scrapes into observations
+ * and submits them to the data layer; canonical builds remain explicit.
  *
  * Input:  src/data/nifty_detail_raw.json  — detail pages captured through
  *         the logged-in browser session (see pi-web-ui bridge).
@@ -12,7 +12,10 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { DATA_DIR, ShrinkGuardError, writeSource, readSource } from "./lib/dataStore";
+import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "./lib/dataStore";
+import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
+import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import {
   parseDepositKeyMoney,
   parseFloors,
@@ -26,9 +29,7 @@ import {
   sumOneOffFees,
 } from "./lib/parseJa";
 import type { RawListing } from "../src/types";
-import { trackingKey } from "./lib/lifecycle";
 import { parseParking } from "./lib/parking";
-import { mergeNiftyIncremental, niftyMatchKeys } from "./lib/nifty";
 
 const NIFTY_PATH = join(DATA_DIR, "nifty_detail_raw.json");
 
@@ -41,7 +42,7 @@ export interface NiftyDetail {
   error?: string;
 }
 
-interface NiftyDump {
+export interface NiftyDump {
   source: string;
   scrapedAt: string;
   listings: NiftyDetail[];
@@ -196,7 +197,8 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
     notes: noteParts.join("・"),
     agency: parseAgency(kv),
     sourceDetails: kv,
-    parking: parking && !/^[－-]$/.test(parking) ? parseParking(parking) : undefined,
+    // Missing detail text is not a request to erase previously captured parking.
+    ...(parking && !/^[－-]$/.test(parking) ? { parking: parseParking(parking) } : {}),
     costs: {
       depositYen,
       keyMoneyYen,
@@ -225,8 +227,11 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
   };
 }
 
-async function main(): Promise<void> {
-  const dump = JSON.parse(await readFile(NIFTY_PATH, "utf8")) as NiftyDump;
+/** Scraper adapter: parsing/filtering and capture metadata only; no source-state reads or merging. */
+export async function prepareNiftyDetailImport(dump: NiftyDump) {
+  if (!dump || !["nifty", "myhome.nifty.com"].includes(dump.source) || !Array.isArray(dump.listings)) {
+    throw new Error("Invalid Nifty detail dump");
+  }
   const converted = dump.listings
     .map(toRawListing)
     .filter((l): l is RawListing => {
@@ -236,44 +241,42 @@ async function main(): Promise<void> {
       return rooms != null && Number(rooms) >= 2;
     });
 
-  const skipped = dump.listings.length - converted.length;
-  const previous = await readSource("nifty");
-  const existingAliases = new Map((previous?.listings ?? []).flatMap((l) => niftyMatchKeys(l).map((key) => [key, l] as const)));
-  const priorTimes = (previous?.provenance?.observedAtByKey ?? {}) as Record<string, string>;
-  const detailsByUrl = new Map(dump.listings.map((d) => [d.url, d]));
-  const eligible = converted.filter((l) => {
-    const prior = niftyMatchKeys(l).map((k) => existingAliases.get(k)).find(Boolean);
-    if (!prior) return true;
-    const at = detailsByUrl.get(l.url!)?.capturedAt;
-    return at != null && at > (priorTimes[trackingKey(prior)] ?? previous?.scrapedAt ?? "");
-  });
-  const merged = mergeNiftyIncremental(previous?.listings ?? [], eligible);
-  const { path, previousCount } = await writeSource(
-    {
-      source: "nifty",
-      scrapedAt: [previous?.scrapedAt ?? "", dump.scrapedAt ?? ""].sort().at(-1) || new Date().toISOString(),
-      // The merge capture adds newly seen pages but preserves prior detail
-      // records; it is discovery data, not proof that every old ad is live.
-      completeSnapshot: false,
-      provenance: {
-        ...previous?.provenance,
-        capturedBy: "logged-in browser session via Pi Control Chrome",
-        detailPages: dump.listings.length,
-        familyListings: converted.length,
-        // Legacy captures without per-page timestamps are NOT observed today.
-        observedTrackingKeys: eligible.filter((l) => detailsByUrl.get(l.url!)?.capturedAt).map(trackingKey),
-        observedAtByKey: { ...priorTimes, ...Object.fromEntries(eligible.flatMap((l) => {
-          const at = detailsByUrl.get(l.url!)?.capturedAt; return at ? [[trackingKey(l), at]] : [];
-        })) },
-        input: "src/data/nifty_detail_raw.json",
-      },
-      listings: merged.listings,
+  const detailsByUrl = new Map(dump.listings.map((detail) => [detail.url, detail]));
+  const batch: ScrapeBatch = {
+    schemaVersion: 1,
+    source: "nifty",
+    scraper: { name: "nifty-detail", version: "1", parserVersion: "1" },
+    runId: `nifty-detail-import:${dump.scrapedAt}`,
+    batchId: await scrapeFingerprint(dump),
+    mode: "detail-enrichment",
+    capturedAt: dump.scrapedAt,
+    scope: { urls: [...detailsByUrl.keys()], cities: [...new Set(converted.flatMap((listing) => listing.city ? [listing.city] : []))], filters: { minRooms: 2 } },
+    observations: await Promise.all(converted.map(async (listing) => {
+      const detail = detailsByUrl.get(listing.url!)!;
+      return {
+        sourceListingId: listing.id ?? listing.url!,
+        observedAt: detail.capturedAt ?? null,
+        evidence: { url: detail.url, captureId: await scrapeFingerprint(detail) },
+        listing,
+      };
+    })),
+    provenance: {
+      capturedBy: "logged-in browser session via Pi Control Chrome",
+      detailPages: dump.listings.length,
+      familyListings: converted.length,
+      input: "src/data/nifty_detail_raw.json",
     },
-    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
-  );
+  };
+  return { batch, converted, skipped: dump.listings.length - converted.length };
+}
 
-  const delta = previousCount ? ` (was ${previousCount})` : "";
-  console.log(`Wrote ${merged.listings.length} nifty listings${delta} to ${path}; ${merged.added} added, ${merged.updated} newer detail updates` + (skipped ? `, ${skipped} skipped` : ""));
+async function main(): Promise<void> {
+  const dump = JSON.parse(await readFile(NIFTY_PATH, "utf8")) as NiftyDump;
+  const { batch, converted, skipped } = await prepareNiftyDetailImport(dump);
+  const ingestion = new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR)));
+  const result = await ingestion.ingestScrape(batch, { allowShrink: process.argv.includes("--force") });
+  const delta = result.previousCount ? ` (was ${result.previousCount})` : "";
+  console.log(`Wrote ${result.currentCount} nifty listings${delta} to ${sourcePath("nifty")}; ${result.added} added, ${result.updated} newer detail updates` + (skipped ? `, ${skipped} skipped` : ""));
   if (process.argv.includes("--verbose")) for (const l of converted) {
     console.log(`  ${l.name} — ¥${l.rent.toLocaleString()} ${l.layout} ${l.sizeM2}㎡`);
   }
