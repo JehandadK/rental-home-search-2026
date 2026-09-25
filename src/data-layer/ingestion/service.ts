@@ -1,22 +1,23 @@
 import type { ListingRepository } from "../contracts";
-import type { IngestionJournal, ScrapeBatch, ScrapeIngestion, ScrapeIngestionReceipt } from "./contracts";
+import { MANAGED_INGESTION_PROVENANCE_KEYS } from "../sourceProvenance";
+import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt } from "./contracts";
 import { prepareNiftyBatch } from "./niftyPolicy";
-
-export class InvalidScrapeBatchError extends Error {
-  constructor(message: string) { super(message); this.name = "InvalidScrapeBatchError"; }
-}
-export class ScrapeReplayConflictError extends Error {
-  constructor() { super("Scrape batch ID was already committed with different content"); this.name = "ScrapeReplayConflictError"; }
-}
+import { prepareSuumoDetailBatch, selectDetailUrls, validateDetailPatch } from "./suumoDetailPolicy";
+import { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
+export { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 
 /** Versioned application boundary. Scrapers never choose the merge policy or read source revisions. */
-export class ListingIngestionService implements ScrapeIngestion {
+export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner {
   constructor(private readonly repository: ListingRepository) {}
 
-  async ingestScrape(request: ScrapeBatch, options: { allowShrink?: boolean } = {}): Promise<ScrapeIngestionReceipt> {
+  async planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]> {
+    return selectDetailUrls(await this.repository.listSources(), options);
+  }
+
+  async ingestScrape(request: ScrapeSubmission, options: { allowShrink?: boolean } = {}): Promise<ScrapeIngestionReceipt> {
     validateScrapeBatch(request);
     // Own an immutable-by-convention JSON copy across asynchronous reads/writes.
-    const batch = JSON.parse(canonicalJson(request)) as ScrapeBatch;
+    const batch = JSON.parse(canonicalJson(request)) as ScrapeSubmission;
     const fingerprint = await scrapeFingerprint(batch);
     const previous = await this.repository.readSource(batch.source);
     const journal = readJournal(previous?.provenance?.ingestionJournal);
@@ -29,7 +30,8 @@ export class ListingIngestionService implements ScrapeIngestion {
         added: 0, updated: 0, retired: 0, ignored: batch.observations.length, novel: 0 };
     }
 
-    const prepared = prepareNiftyBatch(batch, previous);
+    const prepared = batch.observationKind === "detail-patch"
+      ? prepareSuumoDetailBatch(batch, previous) : prepareNiftyBatch(batch, previous);
     const { observations, provenance: _provenance, ...metadata } = batch;
     const nextJournal: IngestionJournal = { schemaVersion: 1, batches: [...journal.batches, {
       runId: batch.runId, batchId: batch.batchId, fingerprint, metadata,
@@ -66,47 +68,56 @@ function object(value: unknown): value is Record<string, unknown> {
 function timestamp(value: unknown): value is string {
   return typeof value === "string" && /T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value));
 }
-function niftyUrl(value: unknown): value is string {
+function sourceUrl(value: unknown, host: string): value is string {
   if (typeof value !== "string") return false;
-  try { const url = new URL(value); return url.protocol === "https:" && url.hostname === "myhome.nifty.com" && !url.username && !url.password; }
+  try { const url = new URL(value); return url.protocol === "https:" && url.hostname === host && !url.username && !url.password; }
   catch { return false; }
 }
 function invalid(message: string): never { throw new InvalidScrapeBatchError(message); }
 
-function validateScrapeBatch(batch: ScrapeBatch): void {
+function validateScrapeBatch(batch: ScrapeSubmission): void {
   if (!object(batch) || batch.schemaVersion !== 1) invalid("Unsupported scrape schemaVersion");
-  if (batch.source !== "nifty") invalid("Unsupported scrape source");
-  if (batch.mode !== "discovery" && batch.mode !== "detail-enrichment") {
+  const detailPatch = batch.observationKind === "detail-patch";
+  if (batch.observationKind !== undefined && batch.observationKind !== "listing" && !detailPatch) invalid("Unsupported observation kind");
+  if (batch.source !== (detailPatch ? "suumo" : "nifty")) invalid("Unsupported scrape source");
+  if ((batch.mode !== "discovery" && batch.mode !== "detail-enrichment") || (detailPatch && batch.mode !== "detail-enrichment")) {
     invalid("Unsupported scrape mode; full snapshots require a reviewed exhaustion-evidence policy");
   }
-  const expectedProducer = batch.mode === "discovery" ? "nifty-list" : "nifty-detail";
+  const validUrl = (value: unknown) => sourceUrl(value, detailPatch ? "suumo.jp" : "myhome.nifty.com");
+  const expectedProducer = detailPatch ? "suumo-detail" : batch.mode === "discovery" ? "nifty-list" : "nifty-detail";
   if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1" || batch.scraper.parserVersion !== "1") {
     invalid("Unsupported or missing scraper name/version/parserVersion");
   }
   if (!nonempty(batch.runId) || !nonempty(batch.batchId) || !timestamp(batch.capturedAt)) invalid("Invalid run/batch identity or capture time");
-  if (!object(batch.scope) || !Array.isArray(batch.scope.urls) || !batch.scope.urls.every(niftyUrl)
+  if (!object(batch.scope) || !Array.isArray(batch.scope.urls) || !batch.scope.urls.every(validUrl)
     || !Array.isArray(batch.scope.cities) || !batch.scope.cities.every(nonempty) || !object(batch.scope.filters)
     || !Object.values(batch.scope.filters).every((value) => typeof value === "string" || typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value)))) {
     invalid("Invalid scrape scope");
   }
-  if (batch.provenance !== undefined && (!object(batch.provenance) || "ingestionJournal" in batch.provenance)) invalid("Invalid/reserved scrape provenance");
+  if (batch.provenance !== undefined && (!object(batch.provenance) || MANAGED_INGESTION_PROVENANCE_KEYS.some((key) => key in batch.provenance!))) invalid("Invalid/reserved scrape provenance");
   if (!Array.isArray(batch.observations)) invalid("Observations must be an array");
   const seen = new Map<string, string>();
   for (const observation of batch.observations) {
-    if (!object(observation) || !nonempty(observation.sourceListingId) || !object(observation.listing)) invalid("Missing observation identity/listing");
+    if (!object(observation) || !nonempty(observation.sourceListingId)) invalid("Missing observation identity");
     if (observation.observedAt === null) {
-      if (batch.mode !== "detail-enrichment") invalid("Only legacy detail captures may have unknown observation time");
+      if (detailPatch || batch.mode !== "detail-enrichment") invalid("Only legacy detail captures may have unknown observation time");
     } else if (!timestamp(observation.observedAt)) invalid("Invalid observation timestamp");
-    if (!object(observation.evidence) || !nonempty(observation.evidence.captureId) || !niftyUrl(observation.evidence.url)
+    if (!object(observation.evidence) || !nonempty(observation.evidence.captureId) || !validUrl(observation.evidence.url)
       || !batch.scope.urls.includes(observation.evidence.url)) invalid("Missing or out-of-scope observation evidence");
-    const listing = observation.listing;
-    if (listing.source !== batch.source || (listing.id != null && listing.id !== observation.sourceListingId)
-      || !niftyUrl(listing.url) || (listing.id == null && observation.sourceListingId !== listing.url)) invalid("Observation source/identity mismatch");
-    if (!nonempty(listing.name) || !nonempty(listing.address) || typeof listing.rent !== "number" || !Number.isFinite(listing.rent) || listing.rent <= 0
-      || (listing.sizeM2 !== null && (typeof listing.sizeM2 !== "number" || !Number.isFinite(listing.sizeM2) || listing.sizeM2 <= 0))
-      || typeof listing.layout !== "string" || Number(listing.layout.normalize("NFKC").match(/^\d+/)?.[0] ?? 0) < 2) invalid("Invalid family listing fields");
-    for (const key of ["status", "firstSeenAt", "lastSeenAt", "soldAt", "sourceListings"] as const) {
-      if (listing[key] !== undefined) invalid(`Scrapers cannot assign canonical field ${key}`);
+    if (detailPatch) {
+      if (observation.sourceListingId !== observation.evidence.url || "listing" in observation || !("details" in observation)) invalid("Invalid detail patch identity/payload");
+      validateDetailPatch(observation.details);
+    } else {
+      if (!("listing" in observation) || !object(observation.listing) || "details" in observation) invalid("Missing observation listing");
+      const listing = observation.listing;
+      if (listing.source !== batch.source || (listing.id != null && listing.id !== observation.sourceListingId)
+        || !validUrl(listing.url) || (listing.id == null && observation.sourceListingId !== listing.url)) invalid("Observation source/identity mismatch");
+      if (!nonempty(listing.name) || !nonempty(listing.address) || typeof listing.rent !== "number" || !Number.isFinite(listing.rent) || listing.rent <= 0
+        || (listing.sizeM2 !== null && (typeof listing.sizeM2 !== "number" || !Number.isFinite(listing.sizeM2) || listing.sizeM2 <= 0))
+        || typeof listing.layout !== "string" || Number(listing.layout.normalize("NFKC").match(/^\d+/)?.[0] ?? 0) < 2) invalid("Invalid family listing fields");
+      for (const key of ["status", "firstSeenAt", "lastSeenAt", "soldAt", "sourceListings"] as const) {
+        if (listing[key] !== undefined) invalid(`Scrapers cannot assign canonical field ${key}`);
+      }
     }
     const encoded = canonicalJson(observation);
     if (seen.has(observation.sourceListingId) && seen.get(observation.sourceListingId) !== encoded) invalid("Conflicting observations for one source listing ID");

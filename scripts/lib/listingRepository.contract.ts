@@ -111,6 +111,56 @@ export function defineListingRepositoryContract(
       }
     });
 
+    it("retains application replay metadata when a compatibility collector replaces capture provenance", async () => {
+      const harness = await createHarness();
+      try {
+        const managed = { ingestionJournal: { schemaVersion: 1, batches: [] }, detailObservedAtByUrl: { "https://example.test/one": "2026-09-24T00:00:00.000Z" } };
+        const initial = await harness.repository.ingest({
+          ...makeBatch(null, "incremental", [listing("one")], "2026-09-25T00:00:00.000Z"),
+          provenance: { ...managed, newListingIds: ["one"], capturedBy: "original" },
+        });
+        await harness.repository.ingest({
+          ...makeBatch(initial.revision, "incremental", [listing("one", 81_000)], "2026-09-25T01:00:00.000Z"),
+          provenance: { capturedBy: "compatibility collector" },
+        });
+        expect((await harness.repository.readSource("fixture"))!.provenance).toEqual({ ...managed, capturedBy: "compatibility collector" });
+      } finally { await harness.cleanup(); }
+    });
+
+    it("preserves snapshot completeness, capture time and unseen history during enrichment", async () => {
+      const harness = await createHarness();
+      try {
+        const initialAt = "2026-09-25T00:00:00.000Z";
+        const initial = await harness.repository.ingest(makeBatch(null, "complete", [listing("one"), listing("two")], initialAt));
+        const result = await harness.repository.ingest({
+          ...makeBatch(initial.revision, "incremental", [listing("one", 81_000)], "2026-09-25T01:00:00.000Z"),
+          completeness: "preserve",
+        });
+        expect(result.retired).toBe(0);
+        await expect(harness.repository.readSource("fixture")).resolves.toMatchObject({
+          completeSnapshot: true, scrapedAt: initialAt, archivedListings: [],
+          listings: [expect.objectContaining({ id: "one", rent: 81_000 }), expect.objectContaining({ id: "two" })],
+        });
+      } finally { await harness.cleanup(); }
+    });
+
+    it("does not allow preserving enrichment to create sources/IDs or retire rows", async () => {
+      const harness = await createHarness();
+      try {
+        const batch = { ...makeBatch(null, "incremental", [listing("one")], "2026-09-25T00:00:00.000Z"), completeness: "preserve" as const };
+        await expect(harness.repository.ingest(batch)).rejects.toThrow("existing source");
+        const initial = await harness.repository.ingest({ ...batch, completeness: "incremental" });
+        const previous = await harness.repository.readSource("fixture");
+        await expect(harness.repository.ingest({ ...batch, expectedRevision: initial.revision,
+          observations: [{ ...batch.observations[0], sourceListingId: "unknown", listing: listing("unknown") }],
+        })).rejects.toThrow("cannot add");
+        await expect(harness.repository.ingest({ ...batch, expectedRevision: initial.revision, observations: [],
+          retirements: [{ id: "one", reason: "not an enrichment", effectiveAt: batch.observedAt }],
+        })).rejects.toThrow("cannot retire");
+        await expect(harness.repository.readSource("fixture")).resolves.toEqual(previous);
+      } finally { await harness.cleanup(); }
+    });
+
     it("allows only one concurrent write from a shared expected revision", async () => {
       const harness = await createHarness();
       try {

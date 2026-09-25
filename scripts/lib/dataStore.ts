@@ -26,6 +26,7 @@ import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RawListing } from "../../src/types";
 import type { ArchivedSourceListing } from "../../src/data-layer/contracts";
+import { mergeSourceProvenance } from "../../src/data-layer/sourceProvenance";
 import { RevisionConflictError } from "../../src/data-layer/errors";
 export { RevisionConflictError } from "../../src/data-layer/errors";
 import { reconcileLifecycle, trackingKey, type LifecycleStats } from "./lifecycle";
@@ -187,6 +188,9 @@ export class JsonSourceStore {
       // Preserve fields unknown to this adapter so newer data is not silently
       // erased by an older script. Caller-provided values still take precedence.
       const bodyRecord = { ...(previous ?? {}), ...file, count: nextCount } as Record<string, unknown>;
+      if (previous?.provenance || file.provenance) {
+        bodyRecord.provenance = mergeSourceProvenance(previous?.provenance, file.provenance);
+      }
       delete bodyRecord.revision;
       const body = bodyRecord as unknown as Omit<SourceFile, "revision">;
       const previousBody = previous ? { ...previous } as Record<string, unknown> : null;

@@ -1,10 +1,11 @@
 /** One detail fetch, all useful fields; deterministic replay over cached HTML. */
 import * as cheerio from "cheerio";
-import type { RawListing } from "../../src/types";
+import type { ListingDetailPatch } from "../../src/data-layer/ingestion/contracts";
+export { applyDetail } from "../../src/data-layer/ingestion/suumoDetailPolicy";
 import { parseParking } from "./parking";
 import { parseLease, parseImmediate, parseGuarantorRequired, parseYenStrict, splitTags } from "./parseJa";
 
-export function parseDetail(html: string): Partial<RawListing> {
+export function parseDetail(html: string): ListingDetailPatch {
   const $ = cheerio.load(html);
   const kv: Record<string, string> = {};
   const clean = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -30,13 +31,5 @@ export function parseDetail(html: string): Partial<RawListing> {
     tenancy: { ...parseLease(kv["契約期間"]), availableFrom: available ?? null, immediateMoveIn: parseImmediate(available) },
     building: { structure: kv["構造"] ?? kv["建物構造"] ?? null,
       features: [...new Set([...features, ...(splitTags(kv["設備"]) ?? [])])], conditions: splitTags(kv["条件"] ?? kv["条件等"]) },
-  };
-}
-const defined = <T extends object>(value: T): Partial<T> => Object.fromEntries(Object.entries(value).filter(([, v]) => v != null && (!Array.isArray(v) || v.length > 0))) as Partial<T>;
-export function applyDetail(listing: RawListing, detail: Partial<RawListing>): RawListing {
-  return { ...listing, ...defined(detail),
-    costs: { ...listing.costs, ...defined(detail.costs ?? {}) },
-    tenancy: { ...listing.tenancy, ...defined(detail.tenancy ?? {}) },
-    building: { ...listing.building, ...defined(detail.building ?? {}) },
   };
 }

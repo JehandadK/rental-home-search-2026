@@ -15,8 +15,10 @@ export interface ScrapeBatch {
     cities: readonly string[];
     filters: Readonly<Record<string, string | number | boolean>>;
   };
+  /** Omitted on legacy full-listing submissions. */
+  observationKind?: "listing";
   observations: readonly ScrapeObservation[];
-  /** Additional capture metadata; the ingestionJournal key is reserved. */
+  /** Additional capture metadata; ingestionJournal and detailObservedAtByUrl are reserved. */
   provenance?: Readonly<Record<string, unknown>>;
 }
 
@@ -26,6 +28,37 @@ export interface ScrapeObservation {
   observedAt: string | null;
   evidence: { url: string; captureId: string };
   listing: RawListing;
+}
+
+/** Detail pages may not assert identity, prices, lifecycle, or user-owned fields. */
+export type ListingDetailPatch = Pick<RawListing, "parking" | "costs" | "tenancy" | "building" | "sourceDetails">;
+
+export interface DetailPatchObservation {
+  /** Exact source URL is the stable ad identity for this patch; resolved by the data layer. */
+  sourceListingId: string;
+  observedAt: string;
+  evidence: { url: string; captureId: string };
+  details: ListingDetailPatch;
+}
+
+export interface DetailPatchBatch extends Omit<ScrapeBatch, "observations" | "observationKind"> {
+  source: "suumo";
+  mode: "detail-enrichment";
+  observationKind: "detail-patch";
+  observations: readonly DetailPatchObservation[];
+}
+
+export type ScrapeSubmission = ScrapeBatch | DetailPatchBatch;
+
+export interface DetailEnrichmentOptions {
+  maxRent: number;
+  minSize: number;
+  force: boolean;
+}
+
+/** Read-side application query: collectors get URLs, never mutable source snapshots. */
+export interface DetailEnrichmentPlanner {
+  planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]>;
 }
 
 export interface ScrapeIngestionReceipt {
@@ -45,7 +78,7 @@ export interface ScrapeIngestionReceipt {
 }
 
 export interface ScrapeIngestion {
-  ingestScrape(batch: ScrapeBatch, options?: { allowShrink?: boolean }): Promise<ScrapeIngestionReceipt>;
+  ingestScrape(batch: ScrapeSubmission, options?: { allowShrink?: boolean }): Promise<ScrapeIngestionReceipt>;
 }
 
 /** Persisted atomically with source rows. Never a separate, fallible receipt write. */
@@ -53,7 +86,7 @@ export interface IngestionJournalEntry {
   runId: string;
   batchId: string;
   fingerprint: string;
-  metadata: Omit<ScrapeBatch, "observations" | "provenance">;
+  metadata: Omit<ScrapeSubmission, "observations" | "provenance">;
   evidence: readonly { sourceListingId: string; observedAt: string | null; url: string; captureId: string }[];
 }
 

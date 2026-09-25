@@ -146,6 +146,8 @@ export interface ReferenceDataRepository {
 export interface ListingObservation {
   source: string;
   sourceListingId: string;
+  /** Existing-row enrichment locator for legacy IDs that collide across distinct ads. */
+  targetUrl?: string;
   observedAt: string;
   listing: RawListing;
 }
@@ -155,7 +157,8 @@ export interface ListingObservationBatch {
   /** Revision of this source's data read by the caller; null means not created yet. */
   expectedRevision: string | null;
   observedAt: string;
-  completeness: "incremental" | "complete";
+  /** preserve is an existing-row-only enrichment, not new availability evidence. */
+  completeness: "incremental" | "complete" | "preserve";
   observations: readonly ListingObservation[];
   /** Explicitly retire source IDs only when an ingestion rule can explain why. */
   retirements?: readonly Retirement[];
