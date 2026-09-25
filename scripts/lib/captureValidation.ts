@@ -3,6 +3,7 @@ import type { RawListing } from "../../src/types";
 import type { SourceFile } from "./dataStore";
 import type { PageCapture } from "./captureStore";
 import { trackingKey } from "./lifecycle";
+import { sourceObservationFallbackTime } from "../../src/data-layer/sourceObservationTime";
 
 /** A parser failure must not be mistaken for a page containing no family units. */
 export function assertParsedFamilies(capture: PageCapture, rows: readonly RawListing[]): void {
@@ -17,6 +18,7 @@ export function newerRows(previous: SourceFile | null, rows: readonly RawListing
   const times = (previous?.provenance?.observedAtByKey ?? {}) as Record<string, string>;
   return rows.filter((row) => {
     const prior = aliases(row).map((key) => index.get(key)).find(Boolean);
-    return !prior || Date.parse(at) >= Date.parse(times[trackingKey(prior)] ?? previous!.scrapedAt);
+    const previousTime = prior ? times[trackingKey(prior)] ?? sourceObservationFallbackTime(previous) : undefined;
+    return previousTime === undefined || Date.parse(at) >= Date.parse(previousTime);
   });
 }

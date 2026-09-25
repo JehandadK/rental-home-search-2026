@@ -2,6 +2,7 @@ import type { RawListing } from "../../types";
 import { trackingKey } from "../../domain/listingIdentity";
 import type { ListingSourceSnapshot } from "../contracts";
 import { sourceObservationBatch } from "../sourceObservationBatch";
+import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sourceObservationTime";
 import type { ScrapeBatch } from "./contracts";
 
 const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
@@ -37,7 +38,7 @@ export function prepareNiftyBatch(request: ScrapeBatch, previous: ListingSourceS
     const prior = niftyMatchKeys(observation.listing).map((key) => aliases.get(key)).find(Boolean);
     if (!prior) return true;
     if (observation.observedAt === null) return false;
-    const previousTime = priorTimes[trackingKey(prior)] ?? previous?.scrapedAt;
+    const previousTime = priorTimes[trackingKey(prior)] ?? sourceObservationFallbackTime(previous);
     // Detail imports only replace strictly older evidence. Discovery may replay
     // an equal timestamp, but cannot overwrite a newer captured price either.
     const delta = Date.parse(observation.observedAt) - (previousTime ? Date.parse(previousTime) : -Infinity);
@@ -50,8 +51,9 @@ export function prepareNiftyBatch(request: ScrapeBatch, previous: ListingSourceS
   for (const observation of eligible) {
     if (observation.observedAt !== null) observedAtByKey[trackingKey(observation.listing)] = observation.observedAt;
   }
-  const observedAt = previous && Date.parse(previous.scrapedAt) > Date.parse(request.capturedAt)
-    ? previous.scrapedAt : request.capturedAt;
+  const previousCaptureTime = previous ? sourceSnapshotCaptureTime(previous) : undefined;
+  const observedAt = previousCaptureTime && Date.parse(previousCaptureTime) > Date.parse(request.capturedAt)
+    ? previousCaptureTime : request.capturedAt;
   const batch = sourceObservationBatch({
     source: request.source,
     previous: previous?.listings ?? [],

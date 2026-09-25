@@ -19,6 +19,59 @@ export function defineListingRepositoryContract(
   createHarness: CreateListingRepositoryHarness,
 ): void {
   describe(`${implementationName} ListingRepository contract`, () => {
+    it("initializes historical rows verbatim without IDs, deduplication or new observation evidence", async () => {
+      const harness = await createHarness();
+      try {
+        const importedAt = "2026-09-25T00:00:00.000Z";
+        const rows = [listing("shared"), { ...listing("shared"), url: "https://example.test/second", rent: 91000 },
+          { name: "Old row", address: "", rent: 0, source: "fixture", futureField: { retained: true } }];
+        await harness.repository.initializeHistoricalSource({ source: "fixture", importedAt, listings: rows,
+          provenance: { migratedFrom: "fixture history", observedTrackingKeys: ["not-evidence"], observedAtByKey: { "not-evidence": importedAt } },
+        }, { expectedRevision: null });
+        const saved = (await harness.repository.readSource("fixture"))!;
+        expect(saved.listings).toEqual(rows);
+        expect(saved).toMatchObject({ scrapedAt: importedAt, completeSnapshot: false,
+          provenance: { migratedFrom: "fixture history", observedTrackingKeys: [], observedAtByKey: {} } });
+        await expect(harness.repository.initializeHistoricalSource({ source: "fixture", importedAt, listings: [], provenance: {} }, { expectedRevision: null })).rejects.toBeInstanceOf(RevisionConflictError);
+        await expect(harness.repository.readSource("fixture")).resolves.toEqual(saved);
+      } finally { await harness.cleanup(); }
+    });
+
+    it("does not normalize missing source fields when initializing the unknown historical group", async () => {
+      const harness = await createHarness();
+      try {
+        const rows = [{ name: "Unattributed", address: "", rent: 0 },
+          { name: "Empty", address: "", rent: 0, source: "" }, { name: "Null", address: "", rent: 0, source: null }];
+        await harness.repository.initializeHistoricalSource({ source: "unknown", importedAt: "2026-09-25T00:00:00.000Z", listings: rows, provenance: {} }, { expectedRevision: null });
+        expect((await harness.repository.readSource("unknown"))!.listings).toEqual(rows);
+      } finally { await harness.cleanup(); }
+    });
+
+    it("only permits create-only, source-owned historical initialization", async () => {
+      const harness = await createHarness();
+      try {
+        const seed = { source: "fixture", importedAt: "2026-09-25T00:00:00.000Z", listings: [listing("one")], provenance: {} };
+        await expect(harness.repository.initializeHistoricalSource(seed, { expectedRevision: "stale" as unknown as null })).rejects.toThrow();
+        await expect(harness.repository.initializeHistoricalSource({ ...seed, source: "other" }, { expectedRevision: null })).rejects.toThrow();
+        await expect(harness.repository.initializeHistoricalSource({ ...seed, source: "../escape" }, { expectedRevision: null })).rejects.toThrow();
+        await expect(harness.repository.listSources()).resolves.toEqual([]);
+      } finally { await harness.cleanup(); }
+    });
+
+    it("allows only one concurrent historical initializer with expectedRevision null", async () => {
+      const harness = await createHarness();
+      try {
+        const seed = { source: "fixture", importedAt: "2026-09-25T00:00:00.000Z", listings: [listing("one")], provenance: {} };
+        const results = await Promise.allSettled([
+          harness.repository.initializeHistoricalSource(seed, { expectedRevision: null }),
+          harness.repository.initializeHistoricalSource({ ...seed, listings: [listing("two")] }, { expectedRevision: null }),
+        ]);
+        expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+        expect((results.find((result) => result.status === "rejected") as PromiseRejectedResult).reason).toBeInstanceOf(RevisionConflictError);
+        expect((await harness.repository.readSource("fixture"))!.listings).toHaveLength(1);
+      } finally { await harness.cleanup(); }
+    });
+
     it("ingests a source observation idempotently", async () => {
       const harness = await createHarness();
       try {
@@ -114,7 +167,7 @@ export function defineListingRepositoryContract(
     it("retains application replay metadata when a compatibility collector replaces capture provenance", async () => {
       const harness = await createHarness();
       try {
-        const managed = { ingestionJournal: { schemaVersion: 1, batches: [] }, correctionJournal: { schemaVersion: 1, operations: [] }, detailObservedAtByUrl: { "https://example.test/one": "2026-09-24T00:00:00.000Z" } };
+        const managed = { ingestionJournal: { schemaVersion: 1, batches: [] }, correctionJournal: { schemaVersion: 1, operations: [] }, bootstrapAudit: { importedAt: "2026-09-24T00:00:00.000Z" }, detailObservedAtByUrl: { "https://example.test/one": "2026-09-24T00:00:00.000Z" } };
         const initial = await harness.repository.ingest({
           ...makeBatch(null, "incremental", [listing("one")], "2026-09-25T00:00:00.000Z"),
           provenance: { ...managed, newListingIds: ["one"], capturedBy: "original" },

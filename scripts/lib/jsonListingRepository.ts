@@ -1,4 +1,5 @@
 import type {
+  HistoricalSourceSeed,
   ListingIngestionResult,
   ListingObservationBatch,
   ListingRepository,
@@ -6,6 +7,7 @@ import type {
 } from "../../src/data-layer/contracts";
 import type { RawListing } from "../../src/types";
 import { RevisionConflictError } from "../../src/data-layer/errors";
+import { invalidBootstrap, legacySource, validateJsonValue, validateLegacyListing, validateSourceId } from "../../src/data-layer/bootstrap/validation";
 import { JsonSourceStore, type SourceFile } from "./dataStore";
 
 export class InvalidListingBatchError extends Error {
@@ -49,6 +51,31 @@ export class JsonListingRepository implements ListingRepository {
       archivedListings: source.archivedListings ?? [],
       provenance: source.provenance,
     }));
+  }
+
+  async initializeHistoricalSource(seed: HistoricalSourceSeed, options: { expectedRevision: null }): Promise<{ revision: string }> {
+    validateSourceId(seed.source);
+    if (options.expectedRevision !== null) invalidBootstrap("Historical bootstrap requires expectedRevision: null");
+    if (typeof seed.importedAt !== "string" || !Number.isFinite(Date.parse(seed.importedAt))) invalidBootstrap("Invalid bootstrap import time");
+    if (!Array.isArray(seed.listings)) invalidBootstrap("Historical listings must be an array");
+    validateJsonValue(seed.listings);
+    validateJsonValue(seed.provenance);
+    for (const listing of seed.listings) {
+      validateLegacyListing(listing);
+      if (legacySource(listing) !== seed.source) invalidBootstrap("Historical row belongs to a different source");
+    }
+    const result = await this.sourceStore.writeSource({
+      source: seed.source,
+      // Compatibility envelope timestamp, explicitly NOT observation evidence.
+      // The audit retains importedAt; readers use the empty evidence maps below.
+      scrapedAt: seed.importedAt,
+      completeSnapshot: false,
+      provenance: { ...seed.provenance, observedTrackingKeys: [], observedAtByKey: {} },
+      // Ordinary ingestion expects modern RawListing rows. This one-time seam
+      // deliberately preserves older shapes (including missing source/ID) verbatim.
+      listings: seed.listings.map((listing) => listing as RawListing),
+    }, { expectedRevision: null });
+    return { revision: result.revision };
   }
 
   async ingest(

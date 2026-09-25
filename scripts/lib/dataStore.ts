@@ -59,6 +59,7 @@ export interface SourceFile {
   source: string;
   /** Revision of the committed source contents; legacy files are hashed on read. */
   revision?: string;
+  /** Compatibility envelope time; tagged historical bootstrap imports are not fresh scrape evidence. */
   scrapedAt: string;
   count: number;
   /**

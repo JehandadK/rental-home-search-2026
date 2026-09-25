@@ -11,6 +11,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { BACKUP_DIR, MANIFEST_PATH, RAW_PATH, buildRaw, listSources } from "./lib/dataStore";
 import type { BuildManifest } from "./lib/dataStore";
+import { sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
 
 const ago = (iso: string): string => {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -28,8 +29,9 @@ async function status(): Promise<void> {
 
   console.log("Sources (each owned by one importer):\n");
   for (const source of sources) {
+    const capturedAt = sourceSnapshotCaptureTime(source);
     console.log(
-      `  ${source.source.padEnd(8)} ${String(source.count).padStart(4)} listings   captured ${ago(source.scrapedAt)}`,
+      `  ${source.source.padEnd(8)} ${String(source.count).padStart(4)} listings   ${capturedAt ? `captured ${ago(capturedAt)}` : "historical import (capture time unknown)"}`,
     );
     for (const [key, value] of Object.entries(source.provenance ?? {})) {
       // Internal identity lists can contain hundreds of values; status should

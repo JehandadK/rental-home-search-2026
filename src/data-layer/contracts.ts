@@ -172,10 +172,22 @@ export interface ArchivedSourceListing {
   reason: string;
 }
 
+/** Bootstrap-only compatibility shape. A missing/empty source is grouped under "unknown" without rewriting the row. */
+export type LegacyListing = Pick<RawListing, "name" | "address" | "rent"> & Partial<Omit<RawListing, "source" | "name" | "address" | "rent">> & { source?: string | null };
+
+/** Internal create-only port: preserve every historical row, including missing/colliding IDs. */
+export interface HistoricalSourceSeed {
+  source: string;
+  importedAt: string;
+  listings: readonly LegacyListing[];
+  provenance: Readonly<Record<string, unknown>>;
+}
+
 /** Current source-owned rows plus retained rows retired by complete snapshots. */
 export interface ListingSourceSnapshot {
   source: string;
   revision: string;
+  /** Legacy envelope time; a tagged bootstrap uses import time, not capture evidence. See sourceObservationTime helpers. */
   scrapedAt: string;
   completeSnapshot: boolean;
   listings: readonly RawListing[];
@@ -199,6 +211,8 @@ export interface ListingIngestionResult {
 export interface ListingRepository {
   readSource(source: string): Promise<ListingSourceSnapshot | null>;
   listSources(): Promise<readonly ListingSourceSnapshot[]>;
+  /** Create historical data verbatim; never replace, deduplicate, assign IDs, or assert fresh observations. */
+  initializeHistoricalSource(seed: HistoricalSourceSeed, options: { expectedRevision: null }): Promise<{ revision: string }>;
   /** allowShrink is an explicit operator confirmation after snapshot validation. */
   ingest(
     batch: ListingObservationBatch,
