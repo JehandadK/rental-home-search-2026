@@ -61,7 +61,9 @@ export function mergeNiftyIncremental(existing: readonly RawListing[], fresh: re
     keys.forEach((k) => seen.add(k));
     if (prior) {
       used.add(prior); updated++;
-      listings.push({ ...prior, ...l, ...(l.parking?.available && prior.parking?.available && prior.parking.monthlyYen != null ? { parking: prior.parking } : {}), costs: { ...prior.costs, ...l.costs }, tenancy: { ...prior.tenancy, ...l.tenancy },
+      listings.push({ ...prior, ...l, ...(l.parking?.available && prior.parking?.available && prior.parking.monthlyYen != null ? { parking: prior.parking } : {}), costs: { ...prior.costs, ...l.costs },
+        // List cards have no tenancy data. Do not invent an empty object on replay.
+        ...(prior.tenancy || l.tenancy ? { tenancy: { ...prior.tenancy, ...l.tenancy } } : {}),
         building: { ...prior.building, ...l.building, features: [...new Set([...(prior.building?.features ?? []), ...(l.building?.features ?? [])])] } });
     } else { listings.push(l); added++; }
   }
