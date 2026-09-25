@@ -1,13 +1,9 @@
 /** Nifty LIST cards already expose essentials: detail loads are optional. */
 import * as cheerio from "cheerio";
 import type { RawListing } from "../../src/types";
-import { trackingKey } from "./lifecycle";
 import { parseYen } from "./parseJa";
 import { parseStationDistance } from "../merge-nifty";
-const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
-export function niftyMatchKeys(l: RawListing): string[] {
-  return [l.id ?? l.url ?? trackingKey(l), `property:${trackingKey(l)}`, `market:${norm(l.address)}|${l.rent}|${l.sizeM2}|${l.layout}`];
-}
+export { niftyMatchKeys, mergeNiftyIncremental } from "../../src/data-layer/ingestion/niftyPolicy";
 export function parseNiftyPage(html: string, city: string, year = new Date().getFullYear()): RawListing[] {
   const $ = cheerio.load(html);
   const rows: RawListing[] = [];
@@ -49,24 +45,4 @@ export function parseNiftyPage(html: string, city: string, year = new Date().get
     });
   });
   return rows;
-}
-export function mergeNiftyIncremental(existing: readonly RawListing[], fresh: readonly RawListing[]): { listings: RawListing[]; added: number; updated: number; overlaps: number } {
-  const aliases = new Map(existing.flatMap((l) => niftyMatchKeys(l).map((k) => [k, l] as const)));
-  const seen = new Set<string>(), used = new Set<RawListing>(), listings: RawListing[] = [];
-  let added = 0, updated = 0;
-  for (const l of fresh) {
-    const keys = niftyMatchKeys(l);
-    if (keys.some((k) => seen.has(k))) continue;
-    const prior = keys.map((k) => aliases.get(k)).find(Boolean);
-    keys.forEach((k) => seen.add(k));
-    if (prior) {
-      used.add(prior); updated++;
-      listings.push({ ...prior, ...l, ...(l.parking?.available && prior.parking?.available && prior.parking.monthlyYen != null ? { parking: prior.parking } : {}), costs: { ...prior.costs, ...l.costs },
-        // List cards have no tenancy data. Do not invent an empty object on replay.
-        ...(prior.tenancy || l.tenancy ? { tenancy: { ...prior.tenancy, ...l.tenancy } } : {}),
-        building: { ...prior.building, ...l.building, features: [...new Set([...(prior.building?.features ?? []), ...(l.building?.features ?? [])])] } });
-    } else { listings.push(l); added++; }
-  }
-  listings.push(...existing.filter((l) => !used.has(l) && !niftyMatchKeys(l).some((k) => seen.has(k))));
-  return { listings, added, updated, overlaps: updated };
 }
