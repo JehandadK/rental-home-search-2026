@@ -3,7 +3,8 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { saveCapture, type PageCapture, CAPTURE_DIR } from "./lib/captureStore";
-import { readSource, writeSource, atomicWriteJson } from "./lib/dataStore";
+import { BACKUP_DIR, JsonSourceStore, readSource, atomicWriteJson, SOURCES_DIR } from "./lib/dataStore";
+import { JsonListingRepository } from "./lib/jsonListingRepository";
 import { parseAthomePage, athomeMatchKeys, mergeAthomeIncremental } from "./lib/athome";
 import { parseRoomspotPage, roomspotMatchKeys, mergeRoomspotIncremental } from "./lib/roomspot";
 import { trackingKey } from "./lib/lifecycle";
@@ -11,13 +12,24 @@ import { parseNiftyPage, niftyMatchKeys, mergeNiftyIncremental } from "./lib/nif
 import { acquireRefreshLock, latestResumableRun, readRefreshLedger, saveRefreshRun } from "./lib/refreshLedger";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, DEPENDENCIES, positiveInteger } from "./lib/refreshPlan";
 import { assertParsedFamilies, newerRows } from "./lib/captureValidation";
+import { sourceObservationBatch } from "./lib/sourceObservationBatch";
 import { parsePage as parseSuumoPage } from "./scrape";
 import { suumoMatchKeys, mergeSuumoIncremental } from "./lib/suumoIncremental";
+
+function sourceMatchKeys(source: string) {
+  if (source === "suumo") return suumoMatchKeys;
+  if (source === "athome") return athomeMatchKeys;
+  if (source === "nifty") return niftyMatchKeys;
+  if (source === "roomspot") return roomspotMatchKeys;
+  throw new Error(`Unsupported listing source: ${source}`);
+}
 
 interface Progress { imported: string[]; cities: Record<string, { pages: number; knownPages: number; added: number; updatedAt: string; done: boolean }> }
 const args = process.argv.slice(2);
 const input = args[args.indexOf("--file") + 1];
 if (!args.includes("--file") || !input) throw new Error("Usage: npm run capture:import -- --file <native-browser-export.json> [--max-pages N]");
+const listingRepository = new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR));
+
 const maxPages = positiveInteger(
   args.includes("--max-pages") ? args[args.indexOf("--max-pages") + 1] : undefined,
   DEFAULT_INCREMENTAL_PAGE_CEILING,
@@ -44,7 +56,7 @@ try {
     const prior = progress.cities[key];
     if (c.page !== (prior?.pages ?? 0) + 1) throw new Error(`${key}: expected page ${(prior?.pages ?? 0) + 1}, got ${c.page}; replay missing pages before completing a city`);
     const previous = await readSource(c.source);
-    const keys = c.source === "suumo" ? suumoMatchKeys : c.source === "athome" ? athomeMatchKeys : c.source === "nifty" ? niftyMatchKeys : roomspotMatchKeys;
+    const keys = sourceMatchKeys(c.source);
     const merge = c.source === "suumo" ? mergeSuumoIncremental : c.source === "athome" ? mergeAthomeIncremental : c.source === "nifty" ? mergeNiftyIncremental : mergeRoomspotIncremental;
     const parsed = c.source === "suumo" ? parseSuumoPage(c.html, new Date(c.capturedAt).getFullYear()).map(l => ({ ...l, city: c.city })) : c.source === "nifty" ? parseNiftyPage(c.html, c.city, new Date(c.capturedAt).getFullYear()) : c.source === "athome" ? parseAthomePage(c.html, c.city) : parseRoomspotPage(c.html, c.city);
     assertParsedFamilies(c, parsed);
@@ -54,9 +66,24 @@ try {
     const merged = merge(previous?.listings ?? [], listings);
     const observedAtByKey = { ...(previous?.provenance?.observedAtByKey as Record<string, string> ?? {}) };
     for (const l of listings) observedAtByKey[trackingKey(l)] = c.capturedAt;
-    await writeSource({ source: c.source, scrapedAt: [previous?.scrapedAt ?? "", c.capturedAt].sort().at(-1)!, completeSnapshot: false,
-      provenance: { ...previous?.provenance, mode: "bounded native-browser discovery", capturedBy: "scripts/import-capture.ts (native browser export)", observedTrackingKeys: listings.map(trackingKey), observedAtByKey }, listings: merged.listings },
-      { expectedRevision: previous?.revision ?? null });
+    const provenance = {
+      ...previous?.provenance,
+      mode: "bounded native-browser discovery",
+      capturedBy: "scripts/import-capture.ts (native browser export)",
+      observedTrackingKeys: listings.map(trackingKey),
+      observedAtByKey,
+    };
+    const batch = sourceObservationBatch({
+      source: c.source,
+      previous: previous?.listings ?? [],
+      current: merged.listings,
+      expectedRevision: previous?.revision ?? null,
+      observedAt: [previous?.scrapedAt ?? "", c.capturedAt].sort().at(-1)!,
+      observedAtByKey,
+      provenance,
+      matchKeys: keys,
+    });
+    await listingRepository.ingest(batch);
     const knownPages = c.sortedNewest && listings.length > 0 && novel === 0 ? (prior?.knownPages ?? 0) + 1 : 0;
     progress.cities[key] = { pages: (prior?.pages ?? 0) + 1, knownPages, added: (prior?.added ?? 0) + merged.added, updatedAt: c.capturedAt, done: knownPages >= 2 || c.page >= maxPages };
     progress.imported.push(receipt);
@@ -74,7 +101,17 @@ try {
     // from an earlier collector is misleading and must not leak into this run.
     delete (provenance as Record<string, unknown>).newListingIds;
     if (JSON.stringify(file.provenance) !== JSON.stringify(provenance)) {
-      await writeSource({ ...file, provenance }, { expectedRevision: file.revision ?? null });
+      const matchKeys = sourceMatchKeys(source);
+      await listingRepository.ingest(sourceObservationBatch({
+        source,
+        previous: file.listings,
+        current: file.listings,
+        expectedRevision: file.revision ?? null,
+        observedAt: file.scrapedAt,
+        observedAtByKey: (file.provenance?.observedAtByKey ?? {}) as Record<string, string>,
+        provenance,
+        matchKeys,
+      }));
     }
   }
   if (run) {
