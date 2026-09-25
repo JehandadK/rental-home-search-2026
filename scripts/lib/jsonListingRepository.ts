@@ -122,7 +122,7 @@ export class JsonListingRepository implements ListingRepository {
     }
 
     const listings = [...current.values()];
-    const provenance = { ...previous?.provenance, ...batch.provenance };
+    const provenance = batch.provenance ? { ...batch.provenance } : previous?.provenance;
     const result = await this.sourceStore.writeSource(
       {
         source: batch.source,

@@ -12,9 +12,11 @@
  * Blocked/uncertain navigation is not retried automatically; a failed crawl
  * never overwrites the last good source snapshot.
  */
-import { readSource, ShrinkGuardError, writeSource } from "./lib/dataStore";
+import { BACKUP_DIR, JsonSourceStore, readSource, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
+import { JsonListingRepository } from "./lib/jsonListingRepository";
 import {
   athomeMatchKeys,
+  athomeObservationBatch,
   isAthomeOverlap,
   mergeAthomeIncremental,
   parseAthomePage,
@@ -24,6 +26,8 @@ import { cachedPage } from "./lib/captureStore";
 import { AthomeBrowser } from "./lib/athomeBrowser";
 import type { RawListing } from "../src/types";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
+
+const listingRepository = new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR));
 
 const CITIES = [
   { slug: "soka-city", city: "Soka" },
@@ -111,27 +115,29 @@ async function main(): Promise<void> {
     ? { ...mergedHistory, listings: mergedHistory.listings.filter((listing) => discovered.some((item) => isAthomeOverlap(item, listing))) }
     : mergedHistory;
 
-  const result = await writeSource(
-    {
-      source: "athome",
-      scrapedAt: new Date().toISOString(),
-      completeSnapshot: FULL,
-      provenance: {
-        mode: FULL ? "full-market audit" : effectiveDeep ? "deep newest-first" : "incremental newest-first",
-        pagesFetched,
-        cities: CITIES.map((city) => city.slug),
-        newListings: merged.added,
-        newListingIds,
-        observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
-        observedAtByKey,
-        capturedBy: "scripts/scrape-athome.ts",
-      },
-      listings: merged.listings,
-    },
-    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
-  );
-  console.log(`\nWrote ${merged.listings.length} AtHome listings (was ${result.previousCount}) to ${result.path}`);
-  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlaps; fetched ${pagesFetched} pages.`);
+  const observedAt = new Date().toISOString();
+  const provenance = {
+    mode: FULL ? "full-market audit" : effectiveDeep ? "deep newest-first" : "incremental newest-first",
+    pagesFetched,
+    cities: CITIES.map((city) => city.slug),
+    newListings: merged.added,
+    newListingIds,
+    observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
+    observedAtByKey,
+    capturedBy: "scripts/scrape-athome.ts",
+  };
+  const batch = athomeObservationBatch({
+    previous: previous?.listings ?? [],
+    current: merged.listings,
+    expectedRevision: previous?.revision ?? null,
+    observedAt,
+    observedAtByKey,
+    completeness: FULL ? "complete" : "incremental",
+    provenance,
+  });
+  const result = await listingRepository.ingest(batch, { allowShrink: process.argv.includes("--force") });
+  console.log(`\nWrote ${merged.listings.length} AtHome listings (was ${previous?.count ?? 0})`);
+  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlaps; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
   console.log("Next: npm run data:build && npm run enrich && npm run find:new");
 }
 

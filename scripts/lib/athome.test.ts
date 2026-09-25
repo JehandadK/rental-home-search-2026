@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { athomeKey, isAthomeOverlap, isFamilyLayout, mergeAthomeIncremental, parseAthomePage } from "./athome";
+import { athomeKey, athomeObservationBatch, isAthomeOverlap, isFamilyLayout, mergeAthomeIncremental, parseAthomePage } from "./athome";
 import type { RawListing } from "../../src/types";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({
@@ -93,6 +93,25 @@ describe("AtHome identity and incremental merge", () => {
 
   it("recognizes a rent change as an overlap", () => {
     expect(isAthomeOverlap(make(), make({ id: "athome-999", url: "https://www.athome.co.jp/chintai/999/", rent: 70_000 }))).toBe(true);
+  });
+
+  it("retires an old source ID only when the merge proves a superseding alias", () => {
+    const old = make();
+    const replacement = make({ id: "athome-999", url: "https://www.athome.co.jp/chintai/999/", rent: 70_000 });
+    const merged = mergeAthomeIncremental([old], [replacement]);
+    const batch = athomeObservationBatch({
+      previous: [old],
+      current: merged.listings,
+      expectedRevision: "revision-1",
+      observedAt: "2026-09-25T00:00:00.000Z",
+      observedAtByKey: {},
+      provenance: {},
+    });
+    expect(batch.observations.map((observation) => observation.sourceListingId)).toEqual(["athome-999"]);
+    expect(batch.retirements).toEqual([expect.objectContaining({
+      id: "athome-1119917524",
+      reason: expect.stringContaining("matching unit aliases"),
+    })]);
   });
 
   it("updates observed records and preserves unseen history", () => {
