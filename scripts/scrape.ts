@@ -19,12 +19,14 @@ import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { ShrinkGuardError, readSource, writeSource } from "./lib/dataStore";
+import { BACKUP_DIR, JsonSourceStore, readSource, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
+import { JsonListingRepository } from "./lib/jsonListingRepository";
 import { isSuumoOverlap, mergeSuumoIncremental, suumoKey, suumoMatchKeys } from "./lib/suumoIncremental";
 import type { RawListing } from "../src/types";
 import { trackingKey } from "./lib/lifecycle";
 import { cachedPage } from "./lib/captureStore";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
+import { sourceObservationBatch } from "./lib/sourceObservationBatch";
 
 /** 2K / 2DK / 2LDK / 3K / 3DK / 3LDK / 4K / 4DK / 4LDK / 5K+ */
 const LAYOUT_CODES = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];
@@ -40,6 +42,7 @@ const CITIES: { sc: string; label: string }[] = [
   { sc: "sc_kawaguchi", label: "Kawaguchi" },
 ];
 
+const listingRepository = new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR));
 const FULL = process.argv.includes("--full");
 /** Scan the whole configured newest-first window, ignoring early overlap stop. */
 const DEEP = process.argv.includes("--deep");
@@ -283,32 +286,35 @@ async function main(): Promise<void> {
       : mergedWithHistory.listings,
   };
 
-  const { path, previousCount } = await writeSource(
-    {
-      source: "suumo",
-      scrapedAt: new Date().toISOString(),
-      completeSnapshot: FULL,
-      provenance: {
-        mode: FULL ? "full-market audit" : DEEP ? "deep newest-first" : "incremental newest-first",
-        pagesFetched,
-        cities: CITIES.map((c) => `${c.label} (${c.sc}, emergency ceiling ${MAX_PAGES}p)`),
-        layoutCodes: LAYOUT_CODES.join(","),
-        newListings: merged.added,
-        newListingIds,
-        // Lets data:build distinguish ads actually observed in this partial
-        // crawl from stale records preserved in the source snapshot.
-        observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
-        observedAtByKey,
-        overlappingListings: merged.overlaps,
-        capturedBy: "scripts/scrape.ts",
-      },
-      listings: merged.listings,
-    },
-    { force: process.argv.includes("--force"), expectedRevision: previous?.revision ?? null },
-  );
+  const observedAt = new Date().toISOString();
+  const provenance = {
+    mode: FULL ? "full-market audit" : DEEP ? "deep newest-first" : "incremental newest-first",
+    pagesFetched,
+    cities: CITIES.map((c) => `${c.label} (${c.sc}, emergency ceiling ${MAX_PAGES}p)`),
+    layoutCodes: LAYOUT_CODES.join(","),
+    newListings: merged.added,
+    newListingIds,
+    // Lets data:build distinguish ads actually observed in this partial crawl
+    // from stale records preserved in the source snapshot.
+    observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
+    observedAtByKey,
+    overlappingListings: merged.overlaps,
+    capturedBy: "scripts/scrape.ts",
+  };
+  const batch = sourceObservationBatch({
+    source: "suumo",
+    previous: previous?.listings ?? [],
+    current: merged.listings,
+    expectedRevision: previous?.revision ?? null,
+    observedAt,
+    observedAtByKey,
+    provenance,
+    matchKeys: suumoMatchKeys,
+  });
+  const result = await listingRepository.ingest(batch, { allowShrink: process.argv.includes("--force") });
 
-  console.log(`\nWrote ${merged.listings.length} listings (was ${previousCount}) to ${path}`);
-  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlapping; fetched ${pagesFetched} pages.`);
+  console.log(`\nWrote ${merged.listings.length} listings (was ${previous?.count ?? 0})`);
+  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlapping; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
   if (!FULL) console.log("Unseen existing listings were preserved; use --full when you need authoritative SOLD detection.");
   console.log("Next: npm run backfill:parking && npm run data:build && npm run enrich");
 }
