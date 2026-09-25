@@ -51,6 +51,8 @@ export interface CityRecord {
   prefecture?: string;
   status: "active" | "retired";
   updatedAt: string;
+  retiredAt?: string;
+  retirementReason?: string;
 }
 
 /** GeoJSON-like coordinates are [longitude, latitude] pairs. */
@@ -69,6 +71,8 @@ export interface CityBoundaryRecord {
   source?: string;
   status: "active" | "retired";
   updatedAt: string;
+  retiredAt?: string;
+  retirementReason?: string;
 }
 
 /**
@@ -87,6 +91,8 @@ export interface ReferencePlaceRecord {
   attributes?: Readonly<Record<string, string | number | boolean | null>>;
   status: "active" | "retired";
   updatedAt: string;
+  retiredAt?: string;
+  retirementReason?: string;
 }
 
 /**
@@ -98,6 +104,21 @@ export interface ReferenceDataSnapshot {
   cities: VersionedDataset<CityRecord>;
   boundaries: VersionedDataset<CityBoundaryRecord>;
   places: VersionedDataset<ReferencePlaceRecord>;
+}
+
+export interface ReferenceCatalogManifest {
+  schemaVersion: 1;
+  revision: string;
+  migratedAt: string;
+  updatedAt?: string;
+  datasets: Record<string, { file: string; schemaVersion: number; revision: string; count: number }>;
+  counts: {
+    cities: number;
+    boundaries: number;
+    places: number;
+    placesByCategory: Record<string, number>;
+  };
+  sourceFiles: Record<string, string>;
 }
 
 export interface ReferenceDataRepository {

@@ -4,8 +4,8 @@ import { mkdir, mkdtemp, readFile, rename, rm } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { DATA_DIR, atomicWriteJson } from "./lib/dataStore";
 import { withFileLock } from "./lib/jsonFile";
-import { migrateLegacyReferenceData, type LegacyReferenceData } from "../src/data-layer/migrations/legacyReference";
-import type { ReferenceDataSnapshot, VersionedDataset } from "../src/data-layer/contracts";
+import { migrateLegacyReferenceData, type LegacyReferenceData } from "./lib/dataMigrations/legacyReference";
+import type { ReferenceCatalogManifest, ReferenceDataSnapshot, VersionedDataset } from "../src/data-layer/contracts";
 
 const SOURCE_FILES = [
   "pois.json",
@@ -18,20 +18,6 @@ const SOURCE_FILES = [
   "neighbor_boundaries.json",
 ] as const;
 const DEFAULT_OUTPUT = resolve(DATA_DIR, "../../data/reference/v1");
-
-interface ReferenceCatalogManifest {
-  schemaVersion: 1;
-  revision: string;
-  migratedAt: string;
-  datasets: Record<string, { file: string; schemaVersion: number; revision: string; count: number }>;
-  counts: {
-    cities: number;
-    boundaries: number;
-    places: number;
-    placesByCategory: Record<string, number>;
-  };
-  sourceFiles: Record<string, string>;
-}
 
 async function main(): Promise<void> {
   const output = outputPath(process.argv.slice(2));

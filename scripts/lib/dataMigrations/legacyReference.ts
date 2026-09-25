@@ -6,14 +6,14 @@ import type {
   ReferenceDataSnapshot,
   ReferencePlaceRecord,
   VersionedDataset,
-} from "../contracts";
+} from "../../../src/data-layer/contracts";
 import type {
   ChildcareFacility,
   Mosque,
   NamedPlace,
   PointOfInterest,
   Station,
-} from "../../types";
+} from "../../../src/types";
 
 export interface LegacyReferenceData {
   pois: readonly PointOfInterest[];
