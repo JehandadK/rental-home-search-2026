@@ -17,6 +17,7 @@ export interface VersionedDataset<T> {
   /** Changes whenever this dataset is successfully updated. */
   revision: string;
   updatedAt: string;
+  provenance?: Readonly<Record<string, unknown>>;
   records: readonly T[];
 }
 
