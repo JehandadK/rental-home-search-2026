@@ -25,6 +25,9 @@ import { existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RawListing } from "../../src/types";
+import type { ArchivedSourceListing } from "../../src/data-layer/contracts";
+import { RevisionConflictError } from "../../src/data-layer/errors";
+export { RevisionConflictError } from "../../src/data-layer/errors";
 import { reconcileLifecycle, trackingKey, type LifecycleStats } from "./lifecycle";
 import { deduplicateListings, isSameUnit } from "../../src/domain/listingDedup";
 import { restoreObservedLifecycle } from "./observations";
@@ -67,6 +70,8 @@ export interface SourceFile {
   completeSnapshot?: boolean;
   /** Free-form capture details: search URLs, page counts, capture method. */
   provenance?: Record<string, unknown>;
+  /** Source rows retired from the current snapshot; retained for audit/reappearance. */
+  archivedListings?: ArchivedSourceListing[];
   listings: RawListing[];
 }
 
@@ -119,16 +124,17 @@ function hashRevision(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-export class RevisionConflictError extends Error {
-  constructor(readonly expected: string | null, readonly actual: string | null, path: string) {
-    super(`Revision conflict for ${path}: expected ${expected ?? "<missing>"}, found ${actual ?? "<missing>"}. Re-read and reconcile before retrying.`);
-    this.name = "RevisionConflictError";
-  }
-}
-
 /** JSON-backed source repository, parameterized for isolated contract tests. */
 export class JsonSourceStore {
-  constructor(readonly sourcesDir: string, readonly backupDir: string) {}
+  readonly transactionLockPath: string;
+
+  constructor(
+    readonly sourcesDir: string,
+    readonly backupDir: string,
+    transactionLockPath = join(dirname(sourcesDir), ".sources.lock"),
+  ) {
+    this.transactionLockPath = transactionLockPath;
+  }
 
   sourcePath(source: string): string {
     return join(this.sourcesDir, `${source}.json`);
@@ -158,8 +164,8 @@ export class JsonSourceStore {
     options: { force?: boolean; expectedRevision: string | null },
   ): Promise<{ path: string; previousCount: number; backup: string | null; revision: string }> {
     const path = this.sourcePath(file.source);
-    return withFileLock(path, async () => {
-      // Read and compare only after acquiring the lock. Two writers based on
+    return withFileLock(this.transactionLockPath, () => withFileLock(path, async () => {
+      // Read and compare only after acquiring the locks. Two writers based on
       // the same revision cannot both commit; the loser receives a conflict.
       const previous = await this.readSource(file.source);
       const actualRevision = previous?.revision ?? null;
@@ -178,20 +184,23 @@ export class JsonSourceStore {
         );
       }
 
+      // Preserve fields unknown to this adapter so newer data is not silently
+      // erased by an older script. Caller-provided values still take precedence.
+      const bodyRecord = { ...(previous ?? {}), ...file, count: nextCount } as Record<string, unknown>;
+      delete bodyRecord.revision;
+      const body = bodyRecord as unknown as Omit<SourceFile, "revision">;
+      const previousBody = previous ? { ...previous } as Record<string, unknown> : null;
+      if (previousBody) delete previousBody.revision;
+      if (previousBody && JSON.stringify(body) === JSON.stringify(previousBody)) {
+        return { path, previousCount, backup: null, revision: actualRevision! };
+      }
+
       const backup = await backupFileIn(path, this.backupDir);
-      const body = {
-        source: file.source,
-        scrapedAt: file.scrapedAt,
-        count: nextCount,
-        completeSnapshot: file.completeSnapshot,
-        provenance: file.provenance,
-        listings: file.listings,
-      };
       const revision = hashRevision(JSON.stringify(body));
       const payload: SourceFile = { ...body, revision };
       await writeJsonAtomicallyUnlocked(path, payload);
       return { path, previousCount, backup, revision };
-    });
+    }));
   }
 }
 
@@ -226,6 +235,12 @@ export async function writeSource(
  * highlight them as new.
  */
 export async function buildRaw(): Promise<BuildManifest> {
+  // Writers use the same lock, so the build reads a coherent set of source
+  // snapshots and cannot race another source update midway through the merge.
+  return withFileLock(join(DATA_DIR, ".sources.lock"), buildRawUnlocked);
+}
+
+async function buildRawUnlocked(): Promise<BuildManifest> {
   const sources = await listSources();
   const captured: RawListing[] = [];
   const contributed = new Map<string, number>();

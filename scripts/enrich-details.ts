@@ -2,6 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { atomicWriteJson, DATA_DIR, listSources, writeSource } from "./lib/dataStore";
+import { withFileLock } from "./lib/jsonFile";
 import { captureKey } from "./lib/captureStore";
 import { parseDetail, applyDetail } from "./lib/detailEnrichment";
 import { deduplicateListings } from "../src/domain/listingDedup";
@@ -16,6 +17,10 @@ async function optional<T>(path: string, fallback: T): Promise<T> {
   catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return fallback; throw e; }
 }
 export async function enrichDetails(): Promise<void> {
+  await withFileLock(join(DATA_DIR, "detail-enrichment"), enrichDetailsLocked);
+}
+
+async function enrichDetailsLocked(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.includes("--all-missing")) throw new Error("--all-missing is retired; use bounded --limit with explicit --max-rent/--min-size gates");
   const arg = (name: string) => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;

@@ -36,9 +36,9 @@ Captured before migration work:
 
 These numbers are migration comparison points, not permanent expectations. Refresh activity can change them; compare parity against the captured input files/manifest for a migration rather than requiring future live counts to remain fixed.
 
-### Known concurrency gap to close in M1
+### Filesystem-lock operating limits
 
-`atomicWriteJson()` currently uses a deterministic `${path}.tmp` name and does not itself lock a read/compare/write transaction. `writeSource()` has a shrink guard but no revision precondition. The refresh runner has an exclusive run lock, but independent scripts can still target the same file. Therefore, the existing implementation is not yet safe to claim optimistic concurrency. M1 must add per-dataset transaction locks/revision checks before advertising that guarantee; until then, avoid concurrent writers to the same dataset.
+M1 adds local-filesystem lock files, unique same-directory temp files, file sync, and atomic rename. Do not treat lock files as a distributed lock service; a shared/network filesystem or multi-host deployment should use a database/service with native transactions instead. If a process crashes and leaves a lock, inspect its JSON metadata and verify the PID is no longer running before removing that exact lock file. For example, inspect `src/data/.sources.lock` or the affected `<file>.lock`, check the recorded PID with `ps -p <PID>`, and only then remove the specific stale lock with `rm <lock-path>`. Never remove a lock based only on its age. A corrupt/empty lock also requires checking for active writers before manual removal.
 
 ## Milestones
 
@@ -139,8 +139,11 @@ These numbers are migration comparison points, not permanent expectations. Refre
 - `PointOfInterest.id` is now a string instead of a two-value union, to avoid encoding POI cardinality in the type.
 - **M1 in progress:** `scripts/lib/jsonFile.ts` now uses exclusive per-path lock files, unique same-directory temp files, file sync, atomic rename, and manual-only stale-lock recovery. `atomicWriteJson()` uses this primitive.
 - **M1 in progress:** `JsonSourceStore` serializes source read/compare/write transactions, hashes legacy files to provide an initial revision, persists revisions on the next successful write, and rejects stale expected revisions. Existing source-writing scripts now pass the revision they read. Shrink checks and backups remain in place.
-- Added tests for lock serialization, atomic failure safety, manual stale-lock behavior, legacy revision upgrades, concurrent stale writers, and shrink-guard preservation.
-- **Still pending in M1:** a reusable contract suite for the application-level `ListingRepository` and moving any remaining read/modify/write flows behind transaction-aware operations. The UI and scripts retain their previous data-loading and storage paths until their respective milestones.
+- **M1 in progress:** `JsonListingRepository` implements source observation ingestion. Incremental batches preserve unseen rows; complete batches move absent rows into an archive; repeated observations are idempotent. A reusable contract suite in `scripts/lib/listingRepository.contract.ts` runs against the JSON adapter and is designed to be reused by future adapters.
+- Added `updateJsonFile()` for serialized read/modify/write operations; refresh-ledger updates use it. Source builds share a transaction lock with source writes. Standalone geocode/detail enrichment runs are mutually exclusive to prevent stale-cache/queue overwrites.
+- Added tests for lock serialization, atomic failure safety, manual stale-lock behavior, legacy revision upgrades, concurrent stale writers, idempotent ingestion, incremental preservation, complete-snapshot archives, and shrink-guard preservation.
+- **M1 adapter work is complete:** the reusable `ListingRepository` contract suite runs against the JSON adapter; source updates/builds, refresh-ledger updates, geocode-cache writes, and detail-queue writes are serialized at their read/modify/write boundary. Manual lock recovery instructions are documented above.
+- **Validation:** `npm test` (267 tests), `npm run typecheck`, `npm run build`, and `npm run data:status` pass. No live refresh or canonical `data:build` was run; the current source and listing counts remain unchanged. Scrapers still use compatibility `writeSource` wrappers until M3, and the frontend still uses its current bundled-data path until M4/M5.
 
 ## Per-milestone validation
 

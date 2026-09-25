@@ -136,21 +136,44 @@ export interface ListingObservationBatch {
   provenance?: Readonly<Record<string, unknown>>;
 }
 
+export interface ArchivedSourceListing {
+  sourceListingId: string;
+  listing: RawListing;
+  retiredAt: string;
+  reason: string;
+}
+
+/** Current source-owned rows plus retained rows retired by complete snapshots. */
+export interface ListingSourceSnapshot {
+  source: string;
+  revision: string;
+  scrapedAt: string;
+  completeSnapshot: boolean;
+  listings: readonly RawListing[];
+  archivedListings: readonly ArchivedSourceListing[];
+  provenance?: Readonly<Record<string, unknown>>;
+}
+
 export interface ListingIngestionResult {
   accepted: number;
   unchanged: number;
-  rejected: number;
+  retired: number;
   revision: string;
 }
 
 /**
- * Listing writes enter through observation batches. Implementations must be
- * idempotent and preserve history; absence from an incremental batch is not a
- * deletion signal. Canonical rebuild/lifecycle decisions belong to use cases.
+ * Listing writes enter through source-scoped observation batches. Implementations
+ * must be idempotent and preserve history; absence from an incremental batch is
+ * not a deletion signal. Canonical merge/lifecycle decisions belong to use cases.
  */
 export interface ListingRepository {
-  listCurrent(): Promise<readonly RawListing[]>;
-  ingest(batch: ListingObservationBatch): Promise<ListingIngestionResult>;
+  readSource(source: string): Promise<ListingSourceSnapshot | null>;
+  listSources(): Promise<readonly ListingSourceSnapshot[]>;
+  /** allowShrink is an explicit operator confirmation after snapshot validation. */
+  ingest(
+    batch: ListingObservationBatch,
+    options?: { allowShrink?: boolean },
+  ): Promise<ListingIngestionResult>;
 }
 
 /** User-owned state is isolated from reference and source-owned listing data. */

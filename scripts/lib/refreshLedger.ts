@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { open, readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWriteJson, DATA_DIR } from "./dataStore";
+import { DATA_DIR } from "./dataStore";
+import { updateJsonFile } from "./jsonFile";
 
 export const REFRESH_LEDGER_PATH = join(DATA_DIR, "refresh-runs.json");
 export const REFRESH_LOCK_PATH = join(DATA_DIR, ".refresh.lock");
@@ -72,12 +73,17 @@ export async function readRefreshLedger(): Promise<RefreshLedger> {
 }
 
 export async function saveRefreshRun(run: RefreshRunRecord): Promise<void> {
-  const ledger = await readRefreshLedger();
-  const index = ledger.runs.findIndex((item) => item.id === run.id);
-  if (index >= 0) ledger.runs[index] = run;
-  else ledger.runs.push(run);
-  ledger.runs = ledger.runs.slice(-MAX_RUNS);
-  await atomicWriteJson(REFRESH_LEDGER_PATH, ledger);
+  await updateJsonFile<RefreshLedger>(
+    REFRESH_LEDGER_PATH,
+    () => ({ schemaVersion: 1, runs: [] }),
+    (ledger) => {
+      const index = ledger.runs.findIndex((item) => item.id === run.id);
+      if (index >= 0) ledger.runs[index] = run;
+      else ledger.runs.push(run);
+      ledger.runs = ledger.runs.slice(-MAX_RUNS);
+      return ledger;
+    },
+  );
 }
 
 export function latestResumableRun(ledger: RefreshLedger): RefreshRunRecord | undefined {

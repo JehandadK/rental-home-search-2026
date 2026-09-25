@@ -80,13 +80,33 @@ export async function writeJsonAtomically(path: string, value: unknown): Promise
   await withFileLock(path, () => writeJsonAtomicallyUnlocked(path, value));
 }
 
+/** Perform a serialized read/modify/write transaction on one JSON file. */
+export async function updateJsonFile<T>(
+  path: string,
+  initial: () => T,
+  update: (current: T) => T | Promise<T>,
+): Promise<T> {
+  return withFileLock(path, async () => {
+    let current: T;
+    try {
+      current = JSON.parse(await readFile(path, "utf8")) as T;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      current = initial();
+    }
+    const next = await update(current);
+    await writeJsonAtomicallyUnlocked(path, next);
+    return next;
+  });
+}
+
 /** Caller must hold `withFileLock(path, ...)` for read/compare/write updates. */
 export async function writeJsonAtomicallyUnlocked(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   const tmp = `${path}.${process.pid}.${randomUUID()}.tmp`;
   let handle;
   try {
-    handle = await open(tmp, "wx", 0o600);
+    handle = await open(tmp, "wx", 0o666);
     await handle.writeFile(`${JSON.stringify(value, null, 2)}\n`, "utf8");
     await handle.sync();
     await handle.close();

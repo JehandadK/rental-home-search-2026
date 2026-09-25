@@ -2,7 +2,7 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { FileLockTimeoutError, withFileLock, writeJsonAtomically } from "./jsonFile";
+import { FileLockTimeoutError, updateJsonFile, withFileLock, writeJsonAtomically } from "./jsonFile";
 
 const roots: string[] = [];
 
@@ -58,6 +58,18 @@ describe("JSON filesystem primitives", () => {
     await expect(writeJsonAtomically(target, circular)).rejects.toThrow();
     await expect(readFile(target, "utf8")).resolves.toBe('{"value":"committed"}\n');
     await expect(readdir(dir)).resolves.toEqual(["records.json"]);
+  });
+
+  it("serializes read/modify/write transactions without losing concurrent updates", async () => {
+    const dir = await tempDirectory();
+    const target = join(dir, "counter.json");
+    await Promise.all(Array.from({ length: 12 }, () =>
+      updateJsonFile(target, () => ({ count: 0 }), async (current) => {
+        await new Promise((resolve) => setTimeout(resolve, 2));
+        return { count: current.count + 1 };
+      }),
+    ));
+    await expect(readFile(target, "utf8")).resolves.toContain('"count": 12');
   });
 
   it("does not automatically break a lock whose owner may still be active", async () => {
