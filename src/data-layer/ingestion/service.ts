@@ -1,27 +1,41 @@
-import type { ListingRepository } from "../contracts";
+import type { ListingRepository, ListingSourceSnapshot } from "../contracts";
 import { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 export { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 import { MANAGED_INGESTION_PROVENANCE_KEYS } from "../sourceProvenance";
-import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt } from "./contracts";
+import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt, SuumoDiscoveryClient, SuumoDiscoveryOptions, SuumoDiscoverySession } from "./contracts";
 import { prepareNiftyBatch } from "./niftyPolicy";
 import { prepareSuumoDetailBatch, selectDetailUrls, validateDetailPatch } from "./suumoDetailPolicy";
+import { prepareSuumoBatch } from "./suumoPolicy";
+import { StagedSuumoDiscovery, validateSuumoDiscoveryOptions } from "./suumoDiscovery";
 import { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 export { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 
 /** Versioned application boundary. Scrapers never choose the merge policy or read source revisions. */
-export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner {
+export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner, SuumoDiscoveryClient {
   constructor(private readonly repository: ListingRepository) {}
 
   async planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]> {
     return selectDetailUrls(await this.repository.listSources(), options);
   }
 
+  async beginSuumoDiscovery(input: SuumoDiscoveryOptions): Promise<SuumoDiscoverySession> {
+    validateSuumoDiscoveryOptions(input);
+    const options = JSON.parse(canonicalJson(input)) as SuumoDiscoveryOptions;
+    const previous = await this.repository.readSource("suumo");
+    if (!previous || previous.source !== "suumo") invalid("No SUUMO snapshot exists. Initialize preserved history with `npm run data:migrate` first.");
+    return new StagedSuumoDiscovery(options, previous, validateScrapeBatch, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
+  }
+
   async ingestScrape(request: ScrapeSubmission, options: { allowShrink?: boolean } = {}): Promise<ScrapeIngestionReceipt> {
     validateScrapeBatch(request);
     // Own an immutable-by-convention JSON copy across asynchronous reads/writes.
     const batch = JSON.parse(canonicalJson(request)) as ScrapeSubmission;
-    const fingerprint = await scrapeFingerprint(batch);
     const previous = await this.repository.readSource(batch.source);
+    return this.commitScrape(batch, previous, options);
+  }
+
+  private async commitScrape(batch: ScrapeSubmission, previous: ListingSourceSnapshot | null, options: { allowShrink?: boolean }): Promise<ScrapeIngestionReceipt> {
+    const fingerprint = await scrapeFingerprint(batch);
     const journal = readJournal(previous?.provenance?.ingestionJournal);
     const priorBatch = journal.batches.find((entry) => entry.runId === batch.runId && entry.batchId === batch.batchId);
     const identity = { source: batch.source, runId: batch.runId, batchId: batch.batchId };
@@ -33,7 +47,7 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
     }
 
     const prepared = batch.observationKind === "detail-patch"
-      ? prepareSuumoDetailBatch(batch, previous) : prepareNiftyBatch(batch, previous);
+      ? prepareSuumoDetailBatch(batch, previous) : batch.source === "suumo" ? prepareSuumoBatch(batch, previous) : prepareNiftyBatch(batch, previous);
     const { observations, provenance: _provenance, ...metadata } = batch;
     const nextJournal: IngestionJournal = { schemaVersion: 1, batches: [...journal.batches, {
       runId: batch.runId, batchId: batch.batchId, fingerprint, metadata,
@@ -43,9 +57,9 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
     }] };
     // Journal and rows share one revision-checked atomic commit. A failure cannot
     // mark a batch as applied. Conflicts are surfaced, never retried with new state.
-    const result = await this.repository.ingest({ ...prepared.batch,
-      provenance: { ...prepared.batch.provenance, ingestionJournal: nextJournal },
-    }, options);
+    const result = "reconciliation" in prepared
+      ? await this.repository.reconcileSource({ ...prepared.reconciliation, provenance: { ...prepared.reconciliation.provenance, ingestionJournal: nextJournal } }, options)
+      : await this.repository.ingest({ ...prepared.batch, provenance: { ...prepared.batch.provenance, ingestionJournal: nextJournal } }, options);
     return { ...identity, replayed: false, revision: result.revision, retired: result.retired,
       added: prepared.added, updated: prepared.updated, ignored: prepared.ignored, novel: prepared.novel,
       previousCount: prepared.previousCount, currentCount: prepared.currentCount };
@@ -70,12 +84,13 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
   if (!object(batch) || batch.schemaVersion !== 1) invalid("Unsupported scrape schemaVersion");
   const detailPatch = batch.observationKind === "detail-patch";
   if (batch.observationKind !== undefined && batch.observationKind !== "listing" && !detailPatch) invalid("Unsupported observation kind");
-  if (batch.source !== (detailPatch ? "suumo" : "nifty")) invalid("Unsupported scrape source");
-  if ((batch.mode !== "discovery" && batch.mode !== "detail-enrichment") || (detailPatch && batch.mode !== "detail-enrichment")) {
+  const suumoDiscovery = !detailPatch && batch.source === "suumo";
+  if (detailPatch ? batch.source !== "suumo" : !["suumo", "nifty"].includes(batch.source)) invalid("Unsupported scrape source");
+  if ((batch.mode !== "discovery" && batch.mode !== "detail-enrichment") || (detailPatch && batch.mode !== "detail-enrichment") || (suumoDiscovery && batch.mode !== "discovery")) {
     invalid("Unsupported scrape mode; full snapshots require a reviewed exhaustion-evidence policy");
   }
-  const validUrl = (value: unknown) => sourceUrl(value, detailPatch ? "suumo.jp" : "myhome.nifty.com");
-  const expectedProducer = detailPatch ? "suumo-detail" : batch.mode === "discovery" ? "nifty-list" : "nifty-detail";
+  const validUrl = (value: unknown) => sourceUrl(value, batch.source === "suumo" ? "suumo.jp" : "myhome.nifty.com");
+  const expectedProducer = detailPatch ? "suumo-detail" : suumoDiscovery ? "suumo-list" : batch.mode === "discovery" ? "nifty-list" : "nifty-detail";
   if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1" || batch.scraper.parserVersion !== "1") {
     invalid("Unsupported or missing scraper name/version/parserVersion");
   }
@@ -86,13 +101,13 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
     invalid("Invalid scrape scope");
   }
   if (batch.provenance !== undefined && (!object(batch.provenance) || MANAGED_INGESTION_PROVENANCE_KEYS.some((key) => key in batch.provenance!))) invalid("Invalid/reserved scrape provenance");
-  if (!Array.isArray(batch.observations)) invalid("Observations must be an array");
+  if (!Array.isArray(batch.observations) || (suumoDiscovery && !batch.observations.length)) invalid("Observations must be a non-empty array for SUUMO discovery");
   const seen = new Map<string, string>();
   for (const observation of batch.observations) {
     if (!object(observation) || !nonempty(observation.sourceListingId)) invalid("Missing observation identity");
     if (observation.observedAt === null) {
-      if (detailPatch || batch.mode !== "detail-enrichment") invalid("Only legacy detail captures may have unknown observation time");
-    } else if (!timestamp(observation.observedAt)) invalid("Invalid observation timestamp");
+      if (detailPatch || suumoDiscovery || batch.mode !== "detail-enrichment") invalid("Only legacy detail captures may have unknown observation time");
+    } else if (!timestamp(observation.observedAt) || (suumoDiscovery && Date.parse(observation.observedAt) > Date.parse(batch.capturedAt))) invalid("Invalid observation timestamp");
     if (!object(observation.evidence) || !nonempty(observation.evidence.captureId) || !validUrl(observation.evidence.url)
       || !batch.scope.urls.includes(observation.evidence.url)) invalid("Missing or out-of-scope observation evidence");
     if (detailPatch) {
@@ -101,8 +116,9 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
     } else {
       if (!("listing" in observation) || !object(observation.listing) || "details" in observation) invalid("Missing observation listing");
       const listing = observation.listing;
-      if (listing.source !== batch.source || (listing.id != null && listing.id !== observation.sourceListingId)
-        || !validUrl(listing.url) || (listing.id == null && observation.sourceListingId !== listing.url)) invalid("Observation source/identity mismatch");
+      if (suumoDiscovery && !nonempty(listing.id)) invalid("SUUMO summary observation requires its display ID");
+      if (listing.source !== batch.source || !validUrl(listing.url)
+        || (suumoDiscovery ? observation.sourceListingId !== listing.url : (listing.id != null ? listing.id !== observation.sourceListingId : observation.sourceListingId !== listing.url))) invalid("Observation source/identity mismatch");
       if (!nonempty(listing.name) || !nonempty(listing.address) || typeof listing.rent !== "number" || !Number.isFinite(listing.rent) || listing.rent <= 0
         || (listing.sizeM2 !== null && (typeof listing.sizeM2 !== "number" || !Number.isFinite(listing.sizeM2) || listing.sizeM2 <= 0))
         || typeof listing.layout !== "string" || Number(listing.layout.normalize("NFKC").match(/^\d+/)?.[0] ?? 0) < 2) invalid("Invalid family listing fields");
@@ -111,8 +127,12 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
       }
     }
     const encoded = canonicalJson(observation);
-    if (seen.has(observation.sourceListingId) && seen.get(observation.sourceListingId) !== encoded) invalid("Conflicting observations for one source listing ID");
-    seen.set(observation.sourceListingId, encoded);
+    // A bounded crawl can see the same ad on multiple pages/capture times.
+    // Reject contradictions within one capture, but let the source policy choose
+    // between independently captured observations instead of deduplicating here.
+    const key = suumoDiscovery ? JSON.stringify([observation.sourceListingId, observation.observedAt, observation.evidence.url, observation.evidence.captureId]) : observation.sourceListingId;
+    if (seen.has(key) && seen.get(key) !== encoded) invalid("Conflicting observations for one source listing ID");
+    seen.set(key, encoded);
   }
 }
 

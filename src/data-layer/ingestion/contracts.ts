@@ -23,6 +23,7 @@ export interface ScrapeBatch {
 }
 
 export interface ScrapeObservation {
+  /** Source ad identity (SUUMO uses its URL), distinct from a legacy display listing.id. */
   sourceListingId: string;
   /** null is only for legacy detail captures: never evidence of current availability. */
   observedAt: string | null;
@@ -59,6 +60,31 @@ export interface DetailEnrichmentOptions {
 /** Read-side application query: collectors get URLs, never mutable source snapshots. */
 export interface DetailEnrichmentPlanner {
   planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]>;
+}
+
+/** Bounded SUUMO discovery is staged in application memory; only commit writes source data. */
+export interface SuumoDiscoveryOptions {
+  deep: boolean;
+  maxPages: number;
+  cities: readonly { code: string; label: string }[];
+  layoutCodes: readonly string[];
+}
+
+export interface SuumoDiscoveryPageResult {
+  parsedCount: number;
+  novel: number;
+  overlap: number;
+  duplicate: number;
+  stopReason: "overlap" | "page-limit" | null;
+}
+
+export interface SuumoDiscoverySession {
+  stagePage(batch: ScrapeBatch): SuumoDiscoveryPageResult;
+  commit(options?: { allowShrink?: boolean }): Promise<ScrapeIngestionReceipt>;
+}
+
+export interface SuumoDiscoveryClient {
+  beginSuumoDiscovery(options: SuumoDiscoveryOptions): Promise<SuumoDiscoverySession>;
 }
 
 export interface ScrapeIngestionReceipt {

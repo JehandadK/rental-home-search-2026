@@ -4,9 +4,11 @@ import type {
   ListingObservationBatch,
   ListingRepository,
   ListingSourceSnapshot,
+  SourceReconciliation,
 } from "../../src/data-layer/contracts";
 import type { RawListing } from "../../src/types";
 import { RevisionConflictError } from "../../src/data-layer/errors";
+import { indexSourceRows, sourceRowKey, sourceRowLocator } from "../../src/data-layer/sourceRowIdentity";
 import { invalidBootstrap, legacySource, validateJsonValue, validateLegacyListing, validateSourceId } from "../../src/data-layer/bootstrap/validation";
 import { JsonSourceStore, type SourceFile } from "./dataStore";
 
@@ -76,6 +78,42 @@ export class JsonListingRepository implements ListingRepository {
       listings: seed.listings.map((listing) => listing as RawListing),
     }, { expectedRevision: null });
     return { revision: result.revision };
+  }
+
+  async reconcileSource(batch: SourceReconciliation, options: { allowShrink?: boolean } = {}): Promise<ListingIngestionResult> {
+    validateSourceId(batch.source);
+    if (!batch.expectedRevision || !Number.isFinite(Date.parse(batch.observedAt))) throw new InvalidListingBatchError("Invalid reconciliation revision/time");
+    if (batch.listings.some((listing) => listing.source !== batch.source)) throw new InvalidListingBatchError("Reconciliation source mismatch");
+    const previous = await this.sourceStore.readSource(batch.source);
+    if (batch.expectedRevision !== (previous?.revision ?? null)) {
+      throw new RevisionConflictError(batch.expectedRevision, previous?.revision ?? null, this.sourceStore.sourcePath(batch.source));
+    }
+    const priorRows = indexSourceRows(previous!.listings), currentRows = indexSourceRows(batch.listings);
+    const retired = new Map<string, SourceReconciliation["retirements"][number]>();
+    for (const retirement of batch.retirements) {
+      const key = sourceRowKey(retirement);
+      if (!priorRows.has(key) || currentRows.has(key) || retired.has(key) || !retirement.reason.trim() || !Number.isFinite(Date.parse(retirement.effectiveAt))) {
+        throw new InvalidListingBatchError("Invalid/unknown reconciliation retirement or retained locator");
+      }
+      retired.set(key, retirement);
+    }
+    for (const key of priorRows.keys()) {
+      if (!currentRows.has(key) && !retired.has(key)) throw new InvalidListingBatchError("Reconciliation cannot omit a source row without an explicit retirement");
+    }
+    let accepted = 0, unchanged = 0;
+    for (const [key, row] of currentRows) {
+      const prior = priorRows.get(key);
+      if (prior && sameListing(prior, row)) unchanged++; else accepted++;
+    }
+    const archivedListings = [...(previous!.archivedListings ?? []), ...[...retired].map(([key, retirement]) => ({
+      sourceListingId: sourceRowLocator(priorRows.get(key)!).sourceListingId, listing: priorRows.get(key)!,
+      retiredAt: retirement.effectiveAt, reason: retirement.reason,
+    }))];
+    const result = await this.sourceStore.writeSource({ source: batch.source, scrapedAt: batch.observedAt,
+      completeSnapshot: false, listings: [...batch.listings], archivedListings,
+      provenance: batch.provenance ? { ...batch.provenance } : previous!.provenance,
+    }, { expectedRevision: batch.expectedRevision, force: options.allowShrink });
+    return { accepted, unchanged, retired: retired.size, revision: result.revision };
   }
 
   async ingest(

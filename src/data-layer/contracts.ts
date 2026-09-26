@@ -165,6 +165,22 @@ export interface ListingObservationBatch {
   provenance?: Readonly<Record<string, unknown>>;
 }
 
+/** Exact legacy row identity. Generated IDs alone may collide across source ads. */
+export interface SourceRowLocator {
+  sourceListingId: string;
+  targetUrl: string | null;
+}
+
+/** Internal application reconciliation: every removed locator needs an explicit archive reason. */
+export interface SourceReconciliation {
+  source: string;
+  expectedRevision: string;
+  observedAt: string;
+  listings: readonly RawListing[];
+  retirements: readonly (SourceRowLocator & { effectiveAt: string; reason: string })[];
+  provenance?: Readonly<Record<string, unknown>>;
+}
+
 export interface ArchivedSourceListing {
   sourceListingId: string;
   listing: RawListing;
@@ -213,6 +229,8 @@ export interface ListingRepository {
   listSources(): Promise<readonly ListingSourceSnapshot[]>;
   /** Create historical data verbatim; never replace, deduplicate, assign IDs, or assert fresh observations. */
   initializeHistoricalSource(seed: HistoricalSourceSeed, options: { expectedRevision: null }): Promise<{ revision: string }>;
+  /** Exact-row incremental reconciliation; rejects unexplained absence and never establishes market completeness. */
+  reconcileSource(batch: SourceReconciliation, options?: { allowShrink?: boolean }): Promise<ListingIngestionResult>;
   /** allowShrink is an explicit operator confirmation after snapshot validation. */
   ingest(
     batch: ListingObservationBatch,

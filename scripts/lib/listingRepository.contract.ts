@@ -72,6 +72,52 @@ export function defineListingRepositoryContract(
       } finally { await harness.cleanup(); }
     });
 
+    it("reconciles exact ID/URL pairs without collapsing generated-ID collisions", async () => {
+      const harness = await createHarness();
+      try {
+        const first = listing("shared"), second = { ...listing("shared", 90000), url: "https://example.test/second" };
+        const initial = await harness.repository.initializeHistoricalSource({ source: "fixture", importedAt: "2026-09-25T00:00:00.000Z", listings: [first, second], provenance: {} }, { expectedRevision: null });
+        const batch = { source: "fixture", expectedRevision: initial.revision, observedAt: "2026-09-25T01:00:00.000Z", listings: [{ ...first, rent: 81000 }, second], retirements: [] };
+        const result = await harness.repository.reconcileSource(batch);
+        expect(result).toMatchObject({ accepted: 1, unchanged: 1, retired: 0 });
+        expect((await harness.repository.readSource("fixture"))!.listings).toEqual(batch.listings);
+        expect(await harness.repository.reconcileSource({ ...batch, expectedRevision: result.revision })).toMatchObject({ revision: result.revision, accepted: 0 });
+      } finally { await harness.cleanup(); }
+    });
+
+    it("rejects unexplained omissions and archives only explicitly retired exact pairs", async () => {
+      const harness = await createHarness();
+      try {
+        const first = listing("shared"), second = { ...listing("shared", 90000), url: "https://example.test/second" };
+        const initial = await harness.repository.initializeHistoricalSource({ source: "fixture", importedAt: "2026-09-25T00:00:00.000Z", listings: [first, second], provenance: {} }, { expectedRevision: null });
+        const batch = { source: "fixture", expectedRevision: initial.revision, observedAt: "2026-09-25T01:00:00.000Z", listings: [first], retirements: [] };
+        const previous = await harness.repository.readSource("fixture");
+        await expect(harness.repository.reconcileSource(batch)).rejects.toThrow("explicit retirement");
+        const retirement = { sourceListingId: "shared", targetUrl: second.url, effectiveAt: batch.observedAt, reason: "Superseded source alias" };
+        await expect(harness.repository.reconcileSource({ ...batch, retirements: [{ ...retirement, targetUrl: first.url }] })).rejects.toThrow();
+        await expect(harness.repository.reconcileSource({ ...batch, listings: [{ ...first, source: "other" }], retirements: [retirement] })).rejects.toThrow();
+        await expect(harness.repository.readSource("fixture")).resolves.toEqual(previous);
+        await harness.repository.reconcileSource({ ...batch, retirements: [retirement] });
+        expect(await harness.repository.readSource("fixture")).toMatchObject({ listings: [first], completeSnapshot: false,
+          archivedListings: [{ sourceListingId: "shared", listing: second, reason: retirement.reason }] });
+      } finally { await harness.cleanup(); }
+    });
+
+    it("permits only one concurrent exact-row reconciliation", async () => {
+      const harness = await createHarness();
+      try {
+        const first = listing("one");
+        const initial = await harness.repository.initializeHistoricalSource({ source: "fixture", importedAt: "2026-09-25T00:00:00.000Z", listings: [first], provenance: {} }, { expectedRevision: null });
+        const batch = { source: "fixture", expectedRevision: initial.revision, observedAt: "2026-09-25T01:00:00.000Z", listings: [first], retirements: [] };
+        const results = await Promise.allSettled([
+          harness.repository.reconcileSource({ ...batch, listings: [{ ...first, rent: 81000 }] }),
+          harness.repository.reconcileSource({ ...batch, listings: [{ ...first, rent: 82000 }] }),
+        ]);
+        expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+        expect((results.find((result) => result.status === "rejected") as PromiseRejectedResult).reason).toBeInstanceOf(RevisionConflictError);
+      } finally { await harness.cleanup(); }
+    });
+
     it("ingests a source observation idempotently", async () => {
       const harness = await createHarness();
       try {

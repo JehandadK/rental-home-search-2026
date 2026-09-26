@@ -7,11 +7,11 @@
  *   - merges discoveries into the existing source snapshot,
  *   - never marks unseen records sold (a partial crawl cannot prove absence).
  *
- * Run `npm run scrape -- --full` for a full-market audit. Full mode walks all
- * configured pages and replaces the source snapshot; the subsequent
- * `data:build` reconciliation can then safely mark vanished listings sold.
+ * `--full` remains guarded until per-city exhaustion can be verified. Capped
+ * discovery never establishes absence. The application layer stages observations
+ * and commits once the bounded crawl succeeds; cached pages survive failures.
  *
- * This script owns ONLY src/data/sources/suumo.json. Afterwards run
+ * This collector submits only source observations. Afterwards run
  * `npm run backfill:parking && npm run data:build && npm run enrich`.
  */
 import { pathToFileURL } from "node:url";
@@ -19,37 +19,24 @@ import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { BACKUP_DIR, JsonSourceStore, readSource, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
+import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
 import { JsonListingRepository } from "./lib/jsonListingRepository";
-import { isSuumoOverlap, mergeSuumoIncremental, suumoKey, suumoMatchKeys } from "./lib/suumoIncremental";
+import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
+import type { ScrapeBatch, SuumoDiscoveryClient } from "../src/data-layer/ingestion/contracts";
 import type { RawListing } from "../src/types";
-import { trackingKey } from "./lib/lifecycle";
-import { cachedPage } from "./lib/captureStore";
+import { cachedPage, validateCapture, type PageCapture } from "./lib/captureStore";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
-import { sourceObservationBatch } from "./lib/sourceObservationBatch";
 
 /** 2K / 2DK / 2LDK / 3K / 3DK / 3LDK / 4K / 4DK / 4LDK / 5K+ */
 const LAYOUT_CODES = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];
 const PAGE_DELAY_MS = 2_000;
 const MD_QUERY = LAYOUT_CODES.map((c) => `md=${c}`).join("&");
 const NEWEST_FIRST = "po1=09";
-/** Stop incremental search after this many all-known pages in a row. */
-const OVERLAP_STOP_PAGES = 2;
-
 const CITIES: { sc: string; label: string }[] = [
   { sc: "sc_soka", label: "Soka" },
   { sc: "sc_koshigaya", label: "Koshigaya" },
   { sc: "sc_kawaguchi", label: "Kawaguchi" },
 ];
-
-const listingRepository = new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR));
-const FULL = process.argv.includes("--full");
-/** Scan the whole configured newest-first window, ignoring early overlap stop. */
-const DEEP = process.argv.includes("--deep");
-const maxPagesFlag = process.argv.indexOf("--max-pages");
-const MAX_PAGES = maxPagesFlag >= 0
-  ? Math.max(1, Number(process.argv[maxPagesFlag + 1]) || 1)
-  : DEFAULT_INCREMENTAL_PAGE_CEILING;
 
 const cityUrl = (sc: string, page: number, newestFirst: boolean) => {
   const params = `${MD_QUERY}${newestFirst ? `&${NEWEST_FIRST}` : ""}${page > 1 ? `&page=${page}` : ""}`;
@@ -60,7 +47,7 @@ const USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const execFileAsync = promisify(execFile);
 
 async function fetchPage(url: string): Promise<string> {
@@ -205,118 +192,67 @@ export function parsePage(html: string, currentYear: number): RawListing[] {
   return listings;
 }
 
-async function main(): Promise<void> {
-  if (FULL) throw new Error("Authoritative --full requires verified per-city exhaustion, not configured page caps. Use --deep for safe non-destructive discovery.");
-  const currentYear = new Date().getFullYear();
-  const previous = await readSource("suumo");
-  if (!FULL && !previous) {
-    throw new Error("No SUUMO snapshot exists. Bootstrap once with `npm run scrape -- --full`.");
-  }
+/** The adapter submits all parsed observations; identity and deduplication belong to the data layer. */
+export async function suumoCaptureBatch(capture: PageCapture): Promise<ScrapeBatch> {
+  if (capture.source !== "suumo") throw new Error("Expected a SUUMO capture");
+  validateCapture(capture);
+  const parsed = parsePage(capture.html, new Date(capture.capturedAt).getFullYear()).map((listing) => ({ ...listing, city: capture.city }));
+  if (!parsed.length) throw new Error("SUUMO page had no usable records; capture retained for offline diagnosis");
+  const captureId = await scrapeFingerprint({ source: capture.source, city: capture.city, url: capture.url, page: capture.page,
+    capturedAt: capture.capturedAt, html: capture.html });
+  return { schemaVersion: 1, source: "suumo", scraper: { name: "suumo-list", version: "1", parserVersion: "1" },
+    runId: `suumo-page:${capture.capturedAt}`, batchId: captureId, mode: "discovery", capturedAt: capture.capturedAt,
+    scope: { urls: [capture.url], cities: [capture.city], filters: { page: capture.page, sort: "newest", layoutCodes: LAYOUT_CODES.join(",") } },
+    observations: parsed.map((listing) => ({ sourceListingId: listing.url!, observedAt: capture.capturedAt,
+      evidence: { url: capture.url, captureId }, listing })),
+  };
+}
 
-  const knownAliases = new Set((previous?.listings ?? []).flatMap(suumoMatchKeys));
-  const discovered: RawListing[] = [];
-  const seenThisRun: RawListing[] = [];
+export interface SuumoScrapeDependencies {
+  client: SuumoDiscoveryClient;
+  page(meta: Pick<PageCapture, "source" | "city" | "url" | "page">): Promise<PageCapture>;
+  sleep(ms: number): Promise<void>;
+  log(message: string): void;
+}
+
+export async function runSuumoScrape(args: readonly string[], dependencies: SuumoScrapeDependencies) {
+  if (args.includes("--full")) throw new Error("Authoritative --full requires verified per-city exhaustion, not configured page caps. Use --deep for safe non-destructive discovery.");
+  const deep = args.includes("--deep");
+  const flag = args.indexOf("--max-pages");
+  const maxPages = flag >= 0 ? Math.max(1, Math.floor(Number(args[flag + 1]) || 1)) : DEFAULT_INCREMENTAL_PAGE_CEILING;
+  const session = await dependencies.client.beginSuumoDiscovery({ deep, maxPages, layoutCodes: LAYOUT_CODES,
+    cities: CITIES.map((city) => ({ code: city.sc, label: city.label })) });
   let pagesFetched = 0;
-  const observedAtByKey: Record<string, string> = {};
-
-  console.log(
-    FULL
-      ? "Full-market audit (absence may mark sold)"
-      : DEEP
-        ? "Deep newest-first discovery (no deletions)"
-        : "Incremental newest-first discovery (no deletions)",
-  );
-
+  dependencies.log(deep ? "Deep newest-first discovery (no deletions)" : "Incremental newest-first discovery (no deletions)");
   for (const city of CITIES) {
-    console.log(`\n=== ${city.label} (${city.sc}) ===`);
-    let consecutiveKnownPages = 0;
-    const pageLimit = MAX_PAGES;
-
-    for (let page = 1; page <= pageLimit; page++) {
-      const capture = await cachedPage({ source: "suumo", city: city.label, url: cityUrl(city.sc, page, !FULL), page }, () => fetchPage(cityUrl(city.sc, page, !FULL)));
-      const parsed = parsePage(capture.html, currentYear).map((listing) => ({ ...listing, city: city.label }));
-      if (parsed.length === 0) throw new Error("SUUMO page had no usable records; capture retained for offline diagnosis");
-      for (const listing of parsed) observedAtByKey[trackingKey(listing)] = capture.capturedAt;
+    dependencies.log(`\n=== ${city.label} (${city.sc}) ===`);
+    for (let page = 1; page <= maxPages; page++) {
+      const meta = { source: "suumo" as const, city: city.label, url: cityUrl(city.sc, page, true), page };
+      const capture = await dependencies.page(meta);
+      if (capture.url !== meta.url || capture.city !== meta.city || capture.page !== page) throw new Error("SUUMO capture identity mismatch");
+      const result = session.stagePage(await suumoCaptureBatch(capture));
       pagesFetched++;
-      let novel = 0;
-      let overlap = 0;
-      let duplicate = 0;
-
-      for (const listing of parsed) {
-        if (seenThisRun.some((seen) => isSuumoOverlap(seen, listing))) {
-          duplicate++;
-          continue;
-        }
-        seenThisRun.push(listing);
-        discovered.push(listing);
-        if (suumoMatchKeys(listing).some((alias) => knownAliases.has(alias))) overlap++;
-        else novel++;
+      dependencies.log(`  page ${page}: ${result.parsedCount} properties (${result.novel} new, ${result.overlap} known, ${result.duplicate} duplicate)`);
+      if (result.stopReason === "overlap") {
+        dependencies.log("  stopped: 2 consecutive pages were entirely known");
+        break;
       }
-
-      console.log(`  page ${page}: ${parsed.length} properties (${novel} new, ${overlap} known, ${duplicate} duplicate)`);
-      if (parsed.length === 0) break;
-
-      if (!FULL && !DEEP) {
-        consecutiveKnownPages = novel === 0 ? consecutiveKnownPages + 1 : 0;
-        if (consecutiveKnownPages >= OVERLAP_STOP_PAGES) {
-          console.log(`  stopped: ${OVERLAP_STOP_PAGES} consecutive pages were entirely known`);
-          break;
-        }
-      }
-      await sleep(PAGE_DELAY_MS);
+      await dependencies.sleep(PAGE_DELAY_MS);
     }
   }
+  const result = await session.commit({ allowShrink: args.includes("--force") });
+  dependencies.log(`\nWrote ${result.currentCount} listings (was ${result.previousCount})`);
+  dependencies.log(`Discovered ${result.added} new; refreshed ${result.updated} overlapping; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
+  dependencies.log("Unseen history was retained; no SOLD decisions were made.");
+  dependencies.log("Next: npm run backfill:parking && npm run data:build && npm run enrich");
+  return result;
+}
 
-  // Exact IDs of genuinely new ads from this run let parking backfill touch
-  // only those detail pages rather than every historical unknown.
-  const newListingIds = discovered
-    .filter((listing) => !suumoMatchKeys(listing).some((alias) => knownAliases.has(alias)))
-    .map(suumoKey);
-
-  const mergedWithHistory = mergeSuumoIncremental(previous?.listings ?? [], discovered);
-  // In a full audit, keep only records observed now, but still use the merge
-  // to preserve their expensive parking detail. Incremental mode also keeps
-  // unseen history because a newest-first prefix cannot establish absence.
-  const merged = {
-    ...mergedWithHistory,
-    listings: FULL
-      ? mergedWithHistory.listings.filter((listing) =>
-          discovered.some((fresh) => isSuumoOverlap(fresh, listing)),
-        )
-      : mergedWithHistory.listings,
-  };
-
-  const observedAt = new Date().toISOString();
-  const provenance = {
-    mode: FULL ? "full-market audit" : DEEP ? "deep newest-first" : "incremental newest-first",
-    pagesFetched,
-    cities: CITIES.map((c) => `${c.label} (${c.sc}, emergency ceiling ${MAX_PAGES}p)`),
-    layoutCodes: LAYOUT_CODES.join(","),
-    newListings: merged.added,
-    newListingIds,
-    // Lets data:build distinguish ads actually observed in this partial crawl
-    // from stale records preserved in the source snapshot.
-    observedTrackingKeys: [...new Set(discovered.map(trackingKey))],
-    observedAtByKey,
-    overlappingListings: merged.overlaps,
-    capturedBy: "scripts/scrape.ts",
-  };
-  const batch = sourceObservationBatch({
-    source: "suumo",
-    previous: previous?.listings ?? [],
-    current: merged.listings,
-    expectedRevision: previous?.revision ?? null,
-    observedAt,
-    observedAtByKey,
-    provenance,
-    matchKeys: suumoMatchKeys,
+async function main(): Promise<void> {
+  await runSuumoScrape(process.argv.slice(2), {
+    client: new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR))),
+    page: (meta) => cachedPage(meta, () => fetchPage(meta.url)), sleep, log: console.log,
   });
-  const result = await listingRepository.ingest(batch, { allowShrink: process.argv.includes("--force") });
-
-  console.log(`\nWrote ${merged.listings.length} listings (was ${previous?.count ?? 0})`);
-  console.log(`Discovered ${merged.added} new; refreshed ${merged.updated} overlapping; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
-  if (!FULL) console.log("Unseen existing listings were preserved; use --full when you need authoritative SOLD detection.");
-  console.log("Next: npm run backfill:parking && npm run data:build && npm run enrich");
 }
 
 // Native-browser imports reuse the parser without starting a network collector.
