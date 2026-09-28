@@ -71,7 +71,10 @@ export async function runPortalScrape(config: PortalCollectorConfig, args: reado
     throw error;
   }
   dependencies.log(`\nWrote ${result.currentCount} ${config.label} listings (was ${result.previousCount})`);
-  dependencies.log(`Discovered ${result.added} new; refreshed ${result.updated} overlaps; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
+  // A replay (e.g. the commit landed but the refresh ledger did not) reports the
+  // journaled original counts, so parseDiscovered does not record zero.
+  const counts = result.replayed && result.effect ? { ...result.effect, retired: result.retired } : result;
+  dependencies.log(`Discovered ${counts.added} new; refreshed ${counts.updated} overlaps; retired ${counts.retired} superseded source ad(s); fetched ${pagesFetched} pages.${result.replayed ? " (already committed; no source change)" : ""}`);
   if (config.nextStep) dependencies.log(config.nextStep);
   return result;
 }

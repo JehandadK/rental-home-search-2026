@@ -39,12 +39,15 @@ function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: re
     aliases.forEach((alias) => seen.add(alias));
     if (!prior) { listings.push(row); added++; continue; }
     used.add(prior); updated++; overlaps++;
+    // The same ad (source ID) keeps its stored locator: AtHome list hrefs carry a
+    // changing sibling-room query, which is not evidence of a new advertisement.
+    const locator = publicPolicy && prior.id === row.id && prior.url ? { url: prior.url } : {};
     if (source === "athome") {
       const parking = row.parking == null ? prior.parking
         : row.parking.available !== false && row.parking.monthlyYen == null && prior.parking?.monthlyYen != null ? prior.parking : row.parking;
-      listings.push({ ...prior, ...row, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } });
+      listings.push({ ...prior, ...row, ...locator, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } });
     } else {
-      listings.push({ ...prior, ...row, ...(publicPolicy ? {
+      listings.push({ ...prior, ...row, ...locator, ...(publicPolicy ? {
         ...(prior.costs || row.costs ? { costs: { ...prior.costs, ...row.costs } } : {}),
         ...(prior.building || row.building ? { building: { ...prior.building, ...row.building } } : {}),
         ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}),
@@ -75,16 +78,23 @@ export const roomspotObservationBatch = (input: LegacyBatchInput) => legacyBatch
 export function preparePortalBatch(request: ScrapeBatch, previous: ListingSourceSnapshot | null) {
   const source = request.source as BrowserPortal;
   const match = (row: RawListing) => portalDiscoveryKeys(source, row);
-  const byAlias = new Map<string, RawListing>();
-  for (const row of previous?.listings ?? []) for (const key of match(row)) if (!byAlias.has(key)) byAlias.set(key, row);
+  const byAlias = new Map<string, RawListing[]>();
+  for (const row of previous?.listings ?? []) for (const key of match(row)) byAlias.set(key, [...(byAlias.get(key) ?? []), row]);
   const times = { ...previous?.provenance?.observedAtByKey as Record<string, string> | undefined };
+  // Every stored row an observation could update or supersede must be no newer than it.
   const eligible = request.observations.filter((observation) => {
-    const prior = match(observation.listing).map((key) => byAlias.get(key)).find(Boolean);
-    const at = prior ? times[trackingKey(prior)] ?? sourceObservationFallbackTime(previous) : undefined;
-    return at === undefined || Date.parse(observation.observedAt!) >= Date.parse(at);
+    const priors = new Set(match(observation.listing).flatMap((key) => byAlias.get(key) ?? []));
+    return [...priors].every((prior) => {
+      const at = times[trackingKey(prior)] ?? sourceObservationFallbackTime(previous);
+      return at === undefined || Date.parse(observation.observedAt!) >= Date.parse(at);
+    });
   });
   const merged = merge(source, previous?.listings ?? [], eligible.map((observation) => observation.listing), true);
-  for (const observation of eligible) times[trackingKey(observation.listing)] = observation.observedAt!;
+  for (const observation of eligible) {
+    // A cached page staged after a fresher one must not move stored evidence backwards.
+    const key = trackingKey(observation.listing), at = times[key];
+    if (at === undefined || Date.parse(observation.observedAt!) > Date.parse(at)) times[key] = observation.observedAt!;
+  }
   const previousAt = previous ? sourceSnapshotCaptureTime(previous) : undefined;
   const observedAt = previousAt && Date.parse(previousAt) > Date.parse(request.capturedAt) ? previousAt : request.capturedAt;
   const novelRows = eligible.filter((observation) => !match(observation.listing).some((key) => byAlias.has(key)));

@@ -12,7 +12,8 @@ import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ROOMSPOT_COLLECTOR, runRoomspotScrape } from "./scrape-roomspot";
 import type { PortalCollectorDependencies } from "./lib/portalCollector";
 import { listCaptureBatch } from "./lib/listCaptureBatch";
-import { mergeRoomspotIncremental, parseRoomspotPage } from "./lib/roomspot";
+import { mergeRoomspotIncremental, parseRoomspotPage, roomspotObservationBatch } from "./lib/roomspot";
+import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
 import type { PageCapture } from "./lib/captureStore";
 import type { RawListing } from "../src/types";
 
@@ -197,6 +198,16 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     expect(saved.listings.length + archived.length).toBe(previous.listings.length);
     expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length });
     expect(current.get(key(target))!.rent).toBe(target.rent + 1000);
+    // Retirements are exactly the legacy ones, minus unseen duplicates the new policy retains.
+    const legacy = roomspotObservationBatch({ previous: previous.listings, current: mergeRoomspotIncremental(previous.listings, [fresh]).listings,
+      expectedRevision: null, observedAt: capturedAt, observedAtByKey: {}, provenance: {} }).retirements!.map((entry) => entry.id);
+    const archivedIds = archived.map((entry) => entry.listing.id!);
+    expect(archivedIds.every((id) => legacy.includes(id))).toBe(true);
+    const freshKeys = portalDiscoveryKeys("roomspot", fresh);
+    for (const id of legacy.filter((id) => !archivedIds.includes(id))) {
+      const kept = saved.listings.find((listing) => listing.id === id)!;
+      expect(portalDiscoveryKeys("roomspot", kept).some((alias) => freshKeys.includes(alias))).toBe(false);
+    }
     expect(await readFile(path, "utf8")).toBe(bytes);
   });
 });
