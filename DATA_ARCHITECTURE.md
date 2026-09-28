@@ -2,7 +2,7 @@
 
 ## Goal
 
-Separate the frontend, application/data rules, storage, and ingestion so each can evolve independently. Preserve the usable app, current CLI workflows, and existing data throughout the migration. Do not combine a data rewrite with a frontend rewrite or a directory reorganization.
+Separate the codebase into three independently evolvable layers—**collectors** (scrapers and importers), the **data layer** (application rules plus replaceable storage adapters), and the **web frontend**—over a shared, pure domain model. Each layer lives in its own directory and talks to the others only through published contracts; dependency direction is enforced by tests, not convention (see "Target layers and dependency rules"). Preserve the usable app, current CLI workflows, and existing data throughout the migration. Do not combine a data rewrite with a frontend rewrite or a directory reorganization.
 
 ## Compatibility rules
 
@@ -25,6 +25,29 @@ Separate the frontend, application/data rules, storage, and ingestion so each ca
 6. **User data is separate.** Preferences, filters, marks, and manual edits cannot be overwritten by a source refresh.
 7. **Storage is replaceable.** Domain/application contracts do not depend on JSON, TOON, filesystem paths, or a database. The browser talks to a client/API, never directly to filesystem or database storage.
 
+## Target layers and dependency rules
+
+Established by M4. Locations are directories inside this one package; converting them to workspace packages is the optional M8.
+
+| Layer | Location | Owns | May import |
+|---|---|---|---|
+| Domain | `src/domain/` | Shared types (`RawListing`, places, scoring keys), scoring configuration, and pure rules: identity keys, deduplication, Japanese text parsing, scoring, filters | Only `src/domain/`. No Node, React, DOM, or network APIs. |
+| Data layer (application) | `src/data-layer/` | Public contracts, ingestion/correction/bootstrap services, per-source identity/merge/detail policies, lifecycle rules, schema migrations | Domain |
+| Storage adapters | `src/storage/json/` | Filesystem implementation of data-layer ports: source store, listing and reference repositories, catalog files, derived canonical build | Data layer, domain, `src/node/` |
+| Collectors | `src/collectors/` | Browser/HTTP fetching, capture cache, per-site HTML parsers, collection loops (page budgets, stopping, backoff), building submissions | Data-layer **contracts and errors only** (`**/contracts.ts`, `errors.ts`, `contentIdentity.ts`), domain, `src/integrations/`, `src/node/` |
+| Refresh orchestration | `src/refresh/` | Refresh plan, run ledger, stage ordering across collectors | Collectors, data layer, storage, domain, `src/node/` |
+| Web | `src/web/` | React app, hooks, components, CSV export, browser adapters | Domain, `src/integrations/`, and type-only imports of data-layer contracts. Never services, policies, storage, collectors, or Node. |
+| CLI | `scripts/` | Argument parsing, composing adapters with services, logging, exit codes | Anything above. Nothing imports a CLI file. |
+| Shared platform code | `src/node/`, `src/integrations/` | `node/`: generic filesystem primitives (locks, atomic writes, data-root paths) with no domain knowledge. `integrations/`: browser-safe external API clients (geocoding). | `node/`: Node built-ins only. `integrations/`: domain and `fetch` only. |
+
+Rules:
+
+- **Collectors only submit.** They reach the data layer through public contracts and a client injected by the CLI composition root. They never import policies, service internals, or storage, and never re-export them for compatibility.
+- **Source policies stay in the data layer, behind a registry.** The data layer owns identity and deduplication, so SUUMO/Nifty/portal matching, merge, and detail policies remain there. A `SourcePolicy` registry keyed by source lets a new site add one policy file plus one collector without editing the ingestion service. HTML parsing stays in collectors.
+- **Data files are storage, not frontend source.** The web app receives listings and reference data through a client (M5). Persisted files move from `src/data/` to `data/` once nothing bundles them.
+- **Shared code moves down, not across.** When two layers need the same logic, it moves to the domain (or to `src/node/`/`src/integrations/` for platform code). A layer never imports a sibling's internals.
+- **Enforced mechanically.** An architecture test checks every import specifier against this table. The web code is typechecked with a configuration that excludes Node types.
+
 ## Public data-layer boundaries (clarified during M3)
 
 - **Scraper input:** `ScrapeIngestion.ingestScrape(ScrapeSubmission)` in `src/data-layer/ingestion/contracts.ts` accepts full-listing observations (`ScrapeBatch`) or explicit partial-detail observations (`DetailPatchBatch`). Require a supported schema version, source, scraper name/version/parser version, run/batch IDs, capture time, scrape mode, scope, and source-scoped observations with capture evidence. Scrapers submit parsed observations, not merged source snapshots or storage revisions. The application layer chooses identity/deduplication, timestamp eligibility, detail preservation, and retirement rules; `ListingRepository` is its internal storage port.
@@ -33,10 +56,10 @@ Separate the frontend, application/data rules, storage, and ingestion so each ca
 - **Replay and caching:** the scraper owns page/capture caching and must retain original observation times. The data layer independently fingerprints requests and records source/run/batch identity with producer metadata/evidence. Its journal and reconciled rows commit atomically under the source revision check. Same-ID/same-content replay is a no-op, including after newer batches; changed content under an existing ID is rejected. Concurrent revision conflicts are surfaced without automatic retry. Journals are additive and are not silently pruned.
 - **Completeness:** discovery and detail enrichment cannot establish absence. New public full-snapshot submissions fail closed until a reviewed scope/exhaustion-evidence policy exists. Legacy Nifty detail observations may explicitly have unknown capture time; they can add missing rows, but cannot overwrite known rows or establish current availability. SUUMO detail patches require known capture times and existing exact source URLs; they cannot add/retire records, change identity/prices/lifecycle, or advance list-observation timestamps/completeness. Their independent per-URL detail timestamps prevent older cached details from rolling back newer details.
 - **Detail selection:** `DetailEnrichmentPlanner.planDetailEnrichment()` returns eligible URLs after application-owned cross-source deduplication, completeness checks, and rent/size/layout filters. The collector owns the queue, fetch budget, backoff, and capture cache, but never reads source snapshots or merges stored listings. Internal `ListingRepository` enrichment uses `completeness: "preserve"` plus exact ID/URL locators; it preserves legacy row order, count, IDs, archives, source capture time, and completeness. Managed replay/detail-time provenance survives omission by older compatibility writers.
-- **Derived source corrections:** `SourceCorrections.applyCorrection()` in `src/data-layer/corrections/contracts.ts` accepts a supported schema/source/rule version, operation ID, actor, and reason—not replacement rows or arbitrary field patches. The application reads current stored evidence and commits exact ID/URL updates plus a protected `correctionJournal` atomically under the observed source revision. Audit entries retain the input revision, rule metadata, application time, source notes, and field-level before/after values (unset, null, and zero stay distinct). Committed operation IDs replay without reapplying to newer data; changed metadata under the same committed ID conflicts. Missing-source and no-change results deliberately create no receipts/writes/backups; fresh CLI runs remain true no-ops when the rule has nothing to change. The actor is local audit metadata, not an authentication mechanism; any future API must add M6 authorization.
+- **Derived source corrections:** `SourceCorrections.applyCorrection()` in `src/data-layer/corrections/contracts.ts` accepts a supported schema/source/rule version, operation ID, actor, and reason—not replacement rows or arbitrary field patches. The application reads current stored evidence and commits exact ID/URL updates plus a protected `correctionJournal` atomically under the observed source revision. Audit entries retain the input revision, rule metadata, application time, source notes, and field-level before/after values (unset, null, and zero stay distinct). Committed operation IDs replay without reapplying to newer data; changed metadata under the same committed ID conflicts. Missing-source and no-change results deliberately create no receipts/writes/backups; fresh CLI runs remain true no-ops when the rule has nothing to change. The actor is local audit metadata, not an authentication mechanism; any future API must add M7 authorization.
 - **Historical source bootstrap:** `SourceBootstrap.bootstrapSources()` in `src/data-layer/bootstrap/contracts.ts` validates a versioned migration, operation ID, actor, reason, dataset identity, and the entire legacy input before accessing target sources. It groups by the original source (missing/null/empty source goes into `unknown` without rewriting the row), skips existing sources unconditionally, and uses the internal create-only `ListingRepository.initializeHistoricalSource(..., { expectedRevision: null })` port. Creation preserves every row, order, missing/colliding ID, unknown field, and lifecycle value; it never deduplicates or normalizes historical rows. Audit metadata/fingerprints commit atomically with each source. Source existence—not operation ID—is the idempotency key; completed source checkpoints survive later failures, while concurrent creators conflict without retry. Portable source-ID and lossless-JSON validation prevent unsafe paths and silent coercions.
 - **Bootstrap time compatibility:** the existing string `scrapedAt` slot holds import time only for the tagged initial historical envelope. `bootstrapAudit.importedAt` records its true meaning; `completeSnapshot` is false and observation keys/times are empty. Consumers must not treat this envelope time as capture evidence or a freshness barrier for unobserved historical rows. `sourceObservationTime` helpers, Nifty eligibility, native-capture eligibility, and `data:status` handle that distinction; original row timestamps remain unchanged. `bootstrapAudit` is protected across compatibility provenance replacement and reserved from ordinary scrape submissions.
-- **Consumer side (planned, not implemented by this M3 step):** asynchronous listing queries/detail reads and reference snapshots in M5. A separate shared-fact submission use case will accept listing ID, revision, actor, evidence, and timestamped facts/corrections. Property-specific eligibility/restriction information belongs there with unknown/conditional/disputed states and provenance, not in personal preferences and not as an unchecked canonical overwrite. Personal filters, favorites, and notes remain in the M4 user-data boundary; transport/auth/shared-write implementation remains M6 work.
+- **Consumer side (planned, not implemented by this M3 step):** asynchronous listing queries/detail reads and reference snapshots in M5. A separate shared-fact submission use case will accept listing ID, revision, actor, evidence, and timestamped facts/corrections. Property-specific eligibility/restriction information belongs there with unknown/conditional/disputed states and provenance, not in personal preferences and not as an unchecked canonical overwrite. Personal filters, favorites, and notes remain in the M6 user-data boundary; transport/auth/shared-write implementation remains M7 work. Read-model contracts live in the data layer so the web app can import their types without importing services.
 - Existing importer-to-`ListingRepository` migrations are an intermediate step. Each importer must eventually use the metadata-gated public ingestion service; canonical cross-source deduplication/lifecycle and enrichment remain explicit derived operations.
 
 ## Current baseline
@@ -55,6 +78,8 @@ These numbers are migration comparison points, not permanent expectations. Refre
 M1 adds local-filesystem lock files, unique same-directory temp files, file sync, and atomic rename. Do not treat lock files as a distributed lock service; a shared/network filesystem or multi-host deployment should use a database/service with native transactions instead. If a process crashes and leaves a lock, inspect its JSON metadata and verify the PID is no longer running before removing that exact lock file. For example, inspect `src/data/.sources.lock` or the affected `<file>.lock`, check the recorded PID with `ps -p <PID>`, and only then remove the specific stale lock with `rm <lock-path>`. Never remove a lock based only on its age. A corrupt/empty lock also requires checking for active writers before manual removal.
 
 ## Milestones
+
+> **Renumbered 2026-09-29, after M3.** The layers were separated in logic but not in the tree, and nothing enforced them, so each M3 step added more mixed-responsibility files to `scripts/lib`. The layer split and its enforcement moved forward from the old M7 to the new M4, and the frontend data client now comes before the user-state wrapper. Old → new: M4 → M6, M5 → M5, M6 → M7, M7 → M4 (enforced layout) + M8 (optional packages). Commits before this date use the old numbers.
 
 ### M0 — Baseline and guardrails (no runtime behavior change)
 
@@ -104,48 +129,80 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 
 **Rollback:** Revert the affected importer to its compatibility wrapper. Preserve both pre- and post-run source backups; never roll back by deleting canonical history.
 
-### M4 — Frontend user-state boundary
+### M4 — Enforced layer boundaries (moves and import fixes only; no behavior change)
 
 **Scope:**
-- Put `localStorage` behind a `UserDataRepository` browser adapter for configuration, filters, place selection, marks, custom listings, and hidden columns.
-- Preserve current storage keys and add explicit versioned migrations for any changed shapes.
-- Introduce a fake/in-memory adapter for UI tests.
+1. **Write the architecture test first.** Add a test that resolves every relative import in `src/` and `scripts/` and checks it against the "Target layers and dependency rules" table. Start with an explicit allowlist of current violations; each later step must shrink it, and M4 ends with it empty. Add a web typecheck configuration (`tsconfig.web.json` over `src/web`, `src/domain`, `src/integrations`, and data-layer contracts, without Node types). `npm run typecheck` runs both configurations.
+2. **Move files with `git mv`, one layer per commit, updating import paths only.** Tests move with their subjects. The `npm run` command names and `scripts/*.ts` entry points do not change.
 
-**Exit checks:** Existing settings survive reloads; corrupt/old state still falls back safely; UI/domain code uses the adapter instead of direct storage access; app behavior is unchanged.
+   | Current | Target |
+   |---|---|
+   | `src/App.tsx`, `main.tsx`, `App.module.css`, `components/`, `hooks/`, `styles/`, `lib/export.ts` | `src/web/` (update the `index.html` entry) |
+   | `src/types.ts`, `src/config/scoring.ts` | `src/domain/` |
+   | `src/lib/geocode.ts` | `src/integrations/geocode.ts` |
+   | `scripts/lib/jsonFile.ts`; the `DATA_DIR` path constants from `dataStore.ts` | `src/node/` |
+   | `scripts/lib/dataStore.ts`, `jsonListingRepository.ts`, `jsonReferenceDataRepository.ts`, `referenceCatalog.ts`, `observations.ts`, `dataMigrations/`, `listingRepository.contract.ts` | `src/storage/json/` |
+   | `scripts/lib/lifecycle.ts` (pure SOLD/lifecycle rules) | `src/data-layer/` |
+   | `scripts/lib/` parsers, browsers, and captures (`athome*`, `roomspot*`, `nifty*`, `chromeBridge`, `parseJa`, `parking`, `detailEnrichment`), plus `captureStore`, `captureValidation`, `listCaptureBatch`, `portalCollector`, `niftyIngestion`, `suumoDetailIngestion`, `geocodeCache` | `src/collectors/`, grouped as `shared/`, `suumo/`, `athome/`, `roomspot/`, `nifty/`, `enrichment/` |
+   | `scripts/lib/refreshPlan.ts`, `refreshLedger.ts` | `src/refresh/` |
+   | `src/data/` | Unchanged in M4; moves in M5 |
 
-**Rollback:** Keep the existing keys and old loader available during the transition; fall back to the current browser adapter.
+3. **Fix the wrong-direction imports.** The allowlist names each of these:
+   - Collector → CLI: move the SUUMO `parsePage` out of `scripts/scrape.ts` and `parseStationDistance` out of `scripts/merge-nifty.ts` into collectors. The CLIs may keep re-exports for their own tests.
+   - Collector → storage: `captureStore` takes `CAPTURE_DIR` and atomic writes from `src/node/`, not from `dataStore`.
+   - Collector → data-layer policies: remove the policy re-exports from `athome.ts`, `nifty.ts`, and `detailEnrichment.ts`, and point their callers at the data layer. Delete the compatibility shims `scripts/lib/sourceObservationBatch.ts` and the unreferenced `suumoIncremental.ts` once their tests import the data layer directly.
+   - Collector → service internals: `niftyIngestion` and `suumoDetailIngestion` import `scrapeFingerprint` from `ingestion/service`, and `captureValidation` imports `sourceObservationFallbackTime`. Either publish these as deliberate public helpers next to `contentIdentity`, or move the need out of collectors.
+   - Collector → refresh: `portalCollector` imports `DEFAULT_INCREMENTAL_PAGE_CEILING` from `refreshPlan`. Move the default into collectors, which own their page budgets; refresh passes overrides down.
+   - Domain → web: `domain/diagnostics.ts` imports the `ScoredRow` type from `lib/export`; move the type into the domain.
+4. **Add the `SourcePolicy` registry** as a separate refactor after the moves. The ingestion, discovery, and detail services look up a source's identity/merge/detail policy by source ID instead of importing each policy module. Behavior and journals stay identical; existing source-specific tests pass unchanged.
+
+**Exit checks:** The architecture allowlist is empty, and a planted violation makes the test fail. Web typecheck passes without Node types. `npm test` passes with the same test count plus the new architecture tests; `npm run typecheck`, `npm run build`, `npm run data:status`, and `npm run refresh -- --plan` pass; the dev server renders the same listing count with no console errors. Every persisted file under `src/data/` and `data/` hashes identically. `git log --follow` traces moved files.
+
+**Rollback:** Revert individual move commits; each moves one layer. No data or schema changes are involved.
 
 ### M5 — Frontend data client and dynamic reference data
 
 **Scope:**
-- Replace direct JSON imports in `src/domain/reference.ts` with an injected client. Begin with a bundled/static client that returns the same data, then add a runtime dataset client with a bundled fallback.
+- Define read-model contracts (listing query, reference snapshot) in the data layer; the web app imports only their types. Replace the direct JSON imports in `src/domain/reference.ts` with an injected client, and move the loading code out of the domain into `src/web/`. Begin with a static client that returns the same data, then add a runtime dataset client with a bundled fallback.
 - Model `loadSnapshot()` as asynchronous at the React boundary. Add explicit loading, error/retry, and empty-data states (or a Suspense boundary with an error boundary); do not render components that assume a catalog exists until loading succeeds. Test slow, failed, stale-fallback, and empty responses.
 - Pass the loaded snapshot into place catalogs, proximity indexes, maps, filters, and enrichment instead of importing module-level arrays.
 - Derive city options, boundary rendering, POI selection, labels, and map extent from the loaded datasets. Handle empty catalogs, multiple boundaries per city, and new POI counts/categories.
 - Do not change scoring results for the current data as part of dependency injection. Any scoring model changes need their own explicit migration.
+- **Final step, as a pure move:** once nothing in `src/web/` imports persisted files, move `src/data/` to `data/` by changing the single root in `src/node/`. `data:web` output becomes a static asset that the client fetches, not a bundled module. Verify with hash parity before and after the move.
 
-**Exit checks:** Current fixture gives equivalent scores, map, filters, and place options; tests add/remove cities and POIs without code edits; the frontend can run against a fake client; it no longer imports persisted data files.
+**Exit checks:** Current fixture gives equivalent scores, map, filters, and place options; tests add/remove cities and POIs without code edits; the frontend can run against a fake client; no web or domain module imports persisted data files; the architecture test forbids such imports; the >500 kB bundle warning caused by bundled data is gone; persisted files hash identically after the move.
 
-**Rollback:** Select the bundled compatibility client. The old JSON files remain unchanged until parity has been demonstrated.
+**Rollback:** Select the bundled compatibility client. The old JSON files remain unchanged until parity has been demonstrated; the directory move reverts independently.
 
-### M6 — Durable API for shared UI writes (only when required)
+### M6 — Frontend user-state boundary
+
+**Scope:**
+- Put `localStorage` behind a `UserDataRepository` browser adapter (in `src/web/`) for configuration, filters, place selection, marks, custom listings, and hidden columns.
+- Preserve current storage keys and add explicit versioned migrations for any changed shapes.
+- Introduce a fake/in-memory adapter for UI tests.
+
+**Exit checks:** Existing settings survive reloads; corrupt/old state still falls back safely; UI/domain code uses the adapter instead of direct storage access, and the architecture test forbids direct `localStorage` access outside the adapter; app behavior is unchanged.
+
+**Rollback:** Keep the existing keys and old loader available during the transition; fall back to the current browser adapter.
+
+### M7 — Durable API for shared UI writes (only when required)
 
 **Scope:**
 - Add an API client/server boundary for manual listings and any user data that must be shared across devices or with ingestion.
-- API handlers call the same application use cases/repositories as CLI ingestion. Add validation, authorization, revision checks, and auditable write reasons.
+- API handlers call the same application use cases/repositories as CLI ingestion. Add validation, authorization, revision checks, and auditable write reasons. The server is another composition root, like the CLIs.
 - Keep browser-local preferences browser-local unless there is a product requirement to synchronize them.
 
 **Exit checks:** API integration tests exercise accepted, rejected, repeated, stale-revision, and unauthorized writes. Static/read-only mode remains usable if the API is unavailable.
 
 **Rollback:** Switch the client back to local/static mode. No UI code should depend on a particular database engine.
 
-### M7 — Physical package/repository reorganization (last, optional)
+### M8 — Workspace packages (optional)
 
-**Scope:** Move code only after logical boundaries and tests are established; e.g. `apps/web`, `packages/domain`, `packages/application`, `packages/storage-json`, and `packages/ingestion`. Move managed data out of frontend source directories without folding the move into a schema change.
+**Scope:** Only if independent builds, deployment, or versioning are needed, convert the M4 directories into workspace packages (for example `apps/web`, `packages/domain`, `packages/data-layer`, `packages/storage-json`, `packages/collectors`) and replace the architecture test with package dependency declarations. M4 already enforces the direction, so this milestone is not required for separation.
 
-**Exit checks:** All app, CLI, test, and build commands still work; package dependency direction is enforced; no frontend package imports Node filesystem code.
+**Exit checks:** All app, CLI, test, and build commands still work; package dependency direction is enforced by the package manager/build; no frontend package depends on Node code.
 
-**Rollback:** Revert file moves independently; no data conversion is part of this milestone.
+**Rollback:** Revert package moves independently; no data conversion is part of this milestone.
 
 ## Progress and changes already made
 
@@ -177,15 +234,16 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 - **Portal and capture writers migrated:** `scripts/scrape-athome.ts` and `scripts/scrape-roomspot.ts` keep only browser navigation, URL construction, and the capture cache; both run the shared, injectable `scripts/lib/portalCollector.ts` loop over the staged `beginPortalDiscovery` session (`src/data-layer/ingestion/portalDiscovery.ts`), whose rules live in `portalPolicy.ts`. First-run deep bootstrap, two-known-page stopping, empty non-family pages (no log/sleep, not counted as known), page budgets, `--force`, guarded `--full`, browser cleanup, exit codes, and log lines (including the `Discovered N new` line read by refresh) are preserved. `scripts/import-capture.ts` is now `runCaptureImport(args, deps)`: each validated page is parsed by `listCaptureBatch` and submitted with its progress receipt as the batch ID, and the per-run source summary goes through `annotateCaptureRun`. If a source commit succeeds but the progress write fails, the retry replays the journaled original effects, so additions are neither lost nor double counted. Capture spooling, progress schema/receipts, `--file`/`--run-id`/`--max-pages`, the refresh lock, ledger stage completion, and downstream invalidation are unchanged.
 - **Intentional behavior differences from the legacy CLIs:** unseen historical duplicates are retained instead of implicitly compacted; RoomSpot merges nested `costs`/`building`/`tenancy` instead of overwriting them; stale observations are filtered in the data layer for direct collectors too, and an observation is rejected if any stored row it could update or supersede is newer; `observedAtByKey` never moves backwards within one commit; an observation with the same source ID keeps the stored URL (AtHome list hrefs carry a changing sibling-room query), so it updates in place rather than being archived and re-appended; a direct crawl drops an earlier native run's `captureRunId`; RoomSpot logs the shared bootstrap line; a replayed collector commit logs the journaled original counts.
 - **Tests:** `scripts/scrape-athome.test.ts`, `scripts/scrape-roomspot.test.ts`, and `scripts/import-capture.test.ts` run offline against temporary stores. They cover bootstrap, stopping/budgets/empty pages, replay without rewrite, fetch/parser/identity failures without partial commits, `--full` cleanup, shrink/`--force` archives, revision conflicts without retry, stale prices, detail/parking retention, same-ID URL changes, mixed-source imports, receipt skipping with legacy progress files, page-order enforcement, per-page persistence, commit/progress-write recovery, and ledger invalidation. Temporary-copy parity tests over every current AtHome and RoomSpot row require retirements to equal the legacy batch's, minus only unseen duplicates. Each regression test for a review fix was checked to fail without its fix.
-- **M3 complete:** `npm test` (503 tests), `npm run typecheck`, `npm run build`, `npm run data:status`, `npm run refresh -- --plan`, and a dev-server render check (3,452 listings, no console errors) pass. No CLI reads source snapshots to merge them or writes the repository directly; the remaining `listSources` callers are the explicit derived commands `data.ts` (status/canonical build) and `merge-duplicates.ts` (rebuilds `listings_raw.json`). A hash comparison confirms every persisted file under `src/data/` and `data/` in this worktree (26 tracked files) is unchanged. No live collector, production capture import, migration, enrichment, backfill, or canonical `data:build` was run. The frontend remains on its bundled path until M4/M5; consumer/shared-fact interfaces are documented targets, not implemented runtime APIs yet.
+- **M3 complete:** `npm test` (503 tests), `npm run typecheck`, `npm run build`, `npm run data:status`, `npm run refresh -- --plan`, and a dev-server render check (3,452 listings, no console errors) pass. No CLI reads source snapshots to merge them or writes the repository directly; the remaining `listSources` callers are the explicit derived commands `data.ts` (status/canonical build) and `merge-duplicates.ts` (rebuilds `listings_raw.json`). A hash comparison confirms every persisted file under `src/data/` and `data/` in this worktree (26 tracked files) is unchanged. No live collector, production capture import, migration, enrichment, backfill, or canonical `data:build` was run. The frontend remains on its bundled path until M5; consumer/shared-fact interfaces are documented targets, not implemented runtime APIs yet.
 - **Known follow-ups (not M3 blockers):**
   - The ingestion journal grows without bound (one evidence entry per observation per commit, now for AtHome/RoomSpot and per native page too); cap or compact older entries.
   - Collector `scrapedAt` is the latest capture time, not the commit time, so `data:status` can miss "changed since the last build" when cached pages are committed after a build (same as SUUMO).
   - A native-import retry after a parser change hits `ScrapeReplayConflictError` for an already-committed page; give an actionable error or include a real parser version in the batch identity.
   - The SUUMO collector's replayed commit still logs zero counts.
   - AtHome's `property:` alias (building name|address|size) can treat two same-size rooms in one building as the same unit; this is pre-existing.
-- **Restart here:** begin M4 (frontend user-state boundary). Do not reorganize directories/packages before M7.
+- **Milestones renumbered after M3 (2026-09-29).** See the note at the top of "Milestones"; the layer split and its enforcement are now M4.
+- **Restart here:** begin M4, step 1 (architecture test and allowlist of current violations). Then move one layer per commit. Do not change behavior, data files, or schemas in M4.
 
 ## Per-milestone validation
 
-At minimum, run `npm test`, `npm run typecheck`, and `npm run build`. For storage/ingestion milestones also run `npm run data:status`, adapter contract tests, and relevant refresh planning/tests. Inspect `git diff` and generated data paths after builds. A milestone is done only when its exit checks pass and the app remains usable; if not, revert that milestone before proceeding.
+At minimum, run `npm test` (including the architecture test from M4 onward), `npm run typecheck`, and `npm run build`. For storage/ingestion milestones also run `npm run data:status`, adapter contract tests, and relevant refresh planning/tests. Inspect `git diff` and generated data paths after builds. A milestone is done only when its exit checks pass and the app remains usable; if not, revert that milestone before proceeding.
