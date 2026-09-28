@@ -82,13 +82,13 @@ export class JsonListingRepository implements ListingRepository {
 
   async reconcileSource(batch: SourceReconciliation, options: { allowShrink?: boolean } = {}): Promise<ListingIngestionResult> {
     validateSourceId(batch.source);
-    if (!batch.expectedRevision || !Number.isFinite(Date.parse(batch.observedAt))) throw new InvalidListingBatchError("Invalid reconciliation revision/time");
+    if ((batch.expectedRevision !== null && !batch.expectedRevision) || !Number.isFinite(Date.parse(batch.observedAt))) throw new InvalidListingBatchError("Invalid reconciliation revision/time");
     if (batch.listings.some((listing) => listing.source !== batch.source)) throw new InvalidListingBatchError("Reconciliation source mismatch");
     const previous = await this.sourceStore.readSource(batch.source);
     if (batch.expectedRevision !== (previous?.revision ?? null)) {
       throw new RevisionConflictError(batch.expectedRevision, previous?.revision ?? null, this.sourceStore.sourcePath(batch.source));
     }
-    const priorRows = indexSourceRows(previous!.listings), currentRows = indexSourceRows(batch.listings);
+    const priorRows = indexSourceRows(previous?.listings ?? []), currentRows = indexSourceRows(batch.listings);
     const retired = new Map<string, SourceReconciliation["retirements"][number]>();
     for (const retirement of batch.retirements) {
       const key = sourceRowKey(retirement);
@@ -105,13 +105,13 @@ export class JsonListingRepository implements ListingRepository {
       const prior = priorRows.get(key);
       if (prior && sameListing(prior, row)) unchanged++; else accepted++;
     }
-    const archivedListings = [...(previous!.archivedListings ?? []), ...[...retired].map(([key, retirement]) => ({
+    const archivedListings = [...(previous?.archivedListings ?? []), ...[...retired].map(([key, retirement]) => ({
       sourceListingId: sourceRowLocator(priorRows.get(key)!).sourceListingId, listing: priorRows.get(key)!,
       retiredAt: retirement.effectiveAt, reason: retirement.reason,
     }))];
     const result = await this.sourceStore.writeSource({ source: batch.source, scrapedAt: batch.observedAt,
       completeSnapshot: false, listings: [...batch.listings], archivedListings,
-      provenance: batch.provenance ? { ...batch.provenance } : previous!.provenance,
+      provenance: batch.provenance ? { ...batch.provenance } : previous?.provenance,
     }, { expectedRevision: batch.expectedRevision, force: options.allowShrink });
     return { accepted, unchanged, retired: retired.size, revision: result.revision };
   }

@@ -20,8 +20,11 @@ function summaryWithDetails(fresh: RawListing, prior: RawListing | undefined): R
 }
 
 /** Approved SUUMO incremental policy: source aliases, never generated display IDs, decide overlap. */
-export function prepareSuumoBatch(request: ScrapeBatch, previous: ListingSourceSnapshot | null) {
-  if (!previous || previous.source !== "suumo") throw new InvalidScrapeBatchError("No SUUMO snapshot exists. Initialize preserved history with `npm run data:migrate` first.");
+export function prepareSuumoBatch(request: ScrapeBatch, snapshot: ListingSourceSnapshot | null) {
+  if ((!snapshot && request.scraper.name !== "native-capture") || (snapshot && snapshot.source !== "suumo")) throw new InvalidScrapeBatchError("No SUUMO snapshot exists. Initialize preserved history with `npm run data:migrate` first.");
+  // Native captures may create the first SUUMO source; the direct collector still requires preserved history.
+  const previous: Omit<ListingSourceSnapshot, "revision"> & { revision: string | null } = snapshot
+    ?? { source: "suumo", revision: null, scrapedAt: request.capturedAt, completeSnapshot: false, listings: [], archivedListings: [], provenance: {} };
   indexSourceRows(previous.listings); // legacy ID collisions are fine; ambiguous ID/URL pairs are not
   const byAlias = new Map<string, RawListing[]>();
   for (const listing of previous.listings) for (const alias of suumoMatchKeys(listing)) {
@@ -31,6 +34,7 @@ export function prepareSuumoBatch(request: ScrapeBatch, previous: ListingSourceS
   const selected = new Set<string>();
   const observed = [] as ScrapeBatch["observations"][number][];
   const fresh: RawListing[] = [];
+  let observedCount = 0;
   for (const observation of request.observations) {
     const keys = suumoMatchKeys(observation.listing);
     const matches = [...new Set(keys.flatMap((key) => byAlias.get(key) ?? []))];
@@ -38,6 +42,7 @@ export function prepareSuumoBatch(request: ScrapeBatch, previous: ListingSourceS
     // Replayed stale prices must not supersede newer stored observations. This
     // check precedes within-run dedup so a later eligible capture can still win.
     if (priorTimes.some((at) => !Number.isFinite(Date.parse(at)) || Date.parse(observation.observedAt!) < Date.parse(at))) continue;
+    observedCount++;
     if (keys.some((key) => selected.has(key))) continue;
     keys.forEach((key) => selected.add(key));
     const priors = keys.map((key) => byAlias.get(key)?.[0]).filter((listing): listing is RawListing => Boolean(listing));
@@ -66,6 +71,6 @@ export function prepareSuumoBatch(request: ScrapeBatch, previous: ListingSourceS
       newListings: merged.added, newListingIds: novelObservations.map((observation) => suumoKey(observation.listing)),
       overlappingListings: merged.overlaps, observedTrackingKeys: [...new Set(observedKeys)], observedAtByKey: times },
   };
-  return { reconciliation, added: merged.added, updated: merged.updated, novel: novelObservations.length,
+  return { reconciliation, added: merged.added, updated: merged.updated, novel: novelObservations.length, observedCount,
     ignored: request.observations.length - acceptedObservations.length, previousCount: previous.listings.length, currentCount: merged.listings.length };
 }

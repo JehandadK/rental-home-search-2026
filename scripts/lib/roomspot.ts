@@ -1,30 +1,8 @@
 /** Pure RoomSpot search-result parser and incremental merge helpers. */
 import * as cheerio from "cheerio";
 import type { RawListing } from "../../src/types";
-import type { ListingObservationBatch } from "../../src/data-layer/contracts";
-import { trackingKey } from "./lifecycle";
+export { roomspotKey, roomspotMatchKeys, isRoomspotOverlap, mergeRoomspotIncremental, roomspotObservationBatch } from "../../src/data-layer/ingestion/portalPolicy";
 import { isExplicitNone, parseYen } from "./parseJa";
-
-const norm = (value: string | null | undefined): string =>
-  (value ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
-
-export function roomspotKey(listing: RawListing): string {
-  const id = listing.id?.match(/roomspot-(\d+)/)?.[1] ?? listing.url?.match(/\/rent\/(\d+)/)?.[1];
-  return id ? `roomspot:${id}` : `property:${trackingKey(listing)}`;
-}
-
-export function roomspotMatchKeys(listing: RawListing): string[] {
-  return [...new Set([
-    roomspotKey(listing),
-    `property:${trackingKey(listing)}`,
-    `market:${norm(listing.address)}|${listing.rent}|${listing.sizeM2 ?? ""}|${norm(listing.layout)}`,
-  ])];
-}
-
-export function isRoomspotOverlap(a: RawListing, b: RawListing): boolean {
-  const aliases = new Set(roomspotMatchKeys(a));
-  return roomspotMatchKeys(b).some((alias) => aliases.has(alias));
-}
 
 export function isFamilyLayout(layout: string | null): boolean {
   const rooms = layout?.normalize("NFKC").match(/^(\d+)/)?.[1];
@@ -108,69 +86,4 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
     });
   });
   return listings;
-}
-
-export function roomspotObservationBatch(input: {
-  previous: readonly RawListing[];
-  current: readonly RawListing[];
-  expectedRevision: string | null;
-  observedAt: string;
-  observedAtByKey: Readonly<Record<string, string>>;
-  provenance: Readonly<Record<string, unknown>>;
-  completeness?: "incremental" | "complete";
-}): ListingObservationBatch {
-  const currentIds = new Set(input.current.map((listing) => listing.id).filter((id): id is string => Boolean(id)));
-  const currentAliases = new Set(input.current.flatMap(roomspotMatchKeys));
-  const retirements = input.previous
-    .filter((listing) =>
-      listing.id && !currentIds.has(listing.id) && roomspotMatchKeys(listing).some((key) => currentAliases.has(key)),
-    )
-    .map((listing) => ({
-      id: listing.id!,
-      effectiveAt: input.observedAt,
-      reason: "Superseded by a newer RoomSpot advertisement with matching unit aliases",
-    }));
-
-  return {
-    source: "roomspot",
-    expectedRevision: input.expectedRevision,
-    observedAt: input.observedAt,
-    completeness: input.completeness ?? "incremental",
-    observations: input.current.map((listing) => {
-      if (!listing.id) throw new Error(`RoomSpot listing has no stable source ID: ${listing.name}`);
-      return {
-        source: "roomspot",
-        sourceListingId: listing.id,
-        observedAt: input.observedAtByKey[trackingKey(listing)] ?? input.observedAt,
-        listing,
-      };
-    }),
-    retirements,
-    provenance: input.provenance,
-  };
-}
-
-export function mergeRoomspotIncremental(
-  existing: readonly RawListing[],
-  discovered: readonly RawListing[],
-): { listings: RawListing[]; added: number; updated: number; overlaps: number } {
-  const byAlias = new Map<string, RawListing>();
-  for (const listing of existing) for (const alias of roomspotMatchKeys(listing)) if (!byAlias.has(alias)) byAlias.set(alias, listing);
-  const used = new Set<RawListing>();
-  const seen = new Set<string>();
-  const listings: RawListing[] = [];
-  let added = 0, updated = 0, overlaps = 0;
-  for (const fresh of discovered) {
-    const aliases = roomspotMatchKeys(fresh);
-    if (aliases.some((alias) => seen.has(alias))) { overlaps++; continue; }
-    const prior = aliases.map((alias) => byAlias.get(alias)).find(Boolean);
-    aliases.forEach((alias) => seen.add(alias));
-    if (prior) { used.add(prior); overlaps++; updated++; listings.push({ ...prior, ...fresh }); }
-    else { added++; listings.push(fresh); }
-  }
-  for (const prior of existing) {
-    if (used.has(prior) || roomspotMatchKeys(prior).some((alias) => seen.has(alias))) continue;
-    roomspotMatchKeys(prior).forEach((alias) => seen.add(alias)); listings.push(prior);
-  }
-  return { listings, added, updated, overlaps };
 }

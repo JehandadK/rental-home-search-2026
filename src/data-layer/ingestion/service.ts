@@ -2,16 +2,18 @@ import type { ListingRepository, ListingSourceSnapshot } from "../contracts";
 import { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 export { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 import { MANAGED_INGESTION_PROVENANCE_KEYS } from "../sourceProvenance";
-import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt, SuumoDiscoveryClient, SuumoDiscoveryOptions, SuumoDiscoverySession } from "./contracts";
+import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt, SuumoDiscoveryClient, SuumoDiscoveryOptions, SuumoDiscoverySession, PortalDiscoveryClient, PortalDiscoveryOptions, PortalDiscoverySession, NativeCaptureIngestion, CaptureRunSummary } from "./contracts";
 import { prepareNiftyBatch } from "./niftyPolicy";
 import { prepareSuumoDetailBatch, selectDetailUrls, validateDetailPatch } from "./suumoDetailPolicy";
 import { prepareSuumoBatch } from "./suumoPolicy";
 import { StagedSuumoDiscovery, validateSuumoDiscoveryOptions } from "./suumoDiscovery";
+import { preparePortalBatch } from "./portalPolicy";
+import { StagedPortalDiscovery, validatePortalOptions } from "./portalDiscovery";
 import { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 export { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 
 /** Versioned application boundary. Scrapers never choose the merge policy or read source revisions. */
-export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner, SuumoDiscoveryClient {
+export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner, SuumoDiscoveryClient, PortalDiscoveryClient, NativeCaptureIngestion {
   constructor(private readonly repository: ListingRepository) {}
 
   async planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]> {
@@ -24,6 +26,32 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
     const previous = await this.repository.readSource("suumo");
     if (!previous || previous.source !== "suumo") invalid("No SUUMO snapshot exists. Initialize preserved history with `npm run data:migrate` first.");
     return new StagedSuumoDiscovery(options, previous, validateScrapeBatch, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
+  }
+
+  async beginPortalDiscovery(input: PortalDiscoveryOptions): Promise<PortalDiscoverySession> {
+    validatePortalOptions(input);
+    const options = JSON.parse(canonicalJson(input)) as PortalDiscoveryOptions;
+    const previous = await this.repository.readSource(options.source);
+    return new StagedPortalDiscovery(options, previous, validateScrapeBatch, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
+  }
+
+  /** Compatibility run annotations carry no observations and never re-merge source rows. */
+  async annotateCaptureRun(input: CaptureRunSummary): Promise<void> {
+    if (!input || input.schemaVersion !== 1 || !["suumo", "athome", "roomspot", "nifty"].includes(input.source)
+      || (input.captureRunId !== undefined && !nonempty(input.captureRunId)) || !Array.isArray(input.cities)
+      || input.cities.some((city) => !city || !nonempty(city.city) || !Number.isInteger(city.pages) || city.pages < 0 || !Number.isInteger(city.added) || city.added < 0)
+      || new Set(input.cities.map((city) => city.city)).size !== input.cities.length) invalid("Invalid capture run summary");
+    const summary = JSON.parse(canonicalJson(input)) as CaptureRunSummary;
+    const previous = await this.repository.readSource(summary.source);
+    if (!previous) return;
+    const provenance: Record<string, unknown> = { ...previous.provenance,
+      pagesFetched: summary.cities.reduce((n, city) => n + city.pages, 0), newListings: summary.cities.reduce((n, city) => n + city.added, 0),
+      cities: summary.cities.map((city) => city.city) };
+    if (summary.captureRunId) provenance.captureRunId = summary.captureRunId; else delete provenance.captureRunId;
+    delete provenance.newListingIds;
+    if (canonicalJson(previous.provenance) === canonicalJson(provenance)) return;
+    await this.repository.ingest({ source: summary.source, expectedRevision: previous.revision, observedAt: previous.scrapedAt,
+      completeness: "preserve", observations: [], provenance });
   }
 
   async ingestScrape(request: ScrapeSubmission, options: { allowShrink?: boolean } = {}): Promise<ScrapeIngestionReceipt> {
@@ -43,14 +71,16 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
       if (priorBatch.fingerprint !== fingerprint) throw new ScrapeReplayConflictError();
       return { ...identity, replayed: true, revision: previous!.revision,
         previousCount: previous!.listings.length, currentCount: previous!.listings.length,
-        added: 0, updated: 0, retired: 0, ignored: batch.observations.length, novel: 0 };
+        added: 0, updated: 0, retired: 0, ignored: batch.observations.length, novel: 0, effect: priorBatch.effect };
     }
 
     const prepared = batch.observationKind === "detail-patch"
-      ? prepareSuumoDetailBatch(batch, previous) : batch.source === "suumo" ? prepareSuumoBatch(batch, previous) : prepareNiftyBatch(batch, previous);
+      ? prepareSuumoDetailBatch(batch, previous) : batch.source === "suumo" ? prepareSuumoBatch(batch, previous) : batch.source === "nifty" ? prepareNiftyBatch(batch, previous) : preparePortalBatch(batch, previous);
+    const effect = { added: prepared.added, updated: prepared.updated, novel: prepared.novel,
+      observedCount: "observedCount" in prepared ? prepared.observedCount : batch.observations.length - prepared.ignored };
     const { observations, provenance: _provenance, ...metadata } = batch;
     const nextJournal: IngestionJournal = { schemaVersion: 1, batches: [...journal.batches, {
-      runId: batch.runId, batchId: batch.batchId, fingerprint, metadata,
+      runId: batch.runId, batchId: batch.batchId, fingerprint, metadata, effect,
       evidence: observations.map((observation) => ({
         sourceListingId: observation.sourceListingId, observedAt: observation.observedAt, ...observation.evidence,
       })),
@@ -62,7 +92,7 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
       : await this.repository.ingest({ ...prepared.batch, provenance: { ...prepared.batch.provenance, ingestionJournal: nextJournal } }, options);
     return { ...identity, replayed: false, revision: result.revision, retired: result.retired,
       added: prepared.added, updated: prepared.updated, ignored: prepared.ignored, novel: prepared.novel,
-      previousCount: prepared.previousCount, currentCount: prepared.currentCount };
+      previousCount: prepared.previousCount, currentCount: prepared.currentCount, effect };
   }
 }
 
@@ -85,12 +115,15 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
   const detailPatch = batch.observationKind === "detail-patch";
   if (batch.observationKind !== undefined && batch.observationKind !== "listing" && !detailPatch) invalid("Unsupported observation kind");
   const suumoDiscovery = !detailPatch && batch.source === "suumo";
-  if (detailPatch ? batch.source !== "suumo" : !["suumo", "nifty"].includes(batch.source)) invalid("Unsupported scrape source");
-  if ((batch.mode !== "discovery" && batch.mode !== "detail-enrichment") || (detailPatch && batch.mode !== "detail-enrichment") || (suumoDiscovery && batch.mode !== "discovery")) {
+  const nativeCapture = batch.scraper?.name === "native-capture";
+  if (detailPatch ? batch.source !== "suumo" : !["suumo", "nifty", "athome", "roomspot"].includes(batch.source)) invalid("Unsupported scrape source");
+  if ((batch.mode !== "discovery" && batch.mode !== "detail-enrichment") || (detailPatch && batch.mode !== "detail-enrichment")
+    || (!detailPatch && (batch.source !== "nifty" || nativeCapture) && batch.mode !== "discovery")) {
     invalid("Unsupported scrape mode; full snapshots require a reviewed exhaustion-evidence policy");
   }
-  const validUrl = (value: unknown) => sourceUrl(value, batch.source === "suumo" ? "suumo.jp" : "myhome.nifty.com");
-  const expectedProducer = detailPatch ? "suumo-detail" : suumoDiscovery ? "suumo-list" : batch.mode === "discovery" ? "nifty-list" : "nifty-detail";
+  const host = { suumo: "suumo.jp", nifty: "myhome.nifty.com", athome: "www.athome.co.jp", roomspot: "www.roomspot.net" }[batch.source as "suumo" | "nifty" | "athome" | "roomspot"];
+  const validUrl = (value: unknown) => sourceUrl(value, host);
+  const expectedProducer = detailPatch ? "suumo-detail" : nativeCapture ? "native-capture" : batch.mode === "discovery" ? `${batch.source}-list` : "nifty-detail";
   if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1" || batch.scraper.parserVersion !== "1") {
     invalid("Unsupported or missing scraper name/version/parserVersion");
   }
@@ -101,7 +134,7 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
     invalid("Invalid scrape scope");
   }
   if (batch.provenance !== undefined && (!object(batch.provenance) || MANAGED_INGESTION_PROVENANCE_KEYS.some((key) => key in batch.provenance!))) invalid("Invalid/reserved scrape provenance");
-  if (!Array.isArray(batch.observations) || (suumoDiscovery && !batch.observations.length)) invalid("Observations must be a non-empty array for SUUMO discovery");
+  if (!Array.isArray(batch.observations) || (suumoDiscovery && !nativeCapture && !batch.observations.length)) invalid("Observations must be a non-empty array for SUUMO discovery");
   const seen = new Map<string, string>();
   for (const observation of batch.observations) {
     if (!object(observation) || !nonempty(observation.sourceListingId)) invalid("Missing observation identity");
@@ -130,7 +163,7 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
     // A bounded crawl can see the same ad on multiple pages/capture times.
     // Reject contradictions within one capture, but let the source policy choose
     // between independently captured observations instead of deduplicating here.
-    const key = suumoDiscovery ? JSON.stringify([observation.sourceListingId, observation.observedAt, observation.evidence.url, observation.evidence.captureId]) : observation.sourceListingId;
+    const key = batch.mode === "discovery" ? JSON.stringify([observation.sourceListingId, observation.observedAt, observation.evidence.url, observation.evidence.captureId]) : observation.sourceListingId;
     if (seen.has(key) && seen.get(key) !== encoded) invalid("Conflicting observations for one source listing ID");
     seen.set(key, encoded);
   }
@@ -145,6 +178,7 @@ function readJournal(value: unknown): IngestionJournal {
       || typeof entry.fingerprint !== "string" || !/^[a-f0-9]{64}$/.test(entry.fingerprint)) invalid("Invalid persisted ingestion receipt");
     const key = JSON.stringify([entry.runId, entry.batchId]);
     if (keys.has(key)) invalid("Duplicate persisted ingestion receipt");
+    if (entry.effect !== undefined && (!object(entry.effect) || !["added", "updated", "novel", "observedCount"].every((field) => Number.isInteger(entry.effect && (entry.effect as Record<string, unknown>)[field]) && Number((entry.effect as Record<string, unknown>)[field]) >= 0))) invalid("Invalid persisted ingestion effects");
     keys.add(key);
   }
   return value as unknown as IngestionJournal;

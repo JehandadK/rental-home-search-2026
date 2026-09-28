@@ -2,32 +2,8 @@
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import type { ParkingInfo, RawListing } from "../../src/types";
-import type { ListingObservationBatch } from "../../src/data-layer/contracts";
-import { trackingKey } from "./lifecycle";
+export { athomeKey, athomeMatchKeys, isAthomeOverlap, mergeAthomeIncremental, athomeObservationBatch } from "../../src/data-layer/ingestion/portalPolicy";
 import { isExplicitNone, parseYen as parseJapaneseYen } from "./parseJa";
-
-const norm = (value: string | null | undefined): string =>
-  (value ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
-
-/** AtHome's stable advertisement number from the detail URL/id. */
-export function athomeKey(listing: RawListing): string {
-  const id = listing.id?.match(/athome-(\d+)/)?.[1] ?? listing.url?.match(/\/chintai\/(\d+)/)?.[1];
-  return id ? `athome:${id}` : `property:${trackingKey(listing)}`;
-}
-
-/** Same-room aliases handle duplicate agency adverts and changing names. */
-export function athomeMatchKeys(listing: RawListing): string[] {
-  return [...new Set([
-    athomeKey(listing),
-    `property:${trackingKey(listing)}`,
-    `market:${norm(listing.address)}|${listing.rent}|${listing.sizeM2 ?? ""}|${norm(listing.layout)}`,
-  ])];
-}
-
-export function isAthomeOverlap(a: RawListing, b: RawListing): boolean {
-  const keys = new Set(athomeMatchKeys(a));
-  return athomeMatchKeys(b).some((key) => keys.has(key));
-}
 
 function parseMan(text: string): number | null {
   const m = text.replace(/\s/g, "").match(/([\d.]+)万円/);
@@ -141,86 +117,4 @@ export function parseAthomePage(html: string, city: string): RawListing[] {
   });
 
   return listings;
-}
-
-/** Overlay a newest-first prefix onto history; unseen records remain untouched. */
-export function athomeObservationBatch(input: {
-  previous: readonly RawListing[];
-  current: readonly RawListing[];
-  expectedRevision: string | null;
-  observedAt: string;
-  observedAtByKey: Readonly<Record<string, string>>;
-  provenance: Readonly<Record<string, unknown>>;
-  completeness?: "incremental" | "complete";
-}): ListingObservationBatch {
-  const currentIds = new Set(input.current.map((listing) => listing.id).filter((id): id is string => Boolean(id)));
-  const currentAliases = new Set(input.current.flatMap(athomeMatchKeys));
-  const retirements = input.previous
-    .filter((listing) =>
-      listing.id && !currentIds.has(listing.id) && athomeMatchKeys(listing).some((key) => currentAliases.has(key)),
-    )
-    .map((listing) => ({
-      id: listing.id!,
-      effectiveAt: input.observedAt,
-      reason: "Superseded by a newer AtHome advertisement with matching unit aliases",
-    }));
-
-  return {
-    source: "athome",
-    expectedRevision: input.expectedRevision,
-    observedAt: input.observedAt,
-    completeness: input.completeness ?? "incremental",
-    observations: input.current.map((listing) => {
-      if (!listing.id) throw new Error(`AtHome listing has no stable source ID: ${listing.name}`);
-      return {
-        source: "athome",
-        sourceListingId: listing.id,
-        observedAt: input.observedAtByKey[trackingKey(listing)] ?? input.observedAt,
-        listing,
-      };
-    }),
-    retirements,
-    provenance: input.provenance,
-  };
-}
-
-export function mergeAthomeIncremental(
-  existing: readonly RawListing[],
-  discovered: readonly RawListing[],
-): { listings: RawListing[]; added: number; updated: number; overlaps: number } {
-  const byAlias = new Map<string, RawListing>();
-  for (const listing of existing) for (const alias of athomeMatchKeys(listing)) if (!byAlias.has(alias)) byAlias.set(alias, listing);
-  const used = new Set<RawListing>();
-  const seen = new Set<string>();
-  const listings: RawListing[] = [];
-  let added = 0, updated = 0, overlaps = 0;
-
-  for (const fresh of discovered) {
-    const aliases = athomeMatchKeys(fresh);
-    if (aliases.some((key) => seen.has(key))) { overlaps++; continue; }
-    const prior = aliases.map((key) => byAlias.get(key)).find(Boolean);
-    aliases.forEach((key) => seen.add(key));
-    if (prior) {
-      used.add(prior); updated++; overlaps++;
-      const parking = fresh.parking == null
-        ? prior.parking
-        : fresh.parking.available !== false && fresh.parking.monthlyYen == null && prior.parking?.monthlyYen != null
-          ? prior.parking
-          : fresh.parking;
-      listings.push({
-        ...prior, ...fresh,
-        parking,
-        building: { ...prior.building, ...fresh.building },
-        costs: { ...prior.costs, ...fresh.costs, parking: parking ?? null },
-      });
-    } else {
-      added++; listings.push(fresh);
-    }
-  }
-  for (const prior of existing) {
-    if (used.has(prior) || athomeMatchKeys(prior).some((key) => seen.has(key))) continue;
-    athomeMatchKeys(prior).forEach((key) => seen.add(key));
-    listings.push(prior);
-  }
-  return { listings, added, updated, overlaps };
 }

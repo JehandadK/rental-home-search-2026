@@ -87,6 +87,32 @@ export interface SuumoDiscoveryClient {
   beginSuumoDiscovery(options: SuumoDiscoveryOptions): Promise<SuumoDiscoverySession>;
 }
 
+export interface PortalDiscoveryOptions {
+  source: "athome" | "roomspot";
+  deep: boolean;
+  maxPages: number;
+  cities: readonly { label: string; url: string }[];
+}
+export interface PortalDiscoverySession extends SuumoDiscoverySession {
+  readonly bootstrap: boolean;
+  readonly deep: boolean;
+}
+export interface PortalDiscoveryClient {
+  beginPortalDiscovery(options: PortalDiscoveryOptions): Promise<PortalDiscoverySession>;
+}
+
+/** Original effects let a capture importer repair its checkpoint after a source commit/ack failure. */
+export interface IngestionEffect { added: number; updated: number; novel: number; observedCount: number }
+export interface CaptureRunSummary {
+  schemaVersion: 1;
+  source: "athome" | "roomspot" | "nifty" | "suumo";
+  captureRunId?: string;
+  cities: readonly { city: string; pages: number; added: number }[];
+}
+export interface NativeCaptureIngestion extends ScrapeIngestion {
+  annotateCaptureRun(summary: CaptureRunSummary): Promise<void>;
+}
+
 export interface ScrapeIngestionReceipt {
   source: string;
   runId: string;
@@ -101,6 +127,7 @@ export interface ScrapeIngestionReceipt {
   retired: number;
   ignored: number;
   novel: number;
+  effect?: IngestionEffect;
 }
 
 export interface ScrapeIngestion {
@@ -112,6 +139,7 @@ export interface IngestionJournalEntry {
   runId: string;
   batchId: string;
   fingerprint: string;
+  effect?: IngestionEffect;
   metadata: Omit<ScrapeSubmission, "observations" | "provenance">;
   evidence: readonly { sourceListingId: string; observedAt: string | null; url: string; captureId: string }[];
 }

@@ -1,7 +1,7 @@
 import type { RawListing } from "../../types";
 import { trackingKey } from "../../domain/listingIdentity";
 import type { ListingSourceSnapshot } from "../contracts";
-import { sourceObservationBatch } from "../sourceObservationBatch";
+import { exactReconciliation } from "./reconciliation";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sourceObservationTime";
 import type { ScrapeBatch } from "./contracts";
 
@@ -54,22 +54,12 @@ export function prepareNiftyBatch(request: ScrapeBatch, previous: ListingSourceS
   const previousCaptureTime = previous ? sourceSnapshotCaptureTime(previous) : undefined;
   const observedAt = previousCaptureTime && Date.parse(previousCaptureTime) > Date.parse(request.capturedAt)
     ? previousCaptureTime : request.capturedAt;
-  const batch = sourceObservationBatch({
-    source: request.source,
-    previous: previous?.listings ?? [],
-    current: merged.listings,
-    expectedRevision: previous?.revision ?? null,
-    observedAt,
+  const reconciliation = exactReconciliation(request.source, previous, merged.listings, observedAt, {
+    ...previous?.provenance, ...request.provenance,
+    observedTrackingKeys: eligible.filter((observation) => observation.observedAt !== null).map((observation) => trackingKey(observation.listing)),
     observedAtByKey,
-    provenance: {
-      ...previous?.provenance,
-      ...request.provenance,
-      observedTrackingKeys: eligible.filter((observation) => observation.observedAt !== null).map((observation) => trackingKey(observation.listing)),
-      observedAtByKey,
-    },
-    matchKeys: niftyMatchKeys,
   });
-  return { batch, added: merged.added, updated: merged.updated, novel,
+  return { reconciliation, added: merged.added, updated: merged.updated, novel, observedCount: eligible.length,
     ignored: request.observations.length - merged.added - merged.updated,
     previousCount: previous?.listings.length ?? 0, currentCount: merged.listings.length };
 }

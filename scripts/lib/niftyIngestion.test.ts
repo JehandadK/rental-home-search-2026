@@ -75,7 +75,7 @@ describe("Nifty list-page ingestion", () => {
     const page = { ...capture, html: html + secondCard };
     const parsed = parseNiftyPage(page.html, page.city, 2026);
     const merged = mergeNiftyIncremental(previous, parsed);
-    const ingest = vi.spyOn(repository, "ingest");
+    const reconcile = vi.spyOn(repository, "reconcileSource");
     const submit = vi.spyOn(service, "ingestScrape");
     const result = await ingestNiftyListPage(service, page);
     expect(submit.mock.calls[0][0]).toMatchObject({
@@ -106,9 +106,8 @@ describe("Nifty list-page ingestion", () => {
       sourceListingId: duplicate.id, listing: duplicate, retiredAt: capturedAt,
       reason: expect.stringContaining("matching source aliases"),
     }]);
-    expect(ingest.mock.calls[0][0]).toMatchObject({ completeness: "incremental", observations: expect.arrayContaining([
-      expect.objectContaining({ sourceListingId: unseen.id, observedAt: priorAt }),
-    ]) });
+    expect(reconcile.mock.calls[0][0]).toMatchObject({ expectedRevision: expect.any(String), listings: expect.arrayContaining([unseen]),
+      retirements: [expect.objectContaining({ sourceListingId: duplicate.id })] });
     const backups = await readdir(store.backupDir);
     expect(backups).toHaveLength(1);
     expect(await readFile(join(store.backupDir, backups[0]), "utf8")).toBe(originalBytes);
@@ -142,9 +141,9 @@ describe("Nifty list-page ingestion", () => {
   ])("retains the last page checkpoint after a %s", async (_, changes) => {
     await ingestNiftyListPage(service, capture);
     const checkpoint = await readFile(store.sourcePath("nifty"), "utf8");
-    const ingest = vi.spyOn(repository, "ingest");
+    const reconcile = vi.spyOn(repository, "reconcileSource");
     await expect(ingestNiftyListPage(service, { ...capture, page: 2, ...changes })).rejects.toThrow();
-    expect(ingest).not.toHaveBeenCalled();
+    expect(reconcile).not.toHaveBeenCalled();
     expect(await readFile(store.sourcePath("nifty"), "utf8")).toBe(checkpoint);
     await expect(readdir(store.backupDir)).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -176,12 +175,10 @@ describe("Nifty list-page ingestion", () => {
 
   it("surfaces a stale revision without retrying or overwriting the winning writer", async () => {
     await ingestNiftyListPage(service, capture);
-    const realIngest = repository.ingest.bind(repository);
-    const ingest = vi.spyOn(repository, "ingest").mockImplementationOnce(async (batch) => {
-      await realIngest({ ...batch, observations: batch.observations.map((observation) => ({
-        ...observation, listing: { ...observation.listing, rent: 99000 },
-      })) });
-      return realIngest(batch);
+    const realReconcile = repository.reconcileSource.bind(repository);
+    const ingest = vi.spyOn(repository, "reconcileSource").mockImplementationOnce(async (batch) => {
+      await realReconcile({ ...batch, listings: batch.listings.map((listing) => ({ ...listing, rent: 99000 })) });
+      return realReconcile(batch);
     });
     await expect(ingestNiftyListPage(service, { ...capture, capturedAt: "2026-09-25T00:01:00.000Z" })).rejects.toBeInstanceOf(RevisionConflictError);
     expect(ingest).toHaveBeenCalledTimes(1);

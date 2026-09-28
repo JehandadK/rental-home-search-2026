@@ -174,7 +174,7 @@ export interface SourceRowLocator {
 /** Internal application reconciliation: every removed locator needs an explicit archive reason. */
 export interface SourceReconciliation {
   source: string;
-  expectedRevision: string;
+  expectedRevision: string | null;
   observedAt: string;
   listings: readonly RawListing[];
   retirements: readonly (SourceRowLocator & { effectiveAt: string; reason: string })[];
