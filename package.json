@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "typecheck": "tsc --noEmit",
-    "build": "npm run data:web && tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json",
+    "build": "npm run data:web && npm run typecheck && vite build",
     "preview": "vite preview",
     "scrape": "tsx scripts/scrape.ts",
     "scrape:athome": "tsx scripts/scrape-athome.ts",
