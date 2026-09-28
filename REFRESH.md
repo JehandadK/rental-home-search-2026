@@ -52,13 +52,18 @@ run the human CLI's direct-Bridge collectors from the agent shell.
    a cold tab at a deep search URL: that can trigger blocking and stuck reads.
    If the homepage is blocked or times out, stop for manual inspection; do not
    proceed to results, replay navigation, or restart the browser automatically.
-   Then prefer the working `/chintai/saitama/list/?pref=11&cities=...&cityCds=...`
-   search supplied by the user. Preserve their other filters; narrow `cities`
-   and `cityCds` together for each city. Pagination is `/list/pageN/`, retaining
-   the query. Verify `select[name=SORT]` is **33** in every response. This modern
+   Then use the city-path search `/chintai/saitama/<city>-city/list/?sort=33`
+   (`soka`, `koshigaya`, `kawaguchi`). As of 2026-09-29 the prefecture search
+   `/chintai/saitama/list/?pref=11&cities=...&cityCds=...` ignores its city
+   filter and returns Saitama-wide cards (the importer rejects them as wrong
+   city). Pagination is `/list/pageN/`, retaining `?sort=33`. Verify
+   `select[name=SORT]` is **33** in every response. Save each page's HTML and
+   convert it with `npm run capture:athome-html -- --file <html> --url <pageUrl>
+   --captured-at <iso>` before `capture:import`. This modern
    template uses `.property-card` / `.room-info-section` (mapping below), not
-   `.p-property`. Legacy single-city pages still require AJAX form `SORT=33`;
-   their lower-case URL query alone does not select it.
+   `.p-property`, and honours the `?sort=33` query. Only the older `.p-property`
+   template needed the AJAX form `SORT=33` (as `scripts/lib/athomeBrowser.ts`
+   still sends); on that template the URL query alone did not select it.
 3. RoomSpot: confirm `sort=new_arrival`; the existing page's public REST search
    parameters support each configured city, avoiding full navigations per city.
 4. Nifty: newest is **sort=regDate-desc**, NOT the default `recommend` order.
