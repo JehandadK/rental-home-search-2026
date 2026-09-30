@@ -4421,6 +4421,678 @@
           "roomspot": 6
         }
       }
+    },
+    {
+      "schemaVersion": 1,
+      "id": "2026-09-30T09-51-41-218Z-94fa3b40",
+      "startedAt": "2026-09-30T09:51:41.218Z",
+      "updatedAt": "2026-09-30T10:09:45.115Z",
+      "status": "partial",
+      "mode": "incremental",
+      "skipNifty": false,
+      "skipRoomspot": false,
+      "limits": {
+        "pagesPerCity": 100,
+        "detailRequests": 0
+      },
+      "invocations": [
+        {
+          "startedAt": "2026-09-30T09:51:41.218Z",
+          "resume": false
+        },
+        {
+          "startedAt": "2026-09-30T09:51:57.813Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:02:46.904Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:05:43.244Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:06:20.519Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:07:05.215Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:08:15.368Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:08:48.050Z",
+          "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:09:32.684Z",
+          "resume": true
+        }
+      ],
+      "beforeTotal": 3666,
+      "stages": [
+        {
+          "id": "suumo",
+          "label": "SUUMO",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:41.235Z",
+              "completedAt": "2026-09-30T09:51:42.178Z",
+              "durationMs": 943,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "  stdout: '',   stderr: 'curl: (22) The requested URL returned error: 403\\n' }"
+            },
+            {
+              "startedAt": "2026-09-30T09:51:57.830Z",
+              "completedAt": "2026-09-30T09:52:34.430Z",
+              "durationMs": 36600,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 11
+            }
+          ],
+          "startedAt": "2026-09-30T09:51:57.830Z",
+          "completedAt": "2026-09-30T09:52:34.430Z",
+          "durationMs": 36600,
+          "exitCode": 0,
+          "discovered": 11
+        },
+        {
+          "id": "suumo-parking",
+          "label": "Legacy parking pass",
+          "status": "skipped",
+          "detail": "Disabled by refresh policy/options",
+          "attempts": []
+        },
+        {
+          "id": "athome",
+          "label": "AtHome",
+          "status": "failed",
+          "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:41.235Z",
+              "completedAt": "2026-09-30T09:51:41.921Z",
+              "durationMs": 686,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T09:51:57.830Z",
+              "completedAt": "2026-09-30T09:51:58.530Z",
+              "durationMs": 701,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:46.921Z",
+              "completedAt": "2026-09-30T10:02:47.530Z",
+              "durationMs": 609,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:05.232Z",
+              "completedAt": "2026-09-30T10:07:07.450Z",
+              "durationMs": 2218,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:15.388Z",
+              "completedAt": "2026-09-30T10:08:17.846Z",
+              "durationMs": 2458,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:48.069Z",
+              "completedAt": "2026-09-30T10:08:54.278Z",
+              "durationMs": 6209,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:32.705Z",
+              "completedAt": "2026-09-30T10:09:38.389Z",
+              "durationMs": 5684,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying"
+            }
+          ],
+          "startedAt": "2026-09-30T10:09:32.705Z",
+          "completedAt": "2026-09-30T10:09:38.389Z",
+          "durationMs": 5684,
+          "exitCode": 1
+        },
+        {
+          "id": "roomspot",
+          "label": "RoomSpot",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:41.235Z",
+              "completedAt": "2026-09-30T09:51:42.009Z",
+              "durationMs": 774,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T09:51:57.830Z",
+              "completedAt": "2026-09-30T09:51:58.595Z",
+              "durationMs": 765,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:46.921Z",
+              "completedAt": "2026-09-30T10:02:47.519Z",
+              "durationMs": 598,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:05:43.263Z",
+              "completedAt": "2026-09-30T10:05:43.931Z",
+              "durationMs": 668,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "║                                                            ║ ║ <3 Playwright Team                                         ║ ╚════════════════════════════════════════════════════════════╝"
+            },
+            {
+              "startedAt": "2026-09-30T10:06:20.539Z",
+              "completedAt": "2026-09-30T10:07:00.372Z",
+              "durationMs": 39833,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 65
+            }
+          ],
+          "startedAt": "2026-09-30T10:06:20.539Z",
+          "completedAt": "2026-09-30T10:07:00.372Z",
+          "durationMs": 39833,
+          "exitCode": 0,
+          "discovered": 65
+        },
+        {
+          "id": "nifty-soka",
+          "label": "Nifty Soka",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:41.235Z",
+              "completedAt": "2026-09-30T09:51:41.916Z",
+              "durationMs": 681,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T09:51:57.830Z",
+              "completedAt": "2026-09-30T09:51:58.507Z",
+              "durationMs": 677,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:46.921Z",
+              "completedAt": "2026-09-30T10:02:47.512Z",
+              "durationMs": 591,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:05.232Z",
+              "completedAt": "2026-09-30T10:07:26.363Z",
+              "durationMs": 21131,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): page.evaluate: Error: Nifty results not ready     at eval (eval at evaluate (:367:30), <anonymous>:1:118)     at async <anonymous>:393:30"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:15.388Z",
+              "completedAt": "2026-09-30T10:08:36.905Z",
+              "durationMs": 21517,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): page.evaluate: Error: Nifty results not ready     at eval (eval at evaluate (:367:30), <anonymous>:1:118)     at async <anonymous>:393:30"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:48.069Z",
+              "completedAt": "2026-09-30T10:08:57.707Z",
+              "durationMs": 9638,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 4
+            }
+          ],
+          "startedAt": "2026-09-30T10:08:48.069Z",
+          "completedAt": "2026-09-30T10:08:57.707Z",
+          "durationMs": 9638,
+          "exitCode": 0,
+          "discovered": 4
+        },
+        {
+          "id": "nifty-koshigaya",
+          "label": "Nifty Koshigaya",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:41.235Z",
+              "completedAt": "2026-09-30T09:51:42.002Z",
+              "durationMs": 767,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T09:51:57.830Z",
+              "completedAt": "2026-09-30T09:51:58.577Z",
+              "durationMs": 747,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:46.921Z",
+              "completedAt": "2026-09-30T10:02:47.558Z",
+              "durationMs": 638,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:05.232Z",
+              "completedAt": "2026-09-30T10:07:26.356Z",
+              "durationMs": 21124,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): page.evaluate: Error: Nifty results not ready     at eval (eval at evaluate (:367:30), <anonymous>:1:118)     at async <anonymous>:393:30"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:15.388Z",
+              "completedAt": "2026-09-30T10:08:36.827Z",
+              "durationMs": 21439,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): page.evaluate: Error: Nifty results not ready     at eval (eval at evaluate (:367:30), <anonymous>:1:118)     at async <anonymous>:393:30"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:48.069Z",
+              "completedAt": "2026-09-30T10:08:51.352Z",
+              "durationMs": 3283,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): Revision conflict for /Users/jehandad.kamal/PersonalProjects/rental-home-search-2026/.claude/worktrees/recent-properties-parallel-1067dd/data/sources/nifty.json: expected 027b884f9d65d19f6c31ced7333ab827044ead27e6d76a3b9f3b4119166ea5c7, found 262a1882bd151ed0a2914a0b96099ef41dce8d5d504cabc8d9376f83271fc02c. Re-read and reconcile before retrying."
+            },
+            {
+              "startedAt": "2026-09-30T10:09:32.705Z",
+              "completedAt": "2026-09-30T10:09:40.868Z",
+              "durationMs": 8163,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 10
+            }
+          ],
+          "startedAt": "2026-09-30T10:09:32.705Z",
+          "completedAt": "2026-09-30T10:09:40.868Z",
+          "durationMs": 8163,
+          "exitCode": 0,
+          "discovered": 10
+        },
+        {
+          "id": "nifty-kawaguchi",
+          "label": "Nifty Kawaguchi",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:41.235Z",
+              "completedAt": "2026-09-30T09:51:41.961Z",
+              "durationMs": 726,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T09:51:57.830Z",
+              "completedAt": "2026-09-30T09:51:58.539Z",
+              "durationMs": 709,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:46.921Z",
+              "completedAt": "2026-09-30T10:02:47.525Z",
+              "durationMs": 604,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): fetch failed"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:05.232Z",
+              "completedAt": "2026-09-30T10:07:26.348Z",
+              "durationMs": 21116,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): page.evaluate: Error: Nifty results not ready     at eval (eval at evaluate (:367:30), <anonymous>:1:118)     at async <anonymous>:393:30"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:15.388Z",
+              "completedAt": "2026-09-30T10:08:36.827Z",
+              "durationMs": 21439,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "Nifty stopped (validated progress retained): page.evaluate: Error: Nifty results not ready     at eval (eval at evaluate (:367:30), <anonymous>:1:118)     at async <anonymous>:393:30"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:48.069Z",
+              "completedAt": "2026-09-30T10:09:07.645Z",
+              "durationMs": 19576,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 40
+            }
+          ],
+          "startedAt": "2026-09-30T10:08:48.069Z",
+          "completedAt": "2026-09-30T10:09:07.645Z",
+          "durationMs": 19576,
+          "exitCode": 0,
+          "discovered": 40
+        },
+        {
+          "id": "nifty-import",
+          "label": "Nifty import",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:42.193Z",
+              "completedAt": "2026-09-30T09:51:42.777Z",
+              "durationMs": 584,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T09:52:34.447Z",
+              "completedAt": "2026-09-30T09:52:35.093Z",
+              "durationMs": 646,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:47.626Z",
+              "completedAt": "2026-09-30T10:02:48.125Z",
+              "durationMs": 499,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:26.429Z",
+              "completedAt": "2026-09-30T10:07:26.980Z",
+              "durationMs": 551,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:36.921Z",
+              "completedAt": "2026-09-30T10:08:37.475Z",
+              "durationMs": 554,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:07.663Z",
+              "completedAt": "2026-09-30T10:09:08.209Z",
+              "durationMs": 546,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:40.888Z",
+              "completedAt": "2026-09-30T10:09:41.447Z",
+              "durationMs": 559,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-09-30T10:09:40.888Z",
+          "completedAt": "2026-09-30T10:09:41.447Z",
+          "durationMs": 559,
+          "exitCode": 0
+        },
+        {
+          "id": "detail-enrich",
+          "label": "Optional details",
+          "status": "skipped",
+          "detail": "Disabled by refresh policy/options",
+          "attempts": []
+        },
+        {
+          "id": "data-build",
+          "label": "Merge/deduplicate",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:42.794Z",
+              "completedAt": "2026-09-30T09:51:43.655Z",
+              "durationMs": 861,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 1
+            },
+            {
+              "startedAt": "2026-09-30T09:52:35.110Z",
+              "completedAt": "2026-09-30T09:52:35.952Z",
+              "durationMs": 842,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 15
+            },
+            {
+              "startedAt": "2026-09-30T10:02:48.141Z",
+              "completedAt": "2026-09-30T10:02:48.996Z",
+              "durationMs": 855,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 0
+            },
+            {
+              "startedAt": "2026-09-30T10:07:26.996Z",
+              "completedAt": "2026-09-30T10:07:27.815Z",
+              "durationMs": 819,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 1
+            },
+            {
+              "startedAt": "2026-09-30T10:08:37.492Z",
+              "completedAt": "2026-09-30T10:08:38.353Z",
+              "durationMs": 861,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 0
+            },
+            {
+              "startedAt": "2026-09-30T10:09:08.226Z",
+              "completedAt": "2026-09-30T10:09:09.093Z",
+              "durationMs": 867,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 28
+            },
+            {
+              "startedAt": "2026-09-30T10:09:41.464Z",
+              "completedAt": "2026-09-30T10:09:42.314Z",
+              "durationMs": 851,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 4
+            }
+          ],
+          "startedAt": "2026-09-30T10:09:41.464Z",
+          "completedAt": "2026-09-30T10:09:42.314Z",
+          "durationMs": 851,
+          "exitCode": 0,
+          "discovered": 4
+        },
+        {
+          "id": "enrich",
+          "label": "Geocode/enrich",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:43.671Z",
+              "completedAt": "2026-09-30T09:51:44.941Z",
+              "durationMs": 1270,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T09:52:35.967Z",
+              "completedAt": "2026-09-30T09:52:37.762Z",
+              "durationMs": 1795,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:49.011Z",
+              "completedAt": "2026-09-30T10:02:50.254Z",
+              "durationMs": 1243,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:27.830Z",
+              "completedAt": "2026-09-30T10:07:30.808Z",
+              "durationMs": 2978,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:38.368Z",
+              "completedAt": "2026-09-30T10:08:39.615Z",
+              "durationMs": 1247,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:09.108Z",
+              "completedAt": "2026-09-30T10:09:10.844Z",
+              "durationMs": 1736,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:42.330Z",
+              "completedAt": "2026-09-30T10:09:44.421Z",
+              "durationMs": 2091,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-09-30T10:09:42.330Z",
+          "completedAt": "2026-09-30T10:09:44.421Z",
+          "durationMs": 2091,
+          "exitCode": 0
+        },
+        {
+          "id": "web-data",
+          "label": "Web payload",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-09-30T09:51:44.956Z",
+              "completedAt": "2026-09-30T09:51:45.613Z",
+              "durationMs": 657,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T09:52:37.779Z",
+              "completedAt": "2026-09-30T09:52:38.489Z",
+              "durationMs": 710,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:02:50.269Z",
+              "completedAt": "2026-09-30T10:02:50.856Z",
+              "durationMs": 587,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:07:30.823Z",
+              "completedAt": "2026-09-30T10:07:31.441Z",
+              "durationMs": 618,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:08:39.630Z",
+              "completedAt": "2026-09-30T10:08:40.252Z",
+              "durationMs": 622,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:10.858Z",
+              "completedAt": "2026-09-30T10:09:11.480Z",
+              "durationMs": 622,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-09-30T10:09:44.438Z",
+              "completedAt": "2026-09-30T10:09:45.068Z",
+              "durationMs": 630,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-09-30T10:09:44.438Z",
+          "completedAt": "2026-09-30T10:09:45.068Z",
+          "durationMs": 630,
+          "exitCode": 0
+        }
+      ],
+      "completedAt": "2026-09-30T10:09:45.115Z",
+      "afterTotal": 3700,
+      "netUniqueAdded": 49,
+      "duplicatesDropped": 2578,
+      "lifecycle": {
+        "continued": 3696,
+        "added": 4,
+        "sold": 0,
+        "reactivated": 0
+      },
+      "recent24h": {
+        "total": 49,
+        "bySource": {
+          "athome": 1,
+          "suumo": 16,
+          "nifty": 30,
+          "roomspot": 2
+        }
+      }
     }
   ]
 }
