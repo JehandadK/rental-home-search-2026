@@ -3,7 +3,7 @@
  * discovered (highlight them) and which are sold (kept, but de-emphasised).
  *
  * The timestamps are assigned by `npm run data:build` (see
- * scripts/lib/lifecycle.ts); listings from before tracking began have a null
+ * src/data-layer/lifecycle.ts); listings from before tracking began have a null
  * `firstSeenAt` and are therefore never "new".
  */
 import type { EnrichedListing } from "./types";

@@ -365,26 +365,34 @@ estimates, but treat exact positions as ±100–200 m.
 
 ```
 src/
-  config/scoring.ts     ← all weights & anchors (the single tuning point)
-  domain/               ← pure, testable logic
-    geo.ts                · haversine, walk-time estimation
+  web/                  ← React app (reads data; never imports Node, storage or collectors)
+    components/           · PlacePanel, FilterPanel, WeightPanel, ListingTable, MapView, AddListingForm
+    hooks/                · localStorage-persisted config, filters, places, listings
+    lib/export.ts         · CSV/Markdown export
+  domain/               ← pure, testable logic shared by every layer
+    types.ts              · listing, place and score shapes
+    scoringConfig.ts      · all weights & anchors (the single tuning point)
     scoring.ts            · the 0–100 engine
+    geo.ts                · haversine, walk-time estimation
     places.ts             · the flat catalog of every reference place
     proximityIndex.ts     · runtime listing × place distance matrix
     placeSelection.ts     · applies "which places count" to a listing
     diagnostics.ts        · finds criteria that decide nothing
     filters.ts            · area/city/rent/size/layout predicates
-  components/           ← PlacePanel, FilterPanel, WeightPanel, ListingTable,
-                          MapView, AddListingForm
-  hooks/                ← localStorage-persisted config, filters, places, listings
-  lib/                  ← GSI geocoding client, CSV/Markdown export
+  collectors/           ← fetch, parse and submit observations (suumo/, athome/, roomspot/, nifty/, enrichment/, shared/)
+  data-layer/           ← contracts, ingestion/correction/bootstrap services, per-source policies, lifecycle
+  storage/json/         ← JSON-file implementation of the data-layer repositories
+  refresh/              ← refresh plan and run ledger
+  node/                 ← locks, atomic writes, data root path
+  integrations/         ← GSI geocoding client
   data/                 ← the datasets above
-scripts/
+scripts/                ← CLI entry points only (npm run …)
   scrape.ts             ← incremental SUUMO collector
   scrape-athome.ts      ← Chrome-backed incremental AtHome collector
   scrape-roomspot.ts    ← Chrome-backed incremental RoomSpot/POLUS collector
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
+tools/architecture/     ← test enforcing the layer rules in DATA_ARCHITECTURE.md
 ```
 
 ## Known caveats
