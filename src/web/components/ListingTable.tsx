@@ -14,6 +14,9 @@ import { isNewListing, isSold } from "../../domain/lifecycle";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ScoredRow } from "../../domain/scoring";
 import type { ScoreParameterKey } from "../../domain/types";
+import { decodeHiddenColumns } from "../userState/decoders";
+import { USER_STATE_KEYS } from "../userState/store";
+import { useUserStateStore } from "../userState/UserStateContext";
 import styles from "./ListingTable.module.css";
 import appStyles from "../App.module.css";
 
@@ -40,7 +43,6 @@ interface TableColumn {
 
 const yen = new Intl.NumberFormat("ja-JP");
 const PAGE_SIZE = 100;
-const COLUMN_STORAGE_KEY = "rental-search-hidden-columns-v1";
 const TABLE_COLUMNS: readonly TableColumn[] = [
   { key: "locate", label: "Map" },
   { key: "rank", label: "Rank" },
@@ -62,16 +64,6 @@ const COMPACT_COLUMNS = new Set<ColumnKey>([
   "station",
   "links",
 ]);
-
-function savedHiddenColumns(): Set<ColumnKey> {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(COLUMN_STORAGE_KEY) ?? "[]");
-    if (!Array.isArray(saved)) return new Set();
-    return new Set(saved.filter((key): key is ColumnKey => COLUMN_KEYS.has(key as ColumnKey)));
-  } catch {
-    return new Set();
-  }
-}
 
 /** Format a parameter's raw value for compact table display. */
 function formatValue(part: ScorePart | undefined): string {
@@ -96,7 +88,10 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [ascending, setAscending] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(savedHiddenColumns);
+  const userState = useUserStateStore();
+  const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(
+    () => decodeHiddenColumns(userState.read(USER_STATE_KEYS.hiddenColumns), COLUMN_KEYS),
+  );
   // Rendering 1,500+ table rows and ~15,000 cells at once dominates browser
   // startup. Render the first useful slice, then opt into more as needed.
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -144,14 +139,9 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
 
   useEffect(() => setVisibleCount(PAGE_SIZE), [items, sortKey, ascending]);
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify([...hiddenColumns]));
-    } catch {
-      // The table remains customizable when storage is unavailable; it just
-      // cannot carry the preference into the next browser session.
-    }
-  }, [hiddenColumns]);
+  // Without storage the table stays customizable; the choice just won't
+  // carry into the next browser session.
+  useEffect(() => userState.write(USER_STATE_KEYS.hiddenColumns, [...hiddenColumns]), [userState, hiddenColumns]);
 
   // Hovering a map marker updates this component frequently. Cache the slice
   // so those transient renders reuse the same row array.

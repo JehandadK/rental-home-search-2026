@@ -384,7 +384,8 @@ src/
   web/                  ← React app (reads data; never imports Node, storage or collectors)
     data/                 · WebDataBoundary + runtime client that fetches public/data/
     components/           · PlacePanel, FilterPanel, WeightPanel, ListingTable, MapView, AddListingForm
-    hooks/                · localStorage-persisted config, filters, places, listings
+    hooks/                · persisted config, filters, places, marks, custom listings
+    userState/            · the only localStorage adapter (plus an in-memory one for tests)
     lib/export.ts         · CSV/Markdown export
   domain/               ← pure, testable logic shared by every layer
     types.ts              · listing, place and score shapes

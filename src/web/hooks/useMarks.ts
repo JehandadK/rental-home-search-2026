@@ -1,29 +1,16 @@
 /**
- * The user's decision marks, persisted to localStorage so they survive
- * reloads and listing-data refreshes. Keyed by listingKey, which prefers
- * the stable source id assigned at scrape time.
+ * The user's decision marks, persisted through the user-state store so they
+ * survive reloads and listing-data refreshes. Keyed by listingKey, which
+ * prefers the stable source id assigned at scrape time.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import type { ListingMark, MarkMap } from "../../domain/marks";
-
-const STORAGE_KEY = "soka-scorer-marks-v1";
-
-function loadMarks(): MarkMap {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {
-    // Ignore corrupt storage.
-  }
-  return {};
-}
+import { decodeMarks } from "../userState/decoders";
+import { USER_STATE_KEYS } from "../userState/store";
+import { usePersistentState } from "../userState/UserStateContext";
 
 export function useMarks() {
-  const [marks, setMarks] = useState<MarkMap>(loadMarks);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(marks));
-  }, [marks]);
+  const [marks, setMarks] = usePersistentState<MarkMap>(USER_STATE_KEYS.marks, decodeMarks);
 
   /** Set the decision mark for one listing key; null clears it. */
   const setMark = useCallback((key: string, mark: ListingMark | null) => {
@@ -33,9 +20,9 @@ export function useMarks() {
       else next[key] = mark;
       return next;
     });
-  }, []);
+  }, [setMarks]);
 
-  const clearMarks = useCallback(() => setMarks({}), []);
+  const clearMarks = useCallback(() => setMarks({}), [setMarks]);
 
   return { marks, setMark, clearMarks };
 }

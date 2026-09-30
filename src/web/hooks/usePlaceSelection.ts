@@ -1,39 +1,21 @@
 /**
- * Place-selection state with localStorage persistence, so a curated set of
- * stations/schools survives reloads.
+ * Place-selection state, persisted through the user-state store so a
+ * curated set of stations/schools survives reloads.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { defaultSelection, type PlaceSelection } from "../../domain/placeSelection";
 import type { DistanceParameterKey, PlaceCatalog } from "../../domain/places";
-
-const STORAGE_KEY = "soka-scorer-places-v1";
-
-function loadSelection(defaults: PlaceSelection): PlaceSelection {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved) as PlaceSelection;
-      const merged = { ...defaults.byParameter, ...parsed.byParameter };
-      // v1 stored Baitul Aman as a single poi target. Mosque scoring now
-      // defaults to nearest of all mosques; migrate that legacy default while
-      // preserving genuinely curated multi-mosque choices.
-      const oldBaitulOnly = merged.poi2?.length === 1 && merged.poi2[0].includes("Baitul Aman");
-      if (oldBaitulOnly) merged.poi2 = null;
-      return { byParameter: merged };
-    }
-  } catch {
-    // Ignore corrupt storage.
-  }
-  return defaults;
-}
+import { decodePlaceSelection } from "../userState/decoders";
+import { USER_STATE_KEYS } from "../userState/store";
+import { usePersistentState } from "../userState/UserStateContext";
 
 export function usePlaceSelection(catalog: PlaceCatalog) {
   const defaults = useMemo(() => defaultSelection(catalog), [catalog]);
-  const [selection, setSelection] = useState<PlaceSelection>(() => loadSelection(defaults));
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
-  }, [selection]);
+  // Decoded once, against the catalog the app loaded with.
+  const [selection, setSelection] = usePersistentState<PlaceSelection>(
+    USER_STATE_KEYS.placeSelection,
+    (raw) => decodePlaceSelection(raw, defaults),
+  );
 
   /** Replace the chosen ids for one parameter (null = any place). */
   const setPlaces = useCallback((key: DistanceParameterKey, ids: string[] | null) => {

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { importsOf, sourceFiles } from "./imports";
 import { KNOWN_VIOLATIONS } from "./knownViolations";
 import { classify, violation, type ImportEdge } from "./layers";
+import { BROWSER_STORAGE_ADAPTER, browserStorageAccesses, storageViolation } from "./browserStorage";
 
 const ROOT = resolve(import.meta.dirname, "..", "..");
 
@@ -167,5 +168,37 @@ describe("source tree", () => {
   it("lists only violations that still occur", () => {
     expect([...known].filter((edgeKey) => !actual.has(edgeKey))).toEqual([]);
     expect(known.size).toBe(KNOWN_VIOLATIONS.length);
+  });
+});
+
+describe("browser storage", () => {
+  const plant = (source: string) => {
+    const dir = mkdtempSync(join(tmpdir(), "storage-access-"));
+    try {
+      mkdirSync(join(dir, "src", "web"), { recursive: true });
+      writeFileSync(join(dir, "src", "web", "Planted.tsx"), source);
+      return browserStorageAccesses(dir, "src/web/Planted.tsx").map(storageViolation);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
+  it("finds direct storage access in every form, and ignores comments and strings", () => {
+    expect(plant("localStorage.getItem('k');")).toEqual([expect.stringMatching(/Planted.tsx:1 uses localStorage/)]);
+    expect(plant("window.sessionStorage.clear();")).toEqual([expect.stringMatching(/uses sessionStorage/)]);
+    expect(plant("const s = window[\"localStorage\"];")).toEqual([expect.stringMatching(/uses localStorage/)]);
+    expect(plant("const db = indexedDB;")).toEqual([expect.stringMatching(/uses indexedDB/)]);
+    expect(plant("// localStorage is wrapped\nconst label = 'localStorage';")).toEqual([]);
+  });
+
+  it("allows the adapter and tests only", () => {
+    expect(storageViolation({ file: BROWSER_STORAGE_ADAPTER, line: 1, name: "localStorage" })).toBeNull();
+    expect(storageViolation({ file: "src/web/App.test.tsx", line: 1, name: "localStorage" })).toBeNull();
+    expect(storageViolation({ file: "src/web/hooks/useMarks.ts", line: 1, name: "localStorage" })).toMatch(/through src\/web\/userState\/store.ts/);
+  });
+
+  it("is only accessed through the user-state adapter in the source tree", () => {
+    const violations = sourceFiles(ROOT).flatMap((file) => browserStorageAccesses(ROOT, file)).map(storageViolation).filter(Boolean);
+    expect(violations).toEqual([]);
   });
 });

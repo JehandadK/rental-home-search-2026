@@ -1,17 +1,13 @@
 /**
- * Scoring-config state with localStorage persistence, so a tuned
+ * Scoring-config state, persisted through the user-state store so a tuned
  * weighting scheme survives page reloads.
  */
-import { useCallback, useEffect, useState } from "react";
-import {
-  DEFAULT_CONFIG,
-  DEFAULT_FEATURE_PREFERENCES,
-  DEFAULT_FEATURE_WEIGHTS,
-  type ScoringConfig,
-} from "../../domain/scoringConfig";
+import { useCallback } from "react";
+import { DEFAULT_CONFIG, type ScoringConfig } from "../../domain/scoringConfig";
 import type { ListingFeatureKey, ScoreParameterKey } from "../../domain/types";
-
-const STORAGE_KEY = "soka-scorer-config-v1";
+import { decodeScoringConfig } from "../userState/decoders";
+import { USER_STATE_KEYS } from "../userState/store";
+import { usePersistentState } from "../userState/UserStateContext";
 
 export function withAllWeightsZero(config: ScoringConfig): ScoringConfig {
   return {
@@ -25,33 +21,8 @@ export function withAllWeightsZero(config: ScoringConfig): ScoringConfig {
   };
 }
 
-function loadConfig(): ScoringConfig {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved) as Partial<ScoringConfig>;
-      return {
-        ...DEFAULT_CONFIG,
-        ...parsed,
-        weights: { ...DEFAULT_CONFIG.weights, ...parsed.weights },
-        featureWeights: { ...DEFAULT_FEATURE_WEIGHTS, ...parsed.featureWeights },
-        featurePreferences: { ...DEFAULT_FEATURE_PREFERENCES, ...parsed.featurePreferences },
-        walkZeroMinutes: { ...DEFAULT_CONFIG.walkZeroMinutes, ...parsed.walkZeroMinutes },
-        moveIn: { ...DEFAULT_CONFIG.moveIn, ...parsed.moveIn },
-      };
-    }
-  } catch {
-    // Corrupt or unavailable storage: fall back to defaults.
-  }
-  return DEFAULT_CONFIG;
-}
-
 export function useScoringConfig() {
-  const [config, setConfig] = useState<ScoringConfig>(loadConfig);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  }, [config]);
+  const [config, setConfig] = usePersistentState<ScoringConfig>(USER_STATE_KEYS.scoringConfig, decodeScoringConfig);
 
   const setWeight = useCallback((key: ScoreParameterKey, weight: number) => {
     setConfig((c) => ({ ...c, weights: { ...c.weights, [key]: weight } }));

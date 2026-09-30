@@ -5,7 +5,7 @@
  * cluttering the search and narrowed-down candidates stand out.
  *
  * Marks are user state, not listing data: they live in their own
- * localStorage store (see web/hooks/useMarks.ts), keyed by listingKey. The key
+ * user-state store (see web/userState/), keyed by listingKey. The key
  * prefers the stable source id, so marks survive scrapes and data rebuilds.
  */
 

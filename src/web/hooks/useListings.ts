@@ -1,37 +1,24 @@
 /**
  * Listing collection state: the loaded base listings, plus custom listings
- * the user adds by hand (persisted to localStorage).
+ * the user adds by hand (persisted through the user-state store).
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import type { EnrichedListing } from "../../domain/types";
 import { deduplicateListings } from "../../domain/listingDedup";
-
-const STORAGE_KEY = "soka-scorer-custom-listings-v1";
-
-function loadCustom(): EnrichedListing[] {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {
-    // Ignore corrupt storage.
-  }
-  return [];
-}
+import { decodeCustomListings } from "../userState/decoders";
+import { USER_STATE_KEYS } from "../userState/store";
+import { usePersistentState } from "../userState/UserStateContext";
 
 export function useListings(baseListings: readonly EnrichedListing[]) {
-  const [custom, setCustom] = useState<EnrichedListing[]>(loadCustom);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
-  }, [custom]);
+  const [custom, setCustom] = usePersistentState<EnrichedListing[]>(USER_STATE_KEYS.customListings, decodeCustomListings);
 
   const addListing = useCallback((listing: EnrichedListing) => {
     setCustom((list) => [...list, listing]);
-  }, []);
+  }, [setCustom]);
 
   const removeListing = useCallback((name: string) => {
     setCustom((list) => list.filter((l) => l.name !== name));
-  }, []);
+  }, [setCustom]);
 
   // Keep this array referentially stable. Rebuilding it on every App render
   // used to cascade into rebuilding the ~2m-entry proximity matrix, resolving
