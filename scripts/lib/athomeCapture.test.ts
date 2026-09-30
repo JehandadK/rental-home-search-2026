@@ -61,6 +61,16 @@ describe("offline native-download AtHome capture", () => {
     expect(() => athomeDownloadedCapture(html, url, "invalid")).toThrow("Invalid AtHome capture");
   });
 
+  it("accepts city-path results, taking the city from the path", () => {
+    const cityUrl = "https://www.athome.co.jp/chintai/saitama/soka-city/list/page3/?sort=33";
+    expect(athomeDownloadedCapture(html, cityUrl, time)).toMatchObject({ city: "Soka", page: 3, url: cityUrl });
+    expect(athomeDownloadedCapture(html, cityUrl.replace("page3/", ""), time).page).toBe(1);
+    expect(() => athomeDownloadedCapture(html, cityUrl.replace("soka", "kawaguchi"), time)).toThrow("wrong city");
+    for (const bad of [cityUrl.replace("sort=33", "sort=95"), cityUrl.replace("soka-city", "constructor-city"), cityUrl.replace("saitama", "tokyo")]) {
+      expect(() => athomeDownloadedCapture(html, bad, time)).toThrow("Invalid AtHome capture");
+    }
+  });
+
   it("fails on malformed family cards rather than silently dropping records", () => {
     for (const broken of [html.replace("75.50m²", "unknown"), html.replace("8.2万円", "unknown"), html.replace("1234567890", "invalid"), html.replace("3LDK", "")]) {
       expect(() => athomeDownloadedCapture(broken, url, time)).toThrow();

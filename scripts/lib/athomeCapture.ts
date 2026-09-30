@@ -14,10 +14,12 @@ const esc = (s: string): string => s.replace(/[&<>"']/g, c => ({
 /** Offline projection of Chrome's downloaded public results; never executes page scripts. */
 export function athomeDownloadedCapture(html: string, url: string, capturedAt: string): PageCapture & { sortedNewest: true } {
   const u = new URL(url);
-  const city = CITIES[u.searchParams.get("cities") as keyof typeof CITIES];
-  const path = u.pathname.match(/^\/chintai\/saitama\/list\/(?:page([1-9]\d*)\/)?$/);
+  // City-path results (`/soka-city/list/`) filter by city; the prefecture search now ignores `cities`/`cityCds`.
+  const path = u.pathname.match(/^\/chintai\/saitama\/(?:([a-z]+)-city\/)?list\/(?:page([1-9]\d*)\/)?$/);
+  const key = path?.[1] ?? u.searchParams.get("cities") ?? "";
+  const city = Object.hasOwn(CITIES, key) ? CITIES[key as keyof typeof CITIES] : undefined;
   if (u.origin !== "https://www.athome.co.jp" || !path || !city ||
-      u.searchParams.get("cityCds") !== city.code || u.searchParams.get("pref") !== "11" ||
+      (!path[1] && (u.searchParams.get("cityCds") !== city.code || u.searchParams.get("pref") !== "11")) ||
       u.searchParams.get("sort") !== "33" || !Number.isFinite(Date.parse(capturedAt))) {
     throw new Error("Invalid AtHome capture URL, city, sort, or observation time");
   }
@@ -59,5 +61,5 @@ export function athomeDownloadedCapture(html: string, url: string, capturedAt: s
       `<dl><i title="家"></i><dd>${esc(text(".info-item--type"))}</dd></dl>${rooms}</div>`;
   }).get().join("");
   return { schemaVersion: 1, source: "athome", city: city.label, url: u.href,
-    page: Number(path[1] ?? 1), capturedAt, httpStatus: 200, sortedNewest: true, html: projected };
+    page: Number(path[2] ?? 1), capturedAt, httpStatus: 200, sortedNewest: true, html: projected };
 }
