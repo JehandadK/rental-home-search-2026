@@ -50,9 +50,15 @@
   **headed** by default: Nifty and AtHome serve a wait/verification page to
   headless Chromium. `PLAYWRIGHT_HEADLESS=1` opts out; `PLAYWRIGHT_EXECUTABLE_PATH`
   overrides the browser, else the newest cached Chromium is used.
-- The AtHome collector still expects the old `#search-parameter` AJAX form; on
-  the modern template it fails with "search form not found". See the AtHome
-  city-path + `capture:athome-html` steps below.
+- The AtHome adapter handles both templates: the legacy `#search-parameter` AJAX
+  form and the modern `.property-card` pages, which it reads as
+  `/list/pageN/?sort=33` documents and projects offline with
+  `athomeDownloadedCapture`. It never retries or works around AtHome's
+  verification page ("認証にご協力ください"); it stops with an error instead.
+- If AtHome shows that page to the automated browser, pass it once by hand: run
+  with `PLAYWRIGHT_USER_DATA_DIR=.context/athome-profile` (gitignored), complete
+  the check in the headed window, and later runs reuse the session. As of
+  2026-09-30 a fresh Playwright profile was shown the page on the homepage.
 
 ## Agent-operated browser collection
 

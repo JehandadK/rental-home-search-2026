@@ -6,6 +6,7 @@
  * Only public listing HTML leaves the page; cookies/storage remain in Chrome.
  */
 import { createBridge } from "../shared/chromeBridge";
+import { athomeDownloadedCapture } from "./athomeCapture";
 
 interface BrowserTab {
   id: number;
@@ -15,6 +16,8 @@ interface BrowserTab {
   sessionId?: string;
 }
 
+/** Returned by the legacy AJAX capture when the page is the modern `.property-card` template instead. */
+const MODERN_TEMPLATE = "__athome_modern_template__";
 const HOMEPAGE_URL = "https://www.athome.co.jp/";
 const NAVIGATION_TIMEOUT_MS = 30_000;
 // Leave time for the Bridge to return its navigation timeout/error.
@@ -24,6 +27,7 @@ export class AthomeBrowser {
   private bridge = createBridge();
   private tab?: BrowserTab;
   private searchReady = false;
+  private modernTemplate = false;
   private readonly sessionId = `athome-scraper-${process.pid}`;
 
   async connect(initialUrl: string): Promise<void> {
@@ -72,9 +76,13 @@ export class AthomeBrowser {
    */
   async fetchPage(page: number, sort = "33"): Promise<string> {
     if (!this.tab || !this.searchReady) throw new Error("AtHome search navigation has not completed; capture stopped");
+    if (this.modernTemplate) return this.fetchModernPage(page, sort);
     const expression = `(async () => {
       const form = document.querySelector('#search-parameter');
-      if (!form) throw new Error('AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying');
+      if (!form) {
+        if (document.querySelector('.property-card')) return ${JSON.stringify(MODERN_TEMPLATE)};
+        throw new Error('AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying');
+      }
       const data = new URLSearchParams(new FormData(form));
       data.set('SORT', ${JSON.stringify(sort)});
       data.set('PAGENO', ${JSON.stringify(String(page))});
@@ -150,9 +158,55 @@ export class AthomeBrowser {
       throw new Error(`AtHome capture stopped: ${message.split("\n")[0].slice(0, 300)}`);
     }
     const html = result.result?.result?.value;
+    if (html === MODERN_TEMPLATE) {
+      this.modernTemplate = true;
+      return this.fetchModernPage(page, sort);
+    }
     if (!html || !html.includes("p-property")) {
       throw new Error("AtHome browser capture returned no property HTML");
     }
+    this.searchReady = true;
+    return html;
+  }
+
+  /**
+   * The modern template has no AJAX form: results are ordinary paged documents
+   * (`/list/pageN/?sort=33`). Navigate the warm tab, read the document once and
+   * project it offline with the same code used for downloaded pages. A
+   * verification page is reported, never retried or worked around.
+   */
+  private async fetchModernPage(page: number, sort: string): Promise<string> {
+    const current = new URL(this.tab!.url);
+    const target = new URL(current);
+    target.pathname = target.pathname.replace(/list\/(?:page\d+\/)?$/, page > 1 ? `list/page${page}/` : "list/");
+    target.searchParams.set("sort", sort);
+    if (target.href !== current.href) await this.navigate(target.href);
+    this.searchReady = false;
+    const result = await this.bridge.request<{
+      result?: { result?: { value?: string }; exceptionDetails?: { text?: string; exception?: { description?: string } } };
+    }>("evaluate", {
+      tabId: this.tab!.id, tabFence: this.tab!.tabFence, incarnation: this.tab!.incarnation, sessionId: this.sessionId,
+      expression: `(async () => {
+        const end = Date.now() + 20000;
+        while (!document.querySelector('.property-card')) {
+          if (/認証/.test(document.title) || Date.now() > end) {
+            throw new Error('AtHome results not available (verification page or no results): ' + document.title);
+          }
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+        return document.documentElement.outerHTML;
+      })()`,
+      awaitPromise: true,
+    }, REQUEST_TIMEOUT_MS);
+    const exception = result.result?.exceptionDetails;
+    if (exception) {
+      const message = exception.exception?.description ?? exception.text ?? "Page evaluation failed";
+      throw new Error(`AtHome capture stopped: ${message.split("\n")[0].slice(0, 300)}`);
+    }
+    const document = result.result?.result?.value;
+    if (!document) throw new Error("AtHome browser capture returned no document");
+    const html = athomeDownloadedCapture(document, target.href, new Date().toISOString()).html;
+    if (!html.includes("p-property")) throw new Error("AtHome browser capture returned no property HTML");
     this.searchReady = true;
     return html;
   }
@@ -164,6 +218,7 @@ export class AthomeBrowser {
     if (this.tab) await this.bridge.request("close_tab", { tabId: this.tab.id, tabFence: this.tab.tabFence, incarnation: this.tab.incarnation, sessionId: this.sessionId }, 5000).catch(() => undefined);
     this.tab = undefined;
     this.searchReady = false;
+    this.modernTemplate = false;
     this.bridge.close();
   }
 }

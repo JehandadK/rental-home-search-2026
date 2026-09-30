@@ -5,7 +5,9 @@
  *
  * Enabled with BROWSER_DRIVER=playwright. Headed by default because Nifty and AtHome
  * serve a wait/verification page to headless Chromium; PLAYWRIGHT_HEADLESS=1 opts out.
- * playwright-core is resolved from PLAYWRIGHT_CORE_PATH, then node resolution, then the global
+ * PLAYWRIGHT_USER_DATA_DIR keeps cookies between runs, so a portal's human
+ * verification passed once by hand in the headed window is reused. It is never
+ * automated or bypassed here. playwright-core is resolved from PLAYWRIGHT_CORE_PATH, then node resolution, then the global
  * `playwright-cli` install.
  */
 import { existsSync, readdirSync } from "node:fs";
@@ -22,7 +24,13 @@ interface Page {
 }
 interface BrowserContext { newPage(): Promise<Page> }
 interface Browser { newContext(options: Record<string, unknown>): Promise<BrowserContext>; close(): Promise<void> }
-interface PlaywrightCore { chromium: { launch(options: { headless: boolean; executablePath?: string }): Promise<Browser> } }
+interface LaunchOptions { headless: boolean; executablePath?: string; locale?: string; timezoneId?: string }
+interface PlaywrightCore {
+  chromium: {
+    launch(options: LaunchOptions): Promise<Browser>;
+    launchPersistentContext(userDataDir: string, options: LaunchOptions): Promise<BrowserContext & { close(): Promise<void> }>;
+  };
+}
 
 const GLOBAL_CORE = "/opt/homebrew/lib/node_modules/@playwright/cli/node_modules/playwright-core";
 
@@ -58,22 +66,33 @@ function cachedChromium(headless: boolean): string | undefined {
 
 export class PlaywrightBridge {
   private browser?: Browser;
+  private persistent?: BrowserContext & { close(): Promise<void> };
   private context?: BrowserContext;
   private pages = new Map<number, Page>();
   private nextTabId = 1;
 
   async connect(): Promise<void> {
-    if (this.browser) return;
+    if (this.context) return;
     const headless = process.env.PLAYWRIGHT_HEADLESS === "1";
     const { chromium } = loadPlaywright();
+    const userDataDir = process.env.PLAYWRIGHT_USER_DATA_DIR;
+    const context = { locale: "ja-JP", timezoneId: "Asia/Tokyo" };
+    const open = async (executablePath?: string) => {
+      if (userDataDir) {
+        this.persistent = await chromium.launchPersistentContext(userDataDir, { headless, executablePath, ...context });
+        this.context = this.persistent;
+      } else {
+        this.browser = await chromium.launch({ headless, executablePath });
+        this.context = await this.browser.newContext(context);
+      }
+    };
     try {
-      this.browser = await chromium.launch({ headless, executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH });
+      await open(process.env.PLAYWRIGHT_EXECUTABLE_PATH);
     } catch (error) {
       const fallback = process.env.PLAYWRIGHT_EXECUTABLE_PATH ? undefined : cachedChromium(headless);
       if (!fallback) throw error;
-      this.browser = await chromium.launch({ headless, executablePath: fallback });
+      await open(fallback);
     }
-    this.context = await this.browser.newContext({ locale: "ja-JP", timezoneId: "Asia/Tokyo" });
   }
 
   async request<T>(method: string, params: Record<string, unknown>, timeoutMs = 120_000): Promise<T> {
@@ -114,8 +133,9 @@ export class PlaywrightBridge {
 
   close(): void {
     // Adapters call close() synchronously at the end of a run.
-    void this.browser?.close().catch(() => undefined);
+    void (this.persistent ?? this.browser)?.close().catch(() => undefined);
     this.browser = undefined;
+    this.persistent = undefined;
     this.context = undefined;
   }
 

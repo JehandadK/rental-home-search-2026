@@ -150,3 +150,60 @@ describe("AtHome homepage-first collection", () => {
     expect(bridge.request.mock.calls.filter(([method]) => method === "new_tab")).toHaveLength(2);
   });
 });
+
+describe("AtHome modern template", () => {
+  const CITY = "https://www.athome.co.jp/chintai/saitama/soka-city/list/";
+  const modernDocument = `<html><body><select name="SORT"><option value="33" selected>新着順</option></select>
+    <div class="property-card"><h2 class="property-title">テストホーム</h2>
+      <div class="info-item--location">草加市金明町</div><div class="info-item--station">新田駅 徒歩6分</div>
+      <div class="info-item--type">賃貸マンション 3階建2020年5月</div>
+      <div class="room-info-section"><div class="price"><span class="rent">8.2万円</span><span>3,000円</span></div>
+        <div class="fees"><span>なし</span><span>1ヶ月</span></div>
+        <div class="layout-size"><span>3LDK</span><span>75.50m²</span></div>
+        <a href="/chintai/1234567890/">詳細</a></div></div></body></html>`;
+  let currentUrl = HOME;
+
+  beforeEach(() => {
+    currentUrl = HOME;
+    bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+      if (method === "new_tab" || method === "navigate") {
+        currentUrl = String(params.url);
+        return { tab: { ...homeTab, url: currentUrl, incarnation: currentUrl } };
+      }
+      if (method === "evaluate") {
+        const expression = String(params.expression);
+        return { result: { result: { value: expression.includes("outerHTML") ? modernDocument : "__athome_modern_template__" } } };
+      }
+      return {};
+    });
+  });
+
+  it("detects the template, navigates to ?sort=33 pages and returns projected legacy markup", async () => {
+    const browser = new AthomeBrowser();
+    await browser.connect(CITY);
+    const first = await browser.fetchPage(1);
+    expect(first).toContain("p-property");
+    expect(first).toContain("1234567890");
+    expect(currentUrl).toBe(`${CITY}?sort=33`);
+    await browser.fetchPage(2);
+    expect(currentUrl).toBe(`${CITY}page2/?sort=33`);
+    // After detection the legacy AJAX probe is skipped: one evaluate per modern page.
+    const evaluations = bridge.request.mock.calls.filter(([method]) => method === "evaluate");
+    expect(evaluations.map(([, params]) => String(params.expression).includes("outerHTML"))).toEqual([false, true, true]);
+  });
+
+  it("reports a verification page instead of retrying, and needs navigation before another capture", async () => {
+    const browser = new AthomeBrowser();
+    await browser.connect(CITY);
+    bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+      if (method === "evaluate" && String(params.expression).includes("outerHTML")) {
+        return { result: { exceptionDetails: { exception: { description: "Error: AtHome results not available (verification page or no results): 認証にご協力ください。" } } } };
+      }
+      if (method === "evaluate") return { result: { result: { value: "__athome_modern_template__" } } };
+      return { tab: { ...homeTab, url: String(params.url) } };
+    });
+    await expect(browser.fetchPage(1)).rejects.toThrow("verification page");
+    await expect(browser.fetchPage(1)).rejects.toThrow("navigation has not completed");
+  });
+});
+
