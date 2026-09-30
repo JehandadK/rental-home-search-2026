@@ -144,8 +144,17 @@ describe("Nifty detail import through the public data layer", () => {
     const saved = (await store.readSource("nifty"))!;
     expect(byId(saved.listings)).toEqual(byId(serialized(expected.merged.listings)));
     expect(result).toMatchObject({ added: expected.merged.added, updated: expected.merged.updated, currentCount: expected.merged.listings.length });
-    const { ingestionJournal: _journal, ...provenance } = saved.provenance!;
-    expect(provenance).toEqual(expected.provenance);
+    // The journal is data-layer managed, so the legacy copy cannot predict it; compare it separately.
+    const { ingestionJournal: journal, ...provenance } = saved.provenance! as { ingestionJournal?: { batches: unknown[] } };
+    const { ingestionJournal: priorJournal, ...legacyProvenance } = expected.provenance as { ingestionJournal?: { batches: unknown[] } };
+    expect(provenance).toEqual(legacyProvenance);
+    // Journal history from earlier real refreshes survives. A dump that a refresh already
+    // imported replays without a new entry; otherwise the import appends exactly one batch.
+    const priorBatches = (priorJournal?.batches ?? []) as { runId: string; batchId: string }[];
+    const alreadyImported = priorBatches.some((entry) => entry.runId === batch.runId && entry.batchId === batch.batchId);
+    expect(result.replayed).toBe(alreadyImported);
+    expect(journal?.batches.slice(0, priorBatches.length)).toEqual(priorBatches);
+    expect(journal?.batches).toHaveLength(priorBatches.length + (alreadyImported ? 0 : 1));
     expect(saved.scrapedAt).toBe(expected.scrapedAt);
     expect(await service.ingestScrape(batch)).toMatchObject({ replayed: true, revision: result.revision });
     expect(await readFile(sourcePath, "utf8")).toBe(sourceBytes);
