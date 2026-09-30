@@ -61,6 +61,7 @@ describe("public scrape ingestion boundary", () => {
     await service.ingestScrape(request([row()], "page-2", later));
     const bytes = await readFile(store.sourcePath("nifty"), "utf8");
     await expect(service.ingestScrape(request([row(undefined, { rent: 99999 })]))).rejects.toBeInstanceOf(ScrapeReplayConflictError);
+    await expect(service.ingestScrape(request([row(undefined, { rent: 99999 })]))).rejects.toThrow(/already committed with different content.*not overwritten/);
     expect(await readFile(store.sourcePath("nifty"), "utf8")).toBe(bytes);
   });
 

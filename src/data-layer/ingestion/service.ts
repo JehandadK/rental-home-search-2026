@@ -75,7 +75,7 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
     const priorBatch = journal.batches.find((entry) => entry.runId === batch.runId && entry.batchId === batch.batchId);
     const identity = { source: batch.source, runId: batch.runId, batchId: batch.batchId };
     if (priorBatch) {
-      if (priorBatch.fingerprint !== fingerprint) throw new ScrapeReplayConflictError();
+      if (priorBatch.fingerprint !== fingerprint) throw new ScrapeReplayConflictError(identity);
       return { ...identity, replayed: true, revision: previous!.revision,
         previousCount: previous!.listings.length, currentCount: previous!.listings.length,
         added: 0, updated: 0, retired: 0, ignored: batch.observations.length, novel: 0, effect: priorBatch.effect };
