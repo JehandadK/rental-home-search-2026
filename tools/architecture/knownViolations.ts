@@ -28,7 +28,7 @@ export const KNOWN_VIOLATIONS: KnownViolation[] = [
   { from: "scripts/lib/captureStore.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Take CAPTURE_DIR and atomic writes from src/node/" },
   { from: "scripts/lib/captureValidation.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Move newerRows (freshness is a data-layer rule; only tests use it) out of collectors" },
   // Collector → data-layer internals
-  { from: "scripts/lib/captureValidation.ts", to: "scripts/lib/lifecycle.ts", until: "M4", fix: "Import trackingKey from the domain" },
+  { from: "scripts/lib/captureValidation.ts", to: "src/data-layer/lifecycle.ts", until: "M4", fix: "Import trackingKey from the domain" },
   { from: "scripts/lib/captureValidation.ts", to: "src/data-layer/sourceObservationTime.ts", until: "M4", fix: "Move newerRows out of collectors" },
   { from: "scripts/lib/athome.ts", to: "src/data-layer/ingestion/portalPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
   { from: "scripts/lib/roomspot.ts", to: "src/data-layer/ingestion/portalPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },

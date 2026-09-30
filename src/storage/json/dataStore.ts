@@ -28,7 +28,7 @@ import type { ArchivedSourceListing } from "../../data-layer/contracts";
 import { mergeSourceProvenance } from "../../data-layer/sourceProvenance";
 import { RevisionConflictError } from "../../data-layer/errors";
 export { RevisionConflictError } from "../../data-layer/errors";
-import { reconcileLifecycle, trackingKey, type LifecycleStats } from "../../../scripts/lib/lifecycle";
+import { reconcileLifecycle, trackingKey, type LifecycleStats } from "../../data-layer/lifecycle";
 import { deduplicateListings, isSameUnit } from "../../domain/listingDedup";
 import { restoreObservedLifecycle } from "./observations";
 import {

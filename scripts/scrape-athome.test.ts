@@ -14,7 +14,7 @@ import type { PortalCollectorDependencies } from "./lib/portalCollector";
 import { athomeObservationBatch, mergeAthomeIncremental, parseAthomePage } from "./lib/athome";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
 import { listCaptureBatch } from "./lib/listCaptureBatch";
-import { trackingKey } from "./lib/lifecycle";
+import { trackingKey } from "../src/data-layer/lifecycle";
 import type { PageCapture } from "./lib/captureStore";
 import type { RawListing } from "../src/domain/types";
 

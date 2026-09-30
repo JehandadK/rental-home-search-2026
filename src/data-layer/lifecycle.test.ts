@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { reconcileLifecycle, trackingKey } from "./lifecycle";
-import type { RawListing } from "../../src/domain/types";
+import type { RawListing } from "../domain/types";
 
 const NOW = "2026-08-30T12:00:00.000Z";
 const BEFORE = "2026-08-01T12:00:00.000Z";

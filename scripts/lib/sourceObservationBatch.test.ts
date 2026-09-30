@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RawListing } from "../../src/domain/types";
-import { trackingKey } from "./lifecycle";
+import { trackingKey } from "../../src/data-layer/lifecycle";
 import { sourceObservationBatch } from "./sourceObservationBatch";
 
 const listing = (id: string, changes: Partial<RawListing> = {}): RawListing => ({

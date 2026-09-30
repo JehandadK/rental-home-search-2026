@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../../src/domain/types";
-import type { ScrapeBatch } from "../../src/data-layer/ingestion/contracts";
-import { InvalidScrapeBatchError, ListingIngestionService, ScrapeReplayConflictError } from "../../src/data-layer/ingestion/service";
-import { sourceRowKey, sourceRowLocator } from "../../src/data-layer/sourceRowIdentity";
-import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../../src/storage/json/dataStore";
-import { JsonListingRepository } from "../../src/storage/json/jsonListingRepository";
-import { mergeSuumoIncremental, suumoMatchKeys } from "./suumoIncremental";
-import { trackingKey } from "./lifecycle";
+import type { RawListing } from "../../domain/types";
+import type { ScrapeBatch } from "./contracts";
+import { InvalidScrapeBatchError, ListingIngestionService, ScrapeReplayConflictError } from "./service";
+import { sourceRowKey, sourceRowLocator } from "../sourceRowIdentity";
+import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../../storage/json/dataStore";
+import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
+import { mergeSuumoIncremental, suumoMatchKeys } from "../../../scripts/lib/suumoIncremental";
+import { trackingKey } from "../lifecycle";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
 const row = (id = "display-id", bc = "1", changes: Partial<RawListing> = {}): RawListing => ({ id, source: "suumo", name: `House ${bc}`,

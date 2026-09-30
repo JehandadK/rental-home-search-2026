@@ -7,7 +7,7 @@ import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { mergeNiftyIncremental, niftyMatchKeys } from "./lib/nifty";
-import { trackingKey } from "./lib/lifecycle";
+import { trackingKey } from "../src/data-layer/lifecycle";
 import { prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
 
 const before = "2026-09-24T00:00:00.000Z", now = "2026-09-25T00:00:00.000Z";

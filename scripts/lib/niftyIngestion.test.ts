@@ -8,7 +8,7 @@ import { ListingIngestionService } from "../../src/data-layer/ingestion/service"
 import type { PageCapture } from "./captureStore";
 import { JsonSourceStore } from "../../src/storage/json/dataStore";
 import { JsonListingRepository } from "../../src/storage/json/jsonListingRepository";
-import { trackingKey } from "./lifecycle";
+import { trackingKey } from "../../src/data-layer/lifecycle";
 import { mergeNiftyIncremental, parseNiftyPage } from "./nifty";
 import { ingestNiftyListPage } from "./niftyIngestion";
 

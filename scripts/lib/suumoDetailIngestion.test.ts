@@ -10,7 +10,7 @@ import { DATA_DIR, JsonSourceStore, type SourceFile } from "../../src/storage/js
 import { JsonListingRepository } from "../../src/storage/json/jsonListingRepository";
 import { detailCaptureBatch } from "./suumoDetailIngestion";
 import { parseDetail } from "./detailEnrichment";
-import { trackingKey } from "./lifecycle";
+import { trackingKey } from "../../src/data-layer/lifecycle";
 
 const capturedAt = "2026-09-24T00:00:00.000Z", sourceAt = "2026-09-25T00:00:00.000Z";
 const html = '<table><tr><th>駐車場</th><td>敷地内6600円</td></tr><tr><th>契約期間</th><td>定期借家2年</td></tr><tr><th>保証会社</th><td>必加入</td></tr></table><ul class="inline_list"><li>都市ガス</li></ul>';

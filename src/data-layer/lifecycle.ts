@@ -13,10 +13,10 @@
  * key: name + address + floor area. Rent moves with the market and must not
  * make a listing look "new" (or its old price look "sold").
  */
-import type { RawListing } from "../../src/domain/types";
+import type { RawListing } from "../domain/types";
 
-import { trackingKey } from "../../src/domain/listingIdentity";
-export { trackingKey } from "../../src/domain/listingIdentity";
+import { trackingKey } from "../domain/listingIdentity";
+export { trackingKey } from "../domain/listingIdentity";
 
 export interface LifecycleStats {
   /** In both the previous and the fresh dataset (price may have moved). */
