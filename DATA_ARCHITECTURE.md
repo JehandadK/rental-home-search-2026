@@ -6,7 +6,7 @@ Separate the codebase into three independently evolvable layers—**collectors**
 
 ## Current state (2026-09-30)
 
-M0–M6 and the SourcePolicy registry are complete and merged into `main` (up to `11f3e6d`). M7 has not started: it applies only when shared or cross-device user data becomes a requirement. M8 is optional.
+M0–M6, the SourcePolicy registry, and the post-M5 cleanup (original reference files retired) are complete and merged into `main` (local; not yet pushed to `origin`). Work is paused here; to resume, start at "Restart here" at the end of "Progress". M7 has not started: it applies only when shared or cross-device user data becomes a requirement. M8 is optional.
 
 | Milestone | Status |
 |---|---|
