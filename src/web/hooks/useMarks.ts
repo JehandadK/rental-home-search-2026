@@ -4,7 +4,7 @@
  * the stable source id assigned at scrape time.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { ListingMark, MarkMap } from "../domain/marks";
+import type { ListingMark, MarkMap } from "../../domain/marks";
 
 const STORAGE_KEY = "soka-scorer-marks-v1";
 

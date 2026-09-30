@@ -3,7 +3,7 @@
  * bounds survive reloads.
  */
 import { useCallback, useEffect, useState } from "react";
-import { EMPTY_FILTERS, type ListingFilters } from "../domain/filters";
+import { EMPTY_FILTERS, type ListingFilters } from "../../domain/filters";
 
 const STORAGE_KEY = "soka-scorer-filters-v1";
 

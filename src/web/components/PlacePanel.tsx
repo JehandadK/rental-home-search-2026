@@ -7,15 +7,15 @@
  * catchment shortlist, or swap the POI target outright.
  */
 import { useMemo, useState } from "react";
-import { SCORE_PARAMETERS } from "../config/scoring";
+import { SCORE_PARAMETERS } from "../../config/scoring";
 import {
   CATEGORY_LABELS,
   DISTANCE_PARAMETERS,
   PARAMETER_SOURCES,
   placesInCategory,
   type DistanceParameterKey,
-} from "../domain/places";
-import { describeSelection, type PlaceSelection } from "../domain/placeSelection";
+} from "../../domain/places";
+import { describeSelection, type PlaceSelection } from "../../domain/placeSelection";
 import styles from "./PlacePanel.module.css";
 import appStyles from "../App.module.css";
 

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_CONFIG } from "../config/scoring";
-import { scoreListing } from "../domain/scoring";
-import { listingKey } from "../domain/listingKey";
-import type { EnrichedListing } from "../types";
+import { DEFAULT_CONFIG } from "../../config/scoring";
+import { scoreListing } from "../../domain/scoring";
+import { listingKey } from "../../domain/listingKey";
+import type { EnrichedListing } from "../../types";
 import type { ScoredRow } from "../lib/export";
 import { ListingTable } from "./ListingTable";
 

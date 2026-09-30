@@ -4,10 +4,10 @@
  * and global options. Rendered data-driven from SCORE_PARAMETERS so a
  * new parameter only needs one entry in config/scoring.ts.
  */
-import { FEATURE_PARAMETERS, SCORE_PARAMETERS, type ScoringConfig } from "../config/scoring";
-import type { ParameterDiagnosis } from "../domain/diagnostics";
-import type { ListingAttributeCategory, ListingFeatureKey, ScoreParameterKey } from "../types";
-import { ATTRIBUTE_CATEGORY_LABELS } from "../domain/listingAttributes";
+import { FEATURE_PARAMETERS, SCORE_PARAMETERS, type ScoringConfig } from "../../config/scoring";
+import type { ParameterDiagnosis } from "../../domain/diagnostics";
+import type { ListingAttributeCategory, ListingFeatureKey, ScoreParameterKey } from "../../types";
+import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
 import styles from "./WeightPanel.module.css";
 import appStyles from "../App.module.css";
 

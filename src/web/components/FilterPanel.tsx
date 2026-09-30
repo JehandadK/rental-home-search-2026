@@ -10,10 +10,10 @@ import {
   cityOptions,
   layoutOptions,
   type ListingFilters,
-} from "../domain/filters";
-import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../domain/marks";
-import { listingKey } from "../domain/listingKey";
-import type { EnrichedListing } from "../types";
+} from "../../domain/filters";
+import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../../domain/marks";
+import { listingKey } from "../../domain/listingKey";
+import type { EnrichedListing } from "../../types";
 import styles from "./FilterPanel.module.css";
 import appStyles from "../App.module.css";
 

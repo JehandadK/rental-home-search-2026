@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { diagnoseAll, diagnoseParameter } from "./diagnostics";
-import type { ScoredRow } from "../lib/export";
+import type { ScoredRow } from "../web/lib/export";
 import type { EnrichedListing, ScoreParameterKey } from "../types";
 import type { ListingScore, ScorePart } from "./scoring";
 

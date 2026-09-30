@@ -42,7 +42,7 @@ export const KNOWN_VIOLATIONS: KnownViolation[] = [
   // Collector → refresh
   { from: "scripts/lib/portalCollector.ts", to: "scripts/lib/refreshPlan.ts", until: "M4", fix: "Collectors own DEFAULT_INCREMENTAL_PAGE_CEILING; refresh passes overrides" },
   // Domain → web
-  { from: "src/domain/diagnostics.ts", to: "src/lib/export.ts", until: "M4", fix: "Move the ScoredRow type into the domain" },
+  { from: "src/domain/diagnostics.ts", to: "src/web/lib/export.ts", until: "M4", fix: "Move the ScoredRow type into the domain" },
   // Bundled persisted data
   ...[
     "pois.json",

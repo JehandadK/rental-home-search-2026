@@ -29,6 +29,8 @@ Separate the codebase into three independently evolvable layers—**collectors**
 
 Established by M4. Locations are directories inside this one package; converting them to workspace packages is the optional M8.
 
+At a glance there are three parts over shared code: **collectors** (`src/collectors/`) fetch, parse, and submit; the **data layer** (`src/data-layer/` rules and contracts plus `src/storage/json/` adapters) owns identity, lifecycle, and persistence; the **web app** (`src/web/`) reads through a client. `src/domain/` holds the pure types and rules shared by all three, `src/node/` and `src/integrations/` hold platform helpers, and `scripts/` holds only CLI entry points that wire the parts together. The table below is the precise version.
+
 | Layer | Location | Owns | May import |
 |---|---|---|---|
 | Domain | `src/domain/` | Shared types (`RawListing`, places, scoring keys), scoring configuration, and pure rules: identity keys, deduplication, Japanese text parsing, scoring, filters | Only `src/domain/`. No Node, React, DOM, or network APIs. |
@@ -156,7 +158,7 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
    - Leftover freshness filtering in a collector: `captureValidation.newerRows` reads a stored `SourceFile` (collector → storage) and `sourceObservationFallbackTime` (data-layer internal). Freshness belongs to the data layer since M3, and only tests use `newerRows`. Move it into the data layer or delete it once the data layer's own freshness tests cover those cases. `captureValidation` also takes `trackingKey` via `scripts/lib/lifecycle.ts`; import it from the domain instead.
    - Collector → refresh: `portalCollector` imports `DEFAULT_INCREMENTAL_PAGE_CEILING` from `refreshPlan`. Move the default into collectors, which own their page budgets; refresh passes overrides down.
    - Domain → web: `domain/diagnostics.ts` imports the `ScoredRow` type from `lib/export`; move the type into the domain.
-4. **Add the `SourcePolicy` registry** as a separate refactor after the moves. The ingestion, discovery, and detail services look up a source's identity/merge/detail policy by source ID instead of importing each policy module. Behavior and journals stay identical; existing source-specific tests pass unchanged.
+4. *(Moved 2026-09-30.)* The `SourcePolicy` registry does not separate layers, so it now follows M5; see "SourcePolicy registry (after M5)".
 
 **Exit checks:** The architecture allowlist has no `M4` entries, and a planted violation makes the test fail. Web typecheck passes without Node types. `npm test` passes with the same test count plus the new architecture tests; `npm run typecheck`, `npm run build`, `npm run data:status`, and `npm run refresh -- --plan` pass; the dev server renders the same listing count with no console errors. Every persisted file under `src/data/` and `data/` hashes identically. `git log --follow` traces moved files.
 
@@ -175,6 +177,12 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 **Exit checks:** Current fixture gives equivalent scores, map, filters, and place options; tests add/remove cities and POIs without code edits; the frontend can run against a fake client; no web or domain module imports persisted data files; the architecture test forbids such imports; the >500 kB bundle warning caused by bundled data is gone; persisted files hash identically after the move.
 
 **Rollback:** Select the bundled compatibility client. The old JSON files remain unchanged until parity has been demonstrated; the directory move reverts independently.
+
+### SourcePolicy registry (after M5)
+
+**Scope:** The ingestion, discovery, and detail services look up a source's identity/merge/detail policy by source ID instead of importing each policy module, so a new site adds one policy file plus one collector without editing the services. Behavior and journals stay identical; existing source-specific tests pass unchanged.
+
+**Rollback:** Revert the refactor commit; no data or schema changes are involved.
 
 ### M6 — Frontend user-state boundary
 
@@ -245,7 +253,9 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
   - AtHome's `property:` alias (building name|address|size) can treat two same-size rooms in one building as the same unit; this is pre-existing.
 - **Milestones renumbered after M3 (2026-09-29).** See the note at the top of "Milestones"; the layer split and its enforcement are now M4.
 - **M4 step 1 complete:** `tools/architecture/layers.ts` holds the layer map (target directories, plus `LEGACY_LOCATIONS` for files not yet moved; unplaced files fail the test). `imports.ts` reads imports with the TypeScript parser, including type-only imports, re-exports, `require`, and `import()`; fixture tests cover each form and the rejected ones. `knownViolations.ts` lists 27 current violations (18 until M4, 9 until M5), each with its fix. The test fails on an unlisted violation and on a stale entry, and both cases were checked by planting them. `tsconfig.web.json` typechecks the web and domain files and the data-layer `contracts.ts` files without Node types (a planted `process.env` fails); `npm run typecheck` and `npm run build` run both configurations. Three violations were missing from the original M4 list and are now recorded in step 3: the CLI → CLI `backfill:parking` alias, `captureValidation.newerRows`, and `portalPageUrl`. An independent review found gaps (npm packages unchecked, aliases/non-literal imports skipped, contracts missing from the web typecheck, mixed type-only re-exports, `*.contract.ts` importable); all were fixed and tested. Validation: `npm test` (515 tests), `npm run typecheck`, `npm run build`, `npm run data:status`, `npm run refresh -- --plan` pass; every persisted file under `src/data/` and `data/` hashes identically. No code moved yet.
-- **Restart here:** M4 step 2. Move one layer per commit; for each move, update `LEGACY_LOCATIONS` and the paths in `knownViolations.ts` in the same commit. Suggested order: web, domain, `src/node/` + storage, `lifecycle.ts` into the data layer, collectors, refresh. Then step 3 (import fixes) and step 4 (`SourcePolicy` registry). Do not change behavior, data files, or schemas in M4.
+- **Plan change (2026-09-30):** the `SourcePolicy` registry (old M4 step 4) moved after M5, because it helps extensibility rather than layer separation; this gets the frontend off bundled data sooner.
+- **M4 step 2, web move complete:** `src/App.tsx`, `App.module.css`, `main.tsx`, `vite-env.d.ts`, `components/`, `hooks/`, `styles/` and `lib/export.ts` moved with `git mv` to `src/web/` (export as `src/web/lib/export.ts`, so imports among web files are unchanged). Only relative import paths changed, plus the `index.html` entry, `tsconfig.web.json` includes, `LEGACY_LOCATIONS`, and the `diagnostics.ts` known-violation target. Validation: `npm test` (516 tests; the +1 over step 1 came from the main merge), `npm run typecheck`, `npm run build`, `npm run data:status`, `npm run refresh -- --plan` pass; the dev server renders all 3,661 listings in `listings_web.json` with no console warnings; all 26 persisted files under `src/data/` and `data/` hash identically.
+- **Restart here:** M4 step 2, next move: domain (`src/types.ts`, `src/config/scoring.ts` → `src/domain/`). Move one layer per commit; for each move, update `LEGACY_LOCATIONS` and the paths in `knownViolations.ts` in the same commit. Remaining order: domain, `src/node/` + storage, `lifecycle.ts` into the data layer, collectors, refresh. Then step 3 (import fixes), then M5. Do not change behavior, data files, or schemas in M4.
 
 ## Per-milestone validation
 

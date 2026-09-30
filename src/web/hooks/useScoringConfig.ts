@@ -8,8 +8,8 @@ import {
   DEFAULT_FEATURE_PREFERENCES,
   DEFAULT_FEATURE_WEIGHTS,
   type ScoringConfig,
-} from "../config/scoring";
-import type { ListingFeatureKey, ScoreParameterKey } from "../types";
+} from "../../config/scoring";
+import type { ListingFeatureKey, ScoreParameterKey } from "../../types";
 
 const STORAGE_KEY = "soka-scorer-config-v1";
 

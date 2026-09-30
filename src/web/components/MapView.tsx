@@ -16,12 +16,12 @@
  * zoom and pan on top, so markers and labels keep a constant screen size.
  */
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { scoreColor } from "../domain/scoring";
-import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../config/scoring";
-import { listingKey } from "../domain/listingKey";
-import { sourceListings as portalReferences } from "../domain/listingDedup";
-import { isNewListing, isSold } from "../domain/lifecycle";
-import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../domain/marks";
+import { scoreColor } from "../../domain/scoring";
+import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../config/scoring";
+import { listingKey } from "../../domain/listingKey";
+import { sourceListings as portalReferences } from "../../domain/listingDedup";
+import { isNewListing, isSold } from "../../domain/lifecycle";
+import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import {
   ELEMENTARY_SCHOOLS,
   MOSQUES,
@@ -29,7 +29,7 @@ import {
   POINTS_OF_INTEREST,
   SOKA_BOUNDARY,
   STATIONS,
-} from "../domain/reference";
+} from "../../domain/reference";
 import type { ScoredRow } from "../lib/export";
 import styles from "./MapView.module.css";
 import appStyles from "../App.module.css";
