@@ -6,7 +6,7 @@ import type { RawListing } from "../src/domain/types";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { atomicWriteJson, JsonSourceStore } from "../src/storage/json/dataStore";
-import { captureKey } from "./lib/captureStore";
+import { captureKey } from "../src/collectors/shared/captureStore";
 import { runDetailEnrichment, type DetailEnrichmentDependencies } from "./enrich-details";
 
 const now = "2026-09-25T00:00:00.000Z", capturedAt = "2026-09-24T00:00:00.000Z";

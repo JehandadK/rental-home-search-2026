@@ -5,7 +5,7 @@
  * navigating to results: opening a list URL in a cold tab can trigger a block.
  * Only public listing HTML leaves the page; cookies/storage remain in Chrome.
  */
-import { ChromeBridge } from "./chromeBridge";
+import { ChromeBridge } from "../shared/chromeBridge";
 
 interface BrowserTab {
   id: number;

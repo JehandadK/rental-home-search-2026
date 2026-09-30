@@ -1,5 +1,5 @@
-import type { DetailEnrichmentOptions, DetailPatchBatch } from "../../src/data-layer/ingestion/contracts";
-import { scrapeFingerprint } from "../../src/data-layer/ingestion/service";
+import type { DetailEnrichmentOptions, DetailPatchBatch } from "../../data-layer/ingestion/contracts";
+import { scrapeFingerprint } from "../../data-layer/ingestion/service";
 import { parseDetail } from "./detailEnrichment";
 
 export interface DetailCapture { url: string; capturedAt: string; html: string }

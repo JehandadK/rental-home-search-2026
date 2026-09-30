@@ -1,5 +1,5 @@
-import type { EnrichedListing } from "../../src/domain/types";
-import type { GeocodeOutcome } from "../../src/integrations/geocode";
+import type { EnrichedListing } from "../../domain/types";
+import type { GeocodeOutcome } from "../../integrations/geocode";
 
 export const addressKey = (address: string): string => address.normalize("NFKC").replace(/\s+/g, "");
 export interface CachedGeocode { value: GeocodeOutcome | null; checkedAt: string }

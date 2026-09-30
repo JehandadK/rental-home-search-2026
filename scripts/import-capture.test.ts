@@ -8,8 +8,8 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { portalPageUrl } from "../src/data-layer/ingestion/portalDiscovery";
 import { runCaptureImport, type CaptureImportDependencies } from "./import-capture";
-import { parseAthomePage } from "./lib/athome";
-import type { PageCapture } from "./lib/captureStore";
+import { parseAthomePage } from "../src/collectors/athome/athome";
+import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RefreshLedger, RefreshRunRecord } from "./lib/refreshLedger";
 
 const at = "2026-09-25T00:00:00.000Z";

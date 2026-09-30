@@ -7,12 +7,12 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import { saveCapture, type PageCapture, CAPTURE_DIR } from "./lib/captureStore";
+import { saveCapture, type PageCapture, CAPTURE_DIR } from "../src/collectors/shared/captureStore";
 import { BACKUP_DIR, JsonSourceStore, atomicWriteJson, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { CaptureRunSummary, NativeCaptureIngestion } from "../src/data-layer/ingestion/contracts";
-import { listCaptureBatch } from "./lib/listCaptureBatch";
+import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
 import { acquireRefreshLock, latestResumableRun, readRefreshLedger, saveRefreshRun, type RefreshLedger, type RefreshRunRecord } from "./lib/refreshLedger";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, DEPENDENCIES, positiveInteger } from "./lib/refreshPlan";
 

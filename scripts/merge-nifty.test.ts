@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normaliseStationName, parseStation, parseStationDistance } from "./merge-nifty";
-import { parseDepositKeyMoney } from "./lib/parseJa";
+import { parseDepositKeyMoney } from "../src/collectors/shared/parseJa";
 
 describe("Nifty move-in text", () => {
   it("keeps explicit 無 / 無 as zero even when UI text follows", () => {

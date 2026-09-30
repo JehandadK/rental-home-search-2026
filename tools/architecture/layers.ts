@@ -36,25 +36,6 @@ const TARGET_DIRS: [prefix: string, layer: Layer][] = [
  * when M4 moves the file; a moved file is classified by TARGET_DIRS.
  */
 export const LEGACY_LOCATIONS: Record<string, Layer> = {
-  "scripts/lib/athome.ts": "collectors",
-  "scripts/lib/athomeBrowser.ts": "collectors",
-  "scripts/lib/athomeCapture.ts": "collectors",
-  "scripts/lib/roomspot.ts": "collectors",
-  "scripts/lib/roomspotBrowser.ts": "collectors",
-  "scripts/lib/nifty.ts": "collectors",
-  "scripts/lib/niftyBrowser.ts": "collectors",
-  "scripts/lib/niftyCapture.ts": "collectors",
-  "scripts/lib/chromeBridge.ts": "collectors",
-  "scripts/lib/parseJa.ts": "collectors",
-  "scripts/lib/parking.ts": "collectors",
-  "scripts/lib/detailEnrichment.ts": "collectors",
-  "scripts/lib/captureStore.ts": "collectors",
-  "scripts/lib/captureValidation.ts": "collectors",
-  "scripts/lib/listCaptureBatch.ts": "collectors",
-  "scripts/lib/portalCollector.ts": "collectors",
-  "scripts/lib/niftyIngestion.ts": "collectors",
-  "scripts/lib/suumoDetailIngestion.ts": "collectors",
-  "scripts/lib/geocodeCache.ts": "collectors",
   "scripts/lib/refreshPlan.ts": "refresh",
   "scripts/lib/refreshLedger.ts": "refresh",
 };

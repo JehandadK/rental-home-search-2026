@@ -1,9 +1,9 @@
 import * as cheerio from "cheerio";
-import type { RawListing } from "../../src/domain/types";
-import type { SourceFile } from "../../src/storage/json/dataStore";
+import type { RawListing } from "../../domain/types";
+import type { SourceFile } from "../../storage/json/dataStore";
 import type { PageCapture } from "./captureStore";
-import { trackingKey } from "../../src/data-layer/lifecycle";
-import { sourceObservationFallbackTime } from "../../src/data-layer/sourceObservationTime";
+import { trackingKey } from "../../data-layer/lifecycle";
+import { sourceObservationFallbackTime } from "../../data-layer/sourceObservationTime";
 
 /** A parser failure must not be mistaken for a page containing no family units. */
 export function assertParsedFamilies(capture: PageCapture, rows: readonly RawListing[]): void {

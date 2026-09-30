@@ -1,5 +1,5 @@
 /** Human CLI adapter only. Agents use native browser_* tools, not this module. */
-import { ChromeBridge } from "./chromeBridge";
+import { ChromeBridge } from "../shared/chromeBridge";
 interface Tab { id: number; title?: string; url?: string; tabFence?: string; incarnation?: string }
 export class NiftyBrowser {
   private bridge = new ChromeBridge();

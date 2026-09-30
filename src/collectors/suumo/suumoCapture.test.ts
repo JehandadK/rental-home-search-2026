@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { parsePage } from "../scrape";
-import { assertParsedFamilies } from "./captureValidation";
-import type { PageCapture } from "./captureStore";
+import { parsePage } from "../../../scripts/scrape";
+import { assertParsedFamilies } from "../shared/captureValidation";
+import type { PageCapture } from "../shared/captureStore";
 
 const html = `<div class="cassetteitem">
   <div class="cassetteitem_content-title">Test rental</div>

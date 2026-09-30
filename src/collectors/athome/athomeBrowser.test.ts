@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AthomeBrowser } from "./athomeBrowser";
 
 const bridge = vi.hoisted(() => ({ connect: vi.fn(), request: vi.fn(), close: vi.fn() }));
-vi.mock("./chromeBridge", () => ({
+vi.mock("../shared/chromeBridge", () => ({
   ChromeBridge: class {
     connect = bridge.connect;
     request = bridge.request;

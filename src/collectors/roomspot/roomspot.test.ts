@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isFamilyLayout, mergeRoomspotIncremental, parseRoomspotPage, roomspotKey, roomspotObservationBatch } from "./roomspot";
-import type { RawListing } from "../../src/domain/types";
+import type { RawListing } from "../../domain/types";
 
 const fixture = `<article class="data"><h2>テストハイツ</h2><table class="spec">
 <tr><td class="kokoku-list-data__address">埼玉県草加市谷塚町1-2</td></tr>

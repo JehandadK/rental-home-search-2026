@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { isFamilyLayout } from "./athome";
-import type { PageCapture } from "./captureStore";
+import type { PageCapture } from "../shared/captureStore";
 
 const CITIES = {
   soka: { code: "11221", label: "Soka", address: "草加市" },

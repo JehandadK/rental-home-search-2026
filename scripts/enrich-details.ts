@@ -6,9 +6,9 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { DetailEnrichmentPlanner, ScrapeIngestion } from "../src/data-layer/ingestion/contracts";
 import { withFileLock } from "../src/node/jsonFile";
-import { captureKey } from "./lib/captureStore";
-import { parseDetail } from "./lib/detailEnrichment";
-import { detailCaptureBatch, validateDetailCapture, type DetailCapture } from "./lib/suumoDetailIngestion";
+import { captureKey } from "../src/collectors/shared/captureStore";
+import { parseDetail } from "../src/collectors/enrichment/detailEnrichment";
+import { detailCaptureBatch, validateDetailCapture, type DetailCapture } from "../src/collectors/enrichment/suumoDetailIngestion";
 import { positiveInteger } from "./lib/refreshPlan";
 
 interface QueueItem { url: string; queuedAt: string; checkedAt?: string; retryAfter?: string; error?: string }

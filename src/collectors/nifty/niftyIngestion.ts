@@ -1,6 +1,6 @@
-import type { ScrapeBatch, ScrapeIngestion } from "../../src/data-layer/ingestion/contracts";
-import { scrapeFingerprint } from "../../src/data-layer/ingestion/service";
-import { type PageCapture, validateCapture } from "./captureStore";
+import type { ScrapeBatch, ScrapeIngestion } from "../../data-layer/ingestion/contracts";
+import { scrapeFingerprint } from "../../data-layer/ingestion/service";
+import { type PageCapture, validateCapture } from "../shared/captureStore";
 import { parseNiftyPage } from "./nifty";
 
 /** Scraper adapter: capture validation/parsing only. Source reads/merges belong to the data layer. */

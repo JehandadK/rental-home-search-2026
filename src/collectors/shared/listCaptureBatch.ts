@@ -1,11 +1,11 @@
-import type { ScrapeBatch } from "../../src/data-layer/ingestion/contracts";
-import { contentFingerprint } from "../../src/data-layer/contentIdentity";
+import type { ScrapeBatch } from "../../data-layer/ingestion/contracts";
+import { contentFingerprint } from "../../data-layer/contentIdentity";
 import { validateCapture, type PageCapture } from "./captureStore";
 import { assertParsedFamilies } from "./captureValidation";
-import { parseAthomePage } from "./athome";
-import { parseRoomspotPage } from "./roomspot";
-import { parseNiftyPage } from "./nifty";
-import { parsePage as parseSuumoPage } from "../scrape";
+import { parseAthomePage } from "../athome/athome";
+import { parseRoomspotPage } from "../roomspot/roomspot";
+import { parseNiftyPage } from "../nifty/nifty";
+import { parsePage as parseSuumoPage } from "../../../scripts/scrape";
 
 /** Parsing and evidence only: all source reads, freshness, matching and writes live behind the client. */
 export async function listCaptureBatch(capture: PageCapture, native?: { runId: string; receipt: string }): Promise<ScrapeBatch> {

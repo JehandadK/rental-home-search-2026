@@ -10,12 +10,12 @@ import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceRowKey, sourceRowLocator } from "../src/data-layer/sourceRowIdentity";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ATHOME_COLLECTOR, runAthomeScrape } from "./scrape-athome";
-import type { PortalCollectorDependencies } from "./lib/portalCollector";
-import { athomeObservationBatch, mergeAthomeIncremental, parseAthomePage } from "./lib/athome";
+import type { PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
+import { athomeObservationBatch, mergeAthomeIncremental, parseAthomePage } from "../src/collectors/athome/athome";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
-import { listCaptureBatch } from "./lib/listCaptureBatch";
+import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
 import { trackingKey } from "../src/data-layer/lifecycle";
-import type { PageCapture } from "./lib/captureStore";
+import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RawListing } from "../src/domain/types";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";

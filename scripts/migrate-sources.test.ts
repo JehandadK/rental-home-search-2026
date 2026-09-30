@@ -13,7 +13,7 @@ import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
 import { DATA_DIR, JsonSourceStore } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
-import { newerRows } from "./lib/captureValidation";
+import { newerRows } from "../src/collectors/shared/captureValidation";
 import { reconcileLifecycle } from "../src/data-layer/lifecycle";
 import { restoreObservedLifecycle } from "../src/storage/json/observations";
 import { runSourceMigration } from "./migrate-sources";

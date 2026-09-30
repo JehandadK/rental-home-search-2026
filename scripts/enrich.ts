@@ -5,7 +5,7 @@ import { enrichListing } from "../src/domain/enrichListing";
 import { geocodeAddress } from "../src/integrations/geocode";
 import { DATA_DIR, atomicWriteJson } from "../src/storage/json/dataStore";
 import { withFileLock } from "../src/node/jsonFile";
-import { addressKey, cachedGeocode, seedGeocodes, type GeocodeCache } from "./lib/geocodeCache";
+import { addressKey, cachedGeocode, seedGeocodes, type GeocodeCache } from "../src/collectors/enrichment/geocodeCache";
 import type { EnrichedListing, RawListing } from "../src/domain/types";
 
 const OUT = join(DATA_DIR, "listings.json");

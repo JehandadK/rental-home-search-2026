@@ -20,25 +20,25 @@ const referenceData = (file: string): KnownViolation => ({
 
 export const KNOWN_VIOLATIONS: KnownViolation[] = [
   // Collector → CLI
-  { from: "scripts/lib/listCaptureBatch.ts", to: "scripts/scrape.ts", until: "M4", fix: "Move the SUUMO parsePage into collectors" },
-  { from: "scripts/lib/nifty.ts", to: "scripts/merge-nifty.ts", until: "M4", fix: "Move parseStationDistance into collectors" },
+  { from: "src/collectors/shared/listCaptureBatch.ts", to: "scripts/scrape.ts", until: "M4", fix: "Move the SUUMO parsePage into collectors" },
+  { from: "src/collectors/nifty/nifty.ts", to: "scripts/merge-nifty.ts", until: "M4", fix: "Move parseStationDistance into collectors" },
   // CLI → CLI
   { from: "scripts/backfill-parking.ts", to: "scripts/enrich-details.ts", until: "M4", fix: "Move the enrichDetails runner into collectors; both CLIs call it" },
   // Collector → storage
-  { from: "scripts/lib/captureStore.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Take CAPTURE_DIR and atomic writes from src/node/" },
-  { from: "scripts/lib/captureValidation.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Move newerRows (freshness is a data-layer rule; only tests use it) out of collectors" },
+  { from: "src/collectors/shared/captureStore.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Take CAPTURE_DIR and atomic writes from src/node/" },
+  { from: "src/collectors/shared/captureValidation.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Move newerRows (freshness is a data-layer rule; only tests use it) out of collectors" },
   // Collector → data-layer internals
-  { from: "scripts/lib/captureValidation.ts", to: "src/data-layer/lifecycle.ts", until: "M4", fix: "Import trackingKey from the domain" },
-  { from: "scripts/lib/captureValidation.ts", to: "src/data-layer/sourceObservationTime.ts", until: "M4", fix: "Move newerRows out of collectors" },
-  { from: "scripts/lib/athome.ts", to: "src/data-layer/ingestion/portalPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
-  { from: "scripts/lib/roomspot.ts", to: "src/data-layer/ingestion/portalPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
-  { from: "scripts/lib/nifty.ts", to: "src/data-layer/ingestion/niftyPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
-  { from: "scripts/lib/detailEnrichment.ts", to: "src/data-layer/ingestion/suumoDetailPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
-  { from: "scripts/lib/niftyIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
-  { from: "scripts/lib/suumoDetailIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
-  { from: "scripts/lib/portalCollector.ts", to: "src/data-layer/ingestion/portalDiscovery.ts", until: "M4", fix: "Publish portalPageUrl with the portal discovery contract" },
+  { from: "src/collectors/shared/captureValidation.ts", to: "src/data-layer/lifecycle.ts", until: "M4", fix: "Import trackingKey from the domain" },
+  { from: "src/collectors/shared/captureValidation.ts", to: "src/data-layer/sourceObservationTime.ts", until: "M4", fix: "Move newerRows out of collectors" },
+  { from: "src/collectors/athome/athome.ts", to: "src/data-layer/ingestion/portalPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
+  { from: "src/collectors/roomspot/roomspot.ts", to: "src/data-layer/ingestion/portalPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
+  { from: "src/collectors/nifty/nifty.ts", to: "src/data-layer/ingestion/niftyPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
+  { from: "src/collectors/enrichment/detailEnrichment.ts", to: "src/data-layer/ingestion/suumoDetailPolicy.ts", until: "M4", fix: "Remove policy re-exports; callers import the data layer" },
+  { from: "src/collectors/nifty/niftyIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
+  { from: "src/collectors/enrichment/suumoDetailIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
+  { from: "src/collectors/shared/portalCollector.ts", to: "src/data-layer/ingestion/portalDiscovery.ts", until: "M4", fix: "Publish portalPageUrl with the portal discovery contract" },
   // Collector → refresh
-  { from: "scripts/lib/portalCollector.ts", to: "scripts/lib/refreshPlan.ts", until: "M4", fix: "Collectors own DEFAULT_INCREMENTAL_PAGE_CEILING; refresh passes overrides" },
+  { from: "src/collectors/shared/portalCollector.ts", to: "scripts/lib/refreshPlan.ts", until: "M4", fix: "Collectors own DEFAULT_INCREMENTAL_PAGE_CEILING; refresh passes overrides" },
   // Domain → web
   { from: "src/domain/diagnostics.ts", to: "src/web/lib/export.ts", until: "M4", fix: "Move the ScoredRow type into the domain" },
   // Bundled persisted data

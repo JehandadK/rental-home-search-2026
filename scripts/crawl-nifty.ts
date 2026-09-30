@@ -1,11 +1,11 @@
 /** List-first Nifty discovery. Zero mandatory detail requests; per-page checkpoints. */
-import { NiftyBrowser } from "./lib/niftyBrowser";
-import { niftyCaptureExpression } from "./lib/niftyCapture";
-import { cachedPage } from "./lib/captureStore";
+import { NiftyBrowser } from "../src/collectors/nifty/niftyBrowser";
+import { niftyCaptureExpression } from "../src/collectors/nifty/niftyCapture";
+import { cachedPage } from "../src/collectors/shared/captureStore";
 import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { ingestNiftyListPage } from "./lib/niftyIngestion";
+import { ingestNiftyListPage } from "../src/collectors/nifty/niftyIngestion";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "./lib/refreshPlan";
 
 const args = process.argv.slice(2);

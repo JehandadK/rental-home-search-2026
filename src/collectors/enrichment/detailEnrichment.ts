@@ -1,9 +1,9 @@
 /** One detail fetch, all useful fields; deterministic replay over cached HTML. */
 import * as cheerio from "cheerio";
-import type { ListingDetailPatch } from "../../src/data-layer/ingestion/contracts";
-export { applyDetail } from "../../src/data-layer/ingestion/suumoDetailPolicy";
-import { parseParking } from "./parking";
-import { parseLease, parseImmediate, parseGuarantorRequired, parseYenStrict, splitTags } from "./parseJa";
+import type { ListingDetailPatch } from "../../data-layer/ingestion/contracts";
+export { applyDetail } from "../../data-layer/ingestion/suumoDetailPolicy";
+import { parseParking } from "../shared/parking";
+import { parseLease, parseImmediate, parseGuarantorRequired, parseYenStrict, splitTags } from "../shared/parseJa";
 
 export function parseDetail(html: string): ListingDetailPatch {
   const $ = cheerio.load(html);

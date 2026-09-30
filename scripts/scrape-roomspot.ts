@@ -7,9 +7,9 @@ import { pathToFileURL } from "node:url";
 import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { cachedPage } from "./lib/captureStore";
-import { RoomspotBrowser } from "./lib/roomspotBrowser";
-import { runPortalScrape, type PortalCollectorConfig, type PortalCollectorDependencies } from "./lib/portalCollector";
+import { cachedPage } from "../src/collectors/shared/captureStore";
+import { RoomspotBrowser } from "../src/collectors/roomspot/roomspotBrowser";
+import { runPortalScrape, type PortalCollectorConfig, type PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
 
 const urlFor = (code: string, address: string) =>
   `https://www.roomspot.net/rent/search/area/pref_11/city_${code}/?address[]=${encodeURIComponent(address)}` +

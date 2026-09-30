@@ -1,9 +1,9 @@
 /** Offline-testable AtHome/RoomSpot collector loop. Source reads, overlap state and merges live behind the client. */
-import type { PortalDiscoveryClient } from "../../src/data-layer/ingestion/contracts";
-import { portalPageUrl } from "../../src/data-layer/ingestion/portalDiscovery";
+import type { PortalDiscoveryClient } from "../../data-layer/ingestion/contracts";
+import { portalPageUrl } from "../../data-layer/ingestion/portalDiscovery";
 import type { PageCapture } from "./captureStore";
 import { listCaptureBatch } from "./listCaptureBatch";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "../../../scripts/lib/refreshPlan";
 
 export interface PortalCollectorConfig {
   source: "athome" | "roomspot";

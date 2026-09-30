@@ -17,9 +17,9 @@ import { pathToFileURL } from "node:url";
 import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { cachedPage } from "./lib/captureStore";
-import { AthomeBrowser } from "./lib/athomeBrowser";
-import { runPortalScrape, type PortalCollectorConfig, type PortalCollectorDependencies } from "./lib/portalCollector";
+import { cachedPage } from "../src/collectors/shared/captureStore";
+import { AthomeBrowser } from "../src/collectors/athome/athomeBrowser";
+import { runPortalScrape, type PortalCollectorConfig, type PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
 
 const cityUrl = (slug: string) => `https://www.athome.co.jp/chintai/saitama/${slug}/list/`;
 

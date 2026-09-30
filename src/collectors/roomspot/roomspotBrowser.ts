@@ -1,5 +1,5 @@
 /** Chrome-backed public RoomSpot search collector. */
-import { ChromeBridge } from "./chromeBridge";
+import { ChromeBridge } from "../shared/chromeBridge";
 
 interface BrowserTab { id: number; tabFence?: string; incarnation?: string }
 

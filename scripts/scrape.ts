@@ -24,7 +24,7 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
 import type { ScrapeBatch, SuumoDiscoveryClient } from "../src/data-layer/ingestion/contracts";
 import type { RawListing } from "../src/domain/types";
-import { cachedPage, validateCapture, type PageCapture } from "./lib/captureStore";
+import { cachedPage, validateCapture, type PageCapture } from "../src/collectors/shared/captureStore";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
 
 /** 2K / 2DK / 2LDK / 3K / 3DK / 3LDK / 4K / 4DK / 4LDK / 5K+ */

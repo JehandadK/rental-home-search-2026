@@ -8,8 +8,8 @@
  *   null    — the source did not say (unknown ≠ free)
  */
 
-import { toHalfWidth } from "../../src/domain/japaneseText";
-export { toHalfWidth, parseFloors } from "../../src/domain/japaneseText";
+import { toHalfWidth } from "../../domain/japaneseText";
+export { toHalfWidth, parseFloors } from "../../domain/japaneseText";
 
 const NONE_MARKERS = ["-", "－", "ー", "なし", "無", "無し", "不要"];
 

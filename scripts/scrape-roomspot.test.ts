@@ -10,11 +10,11 @@ import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceRowKey, sourceRowLocator } from "../src/data-layer/sourceRowIdentity";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ROOMSPOT_COLLECTOR, runRoomspotScrape } from "./scrape-roomspot";
-import type { PortalCollectorDependencies } from "./lib/portalCollector";
-import { listCaptureBatch } from "./lib/listCaptureBatch";
-import { mergeRoomspotIncremental, parseRoomspotPage, roomspotObservationBatch } from "./lib/roomspot";
+import type { PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
+import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
+import { mergeRoomspotIncremental, parseRoomspotPage, roomspotObservationBatch } from "../src/collectors/roomspot/roomspot";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
-import type { PageCapture } from "./lib/captureStore";
+import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RawListing } from "../src/domain/types";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
