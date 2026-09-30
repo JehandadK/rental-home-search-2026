@@ -5,7 +5,7 @@
  * navigating to results: opening a list URL in a cold tab can trigger a block.
  * Only public listing HTML leaves the page; cookies/storage remain in Chrome.
  */
-import { ChromeBridge } from "../shared/chromeBridge";
+import { createBridge } from "../shared/chromeBridge";
 
 interface BrowserTab {
   id: number;
@@ -21,7 +21,7 @@ const NAVIGATION_TIMEOUT_MS = 30_000;
 const REQUEST_TIMEOUT_MS = NAVIGATION_TIMEOUT_MS + 5_000;
 
 export class AthomeBrowser {
-  private bridge = new ChromeBridge();
+  private bridge = createBridge();
   private tab?: BrowserTab;
   private searchReady = false;
   private readonly sessionId = `athome-scraper-${process.pid}`;

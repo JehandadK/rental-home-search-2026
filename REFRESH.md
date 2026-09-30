@@ -39,6 +39,21 @@
   per-city exhaustion. Use `--deep` for wider non-destructive discovery. Automated
   SOLD auditing remains unavailable until explicit exhaustion is implemented.
 
+## Parallel collection and the Playwright driver
+
+- Collectors for different sources (SUUMO, AtHome, RoomSpot, Nifty) run at the
+  same time; the three Nifty cities share `nifty.json`, so they run in order
+  inside one group. `--concurrency N` caps it (`1` = fully sequential).
+- Without the Pi Control Chrome bridge, set `BROWSER_DRIVER=playwright` (for
+  example `BROWSER_DRIVER=playwright npm run refresh -- --resume`). It launches
+  a local Playwright Chromium (`src/collectors/shared/playwrightBridge.ts`),
+  **headed** by default: Nifty and AtHome serve a wait/verification page to
+  headless Chromium. `PLAYWRIGHT_HEADLESS=1` opts out; `PLAYWRIGHT_EXECUTABLE_PATH`
+  overrides the browser, else the newest cached Chromium is used.
+- The AtHome collector still expects the old `#search-parameter` AJAX form; on
+  the modern template it fails with "search form not found". See the AtHome
+  city-path + `capture:athome-html` steps below.
+
 ## Agent-operated browser collection
 
 Use the loaded pi-control-chrome Skill and native `browser_*` tools only. Do not

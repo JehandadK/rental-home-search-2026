@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planRefresh, completeMarket } from "./refreshPlan";
+import { planRefresh, completeMarket, runLimited } from "./refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../collectors/shared/pageBudget";
 import { addressKey, cachedGeocode, seedGeocodes } from "../collectors/enrichment/geocodeCache";
 import { parseDetail } from "../collectors/enrichment/detailEnrichment";
@@ -82,5 +82,17 @@ describe("efficient refresh", () => {
     const packed = packListings(listings);
     expect(unpackListings(packed)).toEqual(listings);
     expect(JSON.stringify(packed).length).toBeLessThan(JSON.stringify(listings).length);
+  });
+  it("runs collectors concurrently up to the limit and keeps result order", async () => {
+    let active = 0, peak = 0;
+    const results = await runLimited([1, 2, 3, 4, 5], 3, async (n) => {
+      peak = Math.max(peak, ++active);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      active--;
+      return n * 2;
+    });
+    expect(results).toEqual([2, 4, 6, 8, 10]);
+    expect(peak).toBe(3);
+    expect(await runLimited([], 4, async (n: number) => n)).toEqual([]);
   });
 });

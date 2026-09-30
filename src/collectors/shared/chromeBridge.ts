@@ -1,3 +1,4 @@
+import { PlaywrightBridge } from "./playwrightBridge";
 /** Minimal read-only client for the local Pi Control Chrome Bridge. */
 const HOST = process.env.PI_CONTROL_CHROME_BRIDGE_HOST ?? "127.0.0.1";
 const PORT = Number(process.env.PI_CONTROL_CHROME_BRIDGE_PORT ?? 17318);
@@ -76,4 +77,16 @@ export class ChromeBridge {
       pending.reject(error);
     } else pending.resolve(message.result);
   }
+}
+
+/** Minimal surface the portal browser adapters need from a browser driver. */
+export interface BrowserBridge {
+  connect(): Promise<void>;
+  request<T>(method: string, params: Record<string, unknown>, timeoutMs?: number): Promise<T>;
+  close(): void;
+}
+
+/** ChromeBridge by default; BROWSER_DRIVER=playwright launches a local Playwright Chromium instead. */
+export function createBridge(): BrowserBridge {
+  return process.env.BROWSER_DRIVER === "playwright" ? new PlaywrightBridge() : new ChromeBridge();
 }

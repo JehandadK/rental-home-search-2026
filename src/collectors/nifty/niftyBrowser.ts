@@ -1,8 +1,8 @@
 /** Human CLI adapter only. Agents use native browser_* tools, not this module. */
-import { ChromeBridge } from "../shared/chromeBridge";
+import { createBridge } from "../shared/chromeBridge";
 interface Tab { id: number; title?: string; url?: string; tabFence?: string; incarnation?: string }
 export class NiftyBrowser {
-  private bridge = new ChromeBridge();
+  private bridge = createBridge();
   private tab?: Tab;
   private sessionId = `nifty-cli-${process.pid}`;
   async connect(url: string): Promise<void> {

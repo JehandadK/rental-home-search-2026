@@ -3,11 +3,7 @@ import { AthomeBrowser } from "./athomeBrowser";
 
 const bridge = vi.hoisted(() => ({ connect: vi.fn(), request: vi.fn(), close: vi.fn() }));
 vi.mock("../shared/chromeBridge", () => ({
-  ChromeBridge: class {
-    connect = bridge.connect;
-    request = bridge.request;
-    close = bridge.close;
-  },
+  createBridge: () => ({ connect: bridge.connect, request: bridge.request, close: bridge.close }),
 }));
 
 const HOME = "https://www.athome.co.jp/";

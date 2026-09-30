@@ -5,6 +5,7 @@
  *   npm run refresh -- --deep          wider newest-first discovery
  *   npm run refresh -- --resume        continue the latest incomplete run
  *   npm run refresh -- --verbose       stream full collector output
+ *   npm run refresh -- --concurrency N cap parallel sources (1 = sequential)
  *
  * Every stage is checkpointed in data/refresh-runs.json. Source collectors
  * remain independently atomic, so a failed portal retains its last successful
@@ -28,7 +29,7 @@ import {
   type RefreshStageRecord,
 } from "../src/refresh/refreshLedger";
 import type { EnrichedListing } from "../src/domain/types";
-import { NETWORK_STAGES, planRefresh } from "../src/refresh/refreshPlan";
+import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, planRefresh, runLimited } from "../src/refresh/refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
 const ROOT = REPO_ROOT;
@@ -45,6 +46,8 @@ const flag = (name: string) => argv.includes(name) ? argv[argv.indexOf(name) + 1
 const onlyStage = flag("--only");
 let pageBudget = positiveInteger(flag("--max-pages"), requestedDeep ? 100 : DEFAULT_INCREMENTAL_PAGE_CEILING);
 let detailBudget = positiveInteger(flag("--detail-limit"), 0, 0);
+// Collectors run concurrently by default; `--concurrency 1` restores one-at-a-time order.
+const concurrency = positiveInteger(flag("--concurrency"), 4);
 
 interface StageDefinition {
   id: string;
@@ -138,19 +141,21 @@ async function executeStage(
   run.updatedAt = startedAt;
   await saveRefreshRun(run);
 
-  process.stdout.write(`${definition.label.padEnd(20)} `);
   const child = spawn(npm, definition.args, {
     cwd: ROOT,
     env: { ...process.env, ...definition.env },
   });
   let stdout = "", stderr = "";
+  // Prefix streamed lines so concurrent collectors stay attributable.
+  const stream = (target: NodeJS.WriteStream, chunk: Buffer | string) =>
+    target.write(String(chunk).replace(/\n$/, "").split("\n").map((line) => `[${definition.id}] ${line}\n`).join(""));
   child.stdout.on("data", (chunk) => {
     stdout += chunk;
-    if (verbose) process.stdout.write(chunk);
+    if (verbose) stream(process.stdout, chunk);
   });
   child.stderr.on("data", (chunk) => {
     stderr += chunk;
-    if (verbose) process.stderr.write(chunk);
+    if (verbose) stream(process.stderr, chunk);
   });
   const exitCode = await new Promise<number | null>((resolve) => {
     child.once("error", (error) => {
@@ -184,10 +189,10 @@ async function executeStage(
   await saveRefreshRun(run);
 
   if (exitCode === 0) {
-    console.log(discovered == null ? "OK" : `${discovered} new`);
+    console.log(`${definition.label.padEnd(20)} ${discovered == null ? "OK" : `${discovered} new`}`);
     return true;
   }
-  console.log(`${definition.recoverable ? "FAILED (saved snapshot retained)" : "FAILED"}${detail ? ` — ${detail.slice(0, 140)}` : ""}`);
+  console.log(`${definition.label.padEnd(20)} ${definition.recoverable ? "FAILED (saved snapshot retained)" : "FAILED"}${detail ? ` — ${detail.slice(0, 140)}` : ""}`);
   return false;
 }
 
@@ -304,6 +309,7 @@ try {
   });
   const planned = planRefresh(activeRun.stages, resume);
   let mandatoryFailure = false;
+  const queue: Array<{ definition: StageDefinition; stage: RefreshRunRecord["stages"][number] }> = [];
   for (let i = 0; i < defs.length; i++) {
     const definition = defs[i];
     const stage = activeRun.stages[i];
@@ -312,6 +318,23 @@ try {
       console.log(`${definition.label.padEnd(20)} deferred (portal collection disabled)`);
       continue;
     }
+    queue.push({ definition, stage });
+  }
+  // Independent portal collectors first. Sources run concurrently; stages that share a
+  // source file (Nifty cities) run in order inside their group. Failures are recoverable.
+  const groups = new Map<string, typeof queue>();
+  for (const item of queue.filter(({ stage }) => PARALLEL_COLLECTOR_STAGES.has(stage.id))) {
+    const key = collectorGroup(item.stage.id);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  if (groups.size > 1 && concurrency > 1) {
+    console.log(`Running ${groups.size} sources in parallel (max ${concurrency}): ${[...groups.keys()].join(", ")}`);
+  }
+  await runLimited([...groups.values()], concurrency, async (items) => {
+    for (const { definition, stage } of items) await executeStage(definition, stage, activeRun!);
+  });
+  for (const { definition, stage } of queue) {
+    if (PARALLEL_COLLECTOR_STAGES.has(stage.id)) continue;
     const ok = await executeStage(definition, stage, activeRun);
     if (!ok && !definition.recoverable) {
       mandatoryFailure = true;

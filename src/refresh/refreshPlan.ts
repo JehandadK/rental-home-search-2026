@@ -26,3 +26,32 @@ export function planRefresh(stages: readonly RefreshStageRecord[], resume: boole
 export function completeMarket(requestedFull: boolean, cities: readonly { exhausted: boolean }[]): boolean {
   return requestedFull && cities.length > 0 && cities.every((city) => city.exhausted);
 }
+
+/**
+ * Portal collectors read only the portal and write only their own source file,
+ * so collectors for different sources can run at the same time. Everything
+ * downstream (Nifty import, details, merge, geocode, web payload) depends on
+ * their output and stays sequential.
+ */
+export const PARALLEL_COLLECTOR_STAGES = new Set(["suumo", "athome", "roomspot", "nifty-soka", "nifty-koshigaya", "nifty-kawaguchi"]);
+
+/**
+ * Stages that write the same source file (the three Nifty cities share nifty.json)
+ * must not commit at the same time: the store's revision check rejects the loser.
+ * They form one group that runs in order; different groups run concurrently.
+ */
+export const collectorGroup = (stageId: string): string => stageId.startsWith("nifty-") ? "nifty" : stageId;
+
+/** Run `task` over `items` with at most `limit` in flight; results keep input order. */
+export async function runLimited<T, R>(items: readonly T[], limit: number, task: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await task(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+  return results;
+}

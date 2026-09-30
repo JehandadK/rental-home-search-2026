@@ -1,10 +1,10 @@
 /** Chrome-backed public RoomSpot search collector. */
-import { ChromeBridge } from "../shared/chromeBridge";
+import { createBridge } from "../shared/chromeBridge";
 
 interface BrowserTab { id: number; tabFence?: string; incarnation?: string }
 
 export class RoomspotBrowser {
-  private bridge = new ChromeBridge();
+  private bridge = createBridge();
   private tab?: BrowserTab;
   private readonly sessionId = `roomspot-scraper-${process.pid}`;
 
