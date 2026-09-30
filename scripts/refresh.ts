@@ -26,7 +26,7 @@ import {
   type RefreshRunRecord,
   type RefreshStageRecord,
 } from "./lib/refreshLedger";
-import type { EnrichedListing } from "../src/types";
+import type { EnrichedListing } from "../src/domain/types";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, NETWORK_STAGES, planRefresh, positiveInteger } from "./lib/refreshPlan";
 
 const ROOT = join(DATA_DIR, "..", "..");

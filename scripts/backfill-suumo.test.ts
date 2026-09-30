@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import type { SourceCorrectionJournal, SourceCorrectionRequest } from "../src/data-layer/corrections/contracts";
 import { InvalidSourceCorrectionError, SourceCorrectionReplayConflictError, SourceCorrectionService } from "../src/data-layer/corrections/service";
 import { backfillSuumoNotes } from "../src/data-layer/corrections/suumoNotes";

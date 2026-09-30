@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "./lib/dataStore";
 import { JsonListingRepository } from "./lib/jsonListingRepository";

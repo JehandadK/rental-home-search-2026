@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import { isSuumoOverlap, mergeSuumoIncremental, suumoKey } from "./suumoIncremental";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({

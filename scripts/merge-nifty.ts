@@ -28,7 +28,7 @@ import {
   sumMonthlyExtras,
   sumOneOffFees,
 } from "./lib/parseJa";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import { parseParking } from "./lib/parking";
 
 const NIFTY_PATH = join(DATA_DIR, "nifty_detail_raw.json");

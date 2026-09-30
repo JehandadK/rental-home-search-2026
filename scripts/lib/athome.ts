@@ -1,7 +1,7 @@
 /** Pure parsers and incremental merge helpers for athome.co.jp list pages. */
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
-import type { ParkingInfo, RawListing } from "../../src/types";
+import type { ParkingInfo, RawListing } from "../../src/domain/types";
 export { athomeKey, athomeMatchKeys, isAthomeOverlap, mergeAthomeIncremental, athomeObservationBatch } from "../../src/data-layer/ingestion/portalPolicy";
 import { isExplicitNone, parseYen as parseJapaneseYen } from "./parseJa";
 

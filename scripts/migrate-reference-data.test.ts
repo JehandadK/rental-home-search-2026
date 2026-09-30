@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import type { ChildcareFacility, Mosque, NamedPlace, PointOfInterest, Station } from "../src/types";
+import type { ChildcareFacility, Mosque, NamedPlace, PointOfInterest, Station } from "../src/domain/types";
 import type { CityBoundaryRecord, CityRecord, ReferencePlaceRecord, VersionedDataset } from "../src/data-layer/contracts";
 
 const roots: string[] = [];

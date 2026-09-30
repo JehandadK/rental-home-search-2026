@@ -1,6 +1,6 @@
 /** Nifty LIST cards already expose essentials: detail loads are optional. */
 import * as cheerio from "cheerio";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import { parseYen } from "./parseJa";
 import { parseStationDistance } from "../merge-nifty";
 export { niftyMatchKeys, mergeNiftyIncremental } from "../../src/data-layer/ingestion/niftyPolicy";

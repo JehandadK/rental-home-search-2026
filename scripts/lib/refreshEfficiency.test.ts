@@ -5,7 +5,7 @@ import { parseDetail, applyDetail } from "./detailEnrichment";
 import { restoreObservedLifecycle } from "./observations";
 import { validateCapture } from "./captureStore";
 import { packListings, unpackListings } from "../../src/domain/webPayload";
-import type { RawListing, EnrichedListing } from "../../src/types";
+import type { RawListing, EnrichedListing } from "../../src/domain/types";
 import { trackingKey } from "./lifecycle";
 import { newerRows, assertParsedFamilies } from "./captureValidation";
 const base: RawListing = { name: "Home", address: "埼玉県草加市１", source: "suumo", id: "s1", url: "https://suumo.jp/a", rent: 80000, layout: "2LDK", sizeM2: 50, builtYear: 2010, stationWalkMin: 5 };

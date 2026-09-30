@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { athomeKey, athomeObservationBatch, isAthomeOverlap, isFamilyLayout, mergeAthomeIncremental, parseAthomePage } from "./athome";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({
   id: "athome-1119917524",

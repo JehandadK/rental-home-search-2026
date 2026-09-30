@@ -15,7 +15,7 @@ import { listCaptureBatch } from "./lib/listCaptureBatch";
 import { mergeRoomspotIncremental, parseRoomspotPage, roomspotObservationBatch } from "./lib/roomspot";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
 import type { PageCapture } from "./lib/captureStore";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
 const cities = ROOMSPOT_COLLECTOR.cities;

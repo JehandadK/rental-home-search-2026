@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import type { SourceFile } from "./dataStore";
 import type { PageCapture } from "./captureStore";
 import { trackingKey } from "./lifecycle";

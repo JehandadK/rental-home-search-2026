@@ -1,6 +1,6 @@
 /** Pure RoomSpot search-result parser and incremental merge helpers. */
 import * as cheerio from "cheerio";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 export { roomspotKey, roomspotMatchKeys, isRoomspotOverlap, mergeRoomspotIncremental, roomspotObservationBatch } from "../../src/data-layer/ingestion/portalPolicy";
 import { isExplicitNone, parseYen } from "./parseJa";
 

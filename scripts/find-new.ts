@@ -11,11 +11,11 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_CONFIG } from "../src/config/scoring";
+import { DEFAULT_CONFIG } from "../src/domain/scoringConfig";
 import { isNewListing, isSold } from "../src/domain/lifecycle";
 import { parkingInfo } from "../src/domain/moveInCost";
 import { scoreListing } from "../src/domain/scoring";
-import type { EnrichedListing } from "../src/types";
+import type { EnrichedListing } from "../src/domain/types";
 
 const argv = process.argv.slice(2);
 const value = (flag: string): string | undefined => {

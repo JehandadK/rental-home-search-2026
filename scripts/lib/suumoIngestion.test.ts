@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import type { ScrapeBatch } from "../../src/data-layer/ingestion/contracts";
 import { InvalidScrapeBatchError, ListingIngestionService, ScrapeReplayConflictError } from "../../src/data-layer/ingestion/service";
 import { sourceRowKey, sourceRowLocator } from "../../src/data-layer/sourceRowIdentity";

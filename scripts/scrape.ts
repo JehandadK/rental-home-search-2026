@@ -23,7 +23,7 @@ import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "./li
 import { JsonListingRepository } from "./lib/jsonListingRepository";
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
 import type { ScrapeBatch, SuumoDiscoveryClient } from "../src/data-layer/ingestion/contracts";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import { cachedPage, validateCapture, type PageCapture } from "./lib/captureStore";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
 

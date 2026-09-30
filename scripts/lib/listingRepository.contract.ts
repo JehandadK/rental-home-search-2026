@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ListingObservationBatch, ListingRepository } from "../../src/data-layer/contracts";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import { RevisionConflictError } from "../../src/data-layer/errors";
 
 export interface ListingRepositoryHarness {

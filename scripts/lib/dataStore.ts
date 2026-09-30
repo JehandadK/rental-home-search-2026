@@ -24,7 +24,7 @@ import { copyFile, mkdir, readFile, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import type { ArchivedSourceListing } from "../../src/data-layer/contracts";
 import { mergeSourceProvenance } from "../../src/data-layer/sourceProvenance";
 import { RevisionConflictError } from "../../src/data-layer/errors";

@@ -16,7 +16,7 @@
  * (backups, lifecycle reconciliation, manifest).
  */
 import { buildRaw, listSources } from "./lib/dataStore";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import { deduplicateListings, isSameProperty, sourceListings } from "../src/domain/listingDedup";
 
 const yen = new Intl.NumberFormat("ja-JP");

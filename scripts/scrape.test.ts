@@ -8,7 +8,7 @@ import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { RevisionConflictError } from "../src/data-layer/errors";
 import { runSuumoScrape, parsePage, suumoCaptureBatch, type SuumoScrapeDependencies } from "./scrape";
 import type { PageCapture } from "./lib/captureStore";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
 const layoutCodes = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import type { LegacyListing } from "../src/data-layer/contracts";
 import type { SourceBootstrapAudit, SourceBootstrapRequest } from "../src/data-layer/bootstrap/contracts";
 import { InvalidSourceBootstrapError, SourceBootstrapService } from "../src/data-layer/bootstrap/service";

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import { RevisionConflictError } from "../../src/data-layer/errors";
 import { ListingIngestionService } from "../../src/data-layer/ingestion/service";
 import type { PageCapture } from "./captureStore";

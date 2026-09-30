@@ -14,7 +14,7 @@ import type {
   NamedPlace,
   PointOfInterest,
   Station,
-} from "../../../src/types";
+} from "../../../src/domain/types";
 
 export interface LegacyReferenceData {
   pois: readonly PointOfInterest[];

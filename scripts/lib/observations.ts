@@ -1,4 +1,4 @@
-import type { RawListing } from "../../src/types";
+import type { RawListing } from "../../src/domain/types";
 import type { SourceFile } from "./dataStore";
 import { trackingKey } from "./lifecycle";
 
