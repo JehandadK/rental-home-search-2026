@@ -4426,8 +4426,8 @@
       "schemaVersion": 1,
       "id": "2026-09-30T09-51-41-218Z-94fa3b40",
       "startedAt": "2026-09-30T09:51:41.218Z",
-      "updatedAt": "2026-09-30T10:32:51.196Z",
-      "status": "partial",
+      "updatedAt": "2026-09-30T10:38:46.532Z",
+      "status": "success",
       "mode": "incremental",
       "skipNifty": false,
       "skipRoomspot": false,
@@ -4475,6 +4475,10 @@
         {
           "startedAt": "2026-09-30T10:32:44.940Z",
           "resume": true
+        },
+        {
+          "startedAt": "2026-09-30T10:37:06.367Z",
+          "resume": true
         }
       ],
       "beforeTotal": 3666,
@@ -4517,8 +4521,7 @@
         {
           "id": "athome",
           "label": "AtHome",
-          "status": "failed",
-          "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying",
+          "status": "success",
           "attempts": [
             {
               "startedAt": "2026-09-30T09:51:41.235Z",
@@ -4583,12 +4586,21 @@
               "exitCode": 1,
               "status": "failed",
               "detail": "AtHome capture stopped: page.evaluate: Error: AtHome search form not found after navigation (blocked or unsupported page); inspect the homepage before retrying"
+            },
+            {
+              "startedAt": "2026-09-30T10:37:06.386Z",
+              "completedAt": "2026-09-30T10:38:46.479Z",
+              "durationMs": 100093,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 152
             }
           ],
-          "startedAt": "2026-09-30T10:32:44.959Z",
-          "completedAt": "2026-09-30T10:32:51.139Z",
-          "durationMs": 6180,
-          "exitCode": 1
+          "startedAt": "2026-09-30T10:37:06.386Z",
+          "completedAt": "2026-09-30T10:38:46.479Z",
+          "durationMs": 100093,
+          "exitCode": 0,
+          "discovered": 152
         },
         {
           "id": "roomspot",
@@ -5086,7 +5098,7 @@
           "exitCode": 0
         }
       ],
-      "completedAt": "2026-09-30T10:32:51.196Z",
+      "completedAt": "2026-09-30T10:38:46.532Z",
       "afterTotal": 3700,
       "netUniqueAdded": 49,
       "duplicatesDropped": 2578,
