@@ -5,6 +5,7 @@ import { sourceObservationBatch } from "../sourceObservationBatch";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sourceObservationTime";
 import { exactReconciliation } from "./reconciliation";
 import type { ScrapeBatch } from "./contracts";
+import type { SourcePolicy } from "./sourcePolicy";
 
 export type BrowserPortal = "athome" | "roomspot";
 const norm = (value: string | null | undefined) => (value ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
@@ -108,3 +109,25 @@ export function preparePortalBatch(request: ScrapeBatch, previous: ListingSource
     ignored: request.observations.length - merged.added - merged.updated,
     previousCount: previous?.listings.length ?? 0, currentCount: merged.listings.length };
 }
+
+export const athomeSourcePolicy: SourcePolicy = {
+  source: "athome",
+  host: "www.athome.co.jp",
+  listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
+  portalDiscovery: {
+    keys: (row) => portalDiscoveryKeys("athome", row),
+    provenanceCity: (city) => new URL(city.url).pathname.split("/")[3],
+    capturedBy: "scripts/scrape-athome.ts",
+  },
+};
+
+export const roomspotSourcePolicy: SourcePolicy = {
+  source: "roomspot",
+  host: "www.roomspot.net",
+  listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
+  portalDiscovery: {
+    keys: (row) => portalDiscoveryKeys("roomspot", row),
+    provenanceCity: (city) => city.label,
+    capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome",
+  },
+};

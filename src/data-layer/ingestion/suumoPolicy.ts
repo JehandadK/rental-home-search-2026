@@ -6,6 +6,8 @@ import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sou
 import type { ScrapeBatch } from "./contracts";
 import { InvalidScrapeBatchError } from "./errors";
 import { mergeSuumoObserved, suumoKey, suumoDiscoveryMatchKeys as suumoMatchKeys } from "./suumoIdentity";
+import { prepareSuumoDetailBatch, validateDetailPatch } from "./suumoDetailPolicy";
+import type { SourcePolicy } from "./sourcePolicy";
 
 const defined = <T extends object>(value: T): Partial<T> => Object.fromEntries(Object.entries(value).filter(([, v]) => v != null)) as Partial<T>;
 
@@ -74,3 +76,10 @@ export function prepareSuumoBatch(request: ScrapeBatch, snapshot: ListingSourceS
   return { reconciliation, added: merged.added, updated: merged.updated, novel: novelObservations.length, observedCount,
     ignored: request.observations.length - acceptedObservations.length, previousCount: previous.listings.length, currentCount: merged.listings.length };
 }
+
+export const suumoSourcePolicy: SourcePolicy = {
+  source: "suumo",
+  host: "suumo.jp",
+  listings: { prepare: prepareSuumoBatch, exactUrlDiscovery: true },
+  detailPatches: { producer: "suumo-detail", validate: validateDetailPatch, prepare: prepareSuumoDetailBatch },
+};

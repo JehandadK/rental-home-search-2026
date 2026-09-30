@@ -3,18 +3,25 @@ import { canonicalJson, contentFingerprint as scrapeFingerprint } from "../conte
 export { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 import { MANAGED_INGESTION_PROVENANCE_KEYS } from "../sourceProvenance";
 import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt, SuumoDiscoveryClient, SuumoDiscoveryOptions, SuumoDiscoverySession, PortalDiscoveryClient, PortalDiscoveryOptions, PortalDiscoverySession, NativeCaptureIngestion, CaptureRunSummary } from "./contracts";
-import { prepareNiftyBatch } from "./niftyPolicy";
-import { prepareSuumoDetailBatch, selectDetailUrls, validateDetailPatch } from "./suumoDetailPolicy";
-import { prepareSuumoBatch } from "./suumoPolicy";
+import { selectDetailUrls } from "./suumoDetailPolicy";
 import { StagedSuumoDiscovery, validateSuumoDiscoveryOptions } from "./suumoDiscovery";
-import { preparePortalBatch } from "./portalPolicy";
 import { StagedPortalDiscovery, validatePortalOptions } from "./portalDiscovery";
+import type { SourcePolicyRegistry } from "./sourcePolicy";
+import { SOURCE_POLICIES } from "./sourcePolicies";
 import { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 export { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
 
-/** Versioned application boundary. Scrapers never choose the merge policy or read source revisions. */
+/**
+ * Versioned application boundary. Scrapers never choose the merge policy or read
+ * source revisions; each source's rules come from its registered SourcePolicy.
+ */
 export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner, SuumoDiscoveryClient, PortalDiscoveryClient, NativeCaptureIngestion {
-  constructor(private readonly repository: ListingRepository) {}
+  private readonly validate = (batch: ScrapeSubmission) => validateScrapeBatch(batch, this.policies);
+
+  constructor(
+    private readonly repository: ListingRepository,
+    private readonly policies: SourcePolicyRegistry = SOURCE_POLICIES,
+  ) {}
 
   async planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]> {
     return selectDetailUrls(await this.repository.listSources(), options);
@@ -25,19 +32,19 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
     const options = JSON.parse(canonicalJson(input)) as SuumoDiscoveryOptions;
     const previous = await this.repository.readSource("suumo");
     if (!previous || previous.source !== "suumo") invalid("No SUUMO snapshot exists. Initialize preserved history with `npm run data:migrate` first.");
-    return new StagedSuumoDiscovery(options, previous, validateScrapeBatch, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
+    return new StagedSuumoDiscovery(options, previous, this.validate, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
   }
 
   async beginPortalDiscovery(input: PortalDiscoveryOptions): Promise<PortalDiscoverySession> {
-    validatePortalOptions(input);
+    const policy = validatePortalOptions(input, this.policies);
     const options = JSON.parse(canonicalJson(input)) as PortalDiscoveryOptions;
     const previous = await this.repository.readSource(options.source);
-    return new StagedPortalDiscovery(options, previous, validateScrapeBatch, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
+    return new StagedPortalDiscovery(options, policy.portalDiscovery, previous, this.validate, (batch, writeOptions) => this.commitScrape(batch, previous, writeOptions));
   }
 
   /** Compatibility run annotations carry no observations and never re-merge source rows. */
   async annotateCaptureRun(input: CaptureRunSummary): Promise<void> {
-    if (!input || input.schemaVersion !== 1 || !["suumo", "athome", "roomspot", "nifty"].includes(input.source)
+    if (!input || input.schemaVersion !== 1 || !this.policies.get(input.source)
       || (input.captureRunId !== undefined && !nonempty(input.captureRunId)) || !Array.isArray(input.cities)
       || input.cities.some((city) => !city || !nonempty(city.city) || !Number.isInteger(city.pages) || city.pages < 0 || !Number.isInteger(city.added) || city.added < 0)
       || new Set(input.cities.map((city) => city.city)).size !== input.cities.length) invalid("Invalid capture run summary");
@@ -55,7 +62,7 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
   }
 
   async ingestScrape(request: ScrapeSubmission, options: { allowShrink?: boolean } = {}): Promise<ScrapeIngestionReceipt> {
-    validateScrapeBatch(request);
+    this.validate(request);
     // Own an immutable-by-convention JSON copy across asynchronous reads/writes.
     const batch = JSON.parse(canonicalJson(request)) as ScrapeSubmission;
     const previous = await this.repository.readSource(batch.source);
@@ -74,10 +81,13 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
         added: 0, updated: 0, retired: 0, ignored: batch.observations.length, novel: 0, effect: priorBatch.effect };
     }
 
+    const policy = this.policies.get(batch.source);
+    const detailPolicy = policy?.detailPatches;
     const prepared = batch.observationKind === "detail-patch"
-      ? prepareSuumoDetailBatch(batch, previous) : batch.source === "suumo" ? prepareSuumoBatch(batch, previous) : batch.source === "nifty" ? prepareNiftyBatch(batch, previous) : preparePortalBatch(batch, previous);
+      ? detailPolicy ? detailPolicy.prepare(batch, previous) : invalid("Unsupported scrape source")
+      : policy ? policy.listings.prepare(batch, previous) : invalid("Unsupported scrape source");
     const effect = { added: prepared.added, updated: prepared.updated, novel: prepared.novel,
-      observedCount: "observedCount" in prepared ? prepared.observedCount : batch.observations.length - prepared.ignored };
+      observedCount: prepared.observedCount ?? batch.observations.length - prepared.ignored };
     const { observations, provenance: _provenance, ...metadata } = batch;
     const nextJournal: IngestionJournal = { schemaVersion: 1, batches: [...journal.batches, {
       runId: batch.runId, batchId: batch.batchId, fingerprint, metadata, effect,
@@ -110,20 +120,22 @@ function sourceUrl(value: unknown, host: string): value is string {
 }
 function invalid(message: string): never { throw new InvalidScrapeBatchError(message); }
 
-function validateScrapeBatch(batch: ScrapeSubmission): void {
+function validateScrapeBatch(batch: ScrapeSubmission, policies: SourcePolicyRegistry): void {
   if (!object(batch) || batch.schemaVersion !== 1) invalid("Unsupported scrape schemaVersion");
   const detailPatch = batch.observationKind === "detail-patch";
   if (batch.observationKind !== undefined && batch.observationKind !== "listing" && !detailPatch) invalid("Unsupported observation kind");
-  const suumoDiscovery = !detailPatch && batch.source === "suumo";
+  const policy = policies.get(batch.source);
+  if (!policy || (detailPatch && !policy.detailPatches)) invalid("Unsupported scrape source");
+  const detailPolicy = policy.detailPatches;
+  const strictDiscovery = !detailPatch && policy.listings.exactUrlDiscovery;
   const nativeCapture = batch.scraper?.name === "native-capture";
-  if (detailPatch ? batch.source !== "suumo" : !["suumo", "nifty", "athome", "roomspot"].includes(batch.source)) invalid("Unsupported scrape source");
+  const detailImportProducer = policy.listings.detailImportProducer;
   if ((batch.mode !== "discovery" && batch.mode !== "detail-enrichment") || (detailPatch && batch.mode !== "detail-enrichment")
-    || (!detailPatch && (batch.source !== "nifty" || nativeCapture) && batch.mode !== "discovery")) {
+    || (!detailPatch && (!detailImportProducer || nativeCapture) && batch.mode !== "discovery")) {
     invalid("Unsupported scrape mode; full snapshots require a reviewed exhaustion-evidence policy");
   }
-  const host = { suumo: "suumo.jp", nifty: "myhome.nifty.com", athome: "www.athome.co.jp", roomspot: "www.roomspot.net" }[batch.source as "suumo" | "nifty" | "athome" | "roomspot"];
-  const validUrl = (value: unknown) => sourceUrl(value, host);
-  const expectedProducer = detailPatch ? "suumo-detail" : nativeCapture ? "native-capture" : batch.mode === "discovery" ? `${batch.source}-list` : "nifty-detail";
+  const validUrl = (value: unknown) => sourceUrl(value, policy.host);
+  const expectedProducer = detailPatch ? detailPolicy!.producer : nativeCapture ? "native-capture" : batch.mode === "discovery" ? `${batch.source}-list` : detailImportProducer;
   if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1" || batch.scraper.parserVersion !== "1") {
     invalid("Unsupported or missing scraper name/version/parserVersion");
   }
@@ -134,24 +146,24 @@ function validateScrapeBatch(batch: ScrapeSubmission): void {
     invalid("Invalid scrape scope");
   }
   if (batch.provenance !== undefined && (!object(batch.provenance) || MANAGED_INGESTION_PROVENANCE_KEYS.some((key) => key in batch.provenance!))) invalid("Invalid/reserved scrape provenance");
-  if (!Array.isArray(batch.observations) || (suumoDiscovery && !nativeCapture && !batch.observations.length)) invalid("Observations must be a non-empty array for SUUMO discovery");
+  if (!Array.isArray(batch.observations) || (strictDiscovery && !nativeCapture && !batch.observations.length)) invalid("Observations must be a non-empty array for SUUMO discovery");
   const seen = new Map<string, string>();
   for (const observation of batch.observations) {
     if (!object(observation) || !nonempty(observation.sourceListingId)) invalid("Missing observation identity");
     if (observation.observedAt === null) {
-      if (detailPatch || suumoDiscovery || batch.mode !== "detail-enrichment") invalid("Only legacy detail captures may have unknown observation time");
-    } else if (!timestamp(observation.observedAt) || (suumoDiscovery && Date.parse(observation.observedAt) > Date.parse(batch.capturedAt))) invalid("Invalid observation timestamp");
+      if (detailPatch || strictDiscovery || batch.mode !== "detail-enrichment") invalid("Only legacy detail captures may have unknown observation time");
+    } else if (!timestamp(observation.observedAt) || (strictDiscovery && Date.parse(observation.observedAt) > Date.parse(batch.capturedAt))) invalid("Invalid observation timestamp");
     if (!object(observation.evidence) || !nonempty(observation.evidence.captureId) || !validUrl(observation.evidence.url)
       || !batch.scope.urls.includes(observation.evidence.url)) invalid("Missing or out-of-scope observation evidence");
     if (detailPatch) {
       if (observation.sourceListingId !== observation.evidence.url || "listing" in observation || !("details" in observation)) invalid("Invalid detail patch identity/payload");
-      validateDetailPatch(observation.details);
+      detailPolicy!.validate(observation.details);
     } else {
       if (!("listing" in observation) || !object(observation.listing) || "details" in observation) invalid("Missing observation listing");
       const listing = observation.listing;
-      if (suumoDiscovery && !nonempty(listing.id)) invalid("SUUMO summary observation requires its display ID");
+      if (strictDiscovery && !nonempty(listing.id)) invalid("SUUMO summary observation requires its display ID");
       if (listing.source !== batch.source || !validUrl(listing.url)
-        || (suumoDiscovery ? observation.sourceListingId !== listing.url : (listing.id != null ? listing.id !== observation.sourceListingId : observation.sourceListingId !== listing.url))) invalid("Observation source/identity mismatch");
+        || (strictDiscovery ? observation.sourceListingId !== listing.url : (listing.id != null ? listing.id !== observation.sourceListingId : observation.sourceListingId !== listing.url))) invalid("Observation source/identity mismatch");
       if (!nonempty(listing.name) || !nonempty(listing.address) || typeof listing.rent !== "number" || !Number.isFinite(listing.rent) || listing.rent <= 0
         || (listing.sizeM2 !== null && (typeof listing.sizeM2 !== "number" || !Number.isFinite(listing.sizeM2) || listing.sizeM2 <= 0))
         || typeof listing.layout !== "string" || Number(listing.layout.normalize("NFKC").match(/^\d+/)?.[0] ?? 0) < 2) invalid("Invalid family listing fields");

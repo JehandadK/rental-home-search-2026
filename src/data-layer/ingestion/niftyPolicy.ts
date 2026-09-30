@@ -4,6 +4,7 @@ import type { ListingSourceSnapshot } from "../contracts";
 import { exactReconciliation } from "./reconciliation";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sourceObservationTime";
 import type { ScrapeBatch } from "./contracts";
+import type { SourcePolicy } from "./sourcePolicy";
 
 const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
 export function niftyMatchKeys(l: RawListing): string[] {
@@ -63,3 +64,10 @@ export function prepareNiftyBatch(request: ScrapeBatch, previous: ListingSourceS
     ignored: request.observations.length - merged.added - merged.updated,
     previousCount: previous?.listings.length ?? 0, currentCount: merged.listings.length };
 }
+
+export const niftySourcePolicy: SourcePolicy = {
+  source: "nifty",
+  host: "myhome.nifty.com",
+  // Legacy detail-page dumps (`npm run import:nifty`) may add missing rows.
+  listings: { prepare: prepareNiftyBatch, exactUrlDiscovery: false, detailImportProducer: "nifty-detail" },
+};
