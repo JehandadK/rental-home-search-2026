@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isFamilyLayout, mergeRoomspotIncremental, parseRoomspotPage, roomspotKey, roomspotObservationBatch } from "./roomspot";
+import { isFamilyLayout, parseRoomspotPage } from "./roomspot";
+import { mergeRoomspotIncremental, roomspotKey, roomspotObservationBatch } from "../../data-layer/ingestion/portalPolicy";
 import type { RawListing } from "../../domain/types";
 
 const fixture = `<article class="data"><h2>テストハイツ</h2><table class="spec">

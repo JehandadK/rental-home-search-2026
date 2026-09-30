@@ -6,7 +6,7 @@ import type { RawListing } from "../src/domain/types";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
-import { mergeNiftyIncremental, niftyMatchKeys } from "../src/collectors/nifty/nifty";
+import { mergeNiftyIncremental, niftyMatchKeys } from "../src/data-layer/ingestion/niftyPolicy";
 import { trackingKey } from "../src/data-layer/lifecycle";
 import { prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
 

@@ -5,13 +5,7 @@ import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import type { MarkMap } from "../../domain/marks";
-import type { ListingScore } from "../../domain/scoring";
-import type { EnrichedListing } from "../../domain/types";
-
-export interface ScoredRow {
-  listing: EnrichedListing;
-  score: ListingScore;
-}
+import type { ListingScore, ScoredRow } from "../../domain/scoring";
 
 const partValue = (score: ListingScore, key: string) =>
   score.parts.find((p) => p.key === key)?.value ?? "";

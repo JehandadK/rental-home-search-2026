@@ -6,7 +6,7 @@ import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/da
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { ingestNiftyListPage } from "../src/collectors/nifty/niftyIngestion";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/refresh/refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
 const args = process.argv.slice(2);
 const arg = (name: string) => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;

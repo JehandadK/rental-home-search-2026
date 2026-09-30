@@ -5,7 +5,7 @@ import { DEFAULT_CONFIG } from "../../domain/scoringConfig";
 import { scoreListing } from "../../domain/scoring";
 import { listingKey } from "../../domain/listingKey";
 import type { EnrichedListing } from "../../domain/types";
-import type { ScoredRow } from "../lib/export";
+import type { ScoredRow } from "../../domain/scoring";
 import { ListingTable } from "./ListingTable";
 
 // jsdom implements neither scrollIntoView nor Element.scrollTo; the table uses

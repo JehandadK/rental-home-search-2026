@@ -1,5 +1,5 @@
 import type { ScrapeBatch, ScrapeIngestion } from "../../data-layer/ingestion/contracts";
-import { scrapeFingerprint } from "../../data-layer/ingestion/service";
+import { contentFingerprint as scrapeFingerprint } from "../../data-layer/contentIdentity";
 import { type PageCapture, validateCapture } from "../shared/captureStore";
 import { parseNiftyPage } from "./nifty";
 

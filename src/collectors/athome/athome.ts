@@ -2,7 +2,6 @@
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import type { ParkingInfo, RawListing } from "../../domain/types";
-export { athomeKey, athomeMatchKeys, isAthomeOverlap, mergeAthomeIncremental, athomeObservationBatch } from "../../data-layer/ingestion/portalPolicy";
 import { isExplicitNone, parseYen as parseJapaneseYen } from "../shared/parseJa";
 
 function parseMan(text: string): number | null {

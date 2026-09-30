@@ -32,6 +32,12 @@ export interface ListingScore {
   parts: ScorePart[];
 }
 
+/** A listing paired with its computed score, as ranked, displayed, and exported. */
+export interface ScoredRow {
+  listing: EnrichedListing;
+  score: ListingScore;
+}
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 /** Map a value onto 0–100 where lower raw values are better. */

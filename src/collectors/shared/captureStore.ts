@@ -2,7 +2,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWriteJson, DATA_DIR } from "../../storage/json/dataStore";
+import { DATA_DIR } from "../../node/dataPaths";
+import { writeJsonAtomically } from "../../node/jsonFile";
 export const CAPTURE_DIR = join(DATA_DIR, ".captures");
 export interface PageCapture {
   schemaVersion: 1;
@@ -28,7 +29,7 @@ export function validateCapture(c: PageCapture): void {
 export async function saveCapture(c: PageCapture): Promise<string> {
   validateCapture(c);
   const path = join(CAPTURE_DIR, c.source, captureKey(c.source, c.url) + ".json");
-  await atomicWriteJson(path, { ...c, sha256: createHash("sha256").update(c.html).digest("hex") });
+  await writeJsonAtomically(path, { ...c, sha256: createHash("sha256").update(c.html).digest("hex") });
   return path;
 }
 export async function readCapture(source: string, url: string, maxAgeMs = 6 * 3600000): Promise<PageCapture | null> {

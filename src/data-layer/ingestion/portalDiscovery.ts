@@ -1,13 +1,10 @@
 import type { ListingSourceSnapshot } from "../contracts";
 import { canonicalJson, contentFingerprint } from "../contentIdentity";
 import { indexSourceRows } from "../sourceRowIdentity";
-import type { PortalDiscoveryOptions, PortalDiscoverySession, ScrapeBatch, ScrapeIngestionReceipt, SuumoDiscoveryPageResult } from "./contracts";
+import { portalPageUrl, type PortalDiscoveryOptions, type PortalDiscoverySession, type ScrapeBatch, type ScrapeIngestionReceipt, type SuumoDiscoveryPageResult } from "./contracts";
 import { InvalidScrapeBatchError } from "./errors";
 import { portalDiscoveryKeys } from "./portalPolicy";
 
-export function portalPageUrl(source: "athome" | "roomspot", base: string, page: number): string {
-  return source === "athome" ? `${base}?sort=33&page=${page}` : `${base}&page_num=${page}`;
-}
 export function validatePortalOptions(options: PortalDiscoveryOptions): void {
   const host = options?.source === "athome" ? "www.athome.co.jp" : "www.roomspot.net";
   if (!options || !["athome", "roomspot"].includes(options.source) || typeof options.deep !== "boolean" || !Number.isInteger(options.maxPages) || options.maxPages < 1

@@ -11,7 +11,7 @@
  * data actually on screen.
  */
 import type { ScoreParameterKey } from "./types";
-import type { ScoredRow } from "../web/lib/export";
+import type { ScoredRow } from "./scoring";
 
 /** Share of listings at the floor/ceiling above which a parameter is "dead". */
 const DEAD_SHARE = 0.9;

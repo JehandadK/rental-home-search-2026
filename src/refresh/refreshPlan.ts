@@ -11,17 +11,6 @@ export const DEPENDENCIES: Record<string, readonly string[]> = {
 };
 export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", "nifty-soka", "nifty-koshigaya", "nifty-kawaguchi", "detail-enrich"]);
 
-/**
- * Emergency ceiling, not the normal incremental stopping condition.
- *
- * Newest-first collectors must normally continue until they cross the prior
- * observation boundary (two consecutive all-known pages). A tiny fixed budget
- * can strand fresh ads behind busy or imperfectly grouped result pages, so the
- * default is deliberately much larger than an ordinary refresh should need.
- * `--max-pages` remains available as an explicit diagnostic/operator cap.
- */
-export const DEFAULT_INCREMENTAL_PAGE_CEILING = 100;
-
 export function planRefresh(stages: readonly RefreshStageRecord[], resume: boolean): Set<string> {
   const planned = new Set<string>();
   for (const stage of stages) {
@@ -31,13 +20,6 @@ export function planRefresh(stages: readonly RefreshStageRecord[], resume: boole
     }
   }
   return planned;
-}
-
-export function positiveInteger(value: string | undefined, fallback: number, minimum = 1): number {
-  if (value === undefined) return fallback;
-  const n = Number(value);
-  if (!Number.isSafeInteger(n) || n < minimum) throw new Error(`Expected integer >= ${minimum}, got ${value}`);
-  return n;
 }
 
 /** Empty parsed results, an overlap boundary or a page cap are NOT exhaustion evidence. */

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { parseNiftyPage, mergeNiftyIncremental } from "./nifty";
+import { parseNiftyPage } from "./nifty";
+import { mergeNiftyIncremental } from "../../data-layer/ingestion/niftyPolicy";
 import { niftyCaptureExpression } from "./niftyCapture";
 const fixture = (layout = "2LDK") => `<div class="card"><header><h2>家の賃貸物件</h2><p>埼玉県草加市1丁目</p><li data-transport-access>新田駅 歩7分</li><dl><dt>築年数</dt><dd>築10年</dd></dl><dl><dt>総階数</dt><dd>3階建</dd></dl><span class="badge is-outline">駐車場あり</span></header><table class="result-bukken-table"><tbody class="click-area"><tr><td></td><td></td><td>2階</td><td><p>${layout}</p><p>50.5㎡</p></td><td class="bukken-info-rent"><p>8万円</p><p>5,000円</p></td><td><dl><dt>敷</dt><dd>不要</dd></dl><dl><dt>礼</dt><dd>1ヶ月</dd></dl></td></tr><tr><td><span class="badge is-outline">バス・トイレ別</span><a href="/rent/saitama/sokashi_ct/detail_aabbcc/">詳細</a></td></tr></tbody></table></div>`;
 describe("Nifty list-first collection", () => {

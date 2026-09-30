@@ -30,7 +30,7 @@ import {
   SOKA_BOUNDARY,
   STATIONS,
 } from "../../domain/reference";
-import type { ScoredRow } from "../lib/export";
+import type { ScoredRow } from "../../domain/scoring";
 import styles from "./MapView.module.css";
 import appStyles from "../App.module.css";
 

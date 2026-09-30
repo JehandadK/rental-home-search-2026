@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { JsonSourceStore, atomicWriteJson } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { portalPageUrl } from "../src/data-layer/ingestion/portalDiscovery";
+import { portalPageUrl } from "../src/data-layer/ingestion/contracts";
 import { runCaptureImport, type CaptureImportDependencies } from "./import-capture";
 import { parseAthomePage } from "../src/collectors/athome/athome";
 import type { PageCapture } from "../src/collectors/shared/captureStore";

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { athomeKey, athomeObservationBatch, isAthomeOverlap, isFamilyLayout, mergeAthomeIncremental, parseAthomePage } from "./athome";
+import { isFamilyLayout, parseAthomePage } from "./athome";
+import { athomeKey, athomeObservationBatch, isAthomeOverlap, mergeAthomeIncremental } from "../../data-layer/ingestion/portalPolicy";
 import type { RawListing } from "../../domain/types";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({

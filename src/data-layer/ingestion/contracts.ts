@@ -93,6 +93,11 @@ export interface PortalDiscoveryOptions {
   maxPages: number;
   cities: readonly { label: string; url: string }[];
 }
+/** Result-page URL a portal collector fetches; discovery validates each staged page against it. */
+export function portalPageUrl(source: "athome" | "roomspot", base: string, page: number): string {
+  return source === "athome" ? `${base}?sort=33&page=${page}` : `${base}&page_num=${page}`;
+}
+
 export interface PortalDiscoverySession extends SuumoDiscoverySession {
   readonly bootstrap: boolean;
   readonly deep: boolean;

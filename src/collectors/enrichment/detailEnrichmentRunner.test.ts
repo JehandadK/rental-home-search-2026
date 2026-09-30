@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../src/domain/types";
-import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
-import { atomicWriteJson, JsonSourceStore } from "../src/storage/json/dataStore";
-import { captureKey } from "../src/collectors/shared/captureStore";
-import { runDetailEnrichment, type DetailEnrichmentDependencies } from "./enrich-details";
+import type { RawListing } from "../../domain/types";
+import { ListingIngestionService } from "../../data-layer/ingestion/service";
+import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
+import { atomicWriteJson, JsonSourceStore } from "../../storage/json/dataStore";
+import { captureKey } from "../shared/captureStore";
+import { runDetailEnrichment, type DetailEnrichmentDependencies } from "./detailEnrichmentRunner";
 
 const now = "2026-09-25T00:00:00.000Z", capturedAt = "2026-09-24T00:00:00.000Z";
 const html = '<table><tr><th>駐車場</th><td>敷地内6600円</td></tr><tr><th>契約期間</th><td>普通借家2年</td></tr></table><ul class="inline_list"><li>都市ガス</li></ul>';

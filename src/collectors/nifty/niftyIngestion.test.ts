@@ -9,7 +9,8 @@ import type { PageCapture } from "../shared/captureStore";
 import { JsonSourceStore } from "../../storage/json/dataStore";
 import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
 import { trackingKey } from "../../data-layer/lifecycle";
-import { mergeNiftyIncremental, parseNiftyPage } from "./nifty";
+import { parseNiftyPage } from "./nifty";
+import { mergeNiftyIncremental } from "../../data-layer/ingestion/niftyPolicy";
 import { ingestNiftyListPage } from "./niftyIngestion";
 
 const html = `<div><header>

@@ -12,7 +12,7 @@ import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
-import type { ScoredRow } from "../lib/export";
+import type { ScoredRow } from "../../domain/scoring";
 import type { ScoreParameterKey } from "../../domain/types";
 import styles from "./ListingTable.module.css";
 import appStyles from "../App.module.css";

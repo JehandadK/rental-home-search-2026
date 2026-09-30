@@ -1,7 +1,6 @@
 /** One detail fetch, all useful fields; deterministic replay over cached HTML. */
 import * as cheerio from "cheerio";
 import type { ListingDetailPatch } from "../../data-layer/ingestion/contracts";
-export { applyDetail } from "../../data-layer/ingestion/suumoDetailPolicy";
 import { parseParking } from "../shared/parking";
 import { parseLease, parseImmediate, parseGuarantorRequired, parseYenStrict, splitTags } from "../shared/parseJa";
 

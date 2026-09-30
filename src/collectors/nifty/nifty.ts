@@ -2,8 +2,7 @@
 import * as cheerio from "cheerio";
 import type { RawListing } from "../../domain/types";
 import { parseYen } from "../shared/parseJa";
-import { parseStationDistance } from "../../../scripts/merge-nifty";
-export { niftyMatchKeys, mergeNiftyIncremental } from "../../data-layer/ingestion/niftyPolicy";
+import { parseStationDistance } from "./niftyStation";
 export function parseNiftyPage(html: string, city: string, year = new Date().getFullYear()): RawListing[] {
   const $ = cheerio.load(html);
   const rows: RawListing[] = [];

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { athomeDownloadedCapture } from "./athomeCapture";
-import { mergeAthomeIncremental, parseAthomePage } from "./athome";
+import { parseAthomePage } from "./athome";
+import { mergeAthomeIncremental } from "../../data-layer/ingestion/portalPolicy";
 import { validateCapture } from "../shared/captureStore";
 
 const url = "https://www.athome.co.jp/chintai/saitama/list/page2/?pref=11&cities=soka&cityCds=11221&sort=33&limit=30";

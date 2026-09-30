@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePage } from "../../../scripts/scrape";
+import { parsePage } from "./suumo";
 import { assertParsedFamilies } from "../shared/captureValidation";
 import type { PageCapture } from "../shared/captureStore";
 

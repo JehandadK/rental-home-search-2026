@@ -27,7 +27,8 @@ import {
   type RefreshStageRecord,
 } from "../src/refresh/refreshLedger";
 import type { EnrichedListing } from "../src/domain/types";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING, NETWORK_STAGES, planRefresh, positiveInteger } from "../src/refresh/refreshPlan";
+import { NETWORK_STAGES, planRefresh } from "../src/refresh/refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
 const ROOT = join(DATA_DIR, "..", "..");
 const argv = process.argv.slice(2);

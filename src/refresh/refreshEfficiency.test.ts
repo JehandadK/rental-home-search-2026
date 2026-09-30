@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING, planRefresh, completeMarket, positiveInteger } from "./refreshPlan";
+import { planRefresh, completeMarket } from "./refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../collectors/shared/pageBudget";
 import { addressKey, cachedGeocode, seedGeocodes } from "../collectors/enrichment/geocodeCache";
-import { parseDetail, applyDetail } from "../collectors/enrichment/detailEnrichment";
+import { parseDetail } from "../collectors/enrichment/detailEnrichment";
+import { applyDetail } from "../data-layer/ingestion/suumoDetailPolicy";
 import { restoreObservedLifecycle } from "../storage/json/observations";
 import { validateCapture } from "../collectors/shared/captureStore";
 import { packListings, unpackListings } from "../domain/webPayload";
 import type { RawListing, EnrichedListing } from "../domain/types";
 import { trackingKey } from "../data-layer/lifecycle";
-import { newerRows, assertParsedFamilies } from "../collectors/shared/captureValidation";
+import { assertParsedFamilies } from "../collectors/shared/captureValidation";
+import { newerRows } from "../data-layer/sourceObservationTime";
 const base: RawListing = { name: "Home", address: "埼玉県草加市１", source: "suumo", id: "s1", url: "https://suumo.jp/a", rent: 80000, layout: "2LDK", sizeM2: 50, builtYear: 2010, stationWalkMin: 5 };
 
 describe("efficient refresh", () => {

@@ -1,7 +1,6 @@
 /** Pure RoomSpot search-result parser and incremental merge helpers. */
 import * as cheerio from "cheerio";
 import type { RawListing } from "../../domain/types";
-export { roomspotKey, roomspotMatchKeys, isRoomspotOverlap, mergeRoomspotIncremental, roomspotObservationBatch } from "../../data-layer/ingestion/portalPolicy";
 import { isExplicitNone, parseYen } from "../shared/parseJa";
 
 export function isFamilyLayout(layout: string | null): boolean {

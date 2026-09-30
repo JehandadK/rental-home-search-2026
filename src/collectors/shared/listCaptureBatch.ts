@@ -5,7 +5,7 @@ import { assertParsedFamilies } from "./captureValidation";
 import { parseAthomePage } from "../athome/athome";
 import { parseRoomspotPage } from "../roomspot/roomspot";
 import { parseNiftyPage } from "../nifty/nifty";
-import { parsePage as parseSuumoPage } from "../../../scripts/scrape";
+import { parsePage as parseSuumoPage } from "../suumo/suumo";
 
 /** Parsing and evidence only: all source reads, freshness, matching and writes live behind the client. */
 export async function listCaptureBatch(capture: PageCapture, native?: { runId: string; receipt: string }): Promise<ScrapeBatch> {
