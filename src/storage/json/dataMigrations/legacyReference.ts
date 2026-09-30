@@ -15,6 +15,7 @@ import type {
   PointOfInterest,
   Station,
 } from "../../../domain/types";
+import { APP_ORDER_ATTRIBUTE, APP_PLACE_ID_ATTRIBUTE, buildPlaceCatalog } from "../../../domain/places";
 
 export interface LegacyReferenceData {
   pois: readonly PointOfInterest[];
@@ -55,7 +56,48 @@ export function migrateLegacyReferenceData(
     boundaries.push(converted.boundary);
   }
 
-  const places: ReferencePlaceRecord[] = [
+  const places = legacyPlaceRecords(legacy, updatedAt);
+  assertUniqueIds("places", places);
+  assertUniqueIds("boundaries", boundaries);
+
+  const cityRecords = [...cities.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const sortedBoundaries = [...boundaries].sort((a, b) => a.id.localeCompare(b.id));
+  const sortedPlaces = [...places].sort((a, b) => a.id.localeCompare(b.id));
+  const cityDataset = dataset("cities", cityRecords, updatedAt, PROVENANCE);
+  const boundaryDataset = dataset("boundaries", sortedBoundaries, updatedAt, PROVENANCE);
+  const placeDataset = dataset("places", sortedPlaces, updatedAt, PROVENANCE);
+
+  return {
+    revision: catalogRevision({
+      datasets: {
+        cities: { file: "cities.json", schemaVersion: cityDataset.schemaVersion, revision: cityDataset.revision, count: cityDataset.records.length },
+        boundaries: { file: "boundaries.json", schemaVersion: boundaryDataset.schemaVersion, revision: boundaryDataset.revision, count: boundaryDataset.records.length },
+        places: { file: "places.json", schemaVersion: placeDataset.schemaVersion, revision: placeDataset.revision, count: placeDataset.records.length },
+      },
+    }),
+    cities: cityDataset,
+    boundaries: boundaryDataset,
+    places: placeDataset,
+  };
+}
+
+const PROVENANCE = {
+  migration: "legacy-json-to-reference-v1",
+  sourceFiles: [
+    "pois.json",
+    "mosques.json",
+    "stations.json",
+    "elementary_schools.json",
+    "kindergartens.json",
+    "bus_stops.json",
+    "soka_boundary.json",
+    "neighbor_boundaries.json",
+  ],
+};
+
+/** The legacy places as catalog records, in the original file order. */
+export function legacyPlaceRecords(legacy: LegacyReferenceData, updatedAt: string): ReferencePlaceRecord[] {
+  return [
     ...legacy.pois.map((place) => convertPlace("poi", place, updatedAt, {
       nameLocal: place.nameJa,
       address: place.address,
@@ -78,41 +120,47 @@ export function migrateLegacyReferenceData(
     })),
     ...legacy.busStops.map((place) => convertPlace("busStop", place, updatedAt)),
   ];
-  assertUniqueIds("places", places);
-  assertUniqueIds("boundaries", boundaries);
+}
 
-  const cityRecords = [...cities.values()].sort((a, b) => a.id.localeCompare(b.id));
-  const sortedBoundaries = [...boundaries].sort((a, b) => a.id.localeCompare(b.id));
-  const sortedPlaces = [...places].sort((a, b) => a.id.localeCompare(b.id));
-  const provenance = {
-    migration: "legacy-json-to-reference-v1",
-    sourceFiles: [
-      "pois.json",
-      "mosques.json",
-      "stations.json",
-      "elementary_schools.json",
-      "kindergartens.json",
-      "bus_stops.json",
-      "soka_boundary.json",
-      "neighbor_boundaries.json",
-    ],
-  };
-  const cityDataset = dataset("cities", cityRecords, updatedAt, provenance);
-  const boundaryDataset = dataset("boundaries", sortedBoundaries, updatedAt, provenance);
-  const placeDataset = dataset("places", sortedPlaces, updatedAt, provenance);
+/**
+ * Pin the app-facing place ids and order (M5). Before the managed catalog,
+ * the app derived each place's id from its name and its position in the
+ * original files (`busStop:東口#1`), and saved selections store those ids.
+ * The catalog is sorted by record id, so this records, for each migrated
+ * place, the id and position the app gave it, plus the subtitle it showed
+ * (address for POIs and mosques, operator for stations). Returns only the
+ * records that change; an already-annotated catalog yields none.
+ */
+export function planAppPlaceAnnotations(
+  legacy: LegacyReferenceData,
+  current: readonly ReferencePlaceRecord[],
+  updatedAt: string,
+): ReferencePlaceRecord[] {
+  const records = legacyPlaceRecords(legacy, updatedAt);
+  const subtitles = [
+    ...legacy.pois.map((place) => place.address),
+    ...legacy.mosques.map((place) => place.address),
+    ...legacy.stations.map((place) => place.operator ?? undefined),
+    ...legacy.schools.map(() => undefined),
+    ...legacy.childcare.map((place) => place.type),
+    ...legacy.busStops.map(() => undefined),
+  ];
+  const appPlaces = buildPlaceCatalog(records).places;
+  const byId = new Map(current.map((record) => [record.id, record]));
 
-  return {
-    revision: catalogRevision({
-      datasets: {
-        cities: { file: "cities.json", schemaVersion: cityDataset.schemaVersion, revision: cityDataset.revision, count: cityDataset.records.length },
-        boundaries: { file: "boundaries.json", schemaVersion: boundaryDataset.schemaVersion, revision: boundaryDataset.revision, count: boundaryDataset.records.length },
-        places: { file: "places.json", schemaVersion: placeDataset.schemaVersion, revision: placeDataset.revision, count: placeDataset.records.length },
-      },
-    }),
-    cities: cityDataset,
-    boundaries: boundaryDataset,
-    places: placeDataset,
-  };
+  const changes: ReferencePlaceRecord[] = [];
+  records.forEach((record, index) => {
+    const existing = byId.get(record.id);
+    if (!existing) {
+      throw new LegacyReferenceMigrationError(`Catalog has no record for legacy ${record.category} ${record.name} (${record.id})`);
+    }
+    if (existing.status !== "active") return;
+    const subtitle = subtitles[index] || undefined;
+    const attributes = { ...existing.attributes, [APP_PLACE_ID_ATTRIBUTE]: appPlaces[index].id, [APP_ORDER_ATTRIBUTE]: index };
+    const next: ReferencePlaceRecord = { ...existing, ...(subtitle ? { subtitle } : {}), attributes };
+    if (JSON.stringify(next) !== JSON.stringify(existing)) changes.push({ ...next, updatedAt });
+  });
+  return changes;
 }
 
 function addCityAndBoundary(

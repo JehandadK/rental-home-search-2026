@@ -5,28 +5,19 @@ import { basename, dirname, join, resolve } from "node:path";
 import { DATA_DIR, REFERENCE_CATALOG_DIR, atomicWriteJson } from "../src/storage/json/dataStore";
 import { withFileLock } from "../src/node/jsonFile";
 import { catalogRevision, CURRENT_CATALOG_REVISION_ALGORITHM, legacyCatalogRevision } from "../src/storage/json/referenceCatalog";
-import { migrateLegacyReferenceData, type LegacyReferenceData } from "../src/storage/json/dataMigrations/legacyReference";
+import { migrateLegacyReferenceData } from "../src/storage/json/dataMigrations/legacyReference";
+import { readLegacyReferenceFiles } from "../src/storage/json/dataMigrations/legacyReferenceFiles";
 import type { ReferenceCatalogManifest, ReferenceDataSnapshot, VersionedDataset } from "../src/data-layer/contracts";
 
-const SOURCE_FILES = [
-  "pois.json",
-  "mosques.json",
-  "stations.json",
-  "elementary_schools.json",
-  "kindergartens.json",
-  "bus_stops.json",
-  "soka_boundary.json",
-  "neighbor_boundaries.json",
-] as const;
 const DEFAULT_OUTPUT = REFERENCE_CATALOG_DIR;
 
 async function main(): Promise<void> {
   const output = outputPath(process.argv.slice(2));
   await withFileLock(output, async () => {
-    const { legacy, sourceFiles } = await readLegacyInputs();
+    const { legacy, sourceFiles } = await readLegacyReferenceFiles(DATA_DIR);
     if (existsSync(output)) {
       if (await existingOutputMatches(output, sourceFiles)) {
-        console.log(`Reference catalog already matches the legacy inputs: ${output}`);
+        console.log(`Reference catalog already matches the legacy inputs it was migrated from: ${output}`);
         return;
       }
       throw new Error(
@@ -62,29 +53,6 @@ async function main(): Promise<void> {
   });
 }
 
-async function readLegacyInputs(): Promise<{ legacy: LegacyReferenceData; sourceFiles: Record<string, string> }> {
-  const parsed = new Map<string, unknown>();
-  const sourceFiles: Record<string, string> = {};
-  for (const file of SOURCE_FILES) {
-    const raw = await readFile(join(DATA_DIR, file), "utf8");
-    parsed.set(file, JSON.parse(raw) as unknown);
-    sourceFiles[file] = createHash("sha256").update(raw).digest("hex");
-  }
-  return {
-    legacy: {
-      pois: parsed.get("pois.json") as LegacyReferenceData["pois"],
-      mosques: parsed.get("mosques.json") as LegacyReferenceData["mosques"],
-      stations: parsed.get("stations.json") as LegacyReferenceData["stations"],
-      schools: parsed.get("elementary_schools.json") as LegacyReferenceData["schools"],
-      childcare: parsed.get("kindergartens.json") as LegacyReferenceData["childcare"],
-      busStops: parsed.get("bus_stops.json") as LegacyReferenceData["busStops"],
-      sokaBoundary: parsed.get("soka_boundary.json") as LegacyReferenceData["sokaBoundary"],
-      neighborBoundaries: parsed.get("neighbor_boundaries.json") as LegacyReferenceData["neighborBoundaries"],
-    },
-    sourceFiles,
-  };
-}
-
 async function existingOutputMatches(output: string, sourceFiles: Record<string, string>): Promise<boolean> {
   try {
     const manifest = JSON.parse(await readFile(join(output, "manifest.json"), "utf8")) as ReferenceCatalogManifest;
@@ -94,10 +62,17 @@ async function existingOutputMatches(output: string, sourceFiles: Record<string,
       JSON.stringify(manifest.sourceFiles) !== JSON.stringify(sourceFiles) ||
       !manifest.counts?.placesByCategory
     ) return false;
+    // Read the revisions the manifest publishes; managed updates since the
+    // migration (for example the M5 app-id annotation) add new revision files.
+    const datasetPath = (id: string) => {
+      const file = manifest.datasets[id]?.file;
+      if (!file || basename(file) !== file) throw new Error(`Invalid ${id} manifest entry`);
+      return join(output, file);
+    };
     const [cities, boundaries, places] = await Promise.all([
-      readDataset(join(output, "cities.json")),
-      readDataset(join(output, "boundaries.json")),
-      readDataset(join(output, "places.json")),
+      readDataset(datasetPath("cities")),
+      readDataset(datasetPath("boundaries")),
+      readDataset(datasetPath("places")),
     ]);
     const datasets = { cities, boundaries, places };
     for (const [datasetId, dataset] of Object.entries(datasets)) {
