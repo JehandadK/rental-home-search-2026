@@ -6,6 +6,7 @@
  * them without changing frontend or ingestion business rules.
  */
 import type { RawListing } from "../domain/types";
+import type { BoundaryGeometry } from "../domain/referenceData";
 
 /** Stable identifiers are data, not array positions or display names. */
 export type RecordId = string;
@@ -55,14 +56,8 @@ export interface CityRecord {
   retirementReason?: string;
 }
 
-/** GeoJSON-like coordinates are [longitude, latitude] pairs. */
-export type Position = readonly [longitude: number, latitude: number];
-export type PolygonCoordinates = readonly (readonly Position[])[];
-
-/** Polygon and multipolygon both support cities with multiple boundary pieces. */
-export type BoundaryGeometry =
-  | { type: "Polygon"; coordinates: PolygonCoordinates }
-  | { type: "MultiPolygon"; coordinates: readonly PolygonCoordinates[] };
+/** Boundary geometry is shared with the domain, which draws and measures it. */
+export type { BoundaryGeometry, PolygonCoordinates, Position } from "../domain/referenceData";
 
 export interface CityBoundaryRecord {
   id: RecordId;

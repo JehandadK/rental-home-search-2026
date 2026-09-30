@@ -48,7 +48,7 @@
   },
   "build": {
     "buildCommand": "python3 - <<'EOF'\np='src/domain/placeSelection.test.ts'\ns=open(p).read()\ns=s.replace('''import { applySelection, DEFAULT_SELECTION, describeSelection } from \"./placeSelection\";\nimport { PLACE_CATALOG, placesInCategory } from \"./places\";''','''import { applySelection, defaultSelection, describeSelection } from \"./placeSelection\";\nimport { PLACE_CATALOG } from \"./reference\";''')\ns=s.replace('''// Near Soka station.''','''const DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);\nconst placesInCategory = (category: string) => PLACE_CATALOG.inCategory(category);\n\n// Near Soka station.''')\ns=s.replace('new ProximityIndex([SOKA])','new ProximityIndex([SOKA], PLACE_CATALOG)')\ns=s.replace('new ProximityIndex([noCoords])','new ProximityIndex([noCoords], PLACE_CATALOG)')\ns=s.replace('describeSelection(DEFAULT_SELECTION, \"station\")','describeSelection(DEFAULT_SELECTION, \"station\", PLACE_CATALOG)')\ns=s.replace('''        \"station\",\n      ),''','''        \"station\",\n        PLACE_CATALOG,\n      ),''')\ns=s.replace('''    const ids = new Set(PLACE_CATALOG.map((p) => p.id));\n    expect(ids.size).toBe(PLACE_CATALOG.length);''','''    const ids = new Set(PLACE_CATALOG.places.map((p) => p.id));\n    expect(ids.size).toBe(PLACE_CATALOG.places.length);''')\nopen(p,'w').write(s)\nEOF\nnpx tsc --noEmit 2>&1 | head -20",
-    "testCommand": "npm run typecheck 2>&1 | tail -5 && npx vitest run 2>&1 | tail -5",
+    "testCommand": "npm run typecheck 2>&1 | tail -3 && npx vitest run src/domain tools 2>&1 | tail -4",
     "lintCommand": null,
     "devCommand": "npm run dev",
     "scripts": {
@@ -167,6 +167,12 @@
       "path": "src/domain/placeCatalogParity.test.ts",
       "accessCount": 1,
       "lastAccessed": 1790749254439,
+      "type": "file"
+    },
+    {
+      "path": "src/domain/referenceData.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1790749347893,
       "type": "file"
     }
   ],
