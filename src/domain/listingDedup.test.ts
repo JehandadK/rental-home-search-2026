@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RawListing } from "../types";
+import type { RawListing } from "./types";
 import { deduplicateListings, isSameProperty, mergeDuplicateListings } from "./listingDedup";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({

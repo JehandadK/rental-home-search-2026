@@ -6,7 +6,7 @@
  * possible — nothing is baked into the listing data, so any subset can be
  * selected at runtime without re-running the enrichment pipeline.
  */
-import type { GeoPoint, NamedPlace, ScoreParameterKey } from "../types";
+import type { GeoPoint, NamedPlace, ScoreParameterKey } from "./types";
 import {
   BUS_STOPS,
   CHILDCARE_FACILITIES,

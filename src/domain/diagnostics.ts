@@ -10,7 +10,7 @@
  * These helpers detect that situation and propose anchors fitted to the
  * data actually on screen.
  */
-import type { ScoreParameterKey } from "../types";
+import type { ScoreParameterKey } from "./types";
 import type { ScoredRow } from "../web/lib/export";
 
 /** Share of listings at the floor/ceiling above which a parameter is "dead". */

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { SCORE_PARAMETERS, type ScoringConfig } from "../config/scoring";
+import { SCORE_PARAMETERS, type ScoringConfig } from "../domain/scoringConfig";
 import { scoreListing } from "../domain/scoring";
 import { diagnoseAll } from "../domain/diagnostics";
 import { matchesListing } from "../domain/filters";
@@ -10,7 +10,7 @@ import { ProximityIndex } from "../domain/proximityIndex";
 import { applySelection, selectionAllowedSets } from "../domain/placeSelection";
 import { usePlaceSelection } from "./hooks/usePlaceSelection";
 import { PlacePanel } from "./components/PlacePanel";
-import type { ScoreParameterKey } from "../types";
+import type { ScoreParameterKey } from "../domain/types";
 import { useListings } from "./hooks/useListings";
 import { useScoringConfig } from "./hooks/useScoringConfig";
 import { useFilters } from "./hooks/useFilters";

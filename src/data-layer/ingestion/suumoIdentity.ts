@@ -11,7 +11,7 @@
  * records while preserving expensive detail-page data (parking), and never
  * removes unseen records — absence can only be established by a full audit.
  */
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import { trackingKey } from "../../domain/listingIdentity";
 
 const norm = (value: string | null | undefined): string =>

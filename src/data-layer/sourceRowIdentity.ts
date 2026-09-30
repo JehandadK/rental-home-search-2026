@@ -1,4 +1,4 @@
-import type { RawListing } from "../types";
+import type { RawListing } from "../domain/types";
 import type { SourceRowLocator } from "./contracts";
 
 export function sourceRowLocator(listing: RawListing): SourceRowLocator {

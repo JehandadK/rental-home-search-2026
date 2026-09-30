@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG } from "../../config/scoring";
+import { DEFAULT_CONFIG } from "../../domain/scoringConfig";
 import { withAllWeightsZero } from "./useScoringConfig";
 
 describe("withAllWeightsZero", () => {

@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import { deduplicateListings } from "../../domain/listingDedup";
 import type { ListingObservationBatch, ListingSourceSnapshot } from "../contracts";
 import type { DetailEnrichmentOptions, DetailPatchBatch, ListingDetailPatch } from "./contracts";

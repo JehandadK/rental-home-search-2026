@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isNewListing, isSold, lifecycleCounts, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 const NOW = new Date("2026-08-30T12:00:00.000Z");
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000).toISOString();

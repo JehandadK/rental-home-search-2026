@@ -5,7 +5,7 @@
  * JSON/TOON files, an API client, and a future database adapter can implement
  * them without changing frontend or ingestion business rules.
  */
-import type { RawListing } from "../types";
+import type { RawListing } from "../domain/types";
 
 /** Stable identifiers are data, not array positions or display names. */
 export type RecordId = string;

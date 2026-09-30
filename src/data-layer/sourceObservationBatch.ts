@@ -1,5 +1,5 @@
 import type { ListingObservationBatch } from "./contracts";
-import type { RawListing } from "../types";
+import type { RawListing } from "../domain/types";
 import { trackingKey } from "../domain/listingIdentity";
 
 /** Build an incremental batch, retiring only IDs explained by source aliases. */

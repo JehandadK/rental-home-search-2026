@@ -10,7 +10,7 @@ import {
   matchesScored,
   type ListingFilters,
 } from "./filters";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 import type { ListingScore } from "./scoring";
 
 const make = (over: Partial<EnrichedListing>): EnrichedListing => ({

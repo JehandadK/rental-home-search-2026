@@ -6,7 +6,7 @@
  * the stations you would actually use, only the schools your children could
  * attend, only 幼稚園 rather than every daycare, and so on.
  */
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 import {
   PARAMETER_SOURCES,
   PLACES_BY_ID,

@@ -4,7 +4,7 @@
  * an include/exclude mode, so you can focus on — or rule out — specific
  * neighbourhoods.
  */
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 import type { ListingScore } from "./scoring";
 import { isNewListing, isSold } from "./lifecycle";
 import type { MarkFilter } from "./marks";

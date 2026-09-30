@@ -4,7 +4,7 @@ import type {
   ParkingInfo,
   RawListing,
   SourceListingReference,
-} from "../types";
+} from "./types";
 
 /**
  * Portal preference for the merged record's presentation and link ordering:

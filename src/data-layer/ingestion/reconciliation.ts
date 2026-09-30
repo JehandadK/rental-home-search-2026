@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import type { ListingSourceSnapshot, SourceReconciliation } from "../contracts";
 import { indexSourceRows, sourceRowKey, sourceRowLocator } from "../sourceRowIdentity";
 

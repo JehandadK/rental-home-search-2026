@@ -17,7 +17,7 @@
 import {
   DEFAULT_MOVE_IN_ASSUMPTIONS,
   type MoveInAssumptions,
-} from "../domain/moveInCost";
+} from "./moveInCost";
 import type {
   FeaturePreferences,
   FeatureWeights,
@@ -26,7 +26,7 @@ import type {
   ParameterWeights,
   ScoreParameterKey,
   ScoringCriterionKey,
-} from "../types";
+} from "./types";
 
 /**
  * How the household actually covers the distance to a place. Soka/Koshigaya

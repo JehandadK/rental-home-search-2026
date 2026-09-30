@@ -2,11 +2,11 @@
  * Sidebar panel for tuning the scoring scheme: per-parameter weights,
  * the normalisation anchors (what counts as "full score" vs "zero"),
  * and global options. Rendered data-driven from SCORE_PARAMETERS so a
- * new parameter only needs one entry in config/scoring.ts.
+ * new parameter only needs one entry in domain/scoringConfig.ts.
  */
-import { FEATURE_PARAMETERS, SCORE_PARAMETERS, type ScoringConfig } from "../../config/scoring";
+import { FEATURE_PARAMETERS, SCORE_PARAMETERS, type ScoringConfig } from "../../domain/scoringConfig";
 import type { ParameterDiagnosis } from "../../domain/diagnostics";
-import type { ListingAttributeCategory, ListingFeatureKey, ScoreParameterKey } from "../../types";
+import type { ListingAttributeCategory, ListingFeatureKey, ScoreParameterKey } from "../../domain/types";
 import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
 import styles from "./WeightPanel.module.css";
 import appStyles from "../App.module.css";

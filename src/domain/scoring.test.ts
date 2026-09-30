@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, type ScoringConfig } from "../config/scoring";
-import type { EnrichedListing, Proximity } from "../types";
+import { DEFAULT_CONFIG, type ScoringConfig } from "./scoringConfig";
+import type { EnrichedListing, Proximity } from "./types";
 import { higherIsBetter, lowerIsBetter, scoreListing, walkScore } from "./scoring";
 
 // Walk minutes are recomputed from distM at scoring time, so encode distM such

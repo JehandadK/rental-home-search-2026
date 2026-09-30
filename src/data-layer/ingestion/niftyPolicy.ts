@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import { trackingKey } from "../../domain/listingIdentity";
 import type { ListingSourceSnapshot } from "../contracts";
 import { exactReconciliation } from "./reconciliation";

@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import { parseFloors } from "../../domain/japaneseText";
 import type { SourceFieldCorrection } from "./contracts";
 

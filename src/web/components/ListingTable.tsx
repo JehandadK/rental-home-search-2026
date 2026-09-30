@@ -3,17 +3,17 @@
  * breakdown; click a column header to sort by that parameter's raw value.
  */
 import { Fragment, memo, useEffect, useMemo, useRef, useState } from "react";
-import { SCORE_PARAMETERS } from "../../config/scoring";
+import { SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { scoreColor, type ScorePart } from "../../domain/scoring";
 import { computeMoveInCosts, parkingInfo, parkingMonthlyYen } from "../../domain/moveInCost";
-import { DEFAULT_CONFIG, FEATURE_PARAMETERS } from "../../config/scoring";
+import { DEFAULT_CONFIG, FEATURE_PARAMETERS } from "../../domain/scoringConfig";
 import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ScoredRow } from "../lib/export";
-import type { ScoreParameterKey } from "../../types";
+import type { ScoreParameterKey } from "../../domain/types";
 import styles from "./ListingTable.module.css";
 import appStyles from "../App.module.css";
 

@@ -11,7 +11,7 @@ import type {
   Mosque,
   PointOfInterest,
   Station,
-} from "../types";
+} from "./types";
 import poisJson from "../data/pois.json";
 import stationsJson from "../data/stations.json";
 import schoolsJson from "../data/elementary_schools.json";

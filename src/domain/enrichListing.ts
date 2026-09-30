@@ -10,7 +10,7 @@
  * for the CLI ranker, exports and eyeballing the data) and they are the
  * fallback for any consumer that does not build an index.
  */
-import type { EnrichedListing, GeoPoint, RawListing } from "../types";
+import type { EnrichedListing, GeoPoint, RawListing } from "./types";
 import { toProximity } from "./geo";
 import {
   BUS_STOPS,

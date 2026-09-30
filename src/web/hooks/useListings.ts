@@ -3,7 +3,7 @@
  * plus custom listings the user adds by hand (persisted to localStorage).
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { EnrichedListing } from "../../types";
+import type { EnrichedListing } from "../../domain/types";
 import { BASE_LISTINGS } from "../../domain/reference";
 import { deduplicateListings } from "../../domain/listingDedup";
 

@@ -13,7 +13,7 @@ import {
 } from "../../domain/filters";
 import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../../domain/marks";
 import { listingKey } from "../../domain/listingKey";
-import type { EnrichedListing } from "../../types";
+import type { EnrichedListing } from "../../domain/types";
 import styles from "./FilterPanel.module.css";
 import appStyles from "../App.module.css";
 

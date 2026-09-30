@@ -8,7 +8,7 @@ import type {
   ListingAttributeCategory,
   ListingFeatureKey,
   RawListing,
-} from "../types";
+} from "./types";
 
 interface Definition {
   key: ListingFeatureKey;

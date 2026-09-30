@@ -17,7 +17,7 @@
  * Scoring therefore penalises **sunk cost**, not headline cash: a ¥200k
  * deposit that mostly comes back is far cheaper than ¥100k of key money.
  */
-import type { EnrichedListing, MoveInCosts, ParkingInfo } from "../types";
+import type { EnrichedListing, MoveInCosts, ParkingInfo } from "./types";
 
 export interface MoveInAssumptions {
   /** Deposit when the listing does not state one, in months of rent. */

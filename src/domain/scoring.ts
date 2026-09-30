@@ -3,8 +3,8 @@
  * a per-parameter breakdown and weighted total come out. No I/O, no React —
  * this module is the testable heart of the tool.
  */
-import { FEATURE_PARAMETERS, travelSpeed, type ScoringConfig } from "../config/scoring";
-import type { EnrichedListing, Proximity, ScoringCriterionKey } from "../types";
+import { FEATURE_PARAMETERS, travelSpeed, type ScoringConfig } from "./scoringConfig";
+import type { EnrichedListing, Proximity, ScoringCriterionKey } from "./types";
 import { featureState } from "./listingAttributes";
 import { estimateWalkMinutes, round1 } from "./geo";
 import {

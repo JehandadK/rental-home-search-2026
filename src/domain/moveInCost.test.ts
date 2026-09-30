@@ -6,7 +6,7 @@ import {
   DEFAULT_MOVE_IN_ASSUMPTIONS,
   sunkCostInMonths,
 } from "./moveInCost";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 const listing = (over: Partial<EnrichedListing> = {}): EnrichedListing => ({
   name: "L",
@@ -167,8 +167,8 @@ describe("nested cost blocks from detail-page imports", () => {
 });
 
 describe("parking costs", () => {
-  const withParking = (p: Partial<import("../types").ParkingInfo> | null) =>
-    listing({ costs: { parking: p as import("../types").ParkingInfo | null } });
+  const withParking = (p: Partial<import("./types").ParkingInfo> | null) =>
+    listing({ costs: { parking: p as import("./types").ParkingInfo | null } });
 
   it("reads the monthly charge from structured parking data", () => {
     expect(parkingMonthlyYen(withParking({ monthlyYen: 7700, available: true }))).toBe(7700);

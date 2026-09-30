@@ -6,7 +6,7 @@
  * scripts/lib/lifecycle.ts); listings from before tracking began have a null
  * `firstSeenAt` and are therefore never "new".
  */
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 /** How long a listing counts as "new" after it is first seen. */
 export const NEW_LISTING_WINDOW_DAYS = 14;

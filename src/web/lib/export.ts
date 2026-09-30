@@ -1,12 +1,12 @@
 /**
  * Export ranked results as CSV or Markdown for sharing / record-keeping.
  */
-import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../config/scoring";
+import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import type { MarkMap } from "../../domain/marks";
 import type { ListingScore } from "../../domain/scoring";
-import type { EnrichedListing } from "../../types";
+import type { EnrichedListing } from "../../domain/types";
 
 export interface ScoredRow {
   listing: EnrichedListing;

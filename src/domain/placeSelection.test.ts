@@ -3,7 +3,7 @@ import { ProximityIndex } from "./proximityIndex";
 import { applySelection, DEFAULT_SELECTION, describeSelection } from "./placeSelection";
 import { PLACE_CATALOG, placesInCategory } from "./places";
 import { haversineM } from "./geo";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 const listing = (lat: number, lon: number): EnrichedListing => ({
   name: "L",

@@ -17,7 +17,7 @@
  */
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { scoreColor } from "../../domain/scoring";
-import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../config/scoring";
+import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";

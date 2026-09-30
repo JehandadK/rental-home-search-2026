@@ -1,4 +1,4 @@
-import type { EnrichedListing, ListingAttribute } from "../types";
+import type { EnrichedListing, ListingAttribute } from "./types";
 export interface WebPayload {
   schemaVersion: 2;
   attributes: ListingAttribute[];

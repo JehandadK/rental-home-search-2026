@@ -2,7 +2,7 @@
  * Client-side geocoding via Japan's GSI address search — free, no API key.
  * https://github.com/gsi-cyberjapan/msearch
  */
-import type { GeoPoint } from "../types";
+import type { GeoPoint } from "../domain/types";
 
 interface GsiResult {
   geometry: { coordinates: [number, number] };

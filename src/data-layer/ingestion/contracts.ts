@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 
 /** Public scraper boundary. No paths, storage revision, or pre-merged source rows. */
 export interface ScrapeBatch {

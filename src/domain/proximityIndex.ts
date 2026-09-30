@@ -11,7 +11,7 @@
  * Cost for the current dataset (536 listings × 1,182 places ≈ 634k pairs):
  * ~10 ms to build, ~0.7 ms to re-reduce after a selection change.
  */
-import type { EnrichedListing, Proximity } from "../types";
+import type { EnrichedListing, Proximity } from "./types";
 import { haversineM } from "./geo";
 import { PLACE_CATALOG, type CatalogPlace, type PlaceCategory } from "./places";
 

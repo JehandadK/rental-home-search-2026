@@ -6,7 +6,7 @@
 import { useState, type FormEvent } from "react";
 import { enrichListing } from "../../domain/enrichListing";
 import { geocodeAddress } from "../../lib/geocode";
-import type { EnrichedListing, RawListing } from "../../types";
+import type { EnrichedListing, RawListing } from "../../domain/types";
 import styles from "./AddListingForm.module.css";
 import appStyles from "../App.module.css";
 

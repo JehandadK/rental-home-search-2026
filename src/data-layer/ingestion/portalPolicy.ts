@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import type { ListingSourceSnapshot } from "../contracts";
 import { trackingKey } from "../../domain/listingIdentity";
 import { sourceObservationBatch } from "../sourceObservationBatch";

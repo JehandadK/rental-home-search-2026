@@ -7,7 +7,7 @@
  * catchment shortlist, or swap the POI target outright.
  */
 import { useMemo, useState } from "react";
-import { SCORE_PARAMETERS } from "../../config/scoring";
+import { SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import {
   CATEGORY_LABELS,
   DISTANCE_PARAMETERS,
