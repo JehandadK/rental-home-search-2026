@@ -178,6 +178,58 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 
 **Rollback:** Select the bundled compatibility client. The old JSON files remain unchanged until parity has been demonstrated; the directory move reverts independently.
 
+#### M5 starting brief (written at M4 close, 2026-09-30)
+
+**Where the frontend gets data today**
+
+- `src/domain/reference.ts` is the only importer of persisted files. It is also the whole architecture allowlist: 9 entries, `until: "M5"`. It imports `pois`, `mosques`, `stations`, `elementary_schools`, `kindergartens`, `bus_stops`, `soka_boundary`, `neighbor_boundaries`, and `listings_web.json` from `src/data/`, and exports them as module-level constants (`POINTS_OF_INTEREST`, `STATIONS`, `BASE_LISTINGS`, and so on).
+- Consumers of those constants:
+  - `domain/places.ts` builds `PLACE_CATALOG`, `PLACES_BY_ID`, and `placesInCategory` at import time.
+  - `domain/proximityIndex.ts` iterates over `PLACE_CATALOG`.
+  - `domain/enrichListing.ts` computes nearest places; `web/components/AddListingForm.tsx` uses it.
+  - `web/components/MapView.tsx` draws the POIs, mosques, stations, schools, `SOKA_BOUNDARY`, and `NEIGHBOR_BOUNDARIES`.
+  - `web/hooks/useListings.ts` reads `BASE_LISTINGS`.
+  - `domain/placeSelection.test.ts` also reads them.
+- Listings: `npm run data:web` (`scripts/build-web-data.ts`) packs `listings.json` into `src/data/listings_web.json`, about 6.0 MB and 3,661 listings, using `domain/webPayload.ts`. `npm run build` runs `data:web` first. The production JS chunk is 4,523 kB (624 kB gzip), and nearly all of it is this file.
+- The reference catalog from M2 is not used by the web app yet. `data/reference/v1` holds 5 cities, 5 boundaries, and 1,189 places (1,010 busStop, 90 childcare, 62 school, 20 station, 5 mosque, 2 poi). `JsonReferenceDataRepository.loadSnapshot()` (storage) returns `ReferenceDataSnapshot`. That type, `ReferencePlaceRecord`, and `CityBoundaryRecord` (polygon or multipolygon) are in `src/data-layer/contracts.ts`, which the web typecheck already includes.
+
+**Decide before coding**
+
+1. **Place ID compatibility.**
+   - The app's place IDs are `${category}:${name}`, with `#n` added for repeated names in list order (`withUniqueIds` in `places.ts`). They are persisted in `localStorage["soka-scorer-places-v1"]` (`PlaceSelection.byParameter`).
+   - Catalog IDs are hashed (`busStop:0057c0…`). Only the two POIs carry a legacy mapping (`attributes.legacyId`).
+   - Switching to catalog IDs would silently reset saved selections. Either keep the app-facing ID equal to today's derived ID, or add a versioned, key-preserving migration from old IDs to catalog IDs.
+   - Recommendation: keep today's IDs in M5. Pin them with a parity test comparing every ID, coordinate, subtitle, and the order of the snapshot-derived catalog against today's `PLACE_CATALOG`. If catalog order cannot guarantee the `#n` suffixes, store the legacy ID in catalog attributes through a revisioned `updatePlaces`.
+2. **POI count is still fixed in scoring.** `DISTANCE_PARAMETERS` and the scoring config use `poi1`/`poi2`, resolved from catalog `attributes.legacyRole`. M5 must not change scores, so keep that mapping. Supporting any number of POIs is a separate scoring migration.
+3. **The fallback conflicts with the bundle exit check.** The scope asks for a runtime client "with a bundled fallback", but a bundled listings fallback keeps the >500 kB warning. Recommendation: always fetch listings and show the error/retry state on failure; bundle at most the small reference snapshot as a fallback.
+4. **Where published web assets live.** The fetched listings and reference snapshot must be served by Vite in dev and copied into `dist/`. The build must not publish sources, captures, backups, geocodes, or the run ledger. Do not point `publicDir` at `data/`. Recommendation: `data:web` writes a dedicated published directory (for example `public/data/`) containing only the listings payload and a reference snapshot exported from `JsonReferenceDataRepository`. Decide whether those derived files stay tracked; `listings_web.json` is tracked today.
+5. **Paths that bypass `DATA_DIR`.** Fix these before the final move. Only the paths below know where data lives; everything else goes through `src/node/dataPaths.ts`.
+   - `scripts/rank.ts:15` and `scripts/find-new.ts:43` hard-code `../src/data`.
+   - `scripts/migrate-reference-data.ts:21` and `scripts/migrate-reference-catalog.ts:5` use `resolve(DATA_DIR, "../../data/reference/v1")`, which points outside the repo once `DATA_DIR` is `data/`. Use `join(DATA_DIR, "reference", "v1")`.
+   - `scripts/refresh.ts:33` uses `ROOT = join(DATA_DIR, "..", "..")`.
+   - `scripts/migrate-sources.ts:29` logs `src/data/sources/…`, and `scripts/migrate-sources.test.ts` expects that text. `scripts/migrate-reference-data.test.ts:25` reads `src/data` directly.
+   - `.gitignore` covers `src/data/.refresh.lock`, `.captures/`, and `.backups/`.
+   - `tools/architecture`: `TARGET_DIRS` has `src/data/`, `imports.ts` has `SKIPPED_DIRS = ["src/data"]`, and `knownViolations.ts` has `src/data/`.
+   - Docs: the README "Data" section, the lock-recovery note above (`src/data/.sources.lock`), and the `dataStore.ts` header comment.
+   - `scripts/merge-nifty.ts:232` records `input: "src/data/nifty_detail_raw.json"` as provenance. Changing it only affects future journal entries, so decide deliberately.
+
+**Suggested order (one revertible commit each)**
+
+1. **Pure domain.** Turn `places.ts`, `proximityIndex.ts`, and `enrichListing.ts` into functions of a reference snapshot (for example `buildPlaceCatalog(snapshot)`), with no module-level data. For now `reference.ts` keeps supplying the same data. Add the ID/order/coordinate parity test from decision 1.
+2. **Read-model contracts** in the data layer: a web data client interface covering the listing query/payload and the reference snapshot. The web app imports them as types only.
+3. **Static client in `src/web/`.** Move the 9 JSON imports out of `domain/reference.ts` into a bundled client in `src/web/`, re-pointing the allowlist `from` paths. Delete `domain/reference.ts`; after this, `src/domain/` imports no persisted data.
+4. **React boundary.** A provider loads the snapshot asynchronously and shows loading, error/retry, and empty states. Components receive the snapshot instead of importing arrays. `MapView` derives boundaries (multiple per city) and map extent from it. Test slow, failed, stale-fallback, and empty responses with a fake client.
+5. **Runtime client.** `data:web` emits the published assets (decision 4), the web client fetches them, and the bundled imports go away. The allowlist becomes empty and the bundle warning disappears. Keep the scores identical for the current data.
+6. **Data directory move.** Fix the paths in decision 5, then move `src/data/` to `data/` by changing `DATA_DIR` in `src/node/dataPaths.ts`. The reference catalog becomes `join(DATA_DIR, "reference", "v1")`. Update the architecture test's persisted-data dirs and `.gitignore`, and verify hash parity before and after.
+
+**Baseline to compare against**
+
+- `npm test`: 516 tests.
+- Dev server: 3,661 listings with the map, no console warnings.
+- `npm run build`: JS chunk 4,523 kB (624 kB gzip).
+- Persisted files: 26 under `src/data/` and `data/`. Record hashes before starting with `find src/data data -type f | sort | xargs shasum -a 256`.
+- Other `localStorage` keys that M5 must leave untouched (M6 wraps them): `soka-scorer-config-v1`, `soka-scorer-filters-v1`, `soka-scorer-marks-v1`, `soka-scorer-custom-listings-v1`, `rental-search-hidden-columns-v1`.
+
 ### SourcePolicy registry (after M5)
 
 **Scope:** The ingestion, discovery, and detail services look up a source's identity/merge/detail policy by source ID instead of importing each policy module, so a new site adds one policy file plus one collector without editing the services. Behavior and journals stay identical; existing source-specific tests pass unchanged.
@@ -258,7 +310,7 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 - **M4 step 2 complete (all moves):** one `git mv` commit per layer — web, domain, integrations, `src/node/` + storage, data layer, collectors, refresh — changing only import paths. Differences from the table above: `src/config/scoring.ts` became `src/domain/scoringConfig.ts` (`src/domain/scoring.ts` already existed); the data root is `DATA_DIR` in `src/node/dataPaths.ts`, and `src/storage/json/dataStore.ts` keeps the storage-specific paths and re-exports `DATA_DIR` so CLIs are unchanged; the ingestion service tests moved to `src/data-layer/ingestion/`, `refreshEfficiency.test.ts` and `scripts/refresh-ledger.test.ts` to `src/refresh/`. With `scripts/lib/` empty, `LEGACY_LOCATIONS` was removed: `scripts/` may now hold only top-level CLI entry points, and any nested file there fails the architecture test.
 - **M4 step 3 complete (import fixes):** the two compatibility shims were deleted and their tests moved beside their data-layer subjects. SUUMO `parsePage` moved to `src/collectors/suumo/suumo.ts` and the Nifty station helpers to `src/collectors/nifty/niftyStation.ts` (the CLIs re-export them for their own tests). The detail-enrichment runner moved to `src/collectors/enrichment/detailEnrichmentRunner.ts`; `enrich-details.ts` and the `backfill-parking.ts` alias each compose it with the JSON-backed client, so no CLI imports another. `DEFAULT_INCREMENTAL_PAGE_CEILING` and `positiveInteger` moved to `src/collectors/shared/pageBudget.ts`. `captureStore` takes `DATA_DIR` and atomic writes from `src/node/`. Collectors no longer re-export data-layer policies (tests import them directly) and fingerprint with the public `contentFingerprint`. `portalPageUrl` is published in `ingestion/contracts.ts`. `newerRows` moved to `src/data-layer/sourceObservationTime.ts` (it takes a structural source type, not the storage `SourceFile`). `ScoredRow` moved to `src/domain/scoring.ts`.
 - **M4 complete:** the allowlist holds only the 9 `until: "M5"` bundled-data imports in `src/domain/reference.ts`. Validation: `npm test` (516 tests; unchanged by M4), `npm run typecheck` (both configurations), `npm run build`, `npm run data:status`, and `npm run refresh -- --plan` pass after every move commit; the dev server renders all 3,661 listings with the map and no console warnings; all 26 persisted files under `src/data/` and `data/` hash identically; `git log --follow` traces moved files to their old paths. `detail:enrich` and `backfill:parking` were smoke-tested with the retired `--all-missing` flag (same message, exit 1, no writes). A planted collector → storage import fails the architecture test. No live collector, capture import, enrichment, or canonical `data:build` was run. The production bundle still warns about size because data is bundled; M5 removes that.
-- **Restart here:** M5 — frontend data client and dynamic reference data. The SourcePolicy registry follows M5. Open question: `src/refresh/` is composition like the CLI and could fold into `scripts/`; not done, since the table above still lists it as a layer.
+- **Restart here:** M5. Read "M5 starting brief" under the M5 milestone first; it lists the current data flow, the four decisions to settle, the step order, and the baseline. The SourcePolicy registry follows M5. Open question: `src/refresh/` is composition like the CLI and could fold into `scripts/`; not done, since the table above still lists it as a layer.
 
 ## Per-milestone validation
 
