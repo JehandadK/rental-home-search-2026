@@ -6,7 +6,7 @@ Separate the codebase into three independently evolvable layers—**collectors**
 
 ## Current state (2026-09-30)
 
-M0–M6, the SourcePolicy registry, and the post-M5 cleanup (original reference files retired) are complete and merged into `main` (local; not yet pushed to `origin`). Work is paused after the M3 hardening follow-ups; to resume, start at "Restart here" at the end of "Progress". M7 has not started: it applies only when shared or cross-device user data becomes a requirement. M8 is optional.
+M0–M6, the SourcePolicy registry, and the post-M5 cleanup (original reference files retired) are complete and merged into `main` (local; not yet pushed to `origin`). Work is paused after the hardening pass (all M3 follow-ups are resolved); to resume, start at "Restart here" at the end of "Progress". M7 has not started: it applies only when shared or cross-device user data becomes a requirement. M8 is optional.
 
 | Milestone | Status |
 |---|---|
@@ -25,7 +25,7 @@ How data flows today:
 - **Publishing:** `npm run data:web` (and `npm run build`) writes `public/data/listings.json` and `public/data/reference.json`.
 - **Web app** (`src/web/`): fetches those two files through `WebDataClient`, behind `WebDataBoundary`, and keeps browser-local preferences in `UserStateStore`. It never imports data files, storage, or browser storage outside its adapters. `tools/architecture` enforces all of this.
 - **Reference data** exists only as the managed catalog. The eight original per-category files were retired after M5 (see "Progress"), and every catalog place is pinned to its app id.
-- **Checks:** `npm test` (569 tests), `npm run typecheck` (both configurations), and `npm run build` (279 kB JS, 90 kB gzip).
+- **Checks:** `npm test` (578 tests), `npm run typecheck` (both configurations), and `npm run build` (279 kB JS, 90 kB gzip).
 
 ## Compatibility rules
 
