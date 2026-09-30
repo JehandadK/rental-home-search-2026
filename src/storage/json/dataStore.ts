@@ -23,23 +23,22 @@ import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, readFile, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import type { RawListing } from "../../src/domain/types";
-import type { ArchivedSourceListing } from "../../src/data-layer/contracts";
-import { mergeSourceProvenance } from "../../src/data-layer/sourceProvenance";
-import { RevisionConflictError } from "../../src/data-layer/errors";
-export { RevisionConflictError } from "../../src/data-layer/errors";
-import { reconcileLifecycle, trackingKey, type LifecycleStats } from "./lifecycle";
-import { deduplicateListings, isSameUnit } from "../../src/domain/listingDedup";
+import type { RawListing } from "../../domain/types";
+import type { ArchivedSourceListing } from "../../data-layer/contracts";
+import { mergeSourceProvenance } from "../../data-layer/sourceProvenance";
+import { RevisionConflictError } from "../../data-layer/errors";
+export { RevisionConflictError } from "../../data-layer/errors";
+import { reconcileLifecycle, trackingKey, type LifecycleStats } from "../../../scripts/lib/lifecycle";
+import { deduplicateListings, isSameUnit } from "../../domain/listingDedup";
 import { restoreObservedLifecycle } from "./observations";
 import {
   withFileLock,
   writeJsonAtomically as atomicWriteJson,
   writeJsonAtomicallyUnlocked,
-} from "./jsonFile";
+} from "../../node/jsonFile";
+import { DATA_DIR } from "../../node/dataPaths";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-export const DATA_DIR = join(HERE, "..", "..", "src", "data");
+export { DATA_DIR };
 export const SOURCES_DIR = join(DATA_DIR, "sources");
 export const BACKUP_DIR = join(DATA_DIR, ".backups");
 export const RAW_PATH = join(DATA_DIR, "listings_raw.json");

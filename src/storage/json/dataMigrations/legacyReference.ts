@@ -6,7 +6,7 @@ import type {
   ReferenceDataSnapshot,
   ReferencePlaceRecord,
   VersionedDataset,
-} from "../../../src/data-layer/contracts";
+} from "../../../data-layer/contracts";
 import { catalogRevision } from "../referenceCatalog";
 import type {
   ChildcareFacility,
@@ -14,7 +14,7 @@ import type {
   NamedPlace,
   PointOfInterest,
   Station,
-} from "../../../src/domain/types";
+} from "../../../domain/types";
 
 export interface LegacyReferenceData {
   pois: readonly PointOfInterest[];

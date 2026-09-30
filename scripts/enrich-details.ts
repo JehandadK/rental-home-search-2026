@@ -1,11 +1,11 @@
 /** Optional bounded detail enrichment AFTER cross-portal deduplication. */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWriteJson, BACKUP_DIR, DATA_DIR, JsonSourceStore, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { atomicWriteJson, BACKUP_DIR, DATA_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { DetailEnrichmentPlanner, ScrapeIngestion } from "../src/data-layer/ingestion/contracts";
-import { withFileLock } from "./lib/jsonFile";
+import { withFileLock } from "../src/node/jsonFile";
 import { captureKey } from "./lib/captureStore";
 import { parseDetail } from "./lib/detailEnrichment";
 import { detailCaptureBatch, validateDetailCapture, type DetailCapture } from "./lib/suumoDetailIngestion";

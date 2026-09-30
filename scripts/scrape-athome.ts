@@ -14,8 +14,8 @@
  * so a failed crawl never overwrites the last good source snapshot.
  */
 import { pathToFileURL } from "node:url";
-import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { cachedPage } from "./lib/captureStore";
 import { AthomeBrowser } from "./lib/athomeBrowser";

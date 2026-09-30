@@ -12,8 +12,8 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import {

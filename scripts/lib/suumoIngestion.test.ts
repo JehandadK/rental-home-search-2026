@@ -6,8 +6,8 @@ import type { RawListing } from "../../src/domain/types";
 import type { ScrapeBatch } from "../../src/data-layer/ingestion/contracts";
 import { InvalidScrapeBatchError, ListingIngestionService, ScrapeReplayConflictError } from "../../src/data-layer/ingestion/service";
 import { sourceRowKey, sourceRowLocator } from "../../src/data-layer/sourceRowIdentity";
-import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "./dataStore";
-import { JsonListingRepository } from "./jsonListingRepository";
+import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../../src/storage/json/dataStore";
+import { JsonListingRepository } from "../../src/storage/json/jsonListingRepository";
 import { mergeSuumoIncremental, suumoMatchKeys } from "./suumoIncremental";
 import { trackingKey } from "./lifecycle";
 

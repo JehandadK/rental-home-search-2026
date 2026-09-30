@@ -4,8 +4,8 @@
  * stages parsed observations and commits once after every city finishes.
  */
 import { pathToFileURL } from "node:url";
-import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { cachedPage } from "./lib/captureStore";
 import { RoomspotBrowser } from "./lib/roomspotBrowser";

@@ -36,13 +36,6 @@ const TARGET_DIRS: [prefix: string, layer: Layer][] = [
  * when M4 moves the file; a moved file is classified by TARGET_DIRS.
  */
 export const LEGACY_LOCATIONS: Record<string, Layer> = {
-  "scripts/lib/jsonFile.ts": "node",
-  "scripts/lib/dataStore.ts": "storage",
-  "scripts/lib/jsonListingRepository.ts": "storage",
-  "scripts/lib/jsonReferenceDataRepository.ts": "storage",
-  "scripts/lib/referenceCatalog.ts": "storage",
-  "scripts/lib/observations.ts": "storage",
-  "scripts/lib/dataMigrations/": "storage",
   "scripts/lib/lifecycle.ts": "data-layer",
   "scripts/lib/athome.ts": "collectors",
   "scripts/lib/athomeBrowser.ts": "collectors",

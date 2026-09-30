@@ -9,7 +9,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWriteJson, DATA_DIR } from "./lib/dataStore";
+import { atomicWriteJson, DATA_DIR } from "../src/storage/json/dataStore";
 import type { EnrichedListing } from "../src/domain/types";
 import { normalizeListingAttributes } from "../src/domain/listingAttributes";
 import { deduplicateListings } from "../src/domain/listingDedup";

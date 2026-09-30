@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, planRefresh, completeMarket, positiveInteger } from "./refreshPlan";
 import { addressKey, cachedGeocode, seedGeocodes } from "./geocodeCache";
 import { parseDetail, applyDetail } from "./detailEnrichment";
-import { restoreObservedLifecycle } from "./observations";
+import { restoreObservedLifecycle } from "../../src/storage/json/observations";
 import { validateCapture } from "./captureStore";
 import { packListings, unpackListings } from "../../src/domain/webPayload";
 import type { RawListing, EnrichedListing } from "../../src/domain/types";

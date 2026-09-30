@@ -3,14 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { RevisionConflictError } from "../../src/data-layer/errors";
-import type { ReferenceCatalogManifest, ReferencePlaceRecord, VersionedDataset } from "../../src/data-layer/contracts";
+import { RevisionConflictError } from "../../data-layer/errors";
+import type { ReferenceCatalogManifest, ReferencePlaceRecord, VersionedDataset } from "../../data-layer/contracts";
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
-import { DatasetMigrationRegistry } from "../../src/data-layer/migrations/registry";
+import { DatasetMigrationRegistry } from "../../data-layer/migrations/registry";
 import { legacyCatalogRevision } from "./referenceCatalog";
 
 const roots: string[] = [];
-const projectRoot = fileURLToPath(new URL("../../", import.meta.url));
+const projectRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
 async function makeRepository(upgrade = true): Promise<{ repo: JsonReferenceDataRepository; directory: string }> {
   const root = await mkdtemp(join(tmpdir(), "reference-repository-test-"));

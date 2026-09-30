@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RawListing } from "../src/domain/types";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
-import { atomicWriteJson, JsonSourceStore } from "./lib/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
+import { atomicWriteJson, JsonSourceStore } from "../src/storage/json/dataStore";
 import { captureKey } from "./lib/captureStore";
 import { runDetailEnrichment, type DetailEnrichmentDependencies } from "./enrich-details";
 

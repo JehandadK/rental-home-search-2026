@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { ReferenceCatalogManifest } from "../../src/data-layer/contracts";
+import type { ReferenceCatalogManifest } from "../../data-layer/contracts";
 
 export const CURRENT_CATALOG_REVISION_ALGORITHM = 2 as const;
 

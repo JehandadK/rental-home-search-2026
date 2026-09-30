@@ -15,7 +15,7 @@
  * script never edits them; --apply delegates to the normal build pipeline
  * (backups, lifecycle reconciliation, manifest).
  */
-import { buildRaw, listSources } from "./lib/dataStore";
+import { buildRaw, listSources } from "../src/storage/json/dataStore";
 import type { RawListing } from "../src/domain/types";
 import { deduplicateListings, isSameProperty, sourceListings } from "../src/domain/listingDedup";
 

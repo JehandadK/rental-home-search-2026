@@ -15,7 +15,7 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { DATA_DIR, MANIFEST_PATH, type BuildManifest } from "./lib/dataStore";
+import { DATA_DIR, MANIFEST_PATH, type BuildManifest } from "../src/storage/json/dataStore";
 import {
   acquireRefreshLock,
   latestResumableRun,

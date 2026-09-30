@@ -1,6 +1,6 @@
-import type { RawListing } from "../../src/domain/types";
+import type { RawListing } from "../../domain/types";
 import type { SourceFile } from "./dataStore";
-import { trackingKey } from "./lifecycle";
+import { trackingKey } from "../../../scripts/lib/lifecycle";
 
 /** Reconcile actual capture evidence from ANY contributing ad, never build time. */
 export function restoreObservedLifecycle(rows: RawListing[], previous: readonly RawListing[], sources: readonly SourceFile[], authoritative = false): void {

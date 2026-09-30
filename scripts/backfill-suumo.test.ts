@@ -7,8 +7,8 @@ import type { SourceCorrectionJournal, SourceCorrectionRequest } from "../src/da
 import { InvalidSourceCorrectionError, SourceCorrectionReplayConflictError, SourceCorrectionService } from "../src/data-layer/corrections/service";
 import { backfillSuumoNotes } from "../src/data-layer/corrections/suumoNotes";
 import { RevisionConflictError } from "../src/data-layer/errors";
-import { DATA_DIR, JsonSourceStore, type SourceFile } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { DATA_DIR, JsonSourceStore, type SourceFile } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { runSuumoBackfill } from "./backfill-suumo";
 
 const sourceAt = "2026-09-24T00:00:00.000Z", appliedAt = "2026-09-25T00:00:00.000Z";

@@ -77,7 +77,7 @@ describe("layer rules", () => {
 
   it("classifies target and not-yet-moved files, and rejects unplaced ones", () => {
     expect(classify("src/web/components/MapView.tsx")).toBe("web");
-    expect(classify("scripts/lib/jsonListingRepository.ts")).toBe("storage");
+    expect(classify("src/storage/json/jsonListingRepository.ts")).toBe("storage");
     expect(classify("scripts/lib/athome.ts")).toBe("collectors");
     expect(classify("scripts/refresh.ts")).toBe("cli");
     expect(classify("src/collectors/suumo/parse.ts")).toBe("collectors");

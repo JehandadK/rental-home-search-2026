@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
-import { JsonReferenceDataRepository } from "./lib/jsonReferenceDataRepository";
-import { DATA_DIR } from "./lib/dataStore";
+import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
+import { DATA_DIR } from "../src/storage/json/dataStore";
 
 const directory = resolve(DATA_DIR, "../../data/reference/v1");
 const result = await new JsonReferenceDataRepository(directory).upgradePersistedSchemas();

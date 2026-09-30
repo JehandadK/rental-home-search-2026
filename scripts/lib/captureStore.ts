@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWriteJson, DATA_DIR } from "./dataStore";
+import { atomicWriteJson, DATA_DIR } from "../../src/storage/json/dataStore";
 export const CAPTURE_DIR = join(DATA_DIR, ".captures");
 export interface PageCapture {
   schemaVersion: 1;

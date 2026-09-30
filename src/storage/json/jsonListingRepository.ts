@@ -5,11 +5,11 @@ import type {
   ListingRepository,
   ListingSourceSnapshot,
   SourceReconciliation,
-} from "../../src/data-layer/contracts";
-import type { RawListing } from "../../src/domain/types";
-import { RevisionConflictError } from "../../src/data-layer/errors";
-import { indexSourceRows, sourceRowKey, sourceRowLocator } from "../../src/data-layer/sourceRowIdentity";
-import { invalidBootstrap, legacySource, validateJsonValue, validateLegacyListing, validateSourceId } from "../../src/data-layer/bootstrap/validation";
+} from "../../data-layer/contracts";
+import type { RawListing } from "../../domain/types";
+import { RevisionConflictError } from "../../data-layer/errors";
+import { indexSourceRows, sourceRowKey, sourceRowLocator } from "../../data-layer/sourceRowIdentity";
+import { invalidBootstrap, legacySource, validateJsonValue, validateLegacyListing, validateSourceId } from "../../data-layer/bootstrap/validation";
 import { JsonSourceStore, type SourceFile } from "./dataStore";
 
 export class InvalidListingBatchError extends Error {

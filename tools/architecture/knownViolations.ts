@@ -25,8 +25,8 @@ export const KNOWN_VIOLATIONS: KnownViolation[] = [
   // CLI → CLI
   { from: "scripts/backfill-parking.ts", to: "scripts/enrich-details.ts", until: "M4", fix: "Move the enrichDetails runner into collectors; both CLIs call it" },
   // Collector → storage
-  { from: "scripts/lib/captureStore.ts", to: "scripts/lib/dataStore.ts", until: "M4", fix: "Take CAPTURE_DIR and atomic writes from src/node/" },
-  { from: "scripts/lib/captureValidation.ts", to: "scripts/lib/dataStore.ts", until: "M4", fix: "Move newerRows (freshness is a data-layer rule; only tests use it) out of collectors" },
+  { from: "scripts/lib/captureStore.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Take CAPTURE_DIR and atomic writes from src/node/" },
+  { from: "scripts/lib/captureValidation.ts", to: "src/storage/json/dataStore.ts", until: "M4", fix: "Move newerRows (freshness is a data-layer rule; only tests use it) out of collectors" },
   // Collector → data-layer internals
   { from: "scripts/lib/captureValidation.ts", to: "scripts/lib/lifecycle.ts", until: "M4", fix: "Import trackingKey from the domain" },
   { from: "scripts/lib/captureValidation.ts", to: "src/data-layer/sourceObservationTime.ts", until: "M4", fix: "Move newerRows out of collectors" },

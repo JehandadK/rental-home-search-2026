@@ -5,8 +5,8 @@
  */
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { BACKUP_DIR, JsonSourceStore, RAW_PATH, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { BACKUP_DIR, JsonSourceStore, RAW_PATH, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { SourceBootstrapService } from "../src/data-layer/bootstrap/service";
 import type { SourceBootstrap } from "../src/data-layer/bootstrap/contracts";
 import type { LegacyListing } from "../src/data-layer/contracts";

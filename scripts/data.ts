@@ -9,8 +9,8 @@
  */
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { BACKUP_DIR, MANIFEST_PATH, RAW_PATH, buildRaw, listSources } from "./lib/dataStore";
-import type { BuildManifest } from "./lib/dataStore";
+import { BACKUP_DIR, MANIFEST_PATH, RAW_PATH, buildRaw, listSources } from "../src/storage/json/dataStore";
+import type { BuildManifest } from "../src/storage/json/dataStore";
 import { sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
 
 const ago = (iso: string): string => {

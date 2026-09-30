@@ -3,8 +3,8 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { enrichListing } from "../src/domain/enrichListing";
 import { geocodeAddress } from "../src/integrations/geocode";
-import { DATA_DIR, atomicWriteJson } from "./lib/dataStore";
-import { withFileLock } from "./lib/jsonFile";
+import { DATA_DIR, atomicWriteJson } from "../src/storage/json/dataStore";
+import { withFileLock } from "../src/node/jsonFile";
 import { addressKey, cachedGeocode, seedGeocodes, type GeocodeCache } from "./lib/geocodeCache";
 import type { EnrichedListing, RawListing } from "../src/domain/types";
 

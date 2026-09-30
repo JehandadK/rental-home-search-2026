@@ -2,10 +2,10 @@ import { createHash, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rename, rm } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
-import { DATA_DIR, atomicWriteJson } from "./lib/dataStore";
-import { withFileLock } from "./lib/jsonFile";
-import { catalogRevision, CURRENT_CATALOG_REVISION_ALGORITHM, legacyCatalogRevision } from "./lib/referenceCatalog";
-import { migrateLegacyReferenceData, type LegacyReferenceData } from "./lib/dataMigrations/legacyReference";
+import { DATA_DIR, atomicWriteJson } from "../src/storage/json/dataStore";
+import { withFileLock } from "../src/node/jsonFile";
+import { catalogRevision, CURRENT_CATALOG_REVISION_ALGORITHM, legacyCatalogRevision } from "../src/storage/json/referenceCatalog";
+import { migrateLegacyReferenceData, type LegacyReferenceData } from "../src/storage/json/dataMigrations/legacyReference";
 import type { ReferenceCatalogManifest, ReferenceDataSnapshot, VersionedDataset } from "../src/data-layer/contracts";
 
 const SOURCE_FILES = [

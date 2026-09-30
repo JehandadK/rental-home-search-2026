@@ -14,13 +14,13 @@ import type {
   ReferencePlaceRecord,
   Retirement,
   VersionedDataset,
-} from "../../src/data-layer/contracts";
-import { REFERENCE_MIGRATION_REGISTRY, CURRENT_REFERENCE_SCHEMA_VERSIONS } from "../../src/data-layer/migrations/referenceSchemas";
+} from "../../data-layer/contracts";
+import { REFERENCE_MIGRATION_REGISTRY, CURRENT_REFERENCE_SCHEMA_VERSIONS } from "../../data-layer/migrations/referenceSchemas";
 import { catalogRevision, CURRENT_CATALOG_REVISION_ALGORITHM, legacyCatalogRevision } from "./referenceCatalog";
-import type { DatasetMigrationRegistry } from "../../src/data-layer/migrations/registry";
-import { RevisionConflictError } from "../../src/data-layer/errors";
+import type { DatasetMigrationRegistry } from "../../data-layer/migrations/registry";
+import { RevisionConflictError } from "../../data-layer/errors";
 import { atomicWriteJson } from "./dataStore";
-import { withFileLock } from "./jsonFile";
+import { withFileLock } from "../../node/jsonFile";
 
 const DATASET_IDS = ["cities", "boundaries", "places"] as const;
 type DatasetId = (typeof DATASET_IDS)[number];

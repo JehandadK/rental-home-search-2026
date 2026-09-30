@@ -11,11 +11,11 @@ import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { contentFingerprint } from "../src/data-layer/contentIdentity";
 import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
-import { DATA_DIR, JsonSourceStore } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { DATA_DIR, JsonSourceStore } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { newerRows } from "./lib/captureValidation";
 import { reconcileLifecycle } from "./lib/lifecycle";
-import { restoreObservedLifecycle } from "./lib/observations";
+import { restoreObservedLifecycle } from "../src/storage/json/observations";
 import { runSourceMigration } from "./migrate-sources";
 
 const importedAt = "2026-09-25T00:00:00.000Z", oldAt = "2026-08-01T00:00:00.000Z";

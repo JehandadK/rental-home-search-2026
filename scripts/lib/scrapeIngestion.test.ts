@@ -6,8 +6,8 @@ import type { RawListing } from "../../src/domain/types";
 import type { ScrapeBatch } from "../../src/data-layer/ingestion/contracts";
 import { ListingIngestionService, InvalidScrapeBatchError, ScrapeReplayConflictError } from "../../src/data-layer/ingestion/service";
 import { RevisionConflictError } from "../../src/data-layer/errors";
-import { JsonSourceStore } from "./dataStore";
-import { JsonListingRepository } from "./jsonListingRepository";
+import { JsonSourceStore } from "../../src/storage/json/dataStore";
+import { JsonListingRepository } from "../../src/storage/json/jsonListingRepository";
 import { trackingKey } from "./lifecycle";
 
 const at = "2026-09-25T00:00:00.000Z";

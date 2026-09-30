@@ -2,8 +2,8 @@
 import { NiftyBrowser } from "./lib/niftyBrowser";
 import { niftyCaptureExpression } from "./lib/niftyCapture";
 import { cachedPage } from "./lib/captureStore";
-import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { ingestNiftyListPage } from "./lib/niftyIngestion";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "./lib/refreshPlan";

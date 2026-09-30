@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { athomeDownloadedCapture } from "./lib/athomeCapture";
 import { CAPTURE_DIR, captureKey, validateCapture } from "./lib/captureStore";
-import { atomicWriteJson } from "./lib/dataStore";
+import { atomicWriteJson } from "../src/storage/json/dataStore";
 import { parseAthomePage } from "./lib/athome";
 import { assertParsedFamilies } from "./lib/captureValidation";
 
