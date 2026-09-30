@@ -205,5 +205,26 @@ describe("AtHome modern template", () => {
     await expect(browser.fetchPage(1)).rejects.toThrow("verification page");
     await expect(browser.fetchPage(1)).rejects.toThrow("navigation has not completed");
   });
-});
 
+  it("waits passively for a person to complete verification when opted in", async () => {
+    vi.stubEnv("ATHOME_VERIFY_WAIT_SECONDS", "30");
+    vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+    try {
+      const titles = ["【アットホーム】認証中", "認証にご協力ください。", "アットホーム"];
+      bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+        if (method === "evaluate") return { result: { result: { value: titles.length > 1 ? titles.shift() : titles[0] } } };
+        return { tab: { ...homeTab, url: String(params.url) } };
+      });
+      const connecting = new AthomeBrowser().connect(SEARCH);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await connecting;
+      const methods = bridge.request.mock.calls.map(([method]) => method);
+      // No reload/navigation while waiting: only title reads until the check clears.
+      expect(methods.slice(0, 2)).toEqual(["new_tab", "evaluate"]);
+      expect(methods.filter((method) => method === "navigate").length).toBe(1);
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllEnvs();
+    }
+  });
+});

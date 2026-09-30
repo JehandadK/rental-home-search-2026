@@ -46,6 +46,7 @@ export class AthomeBrowser {
       turn: 1,
     }, REQUEST_TIMEOUT_MS);
     this.tab = created.tab;
+    await this.waitForHumanVerification();
     await this.navigate(initialUrl);
   }
 
@@ -66,7 +67,33 @@ export class AthomeBrowser {
       sessionId: this.sessionId,
     }, REQUEST_TIMEOUT_MS);
     this.tab = result.tab;
+    await this.waitForHumanVerification();
     this.searchReady = true;
+  }
+
+  /**
+   * Opt-in (ATHOME_VERIFY_WAIT_SECONDS): when AtHome shows its verification page,
+   * wait passively, without reloading or sending any further request, for a person
+   * to complete it in the headed window. Nothing here solves or bypasses the check.
+   */
+  private async waitForHumanVerification(): Promise<void> {
+    const waitMs = Number(process.env.ATHOME_VERIFY_WAIT_SECONDS ?? 0) * 1000;
+    if (!(waitMs > 0) || !this.tab) return;
+    const deadline = Date.now() + waitMs;
+    let announced = false;
+    while (Date.now() < deadline) {
+      let title = "";
+      try {
+        const result = await this.bridge.request<{ result?: { result?: { value?: string } } }>("evaluate", {
+          tabId: this.tab.id, tabFence: this.tab.tabFence, incarnation: this.tab.incarnation, sessionId: this.sessionId,
+          expression: "document.title", awaitPromise: true,
+        }, 10_000);
+        title = result.result?.result?.value ?? "";
+      } catch { /* the page may be navigating after the check; look again */ }
+      if (title && !/認証/.test(title)) return;
+      if (!announced) { console.error("AtHome is showing its verification page: complete it in the browser window (waiting)."); announced = true; }
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+    }
   }
 
   /**

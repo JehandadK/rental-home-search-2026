@@ -57,7 +57,9 @@
   verification page ("認証にご協力ください"); it stops with an error instead.
 - If AtHome shows that page to the automated browser, pass it once by hand: run
   with `PLAYWRIGHT_USER_DATA_DIR=.context/athome-profile` (gitignored), complete
-  the check in the headed window, and later runs reuse the session. As of
+  the check in the headed window, and later runs reuse the session. Add
+  `ATHOME_VERIFY_WAIT_SECONDS=300` so the run waits (passively; no reloads or
+  extra requests) while you complete it, and `--verbose` to see the prompt. As of
   2026-09-30 a fresh Playwright profile was shown the page on the homepage.
 
 ## Agent-operated browser collection
