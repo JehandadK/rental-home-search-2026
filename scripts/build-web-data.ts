@@ -21,6 +21,8 @@ import type { EnrichedListing } from "../src/domain/types";
 import { normalizeListingAttributes } from "../src/domain/listingAttributes";
 import { deduplicateListings } from "../src/domain/listingDedup";
 import { packListings } from "../src/domain/webPayload";
+import { withAvailability } from "../src/domain/availability";
+import { readAvailability } from "../src/storage/json/availabilityStore";
 
 const INPUT = join(DATA_DIR, "listings.json");
 const OUTPUT = join(WEB_PUBLISH_DIR, "listings.json");
@@ -29,7 +31,10 @@ const REFERENCE_OUTPUT = join(WEB_PUBLISH_DIR, "reference.json");
 const listings = JSON.parse(await readFile(INPUT, "utf8")) as EnrichedListing[];
 // Keep the browser payload clean even when listings.json came from an older
 // build. `data:build` uses the same matcher, while this is a final safeguard.
-const uniqueListings = deduplicateListings(listings) as EnrichedListing[];
+const availability = await readAvailability();
+// Bake portal availability checks (data/availability.json) into each ad so the
+// dashboard can hide properties every portal has taken down.
+const uniqueListings = (deduplicateListings(listings) as EnrichedListing[]).map((listing) => withAvailability(listing, availability));
 const compact = uniqueListings.map((listing) => {
   const {
     poi1: _poi1,

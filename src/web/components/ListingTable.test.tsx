@@ -199,4 +199,46 @@ describe("ListingTable", () => {
     expect(selectIn(ruledOutRow).value).toBe("no-foreigners");
     expect(selectIn(candidateRow).value).toBe("shortlisted");
   });
+
+  describe("availability", () => {
+    const SUUMO = "https://suumo.jp/chintai/jnc_000000000001/";
+    const ATHOME = "https://www.athome.co.jp/chintai/1143327034/";
+    const gone = { state: "gone" as const, checkedAt: "2026-09-30T00:00:00.000Z", evidence: "HTTP 404", method: "probe" as const };
+
+    it("badges a property whose every ad is gone, and strikes through the gone links", () => {
+      const rented = makeRow({ name: "Rented Place", sourceListings: [
+        { source: "suumo", url: SUUMO, availability: gone }, { source: "athome", url: ATHOME, availability: gone },
+      ] });
+      const partly = makeRow({ name: "Partly Place", rent: 90_000, sourceListings: [
+        { source: "suumo", url: SUUMO, availability: gone }, { source: "athome", url: ATHOME },
+      ] });
+      renderTable([rented, partly]);
+      const badges = screen.getAllByText("RENTED OUT");
+      expect(badges).toHaveLength(1);
+      expect(badges[0].closest("tr")!.textContent).toContain("Rented Place");
+      const partlyRow = screen.getByText("Partly Place").closest("tr")!;
+      expect(partlyRow.textContent).not.toContain("RENTED OUT");
+      expect(partlyRow.querySelector('a[href="' + SUUMO + '"]')!.className).toMatch(/linkGone/);
+      expect(partlyRow.querySelector('a[href="' + ATHOME + '"]')!.className).not.toMatch(/linkGone/);
+    });
+
+    it("marks one ad gone or still listed by hand without opening the row", () => {
+      const onMarkAd = vi.fn();
+      const onSelect = vi.fn();
+      const row = makeRow({ name: "Toggle Place", sourceListings: [
+        { source: "suumo", url: SUUMO, availability: gone }, { source: "athome", url: ATHOME },
+      ] });
+      renderTable([row], { onMarkAd, onSelect });
+      fireEvent.click(screen.getByLabelText("Mark athome ad as gone"));
+      expect(onMarkAd).toHaveBeenLastCalledWith(expect.objectContaining({ source: "athome", url: ATHOME }), "gone");
+      fireEvent.click(screen.getByLabelText("Mark suumo ad as still listed"));
+      expect(onMarkAd).toHaveBeenLastCalledWith(expect.objectContaining({ source: "suumo", url: SUUMO }), "listed");
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("shows no toggles when marking is not wired", () => {
+      renderTable([makeRow({ name: "Plain", sourceListings: [{ source: "suumo", url: SUUMO }] })]);
+      expect(screen.queryByLabelText("Mark suumo ad as gone")).toBeNull();
+    });
+  });
 });

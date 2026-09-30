@@ -62,6 +62,33 @@
   extra requests) while you complete it, and `--verbose` to see the prompt. As of
   2026-09-30 a fresh Playwright profile was shown the page on the homepage.
 
+## Rented-out detection
+
+A property is **rented out** when every portal ad we know for it has been seen
+gone. One live ad keeps it available. This is separate from `sold`, which is
+only inferred from absence in crawls.
+
+- `npm run check:availability` visits ad pages in the **headed browser only**
+  (`BROWSER_DRIVER=playwright`, else the Chrome bridge; never curl/fetch).
+  It picks the properties a refresh has not seen for longest, checks the
+  cheapest portal first (Nifty, SUUMO, RoomSpot, Yahoo, AtHome) and stops at the
+  first live ad, so an available property costs one page load. Ads already
+  recorded gone are never revisited. Flags: `--limit N` (25), `--stale-days D`
+  (3), `--city`, `--min-size`, `--max-rent`, `--recheck-gone`, `--url <ad>`,
+  `--dry-run` (no browser).
+- What "gone" looks like (`src/collectors/availability/classify.ts`): AtHome
+  HTTP 404 「お探しのページが見つかりません」; SUUMO HTTP 404 「エラー｜SUUMO」 or a
+  redirect to the building's `/library/` page; RoomSpot HTTP 404 with 掲載終了;
+  Nifty a redirect from `detail_…` to the building's `/mansion-info/` page.
+  Verification/busy pages, errors and anything unrecognised are `unknown` and
+  never recorded as gone. Use `ATHOME_VERIFY_WAIT_SECONDS` to pass a check by hand.
+- Results live in `data/availability.json` (newest check wins per ad), separate
+  from the source snapshots so refreshes cannot wipe them. `npm run data:web`
+  bakes them into each ad in `public/data/listings.json`.
+- Dashboard: rented-out properties are hidden by default (filter: hide / show /
+  only), badged **RENTED OUT**, and each portal link has a small ✕ / ↺ to mark
+  that ad gone or still listed by hand (browser-local, newest check wins).
+
 ## Agent-operated browser collection
 
 Use the loaded pi-control-chrome Skill and native `browser_*` tools only. Do not

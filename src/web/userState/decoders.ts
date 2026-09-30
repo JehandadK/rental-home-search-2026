@@ -14,6 +14,7 @@ import {
   DEFAULT_FEATURE_WEIGHTS,
   type ScoringConfig,
 } from "../../domain/scoringConfig";
+import type { AvailabilityMap } from "../../domain/availability";
 import type { EnrichedListing } from "../../domain/types";
 
 type PlainObject = Record<string, unknown>;
@@ -49,6 +50,20 @@ export function decodeMarks(raw: unknown): MarkMap {
   return Object.fromEntries(
     Object.entries(raw).filter(([, mark]) => typeof mark === "string" && MARK_KEYS.has(mark)),
   ) as MarkMap;
+}
+
+/** Hand-made "this ad is gone / still listed" marks; malformed entries are dropped. */
+export function decodeAvailabilityMarks(raw: unknown): AvailabilityMap {
+  if (!isPlainObject(raw)) return {};
+  return Object.fromEntries(Object.entries(raw).filter(([, mark]) =>
+    isPlainObject(mark)
+    && (mark.state === "gone" || mark.state === "listed")
+    && typeof mark.source === "string"
+    && typeof mark.url === "string"
+    && typeof mark.checkedAt === "string" && Number.isFinite(Date.parse(mark.checkedAt))
+    && mark.method === "manual"
+    && typeof mark.evidence === "string",
+  )) as AvailabilityMap;
 }
 
 /** Custom listings must at least have a name and a rent to be scored. */

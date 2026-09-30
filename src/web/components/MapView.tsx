@@ -24,6 +24,7 @@ import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
+import { isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceData";
 import type { CatalogPlace } from "../../domain/places";
@@ -295,7 +296,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
       const sold = isSold(listing);
       const mark = marks[key];
       // Sold listings and ruled-out decisions recede to grey.
-      const dimmed = sold || isRuledOut(mark);
+      const dimmed = sold || isRentedOut(listing) || isRuledOut(mark);
       ctx.beginPath();
       ctx.arc(x, y, 4.5, 0, Math.PI * 2);
       ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);

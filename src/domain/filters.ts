@@ -8,6 +8,7 @@ import type { EnrichedListing } from "./types";
 import type { ListingScore } from "./scoring";
 import { isNewListing, isSold } from "./lifecycle";
 import type { MarkFilter } from "./marks";
+import { isRentedOut } from "./availability";
 
 export type AreaMode = "include" | "exclude";
 
@@ -18,6 +19,14 @@ export type AreaMode = "include" | "exclude";
  *   sold   — only sold listings (what did we miss?)
  */
 export type StatusFilter = "all" | "active" | "sold";
+
+/**
+ * Properties whose every portal ad has been seen gone:
+ *   hide — leave them out (default)
+ *   show — keep them, marked
+ *   only — only those (what did we lose?)
+ */
+export type RentedOutFilter = "hide" | "show" | "only";
 
 export interface ListingFilters {
   /** Cities to keep (empty set = all cities). */
@@ -51,6 +60,8 @@ export interface ListingFilters {
   parkingMaxYen: number | null;
   /** Lifecycle visibility: show sold listings or not. */
   status: StatusFilter;
+  /** Visibility of properties rented out on every portal. */
+  rentedOut: RentedOutFilter;
   /** Keep only listings first seen within the NEW window (14 days). */
   newOnly: boolean;
   /**
@@ -74,6 +85,7 @@ export const EMPTY_FILTERS: ListingFilters = {
   parking: "any",
   parkingMaxYen: null,
   status: "all",
+  rentedOut: "hide",
   newOnly: false,
   markFilter: "all",
 };
@@ -165,6 +177,12 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
   if (filters.status === "sold" && !isSold(listing)) return false;
   if (filters.newOnly && !isNewListing(listing)) return false;
 
+  if (filters.rentedOut !== "show") {
+    const rentedOut = isRentedOut(listing);
+    if (filters.rentedOut === "hide" && rentedOut) return false;
+    if (filters.rentedOut === "only" && !rentedOut) return false;
+  }
+
   return true;
 }
 
@@ -214,6 +232,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   if (filters.parkingMaxYen != null) n++;
   if (filters.status !== "all") n++;
   if (filters.newOnly) n++;
+  if (filters.rentedOut !== "hide") n++;
   if (filters.markFilter !== "all") n++;
   return n;
 }

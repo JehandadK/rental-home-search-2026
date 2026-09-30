@@ -11,9 +11,10 @@ import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
+import { describeAvailability, isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ScoredRow } from "../../domain/scoring";
-import type { ScoreParameterKey } from "../../domain/types";
+import type { ScoreParameterKey, SourceListingReference } from "../../domain/types";
 import { decodeHiddenColumns } from "../userState/decoders";
 import { USER_STATE_KEYS } from "../userState/store";
 import { useUserStateStore } from "../userState/UserStateContext";
@@ -31,6 +32,8 @@ interface Props {
   /** The user's decision marks, keyed by listingKey. */
   marks: MarkMap;
   onSetMark: (key: string, mark: ListingMark | null) => void;
+  /** Record by hand that one portal ad is gone or still listed. */
+  onMarkAd?: (ad: SourceListingReference, state: "gone" | "listed") => void;
 }
 
 type SortKey = "score" | "mark" | ScoreParameterKey;
@@ -84,7 +87,7 @@ function formatValue(part: ScorePart | undefined): string {
   }
 }
 
-export const ListingTable = memo(function ListingTable({ items, onRemove, hovered, onHover, selected, onSelect, onCenterMap, marks, onSetMark }: Props) {
+export const ListingTable = memo(function ListingTable({ items, onRemove, hovered, onHover, selected, onSelect, onCenterMap, marks, onSetMark, onMarkAd }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [ascending, setAscending] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -238,6 +241,7 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
               const isHover = key === hovered;
               const isSelected = key === selected;
               const sold = isSold(listing);
+              const rentedOut = isRentedOut(listing);
               const fresh = isNewListing(listing);
               const mark = marks[key];
               const ruledOut = isRuledOut(mark);
@@ -248,7 +252,7 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
                   ref={isSelected ? selectedRowRef : undefined}
                   className={`${styles.listing} ${isHover ? styles.hovered : ""} ${
                     isSelected ? styles.selected : ""
-                  } ${sold ? styles.sold : ""} ${ruledOut ? styles.ruledOut : ""}`}
+                  } ${sold || rentedOut ? styles.sold : ""} ${ruledOut ? styles.ruledOut : ""}`}
                   onMouseEnter={() => onHover(key)}
                   onMouseLeave={() => onHover(null)}
                   onClick={() => {
@@ -290,6 +294,14 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
                         title={`No longer advertised${listing.soldAt ? ` since ${listing.soldAt.slice(0, 10)}` : ""}`}
                       >
                         SOLD
+                      </span>
+                    )}
+                    {rentedOut && (
+                      <span
+                        className={styles.badgeRentedOut}
+                        title={`Every portal ad is gone:\n${portals.map((ad) => `${ad.source}: ${describeAvailability(ad.availability)}`).join("\n")}`}
+                      >
+                        RENTED OUT
                       </span>
                     )}
                     {portals.length > 1 && (
@@ -356,19 +368,40 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
                     </td>
                   ))}
                   {shows("links") && <td className={styles.links}>
-                    {portals.filter(({ url }) => Boolean(url)).map((reference, linkIndex) => (
-                      <a
-                        key={`${reference.source}-${reference.url}`}
-                        className={linkIndex === 0 && portals.length > 1 ? styles.primaryLink : undefined}
-                        href={reference.url!}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={linkIndex === 0 && portals.length > 1 ? "Preferred portal" : undefined}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {reference.source}
-                      </a>
-                    ))}
+                    {portals.filter(({ url }) => Boolean(url)).map((reference, linkIndex) => {
+                      const gone = reference.availability?.state === "gone";
+                      const status = describeAvailability(reference.availability);
+                      return (
+                        <span key={`${reference.source}-${reference.url}`} className={styles.adLink}>
+                          <a
+                            className={[linkIndex === 0 && portals.length > 1 ? styles.primaryLink : "", gone ? styles.linkGone : ""].join(" ").trim() || undefined}
+                            href={reference.url!}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={`${linkIndex === 0 && portals.length > 1 ? "Preferred portal · " : ""}${reference.source}: ${status}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {reference.source}
+                          </a>
+                          {onMarkAd && (
+                            <button
+                              type="button"
+                              className={styles.adToggle}
+                              title={gone
+                                ? `Marked gone (${status}). Click if it is actually still listed.`
+                                : `Opened it and the room is gone? Click to mark ${reference.source} as rented out.`}
+                              aria-label={gone ? `Mark ${reference.source} ad as still listed` : `Mark ${reference.source} ad as gone`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onMarkAd(reference, gone ? "listed" : "gone");
+                              }}
+                            >
+                              {gone ? "↺" : "✕"}
+                            </button>
+                          )}
+                        </span>
+                      );
+                    })}
                     {listing.lat != null && listing.lon != null && (
                       <a
                         href={`https://www.google.com/maps?q=${listing.lat},${listing.lon}`}

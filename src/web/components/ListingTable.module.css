@@ -228,6 +228,46 @@
   vertical-align: 1px;
 }
 
+.badgeRentedOut {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: #b45309;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+/* One portal ad plus its "mark gone" control. */
+.adLink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.linkGone {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.adToggle {
+  padding: 0 3px;
+  font-size: 10px;
+  line-height: 1.2;
+  background: transparent;
+  color: #9ca3af;
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.adToggle:hover {
+  color: #b45309;
+  background: #fef3c7;
+}
+
 /* Sold rows stay visible but recede so active listings stand out. */
 .sold {
   opacity: 0.5;

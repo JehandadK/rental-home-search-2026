@@ -107,11 +107,27 @@ export interface ListingBuilding {
  */
 export type ListingStatus = "active" | "sold";
 
+/**
+ * What a check of one portal ad found. `gone` needs positive evidence (the
+ * portal's own "no longer available" page); absence from a crawl is not enough.
+ */
+export interface AdAvailability {
+  state: "gone" | "listed";
+  /** When the ad page was looked at (ISO). */
+  checkedAt: string;
+  /** Short human-readable reason, e.g. "HTTP 404 · お探しのページが見つかりません". */
+  evidence: string;
+  /** `probe` = the headed-browser checker; `manual` = marked by hand in the dashboard. */
+  method: "probe" | "manual";
+}
+
 /** One portal advertisement retained when equivalent listings are merged. */
 export interface SourceListingReference {
   source: string;
   id?: string | null;
   url: string | null;
+  /** Latest availability check for this ad; absent when never checked. */
+  availability?: AdAvailability;
 }
 
 /** A rental listing exactly as collected from a listing site. */

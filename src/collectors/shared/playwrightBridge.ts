@@ -17,7 +17,7 @@ import { createRequire } from "node:module";
 
 // playwright-core is resolved at runtime (not a project dependency), so type only what is used.
 interface Page {
-  goto(url: string, options: { waitUntil: "load" | "commit"; timeout: number }): Promise<unknown>;
+  goto(url: string, options: { waitUntil: "load" | "commit"; timeout: number }): Promise<{ status(): number } | null>;
   evaluate(expression: string): Promise<unknown>;
   url(): string;
   close(): Promise<void>;
@@ -104,13 +104,13 @@ export class PlaywrightBridge {
         const page = await this.context.newPage();
         const id = this.nextTabId++;
         this.pages.set(id, page);
-        await page.goto(String(params.url), { waitUntil, timeout });
-        return { tab: { id, url: page.url() } } as T;
+        const response = await page.goto(String(params.url), { waitUntil, timeout });
+        return { tab: { id, url: page.url() }, httpStatus: response?.status() } as T;
       }
       case "navigate": {
         const page = this.page(params);
-        await page.goto(String(params.url), { waitUntil, timeout });
-        return { tab: { id: Number(params.tabId), url: page.url() } } as T;
+        const response = await page.goto(String(params.url), { waitUntil, timeout });
+        return { tab: { id: Number(params.tabId), url: page.url() }, httpStatus: response?.status() } as T;
       }
       case "evaluate": {
         try {

@@ -125,6 +125,22 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
               {mode === "all" ? "all" : mode === "active" ? "active only" : "sold only"}
             </button>
           ))}
+          {(["hide", "show", "only"] as const).map((mode) => (
+            <button
+              key={`rented-${mode}`}
+              className={`${styles.chip} ${filters.rentedOut === mode ? styles.on : ""}`}
+              onClick={() => onUpdate({ rentedOut: mode })}
+              title={
+                mode === "hide"
+                  ? "Hide properties that every portal has taken down (rented out)"
+                  : mode === "show"
+                    ? "Show rented-out properties, marked"
+                    : "Only properties that every portal has taken down"
+              }
+            >
+              {mode === "hide" ? "hide rented out" : mode === "show" ? "show rented out" : "rented out only"}
+            </button>
+          ))}
           <button
             className={`${styles.chip} ${styles.chipNew} ${filters.newOnly ? styles.on : ""}`}
             onClick={() => onUpdate({ newOnly: !filters.newOnly })}

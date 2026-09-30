@@ -29,6 +29,7 @@ export const USER_STATE_KEYS = {
   filters: "soka-scorer-filters-v1",
   placeSelection: "soka-scorer-places-v1",
   marks: "soka-scorer-marks-v1",
+  availabilityMarks: "soka-scorer-availability-v1",
   customListings: "soka-scorer-custom-listings-v1",
   hiddenColumns: "rental-search-hidden-columns-v1",
 } as const;

@@ -4,6 +4,7 @@ import { scoreListing } from "../domain/scoring";
 import { diagnoseAll } from "../domain/diagnostics";
 import { matchesListing } from "../domain/filters";
 import { lifecycleCounts } from "../domain/lifecycle";
+import { withAvailability } from "../domain/availability";
 import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
 import { ProximityIndex } from "../domain/proximityIndex";
@@ -16,6 +17,7 @@ import { useListings } from "./hooks/useListings";
 import { useScoringConfig } from "./hooks/useScoringConfig";
 import { useFilters } from "./hooks/useFilters";
 import { useMarks } from "./hooks/useMarks";
+import { useAvailabilityMarks } from "./hooks/useAvailabilityMarks";
 import { toCsv, toMarkdown } from "./lib/export";
 import type { ScoredRow } from "../domain/scoring";
 import { AddListingForm } from "./components/AddListingForm";
@@ -42,6 +44,7 @@ export function App({ data }: { data: WebData }) {
   const { listings, addListing, removeListing } = useListings(data.listings);
   const { filters, update: updateFilters, reset: resetFilters } = useFilters();
   const { marks, setMark, clearMarks } = useMarks();
+  const { availabilityMarks, markAd } = useAvailabilityMarks();
   const { selection, setPlaces, togglePlace, setTarget, reset: resetPlaces } = usePlaceSelection(catalog);
 
   /**
@@ -64,6 +67,16 @@ export function App({ data }: { data: WebData }) {
   }, [listings, index, selection]);
 
   /**
+   * Overlay the user's hand-made availability marks. Applied after the
+   * proximity work so toggling one ad never rebuilds the distance matrix, and
+   * untouched rows keep their identity.
+   */
+  const available = useMemo(
+    () => Object.keys(availabilityMarks).length ? resolved.map((listing) => withAvailability(listing, availabilityMarks)) : resolved,
+    [resolved, availabilityMarks],
+  );
+
+  /**
    * Apply every score-independent filter before scoring. This avoids doing
    * ten-parameter move-in calculations for hundreds of rows the user has
    * already excluded by city, area, rent, size, status, layout or parking.
@@ -72,14 +85,14 @@ export function App({ data }: { data: WebData }) {
    */
   const candidates = useMemo(
     () =>
-      resolved.filter(
+      available.filter(
         (listing) =>
           matchesListing(listing, filters) &&
           matchesMarkFilter(marks[listingKey(listing)], filters.markFilter),
       ),
     // Marks only affect candidates when the decision filter is active. Without
     // this split, changing one row's mark rescored the entire visible market.
-    [resolved, filters, filters.markFilter === "all" ? null : marks],
+    [available, filters, filters.markFilter === "all" ? null : marks],
   );
 
   const scored: ScoredRow[] = useMemo(
@@ -95,7 +108,7 @@ export function App({ data }: { data: WebData }) {
   );
 
   /** Lifecycle headline numbers: fresh discoveries and sold stock. */
-  const { newCount, soldCount } = useMemo(() => lifecycleCounts(listings), [listings]);
+  const { newCount, soldCount, rentedOutCount } = useMemo(() => lifecycleCounts(available), [available]);
 
   /** Decision-mark headline numbers: candidates shortlisted and homes ruled out. */
   const markSummary = useMemo(
@@ -176,6 +189,7 @@ export function App({ data }: { data: WebData }) {
           {filtered.length} / {listings.length} listings
           {newCount > 0 && ` · ${newCount} new`}
           {soldCount > 0 && ` · ${soldCount} sold`}
+          {rentedOutCount > 0 && ` · ${rentedOutCount} rented out${filters.rentedOut === "hide" ? " (hidden)" : ""}`}
           {markSummary.candidates > 0 && ` · ★${markSummary.candidates} shortlisted`}
           {markSummary.ruledOut > 0 && ` · ✕${markSummary.ruledOut} ruled out`}
         </span>
@@ -240,6 +254,7 @@ export function App({ data }: { data: WebData }) {
             onCenterMap={centerMapOn}
             marks={marks}
             onSetMark={setMark}
+            onMarkAd={markAd}
           />
         </section>
       </main>

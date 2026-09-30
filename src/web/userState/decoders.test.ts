@@ -3,6 +3,7 @@ import { EMPTY_FILTERS } from "../../domain/filters";
 import { DEFAULT_CONFIG, DEFAULT_FEATURE_PREFERENCES, DEFAULT_FEATURE_WEIGHTS } from "../../domain/scoringConfig";
 import type { PlaceSelection } from "../../domain/placeSelection";
 import {
+  decodeAvailabilityMarks,
   decodeCustomListings,
   decodeFilters,
   decodeHiddenColumns,
@@ -88,5 +89,18 @@ describe("user-state decoders", () => {
     expect(decodePlaceSelection({ byParameter: { station: "草加", school: [1], busStop: null } }, DEFAULT_SELECTION))
       .toEqual({ byParameter: { ...DEFAULT_SELECTION.byParameter, busStop: null } });
     expect(decodeHiddenColumns(["rent", "gone", 7], new Set(["rent"]))).toEqual(new Set(["rent"]));
+  });
+});
+
+describe("decodeAvailabilityMarks", () => {
+  const good = { source: "athome", url: "https://www.athome.co.jp/chintai/1/", state: "gone", checkedAt: "2026-09-30T00:00:00.000Z", evidence: "marked gone by hand", method: "manual" };
+
+  it("keeps well-formed hand marks and drops malformed or non-manual entries", () => {
+    expect(decodeAvailabilityMarks({ ok: good, badState: { ...good, state: "maybe" }, probe: { ...good, method: "probe" },
+      noDate: { ...good, checkedAt: "yesterday" }, notObject: "gone" })).toEqual({ ok: good });
+  });
+
+  it("falls back to no marks for anything else", () => {
+    for (const raw of [undefined, null, "x", 3, [good]]) expect(decodeAvailabilityMarks(raw)).toEqual({});
   });
 });
