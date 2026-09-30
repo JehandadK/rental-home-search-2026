@@ -57,6 +57,19 @@ describe("JSON source-store revision safety", () => {
     });
   });
 
+  it("stamps the commit time separately from the capture time, and identical rewrites stay no-ops", async () => {
+    const store = await makeStore();
+    const capturedAt = "2020-01-01T00:00:00.000Z";
+    const first = await store.writeSource(source([listing("1")], capturedAt), { expectedRevision: null });
+    const saved = (await store.readSource("fixture"))!;
+    expect(saved.scrapedAt).toBe(capturedAt);
+    expect(Date.parse(saved.committedAt!)).toBeGreaterThan(Date.parse(capturedAt));
+    const bytes = await readFile(store.sourcePath("fixture"), "utf8");
+    const again = await store.writeSource(source([listing("1")], capturedAt), { expectedRevision: first.revision });
+    expect(again).toMatchObject({ backup: null, revision: first.revision });
+    expect(await readFile(store.sourcePath("fixture"), "utf8")).toBe(bytes);
+  });
+
   it("allows only one concurrent writer with the same expected revision", async () => {
     const store = await makeStore();
     const initial = await store.writeSource(source([listing("1")], "initial"), { expectedRevision: null });

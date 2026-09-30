@@ -130,7 +130,10 @@ export async function runSuumoScrape(args: readonly string[], dependencies: Suum
   }
   const result = await session.commit({ allowShrink: args.includes("--force") });
   dependencies.log(`\nWrote ${result.currentCount} listings (was ${result.previousCount})`);
-  dependencies.log(`Discovered ${result.added} new; refreshed ${result.updated} overlapping; retired ${result.retired} superseded source ad(s); fetched ${pagesFetched} pages.`);
+  // A replay (the commit landed but the refresh ledger did not) reports the journaled
+  // original counts, so parseDiscovered does not record zero.
+  const counts = result.replayed && result.effect ? { ...result.effect, retired: result.retired } : result;
+  dependencies.log(`Discovered ${counts.added} new; refreshed ${counts.updated} overlapping; retired ${counts.retired} superseded source ad(s); fetched ${pagesFetched} pages.${result.replayed ? " (already committed; no source change)" : ""}`);
   dependencies.log("Unseen history was retained; no SOLD decisions were made.");
   dependencies.log("Next: npm run backfill:parking && npm run data:build && npm run enrich");
   return result;

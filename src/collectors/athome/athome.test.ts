@@ -96,6 +96,17 @@ describe("AtHome identity and incremental merge", () => {
     expect(isAthomeOverlap(make(), make({ id: "athome-999", url: "https://www.athome.co.jp/chintai/999/", rent: 70_000 }))).toBe(true);
   });
 
+  it("keeps two same-size rooms of one building that appear in the same batch", () => {
+    const a = make(), b = make({ id: "athome-2", url: "https://www.athome.co.jp/chintai/2/" });
+    expect(mergeAthomeIncremental([], [a, b])).toMatchObject({ added: 2, listings: [{ id: a.id }, { id: b.id }] });
+    // A stored room is claimed by one fresh row only; the sibling is a new room, not its update.
+    const merged = mergeAthomeIncremental([a], [a, b]);
+    expect(merged.listings.map((row) => row.id)).toEqual([a.id, b.id]);
+    expect(merged).toMatchObject({ added: 1, updated: 1 });
+    // The same ad seen twice (same ID) is still one row.
+    expect(mergeAthomeIncremental([], [a, { ...a, rent: 73_000 }]).listings).toHaveLength(1);
+  });
+
   it("retires an old source ID only when the merge proves a superseding alias", () => {
     const old = make();
     const replacement = make({ id: "athome-999", url: "https://www.athome.co.jp/chintai/999/", rent: 70_000 });

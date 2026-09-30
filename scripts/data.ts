@@ -57,7 +57,7 @@ async function status(): Promise<void> {
           (entry.duplicatesDropped ? `   (${entry.duplicatesDropped} dropped as duplicates)` : ""),
       );
     }
-    const stale = sources.filter((s) => new Date(s.scrapedAt) > new Date(manifest.builtAt));
+    const stale = sources.filter((s) => new Date(s.committedAt ?? s.scrapedAt) > new Date(manifest.builtAt));
     if (stale.length > 0) {
       console.log(`\n  ! ${stale.map((s) => s.source).join(", ")} changed since the last build — run \`npm run data:build\``);
     }

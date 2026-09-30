@@ -62,6 +62,11 @@ export interface SourceFile {
   revision?: string;
   /** Compatibility envelope time; tagged historical bootstrap imports are not fresh scrape evidence. */
   scrapedAt: string;
+  /**
+   * When this file's contents last changed on disk. `scrapedAt` is capture time, which
+   * can predate the commit (cached pages committed later); staleness checks use this.
+   */
+  committedAt?: string;
   count: number;
   /**
    * True only when this source file represents a complete market snapshot.
@@ -194,12 +199,15 @@ export class JsonSourceStore {
         bodyRecord.provenance = mergeSourceProvenance(previous?.provenance, file.provenance);
       }
       delete bodyRecord.revision;
-      const body = bodyRecord as unknown as Omit<SourceFile, "revision">;
+      // A commit timestamp never counts as a content change: an identical write stays a no-op.
+      delete bodyRecord.committedAt;
       const previousBody = previous ? { ...previous } as Record<string, unknown> : null;
-      if (previousBody) delete previousBody.revision;
-      if (previousBody && JSON.stringify(body) === JSON.stringify(previousBody)) {
+      if (previousBody) { delete previousBody.revision; delete previousBody.committedAt; }
+      if (previousBody && JSON.stringify(bodyRecord) === JSON.stringify(previousBody)) {
         return { path, previousCount, backup: null, revision: actualRevision! };
       }
+      bodyRecord.committedAt = new Date().toISOString();
+      const body = bodyRecord as unknown as Omit<SourceFile, "revision">;
 
       const backup = await backupFileIn(path, this.backupDir);
       const revision = hashRevision(JSON.stringify(body));

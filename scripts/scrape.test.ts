@@ -61,7 +61,10 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     expect(saved.provenance).toMatchObject({ capturedBy: "scripts/scrape.ts", mode: "incremental newest-first", pagesFetched: 6, fixture: "retained",
       cities: cities.map((city) => `${city.label} (${city.code}, emergency ceiling 5p)`), layoutCodes: layoutCodes.join(",") });
     const bytes = await readFile(store.sourcePath("suumo"), "utf8"), backups = await readdir(store.backupDir);
+    vi.mocked(dependencies.log).mockClear();
     expect(await runSuumoScrape(["--max-pages", "5"], dependencies)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: saved.revision });
+    // The replay logs the journaled original counts, not zeros, and says nothing changed.
+    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 3 overlapping; retired 0 superseded source ad(s); fetched 6 pages. (already committed; no source change)");
     expect(await readFile(store.sourcePath("suumo"), "utf8")).toBe(bytes); expect(await readdir(store.backupDir)).toEqual(backups);
   });
 

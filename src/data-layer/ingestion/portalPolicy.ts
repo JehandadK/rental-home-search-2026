@@ -31,13 +31,20 @@ function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: re
   const match = (row: RawListing) => publicPolicy ? portalDiscoveryKeys(source, row) : keys(source, row);
   const byAlias = new Map<string, RawListing>();
   for (const row of existing) for (const alias of match(row)) if (!byAlias.has(alias)) byAlias.set(alias, row);
-  const seen = new Set<string>(), used = new Set<RawListing>(), listings: RawListing[] = [];
+  // Rooms in one building often share name/address/size, so the shared `property:` alias
+  // cannot make two rows with different source IDs the same ad within one batch.
+  const seen = new Map<string, string | null>(), used = new Set<RawListing>(), listings: RawListing[] = [];
+  const conflicts = (alias: string, id: string | null | undefined) => {
+    if (!seen.has(alias)) return false;
+    const seenId = seen.get(alias);
+    return seenId == null || id == null || seenId === id;
+  };
   let added = 0, updated = 0, overlaps = 0;
   for (const row of fresh) {
     const aliases = match(row);
-    if (aliases.some((alias) => seen.has(alias))) { overlaps++; continue; }
-    const prior = aliases.map((alias) => byAlias.get(alias)).find(Boolean);
-    aliases.forEach((alias) => seen.add(alias));
+    if (aliases.some((alias) => conflicts(alias, row.id))) { overlaps++; continue; }
+    const prior = aliases.map((alias) => byAlias.get(alias)).find((candidate) => candidate && !used.has(candidate));
+    aliases.forEach((alias) => seen.set(alias, row.id ?? null));
     if (!prior) { listings.push(row); added++; continue; }
     used.add(prior); updated++; overlaps++;
     // The same ad (source ID) keeps its stored locator: AtHome list hrefs carry a
@@ -56,8 +63,9 @@ function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: re
     }
   }
   for (const prior of existing) {
+    // Stored rows superseded by a fresh alias are still absorbed (and archived by the caller).
     if (used.has(prior) || match(prior).some((alias) => seen.has(alias))) continue;
-    if (!publicPolicy) match(prior).forEach((alias) => seen.add(alias));
+    if (!publicPolicy) match(prior).forEach((alias) => seen.set(alias, prior.id ?? null));
     listings.push(prior);
   }
   return { listings, added, updated, overlaps };

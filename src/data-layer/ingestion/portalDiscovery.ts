@@ -21,7 +21,7 @@ export class StagedPortalDiscovery implements PortalDiscoverySession {
   readonly bootstrap: boolean;
   readonly deep: boolean;
   private readonly known: Set<string>;
-  private readonly seen = new Set<string>();
+  private readonly seen = new Map<string, string | null>();
   private readonly pages: ScrapeBatch[] = [];
   private readonly cities = new Map<string, { pages: number; known: number; done: boolean }>();
   private closed = false;
@@ -50,8 +50,10 @@ export class StagedPortalDiscovery implements PortalDiscoverySession {
       let novel = 0, overlap = 0, duplicate = 0;
       for (const observation of batch.observations) {
         const keys = this.policy.keys(observation.listing);
-        if (keys.some((key) => this.seen.has(key))) { duplicate++; continue; }
-        keys.forEach((key) => this.seen.add(key));
+        // Same as the commit merge: distinct source IDs are distinct ads even when they share a property alias.
+        const id = observation.listing.id ?? null;
+        if (keys.some((key) => this.seen.has(key) && (this.seen.get(key) == null || id === null || this.seen.get(key) === id))) { duplicate++; continue; }
+        keys.forEach((key) => this.seen.set(key, id));
         if (keys.some((key) => this.known.has(key))) overlap++; else novel++;
       }
       state.pages++;
