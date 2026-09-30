@@ -1,9 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { ProximityIndex } from "./proximityIndex";
 import { applySelection, defaultSelection, describeSelection } from "./placeSelection";
-import { BUNDLED_REFERENCE } from "../web/data/bundledClient";
+import { loadCurrentReferenceModel } from "../storage/json/currentReference.contract";
+import type { PlaceCatalog } from "./places";
+import type { PlaceSelection } from "./placeSelection";
 
-const PLACE_CATALOG = BUNDLED_REFERENCE.catalog;
+// The checked-in reference catalog, as the app loads it.
+let PLACE_CATALOG: PlaceCatalog;
+let DEFAULT_SELECTION: PlaceSelection;
+beforeAll(async () => {
+  PLACE_CATALOG = (await loadCurrentReferenceModel()).catalog;
+  DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);
+});
 import { haversineM } from "./geo";
 import type { EnrichedListing } from "./types";
 
@@ -22,14 +30,14 @@ const listing = (lat: number, lon: number): EnrichedListing => ({
   lon,
 });
 
-const DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);
 const placesInCategory = (category: string) => PLACE_CATALOG.inCategory(category);
 
 // Near Soka station.
 const SOKA = listing(35.8282, 139.8033);
 
 describe("ProximityIndex", () => {
-  const index = new ProximityIndex([SOKA], PLACE_CATALOG);
+  let index: ProximityIndex;
+  beforeAll(() => { index = new ProximityIndex([SOKA], PLACE_CATALOG); });
 
   it("measures the distance to a specific place", () => {
     const station = placesInCategory("station").find((p) => p.name === "草加")!;
@@ -63,7 +71,8 @@ describe("ProximityIndex", () => {
 });
 
 describe("applySelection", () => {
-  const index = new ProximityIndex([SOKA], PLACE_CATALOG);
+  let index: ProximityIndex;
+  beforeAll(() => { index = new ProximityIndex([SOKA], PLACE_CATALOG); });
 
   it("resolves every distance parameter with the default selection", () => {
     const out = applySelection(SOKA, 0, index, DEFAULT_SELECTION);

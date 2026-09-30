@@ -1,5 +1,16 @@
-/** Root of the persisted data files. The only place that knows where they live. */
+/** Where the persisted data files live. The only place that knows. */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "data");
+/** Repository root. */
+export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+/** Root of the persisted data files. */
+export const DATA_DIR = join(REPO_ROOT, "src", "data");
+
+/**
+ * Derived files the web app fetches at runtime (`npm run data:web`). Vite
+ * serves `public/` in dev and copies it into `dist/`, so only files meant
+ * for the browser belong here — never sources, captures, or backups.
+ */
+export const WEB_PUBLISH_DIR = join(REPO_ROOT, "public", "data");

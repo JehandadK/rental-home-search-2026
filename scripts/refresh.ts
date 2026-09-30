@@ -16,6 +16,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { DATA_DIR, MANIFEST_PATH, type BuildManifest } from "../src/storage/json/dataStore";
+import { REPO_ROOT } from "../src/node/dataPaths";
 import {
   acquireRefreshLock,
   latestResumableRun,
@@ -30,7 +31,7 @@ import type { EnrichedListing } from "../src/domain/types";
 import { NETWORK_STAGES, planRefresh } from "../src/refresh/refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
-const ROOT = join(DATA_DIR, "..", "..");
+const ROOT = REPO_ROOT;
 const argv = process.argv.slice(2);
 const requestedDeep = argv.includes("--deep");
 const requestedSkipNifty = argv.includes("--skip-nifty");

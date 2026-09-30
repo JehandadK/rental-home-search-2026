@@ -1,5 +1,9 @@
 /**
- * Produce the compact listing payload consumed by the browser.
+ * Publish the data the browser fetches (public/data/, served by Vite):
+ *
+ *   listings.json   the compact listing payload
+ *   reference.json  the managed reference catalog snapshot (cities,
+ *                   boundaries, places), exported through the repository
  *
  * `listings.json` remains the complete archival/enrichment artifact for CLI
  * analysis. The dashboard recomputes all proximity fields through
@@ -9,14 +13,18 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWriteJson, DATA_DIR } from "../src/storage/json/dataStore";
+import { atomicWriteJson, DATA_DIR, REFERENCE_CATALOG_DIR } from "../src/storage/json/dataStore";
+import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
+import { WEB_PUBLISH_DIR } from "../src/node/dataPaths";
+import { mkdir } from "node:fs/promises";
 import type { EnrichedListing } from "../src/domain/types";
 import { normalizeListingAttributes } from "../src/domain/listingAttributes";
 import { deduplicateListings } from "../src/domain/listingDedup";
 import { packListings } from "../src/domain/webPayload";
 
 const INPUT = join(DATA_DIR, "listings.json");
-const OUTPUT = join(DATA_DIR, "listings_web.json");
+const OUTPUT = join(WEB_PUBLISH_DIR, "listings.json");
+const REFERENCE_OUTPUT = join(WEB_PUBLISH_DIR, "reference.json");
 
 const listings = JSON.parse(await readFile(INPUT, "utf8")) as EnrichedListing[];
 // Keep the browser payload clean even when listings.json came from an older
@@ -51,10 +59,17 @@ const compact = uniqueListings.map((listing) => {
 });
 
 const payload = packListings(compact);
+const reference = await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot();
+await mkdir(WEB_PUBLISH_DIR, { recursive: true });
 await atomicWriteJson(OUTPUT, payload);
+await atomicWriteJson(REFERENCE_OUTPUT, reference);
 const before = Buffer.byteLength(JSON.stringify(listings));
 const after = Buffer.byteLength(JSON.stringify(payload));
 console.log(
   `Wrote ${OUTPUT}: ${compact.length} listings (${listings.length - uniqueListings.length} duplicates merged), ` +
     `${(after / 1024).toFixed(0)} KiB (${Math.round((1 - after / before) * 100)}% smaller than listings.json)`,
+);
+console.log(
+  `Wrote ${REFERENCE_OUTPUT}: reference catalog ${reference.revision.slice(0, 12)} ` +
+    `(${reference.cities.records.length} cities, ${reference.boundaries.records.length} boundaries, ${reference.places.records.length} places)`,
 );

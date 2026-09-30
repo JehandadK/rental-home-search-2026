@@ -29,6 +29,8 @@ const TARGET_DIRS: [prefix: string, layer: Layer][] = [
   ["src/integrations/", "integrations"],
   ["src/data/", "persisted-data"],
   ["data/", "persisted-data"],
+  // Published copies the web app fetches at runtime; never bundled.
+  ["public/", "persisted-data"],
 ];
 
 /** Tests and shared test harnesses (`*.contract.ts`): exempt as importers, never imported by production code. */
@@ -104,7 +106,7 @@ export function violation(edge: ImportEdge): string | null {
   const toLayer = classify(edge.to);
   if (toLayer === "test") return `${fromLayer} imports a test file`;
   if (toLayer === "cli") return "nothing but tests may import a CLI entry point";
-  if (toLayer === "persisted-data") return "persisted data is read through storage, not imported";
+  if (toLayer === "persisted-data") return "persisted data is read through storage or fetched, not imported";
   if (fromLayer === "cli") return null;
   if (fromLayer === "persisted-data") return null;
 

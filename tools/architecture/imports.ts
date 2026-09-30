@@ -8,7 +8,7 @@ const SCANNED_ROOTS = ["src", "scripts"];
 const SKIPPED_DIRS = ["src/data"];
 const RESOLVE_SUFFIXES = ["", ".ts", ".tsx", ".d.ts", "/index.ts", "/index.tsx"];
 /** Repo directories: a bare specifier starting with one is an unsupported path alias, not a package. */
-const REPO_DIRS = ["src", "scripts", "tools", "data"];
+const REPO_DIRS = ["src", "scripts", "tools", "data", "public"];
 
 function toRepoPath(root: string, absolute: string): string {
   return relative(root, absolute).split(sep).join("/");
