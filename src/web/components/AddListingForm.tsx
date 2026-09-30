@@ -5,6 +5,7 @@
  */
 import { useState, type FormEvent } from "react";
 import { enrichListing } from "../../domain/enrichListing";
+import { PLACE_CATALOG } from "../../domain/reference";
 import { geocodeAddress } from "../../integrations/geocode";
 import type { EnrichedListing, RawListing } from "../../domain/types";
 import styles from "./AddListingForm.module.css";
@@ -59,7 +60,7 @@ export function AddListingForm({ onAdd }: Props) {
         setStatus({ kind: "error", message: "Address not found — try lat/lon instead." });
         return;
       }
-      onAdd(enrichListing(raw, coords, coords.matched));
+      onAdd(enrichListing(raw, coords, coords.matched, PLACE_CATALOG));
       form.reset();
       setStatus({ kind: "ok", message: `Added ✓ (${coords.matched})` });
     } catch {

@@ -5,26 +5,143 @@
  * This is what makes the dashboard's "which places matter?" controls
  * possible — nothing is baked into the listing data, so any subset can be
  * selected at runtime without re-running the enrichment pipeline.
+ *
+ * The catalog is built from whatever reference places were loaded; the number
+ * of places, and which categories exist, are data rather than constants.
  */
 import type { GeoPoint, NamedPlace, ScoreParameterKey } from "./types";
-import {
-  BUS_STOPS,
-  CHILDCARE_FACILITIES,
-  ELEMENTARY_SCHOOLS,
-  MOSQUES,
-  POINTS_OF_INTEREST,
-  STATIONS,
-} from "./reference";
 
-/** Which kind of place this is; drives grouping in the UI. */
-export type PlaceCategory = "poi" | "mosque" | "station" | "school" | "childcare" | "busStop";
+/** Which kind of place this is; drives grouping in the UI. Categories are data. */
+export type PlaceCategory = string;
+
+/** Categories the scoring parameters and UI know how to use. */
+export type KnownPlaceCategory = "poi" | "mosque" | "station" | "school" | "childcare" | "busStop";
+
+type PlaceAttributes = Readonly<Record<string, string | number | boolean | null>>;
+
+/**
+ * One reference place as loaded from a reference snapshot. Structurally
+ * compatible with the data layer's `ReferencePlaceRecord`, so a snapshot's
+ * records can be passed in directly.
+ */
+export interface ReferencePlace extends NamedPlace {
+  id: string;
+  category: string;
+  subtitle?: string;
+  attributes?: PlaceAttributes;
+  status?: "active" | "retired";
+}
 
 export interface CatalogPlace extends NamedPlace {
-  /** Stable, unique across the whole catalog: `${category}:${name}`. */
+  /**
+   * Stable, unique across the whole catalog: `${category}:${name}`, with `#n`
+   * for repeated names. Saved place selections store these ids.
+   */
   id: string;
   category: PlaceCategory;
   /** Extra qualifier shown in the UI (operator, facility type…). */
   subtitle?: string;
+  /** Scoring role carried by the record (for example the `poi1` target). */
+  role?: string;
+  attributes?: PlaceAttributes;
+}
+
+/** An immutable, indexed catalog built from one reference snapshot. */
+export interface PlaceCatalog {
+  readonly places: readonly CatalogPlace[];
+  readonly byId: ReadonlyMap<string, CatalogPlace>;
+  /** Categories present, in catalog order. */
+  readonly categories: readonly PlaceCategory[];
+  inCategory(category: PlaceCategory): readonly CatalogPlace[];
+  /** The first place carrying a scoring role, if any. */
+  withRole(role: string): CatalogPlace | undefined;
+}
+
+/**
+ * Record attributes that pin the app-facing identity and order. Saved
+ * selections predate the managed catalog, so records migrated from the old
+ * files carry the id and position the app derived from them.
+ */
+export const APP_PLACE_ID_ATTRIBUTE = "appPlaceId";
+export const APP_ORDER_ATTRIBUTE = "appOrder";
+const ROLE_ATTRIBUTE = "legacyRole";
+
+const EMPTY: readonly CatalogPlace[] = [];
+
+/**
+ * Build the catalog from reference places. Retired places are skipped.
+ * Places with an explicit app order come first, in that order; the rest keep
+ * their input order. Places without a pinned id get `${category}:${name}`,
+ * suffixed with `#n` when that id is already taken.
+ */
+export function buildPlaceCatalog(input: readonly ReferencePlace[]): PlaceCatalog {
+  const active = input
+    .map((place, position) => ({ place, position, order: numberAttribute(place, APP_ORDER_ATTRIBUTE) }))
+    .filter(({ place }) => place.status !== "retired")
+    .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.position - b.position)
+    .map(({ place }) => place);
+
+  const used = new Set<string>();
+  for (const place of active) {
+    const pinned = stringAttribute(place, APP_PLACE_ID_ATTRIBUTE);
+    if (pinned == null) continue;
+    if (used.has(pinned)) throw new Error(`Duplicate app place id: ${pinned}`);
+    used.add(pinned);
+  }
+  const suffixes = new Map<string, number>();
+  const places = active.map((place): CatalogPlace => {
+    let id = stringAttribute(place, APP_PLACE_ID_ATTRIBUTE);
+    if (id == null) {
+      const base = `${place.category}:${place.name}`;
+      let seen = suffixes.get(base) ?? 0;
+      id = seen === 0 ? base : `${base}#${seen}`;
+      while (used.has(id)) id = `${base}#${++seen}`;
+      suffixes.set(base, seen + 1);
+      used.add(id);
+    }
+    const role = stringAttribute(place, ROLE_ATTRIBUTE);
+    return {
+      id,
+      name: place.name,
+      lat: place.lat,
+      lon: place.lon,
+      category: place.category,
+      ...(place.subtitle ? { subtitle: place.subtitle } : {}),
+      ...(role ? { role } : {}),
+      ...(place.attributes ? { attributes: place.attributes } : {}),
+    };
+  });
+
+  const byId = new Map(places.map((place) => [place.id, place]));
+  const byCategory = new Map<PlaceCategory, CatalogPlace[]>();
+  for (const place of places) {
+    const list = byCategory.get(place.category) ?? [];
+    list.push(place);
+    byCategory.set(place.category, list);
+  }
+  return {
+    places,
+    byId,
+    categories: [...byCategory.keys()],
+    inCategory: (category) => byCategory.get(category) ?? EMPTY,
+    withRole: (role) => places.find((place) => place.role === role),
+  };
+}
+
+function stringAttribute(place: ReferencePlace, key: string): string | undefined {
+  const value = place.attributes?.[key];
+  return typeof value === "string" && value !== "" ? value : undefined;
+}
+
+function numberAttribute(place: ReferencePlace, key: string): number | undefined {
+  const value = place.attributes?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+/** Childcare facilities that are 幼稚園/認定こども園, not daycares (保育園). */
+export function isKindergarten(place: CatalogPlace): boolean {
+  const type = place.attributes?.facilityType ?? place.subtitle;
+  return type !== "hoikuen";
 }
 
 /** Score parameters that resolve to "distance to a place". */
@@ -39,67 +156,8 @@ export const DISTANCE_PARAMETERS = [
 
 export type DistanceParameterKey = (typeof DISTANCE_PARAMETERS)[number];
 
-/** Deduplicate ids when two places share a name within a category. */
-function withUniqueIds(places: Omit<CatalogPlace, "id">[]): CatalogPlace[] {
-  const used = new Map<string, number>();
-  return places.map((p) => {
-    const base = `${p.category}:${p.name}`;
-    const seen = used.get(base) ?? 0;
-    used.set(base, seen + 1);
-    return { ...p, id: seen === 0 ? base : `${base}#${seen}` };
-  });
-}
-
-export const PLACE_CATALOG: CatalogPlace[] = withUniqueIds([
-  ...POINTS_OF_INTEREST.map((p) => ({
-    name: p.name,
-    lat: p.lat,
-    lon: p.lon,
-    category: "poi" as const,
-    subtitle: p.address,
-  })),
-  ...MOSQUES.map((m) => ({
-    name: m.name,
-    lat: m.lat,
-    lon: m.lon,
-    category: "mosque" as const,
-    subtitle: m.address,
-  })),
-  ...STATIONS.map((s) => ({
-    name: s.name,
-    lat: s.lat,
-    lon: s.lon,
-    category: "station" as const,
-    subtitle: s.operator ?? undefined,
-  })),
-  ...ELEMENTARY_SCHOOLS.map((s) => ({
-    name: s.name,
-    lat: s.lat,
-    lon: s.lon,
-    category: "school" as const,
-  })),
-  ...CHILDCARE_FACILITIES.map((c) => ({
-    name: c.name,
-    lat: c.lat,
-    lon: c.lon,
-    category: "childcare" as const,
-    subtitle: c.type,
-  })),
-  ...BUS_STOPS.map((b) => ({
-    name: b.name,
-    lat: b.lat,
-    lon: b.lon,
-    category: "busStop" as const,
-  })),
-]);
-
-export const PLACES_BY_ID = new Map(PLACE_CATALOG.map((p) => [p.id, p]));
-
-export const placesInCategory = (category: PlaceCategory): CatalogPlace[] =>
-  PLACE_CATALOG.filter((p) => p.category === category);
-
 /** Human labels for the category headings. */
-export const CATEGORY_LABELS: Record<PlaceCategory, string> = {
+export const CATEGORY_LABELS: Record<KnownPlaceCategory, string> = {
   poi: "Points of interest",
   mosque: "Mosques / Masjids / Musallas",
   station: "Stations",
@@ -108,13 +166,17 @@ export const CATEGORY_LABELS: Record<PlaceCategory, string> = {
   busStop: "Bus stops",
 };
 
+/** Label for any category, including ones added to the data later. */
+export const categoryLabel = (category: PlaceCategory): string =>
+  (CATEGORY_LABELS as Record<string, string>)[category] ?? category;
+
 /**
  * Which catalog category each distance parameter draws candidates from,
  * and whether the user picks one specific place ("target") or the nearest
  * of a selected set ("nearest").
  */
 export interface ParameterSource {
-  category: PlaceCategory;
+  category: KnownPlaceCategory;
   mode: "target" | "nearest";
 }
 

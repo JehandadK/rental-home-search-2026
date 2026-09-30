@@ -2,6 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { enrichListing } from "../src/domain/enrichListing";
+import { PLACE_CATALOG } from "../src/domain/reference";
 import { geocodeAddress } from "../src/integrations/geocode";
 import { DATA_DIR, atomicWriteJson } from "../src/storage/json/dataStore";
 import { withFileLock } from "../src/node/jsonFile";
@@ -38,7 +39,7 @@ async function main(): Promise<void> {
       }
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
-    enriched.push(entry?.value ? enrichListing(listing, entry.value, entry.value.matched) : { ...listing, geocoded: false });
+    enriched.push(entry?.value ? enrichListing(listing, entry.value, entry.value.matched, PLACE_CATALOG) : { ...listing, geocoded: false });
   }
   await atomicWriteJson(CACHE, cache);
   await atomicWriteJson(OUT, enriched);

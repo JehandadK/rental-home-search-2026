@@ -3,10 +3,12 @@
  * stations/schools survives reloads.
  */
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_SELECTION, type PlaceSelection } from "../../domain/placeSelection";
+import { defaultSelection, type PlaceSelection } from "../../domain/placeSelection";
+import { PLACE_CATALOG } from "../../domain/reference";
 import type { DistanceParameterKey } from "../../domain/places";
 
 const STORAGE_KEY = "soka-scorer-places-v1";
+const DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);
 
 function loadSelection(): PlaceSelection {
   try {

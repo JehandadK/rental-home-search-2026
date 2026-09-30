@@ -10,14 +10,17 @@
  *
  * Cost for the current dataset (536 listings × 1,182 places ≈ 634k pairs):
  * ~10 ms to build, ~0.7 ms to re-reduce after a selection change.
+ *
+ * The index measures whatever catalog it is given, so adding places or
+ * categories to the reference data needs no code change here.
  */
 import type { EnrichedListing, Proximity } from "./types";
 import { haversineM } from "./geo";
-import { PLACE_CATALOG, type CatalogPlace, type PlaceCategory } from "./places";
+import type { CatalogPlace, PlaceCatalog, PlaceCategory } from "./places";
 
 /** Distances (metres) from every listing to every place in one category. */
 interface CategoryBlock {
-  places: CatalogPlace[];
+  places: readonly CatalogPlace[];
   /** Row-major listings × places, Float32 to keep it compact. */
   distances: Float32Array;
 }
@@ -27,15 +30,12 @@ export class ProximityIndex {
   /** placeId → where to find its column, so lookups stay O(1). */
   private readonly locate = new Map<string, { category: PlaceCategory; column: number }>();
 
-  constructor(private readonly listings: readonly EnrichedListing[]) {
-    const byCategory = new Map<PlaceCategory, CatalogPlace[]>();
-    for (const place of PLACE_CATALOG) {
-      const list = byCategory.get(place.category) ?? [];
-      list.push(place);
-      byCategory.set(place.category, list);
-    }
-
-    for (const [category, places] of byCategory) {
+  constructor(
+    private readonly listings: readonly EnrichedListing[],
+    catalog: PlaceCatalog,
+  ) {
+    for (const category of catalog.categories) {
+      const places = catalog.inCategory(category);
       const distances = new Float32Array(listings.length * places.length);
       for (let i = 0; i < listings.length; i++) {
         const listing = listings[i];

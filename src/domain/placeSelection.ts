@@ -7,12 +7,7 @@
  * attend, only 幼稚園 rather than every daycare, and so on.
  */
 import type { EnrichedListing } from "./types";
-import {
-  PARAMETER_SOURCES,
-  PLACES_BY_ID,
-  placesInCategory,
-  type DistanceParameterKey,
-} from "./places";
+import { PARAMETER_SOURCES, type DistanceParameterKey, type PlaceCatalog } from "./places";
 import type { ProximityIndex } from "./proximityIndex";
 
 export interface PlaceSelection {
@@ -23,19 +18,23 @@ export interface PlaceSelection {
   byParameter: Record<DistanceParameterKey, string[] | null>;
 }
 
-/** Default Al Sanad target; mosque defaults to nearest of every mosque. */
-const DEFAULT_POI_TARGETS = placesInCategory("poi").map((p) => p.id);
-
-export const DEFAULT_SELECTION: PlaceSelection = {
-  byParameter: {
-    poi1: DEFAULT_POI_TARGETS[0] ? [DEFAULT_POI_TARGETS[0]] : null,
-    poi2: null,
-    station: null,
-    busStop: null,
-    kindergarten: null,
-    school: null,
-  },
-};
+/**
+ * Default selection: the first POI (Al Sanad) as the target; everything else,
+ * including the mosque, is the nearest of every place in its category.
+ */
+export function defaultSelection(catalog: PlaceCatalog): PlaceSelection {
+  const firstPoi = catalog.inCategory(PARAMETER_SOURCES.poi1.category)[0];
+  return {
+    byParameter: {
+      poi1: firstPoi ? [firstPoi.id] : null,
+      poi2: null,
+      station: null,
+      busStop: null,
+      kindergarten: null,
+      school: null,
+    },
+  };
+}
 
 /** Ids selected for a parameter, as a lookup set (null = unrestricted). */
 function allowedSet(selection: PlaceSelection, key: DistanceParameterKey): Set<string> | null {
@@ -123,6 +122,7 @@ function assign(
 export function describeSelection(
   selection: PlaceSelection,
   key: DistanceParameterKey,
+  catalog: PlaceCatalog,
 ): string {
   const ids = selection.byParameter[key];
   const source = PARAMETER_SOURCES[key];
@@ -130,8 +130,8 @@ export function describeSelection(
     return source.mode === "target" ? "none chosen" : "nearest of all";
   }
   if (source.mode === "target") {
-    return PLACES_BY_ID.get(ids[0])?.name ?? "unknown";
+    return catalog.byId.get(ids[0])?.name ?? "unknown";
   }
-  if (ids.length === 1) return `only ${PLACES_BY_ID.get(ids[0])?.name ?? "1 place"}`;
+  if (ids.length === 1) return `only ${catalog.byId.get(ids[0])?.name ?? "1 place"}`;
   return `nearest of ${ids.length} chosen`;
 }

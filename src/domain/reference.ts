@@ -24,6 +24,7 @@ import neighborBoundariesJson from "../data/neighbor_boundaries.json";
 import listingsJson from "../data/listings_web.json";
 import mosquesJson from "../data/mosques.json";
 import { unpackListings, type WebPayload } from "./webPayload";
+import { buildPlaceCatalog, type PlaceCatalog, type ReferencePlace } from "./places";
 
 /** The two points of interest: Al Sanad School and Baitul Aman Masjid. */
 export const POINTS_OF_INTEREST = poisJson as PointOfInterest[];
@@ -60,3 +61,31 @@ export const NEIGHBOR_BOUNDARIES = neighborBoundariesJson as CityBoundary[];
 
 /** Scraped + enriched listings; compacted by `npm run data:web`. */
 export const BASE_LISTINGS = unpackListings(listingsJson as unknown as WebPayload | EnrichedListing[]);
+
+/**
+ * The bundled files as reference places, in the order the app has always
+ * listed them. `legacyRole` marks the POI scoring targets, as in the managed
+ * catalog; there is no pinned id, so ids derive from this order.
+ */
+const REFERENCE_PLACES: ReferencePlace[] = [
+  ...POINTS_OF_INTEREST.map((p) => ({
+    id: p.id, category: "poi", name: p.name, lat: p.lat, lon: p.lon,
+    subtitle: p.address, attributes: { legacyRole: p.id },
+  })),
+  ...MOSQUES.map((m, i) => ({
+    id: `mosque:${i}`, category: "mosque", name: m.name, lat: m.lat, lon: m.lon, subtitle: m.address,
+  })),
+  ...STATIONS.map((s, i) => ({
+    id: `station:${i}`, category: "station", name: s.name, lat: s.lat, lon: s.lon,
+    subtitle: s.operator ?? undefined,
+  })),
+  ...ELEMENTARY_SCHOOLS.map((s, i) => ({ id: `school:${i}`, category: "school", name: s.name, lat: s.lat, lon: s.lon })),
+  ...CHILDCARE_FACILITIES.map((c, i) => ({
+    id: `childcare:${i}`, category: "childcare", name: c.name, lat: c.lat, lon: c.lon,
+    subtitle: c.type, attributes: { facilityType: c.type },
+  })),
+  ...BUS_STOPS.map((b, i) => ({ id: `busStop:${i}`, category: "busStop", name: b.name, lat: b.lat, lon: b.lon })),
+];
+
+/** Place catalog over the bundled files. */
+export const PLACE_CATALOG: PlaceCatalog = buildPlaceCatalog(REFERENCE_PLACES);

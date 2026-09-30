@@ -9,29 +9,27 @@
  * They are kept because they make `listings.json` self-describing (useful
  * for the CLI ranker, exports and eyeballing the data) and they are the
  * fallback for any consumer that does not build an index.
+ *
+ * The baked `poi1`/`poi2` fields follow the places carrying those scoring
+ * roles; any number of other POIs can exist in the catalog.
  */
 import type { EnrichedListing, GeoPoint, RawListing } from "./types";
-import { toProximity } from "./geo";
-import {
-  BUS_STOPS,
-  CHILDCARE_FACILITIES,
-  ELEMENTARY_SCHOOLS,
-  KINDERGARTENS_ONLY,
-  POINTS_OF_INTEREST,
-  STATIONS,
-} from "./reference";
-import { nearestPlace } from "./geo";
+import { nearestPlace, toProximity } from "./geo";
+import { isKindergarten, type CatalogPlace, type PlaceCatalog } from "./places";
 
 /** Default walking-time estimation knobs, mirroring DEFAULT_CONFIG. */
 const WALK_SPEED_M_PER_MIN = 80;
 const DETOUR_FACTOR = 1.3;
 
-export function enrichListing(raw: RawListing, coords: GeoPoint, matched?: string): EnrichedListing {
-  const proximityTo = (places: Parameters<typeof nearestPlace>[1]) => {
-    const nearest = nearestPlace(coords, places);
-    if (!nearest) return undefined;
-    return toProximity(coords, nearest.place, WALK_SPEED_M_PER_MIN, DETOUR_FACTOR);
-  };
+export function enrichListing(
+  raw: RawListing,
+  coords: GeoPoint,
+  matched: string | undefined,
+  catalog: PlaceCatalog,
+): EnrichedListing {
+  const toPlace = (place: CatalogPlace | undefined) =>
+    place ? toProximity(coords, place, WALK_SPEED_M_PER_MIN, DETOUR_FACTOR) : undefined;
+  const proximityTo = (places: readonly CatalogPlace[]) => toPlace(nearestPlace(coords, places)?.place);
 
   return {
     ...raw,
@@ -39,12 +37,12 @@ export function enrichListing(raw: RawListing, coords: GeoPoint, matched?: strin
     lat: coords.lat,
     lon: coords.lon,
     geocodeMatched: matched,
-    poi1: toProximity(coords, POINTS_OF_INTEREST[0], WALK_SPEED_M_PER_MIN, DETOUR_FACTOR),
-    poi2: toProximity(coords, POINTS_OF_INTEREST[1], WALK_SPEED_M_PER_MIN, DETOUR_FACTOR),
-    station: proximityTo(STATIONS),
-    busStop: proximityTo(BUS_STOPS),
-    school: proximityTo(ELEMENTARY_SCHOOLS),
-    kindergarten: proximityTo(KINDERGARTENS_ONLY),
-    childcareAny: proximityTo(CHILDCARE_FACILITIES),
+    poi1: toPlace(catalog.withRole("poi1")),
+    poi2: toPlace(catalog.withRole("poi2")),
+    station: proximityTo(catalog.inCategory("station")),
+    busStop: proximityTo(catalog.inCategory("busStop")),
+    school: proximityTo(catalog.inCategory("school")),
+    kindergarten: proximityTo(catalog.inCategory("childcare").filter(isKindergarten)),
+    childcareAny: proximityTo(catalog.inCategory("childcare")),
   };
 }

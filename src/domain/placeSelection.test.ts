@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ProximityIndex } from "./proximityIndex";
-import { applySelection, DEFAULT_SELECTION, describeSelection } from "./placeSelection";
-import { PLACE_CATALOG, placesInCategory } from "./places";
+import { applySelection, defaultSelection, describeSelection } from "./placeSelection";
+import { PLACE_CATALOG } from "./reference";
 import { haversineM } from "./geo";
 import type { EnrichedListing } from "./types";
 
@@ -20,11 +20,14 @@ const listing = (lat: number, lon: number): EnrichedListing => ({
   lon,
 });
 
+const DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);
+const placesInCategory = (category: string) => PLACE_CATALOG.inCategory(category);
+
 // Near Soka station.
 const SOKA = listing(35.8282, 139.8033);
 
 describe("ProximityIndex", () => {
-  const index = new ProximityIndex([SOKA]);
+  const index = new ProximityIndex([SOKA], PLACE_CATALOG);
 
   it("measures the distance to a specific place", () => {
     const station = placesInCategory("station").find((p) => p.name === "草加")!;
@@ -52,13 +55,13 @@ describe("ProximityIndex", () => {
 
   it("skips listings without coordinates", () => {
     const noCoords = { ...SOKA, lat: undefined, lon: undefined };
-    const idx = new ProximityIndex([noCoords]);
+    const idx = new ProximityIndex([noCoords], PLACE_CATALOG);
     expect(idx.nearestIn(0, "station", null)).toBeNull();
   });
 });
 
 describe("applySelection", () => {
-  const index = new ProximityIndex([SOKA]);
+  const index = new ProximityIndex([SOKA], PLACE_CATALOG);
 
   it("resolves every distance parameter with the default selection", () => {
     const out = applySelection(SOKA, 0, index, DEFAULT_SELECTION);
@@ -119,12 +122,13 @@ describe("applySelection", () => {
 
 describe("describeSelection", () => {
   it("summarises the current choice", () => {
-    expect(describeSelection(DEFAULT_SELECTION, "station")).toBe("nearest of all");
+    expect(describeSelection(DEFAULT_SELECTION, "station", PLACE_CATALOG)).toBe("nearest of all");
     const one = placesInCategory("station")[0];
     expect(
       describeSelection(
         { byParameter: { ...DEFAULT_SELECTION.byParameter, station: [one.id] } },
         "station",
+        PLACE_CATALOG,
       ),
     ).toContain(one.name);
   });
@@ -132,7 +136,7 @@ describe("describeSelection", () => {
 
 describe("place catalog", () => {
   it("gives every place a unique id", () => {
-    const ids = new Set(PLACE_CATALOG.map((p) => p.id));
-    expect(ids.size).toBe(PLACE_CATALOG.length);
+    const ids = new Set(PLACE_CATALOG.places.map((p) => p.id));
+    expect(ids.size).toBe(PLACE_CATALOG.places.length);
   });
 });

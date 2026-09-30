@@ -9,12 +9,12 @@
 import { useMemo, useState } from "react";
 import { SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import {
-  CATEGORY_LABELS,
+  categoryLabel,
   DISTANCE_PARAMETERS,
   PARAMETER_SOURCES,
-  placesInCategory,
   type DistanceParameterKey,
 } from "../../domain/places";
+import { PLACE_CATALOG } from "../../domain/reference";
 import { describeSelection, type PlaceSelection } from "../../domain/placeSelection";
 import styles from "./PlacePanel.module.css";
 import appStyles from "../App.module.css";
@@ -70,7 +70,7 @@ function ParameterPlaces({
   defaultOpen: boolean;
 } & Omit<Props, "onReset">) {
   const source = PARAMETER_SOURCES[paramKey];
-  const places = useMemo(() => placesInCategory(source.category), [source.category]);
+  const places = useMemo(() => PLACE_CATALOG.inCategory(source.category), [source.category]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(defaultOpen);
   const chosen = selection.byParameter[paramKey];
@@ -87,15 +87,15 @@ function ParameterPlaces({
     <details className={styles.group} open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>
         <span className={styles.name}>{labelFor(paramKey)}</span>
-        <span className={styles.summary}>{describeSelection(selection, paramKey)}</span>
+        <span className={styles.summary}>{describeSelection(selection, paramKey, PLACE_CATALOG)}</span>
       </summary>
 
       <div className={styles.body}>
         <div className={styles.actions}>
           <span className={styles.hint}>
             {isTarget
-              ? `Measure distance to one ${CATEGORY_LABELS[source.category].toLowerCase()}`
-              : `Nearest of the selected ${CATEGORY_LABELS[source.category].toLowerCase()}`}
+              ? `Measure distance to one ${categoryLabel(source.category).toLowerCase()}`
+              : `Nearest of the selected ${categoryLabel(source.category).toLowerCase()}`}
           </span>
           {!isTarget && (
             <span className={styles.bulk}>
