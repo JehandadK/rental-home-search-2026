@@ -38,7 +38,7 @@ export const KNOWN_VIOLATIONS: KnownViolation[] = [
   { from: "src/collectors/enrichment/suumoDetailIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
   { from: "src/collectors/shared/portalCollector.ts", to: "src/data-layer/ingestion/portalDiscovery.ts", until: "M4", fix: "Publish portalPageUrl with the portal discovery contract" },
   // Collector → refresh
-  { from: "src/collectors/shared/portalCollector.ts", to: "scripts/lib/refreshPlan.ts", until: "M4", fix: "Collectors own DEFAULT_INCREMENTAL_PAGE_CEILING; refresh passes overrides" },
+  { from: "src/collectors/shared/portalCollector.ts", to: "src/refresh/refreshPlan.ts", until: "M4", fix: "Collectors own DEFAULT_INCREMENTAL_PAGE_CEILING; refresh passes overrides" },
   // Domain → web
   { from: "src/domain/diagnostics.ts", to: "src/web/lib/export.ts", until: "M4", fix: "Move the ScoredRow type into the domain" },
   // Bundled persisted data

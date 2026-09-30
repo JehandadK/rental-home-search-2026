@@ -9,7 +9,7 @@ import { withFileLock } from "../src/node/jsonFile";
 import { captureKey } from "../src/collectors/shared/captureStore";
 import { parseDetail } from "../src/collectors/enrichment/detailEnrichment";
 import { detailCaptureBatch, validateDetailCapture, type DetailCapture } from "../src/collectors/enrichment/suumoDetailIngestion";
-import { positiveInteger } from "./lib/refreshPlan";
+import { positiveInteger } from "../src/refresh/refreshPlan";
 
 interface QueueItem { url: string; queuedAt: string; checkedAt?: string; retryAfter?: string; error?: string }
 export interface DetailEnrichmentDependencies {

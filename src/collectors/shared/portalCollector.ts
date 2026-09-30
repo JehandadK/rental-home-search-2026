@@ -3,7 +3,7 @@ import type { PortalDiscoveryClient } from "../../data-layer/ingestion/contracts
 import { portalPageUrl } from "../../data-layer/ingestion/portalDiscovery";
 import type { PageCapture } from "./captureStore";
 import { listCaptureBatch } from "./listCaptureBatch";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "../../../scripts/lib/refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "../../refresh/refreshPlan";
 
 export interface PortalCollectorConfig {
   source: "athome" | "roomspot";

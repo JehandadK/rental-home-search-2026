@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, planRefresh, completeMarket, positiveInteger } from "./refreshPlan";
-import { addressKey, cachedGeocode, seedGeocodes } from "../../src/collectors/enrichment/geocodeCache";
-import { parseDetail, applyDetail } from "../../src/collectors/enrichment/detailEnrichment";
-import { restoreObservedLifecycle } from "../../src/storage/json/observations";
-import { validateCapture } from "../../src/collectors/shared/captureStore";
-import { packListings, unpackListings } from "../../src/domain/webPayload";
-import type { RawListing, EnrichedListing } from "../../src/domain/types";
-import { trackingKey } from "../../src/data-layer/lifecycle";
-import { newerRows, assertParsedFamilies } from "../../src/collectors/shared/captureValidation";
+import { addressKey, cachedGeocode, seedGeocodes } from "../collectors/enrichment/geocodeCache";
+import { parseDetail, applyDetail } from "../collectors/enrichment/detailEnrichment";
+import { restoreObservedLifecycle } from "../storage/json/observations";
+import { validateCapture } from "../collectors/shared/captureStore";
+import { packListings, unpackListings } from "../domain/webPayload";
+import type { RawListing, EnrichedListing } from "../domain/types";
+import { trackingKey } from "../data-layer/lifecycle";
+import { newerRows, assertParsedFamilies } from "../collectors/shared/captureValidation";
 const base: RawListing = { name: "Home", address: "埼玉県草加市１", source: "suumo", id: "s1", url: "https://suumo.jp/a", rent: 80000, layout: "2LDK", sizeM2: 50, builtYear: 2010, stationWalkMin: 5 };
 
 describe("efficient refresh", () => {

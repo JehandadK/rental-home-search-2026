@@ -13,8 +13,8 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { CaptureRunSummary, NativeCaptureIngestion } from "../src/data-layer/ingestion/contracts";
 import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
-import { acquireRefreshLock, latestResumableRun, readRefreshLedger, saveRefreshRun, type RefreshLedger, type RefreshRunRecord } from "./lib/refreshLedger";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING, DEPENDENCIES, positiveInteger } from "./lib/refreshPlan";
+import { acquireRefreshLock, latestResumableRun, readRefreshLedger, saveRefreshRun, type RefreshLedger, type RefreshRunRecord } from "../src/refresh/refreshLedger";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING, DEPENDENCIES, positiveInteger } from "../src/refresh/refreshPlan";
 
 interface Progress { imported: string[]; cities: Record<string, { pages: number; knownPages: number; added: number; updatedAt: string; done: boolean }> }
 type NativeCapture = PageCapture & { sortedNewest?: boolean };

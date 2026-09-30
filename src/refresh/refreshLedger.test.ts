@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { latestResumableRun, markInterrupted, parseDiscovered, resumeStageIndex, type RefreshRunRecord } from "./lib/refreshLedger";
+import { latestResumableRun, markInterrupted, parseDiscovered, resumeStageIndex, type RefreshRunRecord } from "./refreshLedger";
 
 function run(): RefreshRunRecord {
   return {
@@ -24,7 +24,7 @@ function run(): RefreshRunRecord {
 
 describe("refresh ledger", () => {
   it("excludes RoomSpot collection from an offline plan without excluding other sources or builds", () => {
-    const root = fileURLToPath(new URL("../", import.meta.url));
+    const root = fileURLToPath(new URL("../../", import.meta.url));
     const output = execFileSync(process.execPath, ["--import", "tsx", "scripts/refresh.ts", "--plan", "--skip-roomspot"], {
       cwd: root, encoding: "utf8", timeout: 10_000,
     });

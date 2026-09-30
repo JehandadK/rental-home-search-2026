@@ -25,9 +25,9 @@ import {
   saveRefreshRun,
   type RefreshRunRecord,
   type RefreshStageRecord,
-} from "./lib/refreshLedger";
+} from "../src/refresh/refreshLedger";
 import type { EnrichedListing } from "../src/domain/types";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING, NETWORK_STAGES, planRefresh, positiveInteger } from "./lib/refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING, NETWORK_STAGES, planRefresh, positiveInteger } from "../src/refresh/refreshPlan";
 
 const ROOT = join(DATA_DIR, "..", "..");
 const argv = process.argv.slice(2);

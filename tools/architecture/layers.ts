@@ -31,15 +31,6 @@ const TARGET_DIRS: [prefix: string, layer: Layer][] = [
   ["data/", "persisted-data"],
 ];
 
-/**
- * Files that have not reached their target directory yet. Remove each entry
- * when M4 moves the file; a moved file is classified by TARGET_DIRS.
- */
-export const LEGACY_LOCATIONS: Record<string, Layer> = {
-  "scripts/lib/refreshPlan.ts": "refresh",
-  "scripts/lib/refreshLedger.ts": "refresh",
-};
-
 /** Tests and shared test harnesses (`*.contract.ts`): exempt as importers, never imported by production code. */
 export function isTestFile(path: string): boolean {
   return /\.(test|contract)\.tsx?$/.test(path);
@@ -48,10 +39,8 @@ export function isTestFile(path: string): boolean {
 export function classify(path: string): Layer {
   if (isTestFile(path)) return "test";
   for (const [prefix, layer] of TARGET_DIRS) if (path.startsWith(prefix)) return layer;
-  for (const [location, layer] of Object.entries(LEGACY_LOCATIONS)) {
-    if (location.endsWith("/") ? path.startsWith(location) : path === location) return layer;
-  }
-  if (path.startsWith("scripts/") && !path.startsWith("scripts/lib/")) return "cli";
+  // Only CLI entry points live in scripts/; shared code belongs in a src/ layer.
+  if (path.startsWith("scripts/") && !path.slice("scripts/".length).includes("/")) return "cli";
   throw new Error(`${path} has no layer: place it in a target directory from DATA_ARCHITECTURE.md`);
 }
 

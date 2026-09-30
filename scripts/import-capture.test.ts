@@ -10,7 +10,7 @@ import { portalPageUrl } from "../src/data-layer/ingestion/portalDiscovery";
 import { runCaptureImport, type CaptureImportDependencies } from "./import-capture";
 import { parseAthomePage } from "../src/collectors/athome/athome";
 import type { PageCapture } from "../src/collectors/shared/captureStore";
-import type { RefreshLedger, RefreshRunRecord } from "./lib/refreshLedger";
+import type { RefreshLedger, RefreshRunRecord } from "../src/refresh/refreshLedger";
 
 const at = "2026-09-25T00:00:00.000Z";
 const cityUrls: Record<string, string> = { Soka: "soka-city", Koshigaya: "koshigaya-city", Kawaguchi: "kawaguchi-city" };

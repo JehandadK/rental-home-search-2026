@@ -25,7 +25,7 @@ import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/in
 import type { ScrapeBatch, SuumoDiscoveryClient } from "../src/data-layer/ingestion/contracts";
 import type { RawListing } from "../src/domain/types";
 import { cachedPage, validateCapture, type PageCapture } from "../src/collectors/shared/captureStore";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./lib/refreshPlan";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "../src/refresh/refreshPlan";
 
 /** 2K / 2DK / 2LDK / 3K / 3DK / 3LDK / 4K / 4DK / 4LDK / 5K+ */
 const LAYOUT_CODES = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];
