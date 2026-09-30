@@ -2,20 +2,18 @@
  * Place-selection state with localStorage persistence, so a curated set of
  * stations/schools survives reloads.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { defaultSelection, type PlaceSelection } from "../../domain/placeSelection";
-import { BUNDLED_REFERENCE } from "../data/bundledClient";
-import type { DistanceParameterKey } from "../../domain/places";
+import type { DistanceParameterKey, PlaceCatalog } from "../../domain/places";
 
 const STORAGE_KEY = "soka-scorer-places-v1";
-const DEFAULT_SELECTION = defaultSelection(BUNDLED_REFERENCE.catalog);
 
-function loadSelection(): PlaceSelection {
+function loadSelection(defaults: PlaceSelection): PlaceSelection {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as PlaceSelection;
-      const merged = { ...DEFAULT_SELECTION.byParameter, ...parsed.byParameter };
+      const merged = { ...defaults.byParameter, ...parsed.byParameter };
       // v1 stored Baitul Aman as a single poi target. Mosque scoring now
       // defaults to nearest of all mosques; migrate that legacy default while
       // preserving genuinely curated multi-mosque choices.
@@ -26,11 +24,12 @@ function loadSelection(): PlaceSelection {
   } catch {
     // Ignore corrupt storage.
   }
-  return DEFAULT_SELECTION;
+  return defaults;
 }
 
-export function usePlaceSelection() {
-  const [selection, setSelection] = useState<PlaceSelection>(loadSelection);
+export function usePlaceSelection(catalog: PlaceCatalog) {
+  const defaults = useMemo(() => defaultSelection(catalog), [catalog]);
+  const [selection, setSelection] = useState<PlaceSelection>(() => loadSelection(defaults));
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
@@ -61,7 +60,7 @@ export function usePlaceSelection() {
     setSelection((s) => ({ byParameter: { ...s.byParameter, [key]: [id] } }));
   }, []);
 
-  const reset = useCallback(() => setSelection(DEFAULT_SELECTION), []);
+  const reset = useCallback(() => setSelection(defaults), [defaults]);
 
   return { selection, setPlaces, togglePlace, setTarget, reset };
 }

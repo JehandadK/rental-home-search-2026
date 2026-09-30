@@ -26,6 +26,7 @@ import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceData";
+import type { CatalogPlace } from "../../domain/places";
 import { boundaryExtent, extentOf, labelPosition, padExtent, polygonsOf, type Extent } from "../../domain/mapGeometry";
 import type { ScoredRow } from "../../domain/scoring";
 import styles from "./MapView.module.css";
@@ -34,6 +35,8 @@ import appStyles from "../App.module.css";
 interface Props {
   items: ScoredRow[];
   reference: ReferenceModel;
+  /** The place the poi1 score measures to; drawn as a star. */
+  targetPoi: CatalogPlace | null;
   hovered: string | null;
   onHover: (key: string | null) => void;
   selected: string | null;
@@ -92,7 +95,7 @@ interface CityLayer {
   focus: boolean;
 }
 
-export const MapView = memo(function MapView({ items, reference, hovered, onHover, selected, onSelect, centerTarget, marks, onSetMark }: Props) {
+export const MapView = memo(function MapView({ items, reference, targetPoi, hovered, onHover, selected, onSelect, centerTarget, marks, onSetMark }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
   const [view, setView] = useState<View>(IDENTITY);
@@ -255,8 +258,7 @@ export const MapView = memo(function MapView({ items, reference, hovered, onHove
       }
     }
 
-    // The target POI (Al Sanad) as a red star.
-    const targetPoi = reference.catalog.withRole("poi1");
+    // The target POI (Al Sanad by default) as a red star.
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       drawStar(ctx, x, y, 9, "#dc2626");
@@ -323,7 +325,7 @@ export const MapView = memo(function MapView({ items, reference, hovered, onHove
     }
     if (selectedDot) drawEmphasis(ctx, selectedDot, "#2563eb");
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, "#111827");
-  }, [items, reference, cityLayers, toScreen, hovered, selected, marks]);
+  }, [items, reference, targetPoi, cityLayers, toScreen, hovered, selected, marks]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -486,7 +488,7 @@ export const MapView = memo(function MapView({ items, reference, hovered, onHove
             } · ${hoveredRow.listing.city ?? ""} · ${hoveredRow.listing.address}`
           : selectedRow
             ? "Selected property is pinned above. Use View listing or Google Maps to continue. Click the same marker to cycle overlapping homes."
-            : "★ Al Sanad · ◆ mosques (nearest scores) · ■ stations · dots = listings · click for score/details/links · green ring = new · gold ring = shortlisted · grey = sold / ruled out"}
+            : `★ ${targetPoi?.name ?? "no target POI"} · ◆ mosques (nearest scores) · ■ stations · dots = listings · click for score/details/links · green ring = new · gold ring = shortlisted · grey = sold / ruled out`}
       </div>
     </section>
   );

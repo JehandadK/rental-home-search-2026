@@ -13,15 +13,14 @@ import {
   DISTANCE_PARAMETERS,
   PARAMETER_SOURCES,
   type DistanceParameterKey,
+  type PlaceCatalog,
 } from "../../domain/places";
-import { BUNDLED_REFERENCE } from "../data/bundledClient";
-
-const PLACE_CATALOG = BUNDLED_REFERENCE.catalog;
 import { describeSelection, type PlaceSelection } from "../../domain/placeSelection";
 import styles from "./PlacePanel.module.css";
 import appStyles from "../App.module.css";
 
 interface Props {
+  catalog: PlaceCatalog;
   selection: PlaceSelection;
   onToggle: (key: DistanceParameterKey, id: string) => void;
   onSetTarget: (key: DistanceParameterKey, id: string) => void;
@@ -32,7 +31,7 @@ interface Props {
 const labelFor = (key: DistanceParameterKey) =>
   SCORE_PARAMETERS.find((p) => p.key === key)?.label ?? key;
 
-export function PlacePanel({ selection, onToggle, onSetTarget, onSetPlaces, onReset }: Props) {
+export function PlacePanel({ catalog, selection, onToggle, onSetTarget, onSetPlaces, onReset }: Props) {
   return (
     <section className={appStyles.card}>
       <h2 className={appStyles.cardTitle}>
@@ -49,6 +48,7 @@ export function PlacePanel({ selection, onToggle, onSetTarget, onSetPlaces, onRe
         <ParameterPlaces
           key={key}
           paramKey={key}
+          catalog={catalog}
           defaultOpen={index < 2}
           selection={selection}
           onToggle={onToggle}
@@ -62,6 +62,7 @@ export function PlacePanel({ selection, onToggle, onSetTarget, onSetPlaces, onRe
 
 function ParameterPlaces({
   paramKey,
+  catalog,
   defaultOpen,
   selection,
   onToggle,
@@ -72,7 +73,7 @@ function ParameterPlaces({
   defaultOpen: boolean;
 } & Omit<Props, "onReset">) {
   const source = PARAMETER_SOURCES[paramKey];
-  const places = useMemo(() => PLACE_CATALOG.inCategory(source.category), [source.category]);
+  const places = useMemo(() => catalog.inCategory(source.category), [catalog, source.category]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(defaultOpen);
   const chosen = selection.byParameter[paramKey];
@@ -89,7 +90,7 @@ function ParameterPlaces({
     <details className={styles.group} open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>
         <span className={styles.name}>{labelFor(paramKey)}</span>
-        <span className={styles.summary}>{describeSelection(selection, paramKey, PLACE_CATALOG)}</span>
+        <span className={styles.summary}>{describeSelection(selection, paramKey, catalog)}</span>
       </summary>
 
       <div className={styles.body}>

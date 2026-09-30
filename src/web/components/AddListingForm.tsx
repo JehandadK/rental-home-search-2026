@@ -5,13 +5,14 @@
  */
 import { useState, type FormEvent } from "react";
 import { enrichListing } from "../../domain/enrichListing";
-import { BUNDLED_REFERENCE } from "../data/bundledClient";
 import { geocodeAddress } from "../../integrations/geocode";
 import type { EnrichedListing, RawListing } from "../../domain/types";
+import type { PlaceCatalog } from "../../domain/places";
 import styles from "./AddListingForm.module.css";
 import appStyles from "../App.module.css";
 
 interface Props {
+  catalog: PlaceCatalog;
   onAdd: (listing: EnrichedListing) => void;
 }
 
@@ -23,7 +24,7 @@ const parseOptional = (raw: string): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-export function AddListingForm({ onAdd }: Props) {
+export function AddListingForm({ catalog, onAdd }: Props) {
   const [status, setStatus] = useState<Status>({ kind: "idle", message: "" });
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -60,7 +61,7 @@ export function AddListingForm({ onAdd }: Props) {
         setStatus({ kind: "error", message: "Address not found — try lat/lon instead." });
         return;
       }
-      onAdd(enrichListing(raw, coords, coords.matched, BUNDLED_REFERENCE.catalog));
+      onAdd(enrichListing(raw, coords, coords.matched, catalog));
       form.reset();
       setStatus({ kind: "ok", message: `Added ✓ (${coords.matched})` });
     } catch {

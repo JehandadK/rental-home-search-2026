@@ -8,7 +8,7 @@ import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
 import { ProximityIndex } from "../domain/proximityIndex";
 import { applySelection, selectionAllowedSets } from "../domain/placeSelection";
-import { BUNDLED_REFERENCE } from "./data/bundledClient";
+import type { WebData } from "./data/useWebData";
 import { usePlaceSelection } from "./hooks/usePlaceSelection";
 import { PlacePanel } from "./components/PlacePanel";
 import type { ScoreParameterKey } from "../domain/types";
@@ -25,7 +25,10 @@ import { MapView } from "./components/MapView";
 import { WeightPanel } from "./components/WeightPanel";
 import styles from "./App.module.css";
 
-export function App() {
+/** The dashboard, over data the WebDataBoundary has already loaded. */
+export function App({ data }: { data: WebData }) {
+  const { reference } = data;
+  const { catalog } = reference;
   const {
     config,
     setWeight,
@@ -36,17 +39,23 @@ export function App() {
     zeroAllWeights,
     reset,
   } = useScoringConfig();
-  const { listings, addListing, removeListing } = useListings();
+  const { listings, addListing, removeListing } = useListings(data.listings);
   const { filters, update: updateFilters, reset: resetFilters } = useFilters();
   const { marks, setMark, clearMarks } = useMarks();
-  const { selection, setPlaces, togglePlace, setTarget, reset: resetPlaces } = usePlaceSelection();
+  const { selection, setPlaces, togglePlace, setTarget, reset: resetPlaces } = usePlaceSelection(catalog);
 
   /**
    * Full listing × place distance matrix, built once per listing set. Every
    * reference place is measured, so changing which places count is a cheap
    * in-memory reduction rather than a pipeline re-run.
    */
-  const index = useMemo(() => new ProximityIndex(listings, BUNDLED_REFERENCE.catalog), [listings]);
+  const index = useMemo(() => new ProximityIndex(listings, catalog), [listings, catalog]);
+
+  /** The place the poi1 score measures to, marked on the map. */
+  const targetPoi = useMemo(() => {
+    const id = selection.byParameter.poi1?.[0];
+    return id ? catalog.byId.get(id) ?? null : null;
+  }, [catalog, selection]);
 
   /** Listings with proximities resolved against the current place selection. */
   const resolved = useMemo(() => {
@@ -175,6 +184,7 @@ export function App() {
         <aside className={styles.sidebar}>
           <FilterPanel
             listings={listings}
+            cities={reference.cities}
             filters={filters}
             onUpdate={updateFilters}
             onReset={resetFilters}
@@ -198,18 +208,20 @@ export function App() {
             onFitAll={fitAll}
           />
           <PlacePanel
+            catalog={catalog}
             selection={selection}
             onToggle={togglePlace}
             onSetTarget={setTarget}
             onSetPlaces={setPlaces}
             onReset={resetPlaces}
           />
-          <AddListingForm onAdd={addListing} />
+          <AddListingForm catalog={catalog} onAdd={addListing} />
         </aside>
         <section className={styles.main}>
           <MapView
             items={filtered}
-            reference={BUNDLED_REFERENCE}
+            reference={reference}
+            targetPoi={targetPoi}
             hovered={hovered}
             onHover={setHovered}
             selected={selected}

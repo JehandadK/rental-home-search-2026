@@ -7,7 +7,8 @@
  * runtime client implements.
  */
 import type { CityBoundaryRecord, CityRecord, ReferenceDataSnapshot, ReferencePlaceRecord, VersionedDataset } from "../../data-layer/contracts";
-import type { ReadResult, WebDataClient, ListingQueryResult } from "../../data-layer/read/contracts";
+import type { WebDataClient } from "../../data-layer/read/contracts";
+import { createStaticWebDataClient } from "./staticClient";
 import type { ChildcareFacility, EnrichedListing, Mosque, NamedPlace, PointOfInterest, Station } from "../../domain/types";
 import { buildReferenceModel, type ReferenceModel } from "../../domain/referenceData";
 import { unpackListings, type WebPayload } from "../../domain/webPayload";
@@ -82,12 +83,9 @@ export const BUNDLED_REFERENCE_SNAPSHOT = legacySnapshot();
 export const BUNDLED_LISTINGS: readonly EnrichedListing[] =
   unpackListings(listingsJson as unknown as WebPayload | EnrichedListing[]);
 
-/** Reference model over the bundled files, for code not yet behind the data provider. */
+/** Reference model over the bundled files, for tests that need the current data. */
 export const BUNDLED_REFERENCE: ReferenceModel = buildReferenceModel(BUNDLED_REFERENCE_SNAPSHOT);
 
 export function createBundledWebDataClient(): WebDataClient {
-  return {
-    queryListings: async (): Promise<ReadResult<ListingQueryResult>> => ({ data: { listings: BUNDLED_LISTINGS } }),
-    loadReferenceSnapshot: async (): Promise<ReadResult<ReferenceDataSnapshot>> => ({ data: BUNDLED_REFERENCE_SNAPSHOT }),
-  };
+  return createStaticWebDataClient({ listings: BUNDLED_LISTINGS, reference: BUNDLED_REFERENCE_SNAPSHOT });
 }

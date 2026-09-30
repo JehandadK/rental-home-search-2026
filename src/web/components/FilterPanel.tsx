@@ -14,11 +14,14 @@ import {
 import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../../domain/marks";
 import { listingKey } from "../../domain/listingKey";
 import type { EnrichedListing } from "../../domain/types";
+import { cityLabel, type ReferenceCity } from "../../domain/referenceData";
 import styles from "./FilterPanel.module.css";
 import appStyles from "../App.module.css";
 
 interface Props {
   listings: readonly EnrichedListing[];
+  /** Reference cities, for labelling the city chips. */
+  cities: readonly ReferenceCity[];
   filters: ListingFilters;
   onUpdate: (patch: Partial<ListingFilters>) => void;
   onReset: () => void;
@@ -35,15 +38,14 @@ const numberOrNull = (raw: string): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-const CITY_LABELS: Record<string, string> = {
-  Soka: "Soka · 草加",
-  Koshigaya: "Koshigaya · 越谷",
-  Kawaguchi: "Kawaguchi · 川口",
-};
-const cityLabel = (city: string) => CITY_LABELS[city] ?? city;
-
-export function FilterPanel({ listings, filters, onUpdate, onReset, marks, onClearMarks, matchCount }: Props) {
+export function FilterPanel({ listings, cities: referenceCities, filters, onUpdate, onReset, marks, onClearMarks, matchCount }: Props) {
   const cities = useMemo(() => cityOptions(listings), [listings]);
+  // Listings name their city in English ("Soka"); the reference catalog adds the local name.
+  const cityLabels = useMemo(
+    () => new Map(referenceCities.map((city) => [city.name, cityLabel(city)])),
+    [referenceCities],
+  );
+  const labelFor = (city: string) => cityLabels.get(city) ?? city;
   const layouts = useMemo(() => layoutOptions(listings), [listings]);
   // Neighbourhood choices follow the selected city chips, preventing an
   // unrelated 100-area wall and making the city → neighbourhood hierarchy clear.
@@ -187,14 +189,14 @@ export function FilterPanel({ listings, filters, onUpdate, onReset, marks, onCle
               className={`${styles.chip} ${filters.cities.includes(city) ? styles.on : ""}`}
               onClick={() => toggleCity(city)}
             >
-              {cityLabel(city)}
+              {labelFor(city)}
             </button>
           ))}
         </div>
 
         <div className={styles.areaDivider} />
         <p className={styles.help}>
-          2. Optional neighbourhood (町名) · showing {filters.cities.length ? filters.cities.map(cityLabel).join(" + ") : "all cities"}
+          2. Optional neighbourhood (町名) · showing {filters.cities.length ? filters.cities.map(labelFor).join(" + ") : "all cities"}
         </p>
         <div className={styles.groupLabel}>
           Neighbourhood mode

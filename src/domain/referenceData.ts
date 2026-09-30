@@ -60,3 +60,9 @@ export function buildReferenceModel(snapshot: ReferenceSnapshotLike): ReferenceM
     ),
   };
 }
+
+/** "Soka · 草加" for a city with a local name; the name alone otherwise. */
+export function cityLabel(city: ReferenceCity): string {
+  const local = city.nameLocal?.replace(/[市区町村]$/u, "");
+  return local && local !== city.name ? `${city.name} · ${local}` : city.name;
+}

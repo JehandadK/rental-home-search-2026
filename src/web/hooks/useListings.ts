@@ -1,10 +1,9 @@
 /**
- * Listing collection state: scraped base listings from the data bundle,
- * plus custom listings the user adds by hand (persisted to localStorage).
+ * Listing collection state: the loaded base listings, plus custom listings
+ * the user adds by hand (persisted to localStorage).
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EnrichedListing } from "../../domain/types";
-import { BUNDLED_LISTINGS as BASE_LISTINGS } from "../data/bundledClient";
 import { deduplicateListings } from "../../domain/listingDedup";
 
 const STORAGE_KEY = "soka-scorer-custom-listings-v1";
@@ -19,7 +18,7 @@ function loadCustom(): EnrichedListing[] {
   return [];
 }
 
-export function useListings() {
+export function useListings(baseListings: readonly EnrichedListing[]) {
   const [custom, setCustom] = useState<EnrichedListing[]>(loadCustom);
 
   useEffect(() => {
@@ -41,9 +40,9 @@ export function useListings() {
     // The generated base payload is already deduplicated at build time. Avoid
     // an O(n²) browser pass unless a custom listing actually needs merging.
     () => custom.length === 0
-      ? BASE_LISTINGS
-      : deduplicateListings([...BASE_LISTINGS, ...custom]) as EnrichedListing[],
-    [custom],
+      ? baseListings
+      : deduplicateListings([...baseListings, ...custom]) as EnrichedListing[],
+    [baseListings, custom],
   );
   return { listings, custom, addListing, removeListing };
 }
