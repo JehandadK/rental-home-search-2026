@@ -4,7 +4,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EnrichedListing } from "../../domain/types";
-import { BASE_LISTINGS } from "../../domain/reference";
+import { BUNDLED_LISTINGS as BASE_LISTINGS } from "../data/bundledClient";
 import { deduplicateListings } from "../../domain/listingDedup";
 
 const STORAGE_KEY = "soka-scorer-custom-listings-v1";

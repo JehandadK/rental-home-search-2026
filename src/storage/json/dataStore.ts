@@ -43,6 +43,8 @@ export const SOURCES_DIR = join(DATA_DIR, "sources");
 export const BACKUP_DIR = join(DATA_DIR, ".backups");
 export const RAW_PATH = join(DATA_DIR, "listings_raw.json");
 export const MANIFEST_PATH = join(SOURCES_DIR, "_manifest.json");
+/** The managed reference catalog (cities, boundaries, places). */
+export const REFERENCE_CATALOG_DIR = join(DATA_DIR, "..", "..", "data", "reference", "v1");
 
 /** Keep this many historical copies of each file. */
 const BACKUPS_PER_FILE = 10;

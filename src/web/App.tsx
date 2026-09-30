@@ -8,7 +8,7 @@ import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
 import { ProximityIndex } from "../domain/proximityIndex";
 import { applySelection, selectionAllowedSets } from "../domain/placeSelection";
-import { PLACE_CATALOG } from "../domain/reference";
+import { BUNDLED_REFERENCE } from "./data/bundledClient";
 import { usePlaceSelection } from "./hooks/usePlaceSelection";
 import { PlacePanel } from "./components/PlacePanel";
 import type { ScoreParameterKey } from "../domain/types";
@@ -46,7 +46,7 @@ export function App() {
    * reference place is measured, so changing which places count is a cheap
    * in-memory reduction rather than a pipeline re-run.
    */
-  const index = useMemo(() => new ProximityIndex(listings, PLACE_CATALOG), [listings]);
+  const index = useMemo(() => new ProximityIndex(listings, BUNDLED_REFERENCE.catalog), [listings]);
 
   /** Listings with proximities resolved against the current place selection. */
   const resolved = useMemo(() => {
@@ -209,6 +209,7 @@ export function App() {
         <section className={styles.main}>
           <MapView
             items={filtered}
+            reference={BUNDLED_REFERENCE}
             hovered={hovered}
             onHover={setHovered}
             selected={selected}

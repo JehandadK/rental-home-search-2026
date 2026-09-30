@@ -11,10 +11,10 @@ export interface KnownViolation {
 }
 
 const referenceData = (file: string): KnownViolation => ({
-  from: "src/domain/reference.ts",
+  from: "src/web/data/bundledClient.ts",
   to: `src/data/${file}`,
   until: "M5",
-  fix: "Load through the injected web data client",
+  fix: "Fetch published assets through the runtime web data client",
 });
 
 export const KNOWN_VIOLATIONS: KnownViolation[] = [

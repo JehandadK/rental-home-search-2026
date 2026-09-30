@@ -7,9 +7,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DATA_DIR } from "../node/dataPaths";
-import { PLACE_CATALOG } from "./reference";
-import type { ChildcareFacility, Mosque, NamedPlace, PointOfInterest, Station } from "./types";
+import { DATA_DIR } from "../../node/dataPaths";
+import type { ChildcareFacility, Mosque, NamedPlace, PointOfInterest, Station } from "../../domain/types";
+import { BUNDLED_REFERENCE } from "./bundledClient";
+
+const PLACE_CATALOG = BUNDLED_REFERENCE.catalog;
 
 const legacy = <T>(file: string): T => JSON.parse(readFileSync(join(DATA_DIR, file), "utf8")) as T;
 

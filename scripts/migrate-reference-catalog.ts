@@ -1,8 +1,7 @@
-import { resolve } from "node:path";
 import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
-import { DATA_DIR } from "../src/storage/json/dataStore";
+import { REFERENCE_CATALOG_DIR } from "../src/storage/json/dataStore";
 
-const directory = resolve(DATA_DIR, "../../data/reference/v1");
+const directory = REFERENCE_CATALOG_DIR;
 const result = await new JsonReferenceDataRepository(directory).upgradePersistedSchemas();
 if (result.upgraded.length === 0 && !result.formatUpgraded) {
   console.log(`Reference catalog format/schema is current: ${directory}`);

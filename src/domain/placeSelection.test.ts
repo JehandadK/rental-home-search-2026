@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { ProximityIndex } from "./proximityIndex";
 import { applySelection, defaultSelection, describeSelection } from "./placeSelection";
-import { PLACE_CATALOG } from "./reference";
+import { BUNDLED_REFERENCE } from "../web/data/bundledClient";
+
+const PLACE_CATALOG = BUNDLED_REFERENCE.catalog;
 import { haversineM } from "./geo";
 import type { EnrichedListing } from "./types";
 

@@ -4,11 +4,11 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { defaultSelection, type PlaceSelection } from "../../domain/placeSelection";
-import { PLACE_CATALOG } from "../../domain/reference";
+import { BUNDLED_REFERENCE } from "../data/bundledClient";
 import type { DistanceParameterKey } from "../../domain/places";
 
 const STORAGE_KEY = "soka-scorer-places-v1";
-const DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);
+const DEFAULT_SELECTION = defaultSelection(BUNDLED_REFERENCE.catalog);
 
 function loadSelection(): PlaceSelection {
   try {

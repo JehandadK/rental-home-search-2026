@@ -1,8 +1,11 @@
 /**
  * Canvas map of Soka City and its northern neighbour Koshigaya (plus the
  * surrounding municipalities for context): city boundaries, stations,
- * elementary schools, the two POIs, and every geocoded listing coloured by
- * its current score.
+ * elementary schools, the target POI, mosques, and every geocoded listing
+ * coloured by its current score.
+ *
+ * Cities, boundaries (any number per city, polygons or multipolygons), places,
+ * and the map extent all come from the loaded reference model.
  *
  * Interaction:
  *   - hover a dot            → highlights it + the matching table row (no scroll)
@@ -12,7 +15,7 @@
  *   - +/−/⤢ buttons          → zoom in / out / reset
  *
  * The base projection is a plain equirectangular fit to the combined extent
- * of all boundaries; a separate view transform (scale + translation) layers
+ * of all boundaries (or of the places, when there are no boundaries); a separate view transform (scale + translation) layers
  * zoom and pan on top, so markers and labels keep a constant screen size.
  */
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -22,20 +25,15 @@ import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
-import {
-  ELEMENTARY_SCHOOLS,
-  MOSQUES,
-  NEIGHBOR_BOUNDARIES,
-  POINTS_OF_INTEREST,
-  SOKA_BOUNDARY,
-  STATIONS,
-} from "../../domain/reference";
+import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceData";
+import { boundaryExtent, extentOf, labelPosition, padExtent, polygonsOf, type Extent } from "../../domain/mapGeometry";
 import type { ScoredRow } from "../../domain/scoring";
 import styles from "./MapView.module.css";
 import appStyles from "../App.module.css";
 
 interface Props {
   items: ScoredRow[];
+  reference: ReferenceModel;
   hovered: string | null;
   onHover: (key: string | null) => void;
   selected: string | null;
@@ -81,7 +79,20 @@ const LABELLED_STATIONS = new Set([
 
 const CITY_LABEL_COLOR = "#94a3b8";
 
-export const MapView = memo(function MapView({ items, hovered, onHover, selected, onSelect, centerTarget, marks, onSetMark }: Props) {
+/** The primary search area, drawn emphasised when the data contains it. */
+const FOCUS_CITY_ID = "city:soka";
+
+/** Soka and its neighbours; only used when the data has nothing to fit. */
+const DEFAULT_EXTENT: Extent = { minLon: 139.68, maxLon: 139.86, minLat: 35.74, maxLat: 35.93 };
+
+interface CityLayer {
+  id: string;
+  label: string;
+  boundaries: ReferenceBoundary[];
+  focus: boolean;
+}
+
+export const MapView = memo(function MapView({ items, reference, hovered, onHover, selected, onSelect, centerTarget, marks, onSetMark }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
   const [view, setView] = useState<View>(IDENTITY);
@@ -91,16 +102,24 @@ export const MapView = memo(function MapView({ items, hovered, onHover, selected
   // Pointer-interaction bookkeeping (refs so handlers stay stable).
   const drag = useRef<{ startX: number; startY: number; view: View; moved: boolean } | null>(null);
 
-  // Base projection: fit the combined extent of Soka + all neighbour rings.
+  /** Cities with at least one boundary; the focus city is drawn last, on top. */
+  const cityLayers = useMemo((): CityLayer[] => {
+    const layers = reference.cities
+      .map((city) => ({
+        id: city.id,
+        label: city.nameLocal ?? city.name,
+        boundaries: reference.boundaries.filter((boundary) => boundary.cityId === city.id),
+        focus: city.id === FOCUS_CITY_ID,
+      }))
+      .filter((layer) => layer.boundaries.length > 0);
+    return [...layers.filter((layer) => !layer.focus), ...layers.filter((layer) => layer.focus)];
+  }, [reference]);
+
+  // Base projection: fit the combined extent of every city boundary.
   const project = useMemo(() => {
-    const allPts: [number, number][] = [
-      ...SOKA_BOUNDARY,
-      ...NEIGHBOR_BOUNDARIES.flatMap((c) => c.ring),
-    ];
-    const lons = allPts.map(([lon]) => lon);
-    const lats = allPts.map(([, lat]) => lat);
-    const minLon = Math.min(...lons), maxLon = Math.max(...lons);
-    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const { minLon, maxLon, minLat, maxLat } = padExtent(
+      boundaryExtent(reference.boundaries) ?? extentOf(reference.catalog.places) ?? DEFAULT_EXTENT,
+    );
     const scale = Math.min(
       (WIDTH - 2 * PADDING) / (maxLon - minLon),
       (HEIGHT - 2 * PADDING) / (maxLat - minLat),
@@ -111,7 +130,7 @@ export const MapView = memo(function MapView({ items, hovered, onHover, selected
       x: offsetX + (lon - minLon) * scale,
       y: HEIGHT - (offsetY + (lat - minLat) * scale),
     });
-  }, []);
+  }, [reference]);
 
   // Compose base projection with the current view transform.
   const toScreen = useCallback(
@@ -166,53 +185,57 @@ export const MapView = memo(function MapView({ items, hovered, onHover, selected
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     ctx.font = "11px sans-serif";
 
-    const ring = (pts: readonly [number, number][]) => {
+    const trace = (boundaries: readonly ReferenceBoundary[]) => {
       ctx.beginPath();
-      pts.forEach(([lon, lat], i) => {
-        const { x, y } = toScreen(lat, lon);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      });
-      ctx.closePath();
+      for (const boundary of boundaries) {
+        for (const polygon of polygonsOf(boundary.geometry)) {
+          for (const ring of polygon) {
+            ring.forEach(([lon, lat], i) => {
+              const { x, y } = toScreen(lat, lon);
+              i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+          }
+        }
+      }
+    };
+    const drawLabel = (layer: CityLayer, color: string) => {
+      const position = labelPosition(layer.boundaries);
+      if (!position) return;
+      const { x, y } = toScreen(position[1], position[0]);
+      ctx.fillStyle = color;
+      ctx.font = "13px sans-serif";
+      ctx.fillText(layer.label, x - 18, y);
+      ctx.font = "11px sans-serif";
     };
 
     // Neighbouring municipalities: faint fill, dashed outline.
+    const neighbours = cityLayers.filter((layer) => !layer.focus);
     ctx.setLineDash([4, 4]);
-    for (const city of NEIGHBOR_BOUNDARIES) {
-      ring(city.ring);
+    for (const layer of neighbours) {
+      trace(layer.boundaries);
       ctx.fillStyle = "#f6f7f9";
-      ctx.fill();
+      ctx.fill("evenodd");
       ctx.strokeStyle = "#d3d9e2";
       ctx.stroke();
     }
     ctx.setLineDash([]);
-    ctx.fillStyle = CITY_LABEL_COLOR;
-    ctx.font = "13px sans-serif";
-    for (const city of NEIGHBOR_BOUNDARIES) {
-      const c = centroid(city.ring);
-      const { x, y } = toScreen(c[1], c[0]);
-      ctx.fillText(city.name, x - 18, y);
-    }
-    ctx.font = "11px sans-serif";
+    for (const layer of neighbours) drawLabel(layer, CITY_LABEL_COLOR);
 
-    // Soka boundary: solid, emphasised (the primary search area).
-    ring(SOKA_BOUNDARY);
-    ctx.fillStyle = "rgba(238,244,251,0.65)";
-    ctx.fill();
-    ctx.strokeStyle = "#6f8bb5";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.lineWidth = 1;
-    {
-      const c = centroid(SOKA_BOUNDARY);
-      const { x, y } = toScreen(c[1], c[0]);
-      ctx.fillStyle = "#5b7099";
-      ctx.font = "13px sans-serif";
-      ctx.fillText("草加市", x - 18, y);
-      ctx.font = "11px sans-serif";
+    // The focus city (Soka): solid, emphasised (the primary search area).
+    for (const layer of cityLayers.filter((candidate) => candidate.focus)) {
+      trace(layer.boundaries);
+      ctx.fillStyle = "rgba(238,244,251,0.65)";
+      ctx.fill("evenodd");
+      ctx.strokeStyle = "#6f8bb5";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      drawLabel(layer, "#5b7099");
     }
 
     // Elementary schools.
-    for (const school of ELEMENTARY_SCHOOLS) {
+    for (const school of reference.catalog.inCategory("school")) {
       const { x, y } = toScreen(school.lat, school.lon);
       ctx.fillStyle = "#9db4ce";
       ctx.beginPath();
@@ -221,7 +244,7 @@ export const MapView = memo(function MapView({ items, hovered, onHover, selected
     }
 
     // Stations: squares, labelled for the main hubs.
-    for (const station of STATIONS) {
+    for (const station of reference.catalog.inCategory("station")) {
       const { x, y } = toScreen(station.lat, station.lon);
       const major = LABELLED_STATIONS.has(station.name);
       ctx.fillStyle = "#2563eb";
@@ -232,16 +255,17 @@ export const MapView = memo(function MapView({ items, hovered, onHover, selected
       }
     }
 
-    // Al Sanad and other general POIs as red stars.
-    for (const poi of POINTS_OF_INTEREST.filter((place) => place.id === "poi1")) {
-      const { x, y } = toScreen(poi.lat, poi.lon);
+    // The target POI (Al Sanad) as a red star.
+    const targetPoi = reference.catalog.withRole("poi1");
+    if (targetPoi) {
+      const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       drawStar(ctx, x, y, 9, "#dc2626");
       ctx.fillStyle = "#7f1d1d";
-      ctx.fillText("Al Sanad School", x + 11, y + 4);
+      ctx.fillText(targetPoi.name, x + 11, y + 4);
     }
 
     // Mosque candidates as purple diamonds; scoring uses the nearest selected one.
-    for (const mosque of MOSQUES) {
+    for (const mosque of reference.catalog.inCategory("mosque")) {
       const { x, y } = toScreen(mosque.lat, mosque.lon);
       ctx.save();
       ctx.translate(x, y);
@@ -299,7 +323,7 @@ export const MapView = memo(function MapView({ items, hovered, onHover, selected
     }
     if (selectedDot) drawEmphasis(ctx, selectedDot, "#2563eb");
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, "#111827");
-  }, [items, toScreen, hovered, selected, marks]);
+  }, [items, reference, cityLayers, toScreen, hovered, selected, marks]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -591,17 +615,6 @@ function drawEmphasis(ctx: CanvasRenderingContext2D, dot: Projected, ringColor: 
   ctx.strokeStyle = ringColor;
   ctx.stroke();
   ctx.lineWidth = 1;
-}
-
-/** Simple average-of-vertices centroid, good enough for label placement. */
-function centroid(ring: readonly [number, number][]): [number, number] {
-  let sx = 0;
-  let sy = 0;
-  for (const [lon, lat] of ring) {
-    sx += lon;
-    sy += lat;
-  }
-  return [sx / ring.length, sy / ring.length];
 }
 
 function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {

@@ -14,7 +14,9 @@ import {
   PARAMETER_SOURCES,
   type DistanceParameterKey,
 } from "../../domain/places";
-import { PLACE_CATALOG } from "../../domain/reference";
+import { BUNDLED_REFERENCE } from "../data/bundledClient";
+
+const PLACE_CATALOG = BUNDLED_REFERENCE.catalog;
 import { describeSelection, type PlaceSelection } from "../../domain/placeSelection";
 import styles from "./PlacePanel.module.css";
 import appStyles from "../App.module.css";
