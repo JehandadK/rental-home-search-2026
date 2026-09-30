@@ -27,7 +27,6 @@ const TARGET_DIRS: [prefix: string, layer: Layer][] = [
   ["src/refresh/", "refresh"],
   ["src/node/", "node"],
   ["src/integrations/", "integrations"],
-  ["src/data/", "persisted-data"],
   ["data/", "persisted-data"],
   // Published copies the web app fetches at runtime; never bundled.
   ["public/", "persisted-data"],

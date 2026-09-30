@@ -2,9 +2,9 @@
  * Converts Nifty (myhome.nifty.com) detail-page scrapes into observations
  * and submits them to the data layer; canonical builds remain explicit.
  *
- * Input:  src/data/nifty_detail_raw.json  — detail pages captured through
+ * Input:  data/nifty_detail_raw.json  — detail pages captured through
  *         the logged-in browser session (see pi-web-ui bridge).
- * Output: src/data/sources/nifty.json     — this script owns that file and
+ * Output: data/sources/nifty.json     — this script owns that file and
  *         nothing else; SUUMO data is never touched.
  *
  * Run with: npm run import:nifty
@@ -229,6 +229,8 @@ export async function prepareNiftyDetailImport(dump: NiftyDump) {
       capturedBy: "logged-in browser session via Pi Control Chrome",
       detailPages: dump.listings.length,
       familyListings: converted.length,
+      // A stable label, not a live path: batch fingerprints include provenance, so
+      // renaming it would turn a replay of an imported dump into a conflict.
       input: "src/data/nifty_detail_raw.json",
     },
   };

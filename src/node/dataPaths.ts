@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 export const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 /** Root of the persisted data files. */
-export const DATA_DIR = join(REPO_ROOT, "src", "data");
+export const DATA_DIR = join(REPO_ROOT, "data");
 
 /**
  * Derived files the web app fetches at runtime (`npm run data:web`). Vite

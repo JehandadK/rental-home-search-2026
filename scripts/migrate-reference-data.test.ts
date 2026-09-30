@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ChildcareFacility, Mosque, NamedPlace, PointOfInterest, Station } from "../src/domain/types";
+import { DATA_DIR } from "../src/node/dataPaths";
 import type { CityBoundaryRecord, CityRecord, ReferencePlaceRecord, VersionedDataset } from "../src/data-layer/contracts";
 
 const roots: string[] = [];
@@ -22,7 +23,7 @@ afterEach(async () => {
 });
 
 async function readLegacy<T>(file: string): Promise<T> {
-  return JSON.parse(await readFile(join(root, "src", "data", file), "utf8")) as T;
+  return JSON.parse(await readFile(join(DATA_DIR, file), "utf8")) as T;
 }
 
 async function readLegacyCount(file: string): Promise<number> {

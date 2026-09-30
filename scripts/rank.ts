@@ -5,14 +5,14 @@
  * Run with: npm run rank [-- -n 20]
  */
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { DATA_DIR } from "../src/node/dataPaths";
 import { DEFAULT_CONFIG } from "../src/domain/scoringConfig";
 import { scoreListing } from "../src/domain/scoring";
 import { isNewListing, isSold } from "../src/domain/lifecycle";
 import type { EnrichedListing } from "../src/domain/types";
 
-const DATA_FILE = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "listings.json");
+const DATA_FILE = join(DATA_DIR, "listings.json");
 
 const nFlagIndex = process.argv.indexOf("-n");
 const topN = nFlagIndex >= 0 ? Math.max(1, parseInt(process.argv[nFlagIndex + 1], 10) || 15) : 15;

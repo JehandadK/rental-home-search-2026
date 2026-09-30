@@ -208,10 +208,13 @@ preferred when available, since it reflects the real route.
 
 ## Data
 
-Everything lives in `src/data/`:
+Persisted data lives in `data/` (`DATA_DIR` in `src/node/dataPaths.ts` is the only
+place that knows). The web app never imports it: `npm run data:web` publishes
+the two files the browser fetches into `public/data/` (below).
 
 | File | Contents | Source |
 |---|---|---|
+| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (the app's reference data) | `npm run data:reference:migrate` from the files below, then revisioned updates |
 | `pois.json` | General POIs (Al Sanad and legacy Baitul Aman reference) | Curated map pins |
 | `mosques.json` | Mosque/masjid/musalla candidates used by nearest-mosque scoring | OpenStreetMap + curated map pins |
 | `stations.json` | 20 stations across Soka + Koshigaya (Tobu Skytree, JR Musashino, Nippori-Toneri…) | OpenStreetMap |
@@ -227,13 +230,26 @@ Everything lives in `src/data/`:
 | `sources/yahoo.json` | User-selected Yahoo! Real Estate detail listings, retained across rebuilds | Native-browser detail extraction; no automatic market crawl |
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
 | `listings.json` | Full archival data, geocoded + enriched with baked nearest places | `npm run enrich` |
-| `listings_web.json` | Compact browser payload (redundant proximities/audit text removed) | `npm run data:web` |
+
+The original reference files (`pois.json` … `neighbor_boundaries.json`) are the
+catalog's migration inputs; they stay unchanged. The catalog pins the place ids
+the app derived from them (`npm run data:reference:app-ids`), so saved place
+selections keep working.
+
+Published for the browser (`public/data/`, served by Vite and copied into `dist/`):
+
+| File | Contents | Source |
+|---|---|---|
+| `listings.json` | Compact browser payload (redundant proximities/audit text removed) | `npm run data:web` |
+| `reference.json` | Snapshot of the managed reference catalog | `npm run data:web` |
+
+The app loads both at startup, with loading, error/retry, and stale-copy states.
 
 ### User-selected Yahoo! Real Estate listings
 
-`src/data/sources/yahoo.json` stores individually requested Yahoo listings as
+`data/sources/yahoo.json` stores individually requested Yahoo listings as
 an independent source, so ordinary refreshes cannot erase them. Public detail
-captures are retained in `src/data/.captures/yahoo/`; email/tracking parameters
+captures are retained in `data/.captures/yahoo/`; email/tracking parameters
 are removed from the saved listing URLs. These are partial observations, not a
 complete Yahoo market snapshot or an automated Yahoo collector.
 
@@ -333,7 +349,7 @@ and emits only a compact summary; portal collectors stop after two all-known
 pages when newest-first sorting is confirmed. Nifty now parses family units and
 parking/amenity flags directly from list cards, so discovery needs no detail
 requests. Browser captures are replayable locally; only summaries reach the model. Every invocation is checkpointed in
-`src/data/refresh-runs.json` with start/completion times, durations, attempts,
+`data/refresh-runs.json` with start/completion times, durations, attempts,
 per-stage status and discoveries, pre/post totals, net unique additions after
 deduplication, duplicate counts, and lifecycle results. A process lock prevents
 two refreshes from corrupting each other's checkpoints. If a portal fails its
@@ -366,6 +382,7 @@ estimates, but treat exact positions as ±100–200 m.
 ```
 src/
   web/                  ← React app (reads data; never imports Node, storage or collectors)
+    data/                 · WebDataBoundary + runtime client that fetches public/data/
     components/           · PlacePanel, FilterPanel, WeightPanel, ListingTable, MapView, AddListingForm
     hooks/                · localStorage-persisted config, filters, places, listings
     lib/export.ts         · CSV/Markdown export
@@ -374,6 +391,7 @@ src/
     scoringConfig.ts      · all weights & anchors (the single tuning point)
     scoring.ts            · the 0–100 engine
     geo.ts                · haversine, walk-time estimation
+    referenceData.ts      · the reference model built from a loaded snapshot
     places.ts             · the flat catalog of every reference place
     proximityIndex.ts     · runtime listing × place distance matrix
     placeSelection.ts     · applies "which places count" to a listing
@@ -385,7 +403,8 @@ src/
   refresh/              ← refresh plan and run ledger
   node/                 ← locks, atomic writes, data root path
   integrations/         ← GSI geocoding client
-  data/                 ← the datasets above
+data/                   ← the persisted datasets above
+public/data/            ← published web assets (npm run data:web)
 scripts/                ← CLI entry points only (npm run …)
   scrape.ts             ← incremental SUUMO collector
   scrape-athome.ts      ← Chrome-backed incremental AtHome collector

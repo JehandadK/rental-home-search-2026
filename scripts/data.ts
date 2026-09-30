@@ -5,7 +5,7 @@
  *   npm run data:build    rebuild listings_raw.json from all source files
  *
  * `listings_raw.json` is derived; never edit it by hand. Each source file
- * under src/data/sources/ is owned by its own importer.
+ * under data/sources/ is owned by its own importer.
  */
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";

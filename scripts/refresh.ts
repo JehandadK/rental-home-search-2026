@@ -6,7 +6,7 @@
  *   npm run refresh -- --resume        continue the latest incomplete run
  *   npm run refresh -- --verbose       stream full collector output
  *
- * Every stage is checkpointed in src/data/refresh-runs.json. Source collectors
+ * Every stage is checkpointed in data/refresh-runs.json. Source collectors
  * remain independently atomic, so a failed portal retains its last successful
  * snapshot. A partial run still rebuilds from the valid snapshots, but exits 2
  * and can be resumed without rerunning already-successful earlier stages.

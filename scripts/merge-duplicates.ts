@@ -11,7 +11,7 @@
  *   npm run dedup -- --apply rebuild listings_raw.json from the source files,
  *                            applying the merge for real
  *
- * Source files under src/data/sources/ stay owned by their importers — this
+ * Source files under data/sources/ stay owned by their importers — this
  * script never edits them; --apply delegates to the normal build pipeline
  * (backups, lifecycle reconciliation, manifest).
  */

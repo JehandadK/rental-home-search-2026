@@ -26,8 +26,8 @@
 - A detail fetch parses parking, lease, availability, fees, structure and amenities
   together. Valid HTML is cached; `--replay` re-parses it with zero requests.
   `--force` explicitly rechecks within the budget. Deferred URLs live in
-  `src/data/detail-queue.json`, independent of scrape `newListingIds`.
-- Shared-address geocodes persist in `src/data/geocodes.json`. New results are
+  `data/detail-queue.json`, independent of scrape `newListingIds`.
+- Shared-address geocodes persist in `data/geocodes.json`. New results are
   checkpointed immediately, reused within the same run, and written atomically.
   No-match results expire after 7 days; transient HTTP failures are not cached.
 - Source observation times come from the capture, not the build clock, and any
@@ -94,7 +94,7 @@ run the human CLI's direct-Bridge collectors from the agent shell.
 
 PageCapture schema: `schemaVersion:1, source, city, url, page, capturedAt,
 httpStatus:200, sortedNewest:true, html`. Cities: Soka/Koshigaya/Kawaguchi.
-Captures and progress receipts live in `src/data/.captures/`; never put full
+Captures and progress receipts live in `data/.captures/`; never put full
 HTML, source JSON, browser storage, cookies or tokens into model context.
 
 ## 2026-09-07 recovery result

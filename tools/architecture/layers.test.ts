@@ -45,12 +45,12 @@ describe("layer rules", () => {
     expect(violation(edge("src/collectors/nifty/parse.ts", "scripts/merge-nifty.ts"))).toMatch(/CLI entry point/);
     expect(violation(edge("scripts/backfill-parking.ts", "scripts/enrich-details.ts"))).toMatch(/CLI entry point/);
     expect(violation(edge("src/domain/scoring.ts", "src/domain/scoring.test.ts"))).toMatch(/test file/);
-    expect(violation(edge("src/domain/reference.ts", "src/data/pois.json"))).toMatch(/persisted data/);
+    expect(violation(edge("src/domain/reference.ts", "data/pois.json"))).toMatch(/persisted data/);
     expect(violation(edge("scripts/data.ts", "data/reference/v1/manifest.json"))).toMatch(/persisted data/);
     // The web app fetches its published assets; it never bundles them (M5).
     expect(violation(edge("src/web/data/httpClient.ts", "public/data/listings.json"))).toMatch(/persisted data/);
     expect(violation(edge("src/domain/places.ts", "public/data/reference.json"))).toMatch(/persisted data/);
-    expect(violation(edge("src/web/App.tsx", "src/data/pois.json"))).toMatch(/persisted data/);
+    expect(violation(edge("src/web/App.tsx", "data/pois.json"))).toMatch(/persisted data/);
     expect(violation(edge("scripts/scrape.test.ts", "scripts/scrape.ts"))).toBeNull();
     expect(violation(edge("src/domain/scoring.test.ts", "src/storage/json/dataStore.ts"))).toBeNull();
     expect(violation(edge("src/storage/json/dataStore.ts", "src/storage/json/listingRepository.contract.ts"))).toMatch(/test file/);

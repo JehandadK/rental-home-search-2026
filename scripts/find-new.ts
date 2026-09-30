@@ -9,8 +9,8 @@
  *   npm run find:new -- --bike --parking required
  */
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { DATA_DIR } from "../src/node/dataPaths";
 import { DEFAULT_CONFIG } from "../src/domain/scoringConfig";
 import { isNewListing, isSold } from "../src/domain/lifecycle";
 import { parkingInfo } from "../src/domain/moveInCost";
@@ -40,7 +40,7 @@ if (!["any", "required", "free"].includes(parking)) {
   throw new Error("--parking must be any, required, or free");
 }
 
-const dataFile = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "listings.json");
+const dataFile = join(DATA_DIR, "listings.json");
 const listings = JSON.parse(await readFile(dataFile, "utf8")) as EnrichedListing[];
 const config = argv.includes("--bike")
   ? { ...DEFAULT_CONFIG, travelMode: "bicycle" as const }

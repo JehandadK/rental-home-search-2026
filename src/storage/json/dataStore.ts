@@ -6,11 +6,11 @@
  * build artifact — the union of every source file — so re-running one
  * scraper can never delete another source's data.
  *
- *   src/data/sources/suumo.json   ← npm run scrape        (owns SUUMO data)
- *   src/data/sources/nifty.json   ← npm run import:nifty  (owns Nifty data)
- *   src/data/sources/_manifest.json                       (build provenance)
+ *   data/sources/suumo.json   ← npm run scrape        (owns SUUMO data)
+ *   data/sources/nifty.json   ← npm run import:nifty  (owns Nifty data)
+ *   data/sources/_manifest.json                       (build provenance)
  *        │
- *        └── npm run data:build → src/data/listings_raw.json (derived, do not edit)
+ *        └── npm run data:build → data/listings_raw.json (derived, do not edit)
  *                               → npm run enrich → listings.json
  *
  * Safety features:
@@ -44,7 +44,7 @@ export const BACKUP_DIR = join(DATA_DIR, ".backups");
 export const RAW_PATH = join(DATA_DIR, "listings_raw.json");
 export const MANIFEST_PATH = join(SOURCES_DIR, "_manifest.json");
 /** The managed reference catalog (cities, boundaries, places). */
-export const REFERENCE_CATALOG_DIR = join(DATA_DIR, "..", "..", "data", "reference", "v1");
+export const REFERENCE_CATALOG_DIR = join(DATA_DIR, "reference", "v1");
 
 /** Keep this many historical copies of each file. */
 const BACKUPS_PER_FILE = 10;

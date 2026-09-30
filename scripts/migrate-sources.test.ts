@@ -114,11 +114,11 @@ describe("audited historical source bootstrap", () => {
     const write = store.writeSource.bind(store);
     vi.spyOn(store, "writeSource").mockImplementationOnce(write).mockRejectedValueOnce(new Error("simulated disk failure"));
     await expect(runSourceMigration(inputPath, service, log)).rejects.toThrow("simulated disk failure");
-    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: 1 listings → src/data/sources/athome.json"]);
+    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: 1 listings → data/sources/athome.json"]);
     expect(await store.readSource("suumo")).toBeNull();
     const firstBytes = await readFile(store.sourcePath("athome"), "utf8"); log.mockClear();
     expect(await runSourceMigration(inputPath, service, log)).toMatchObject([{ source: "athome", status: "skipped" }, { source: "suumo", status: "created" }]);
-    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: source file already exists, skipped", "  suumo: 1 listings → src/data/sources/suumo.json", "\nNext: npm run data:build"]);
+    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: source file already exists, skipped", "  suumo: 1 listings → data/sources/suumo.json", "\nNext: npm run data:build"]);
     expect(await readFile(store.sourcePath("athome"), "utf8")).toBe(firstBytes);
     expect((await store.readSource("suumo"))!.listings).toEqual([records[1]]);
     expect(JSON.parse(await readFile(inputPath, "utf8"))).toEqual(records);
