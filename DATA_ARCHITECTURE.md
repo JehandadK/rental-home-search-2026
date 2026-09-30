@@ -4,6 +4,28 @@
 
 Separate the codebase into three independently evolvable layers—**collectors** (scrapers and importers), the **data layer** (application rules plus replaceable storage adapters), and the **web frontend**—over a shared, pure domain model. Each layer lives in its own directory and talks to the others only through published contracts; dependency direction is enforced by tests, not convention (see "Target layers and dependency rules"). Preserve the usable app, current CLI workflows, and existing data throughout the migration. Do not combine a data rewrite with a frontend rewrite or a directory reorganization.
 
+## Current state (2026-09-30)
+
+M0–M6 and the SourcePolicy registry are complete and merged into `main` (up to `11f3e6d`). M7 has not started: it applies only when shared or cross-device user data becomes a requirement. M8 is optional.
+
+| Milestone | Status |
+|---|---|
+| M0 Baseline, M1 repository contracts, M2 reference catalog, M3 controlled ingestion | Done |
+| M4 Enforced layer boundaries | Done; the architecture allowlist is empty since M5 |
+| M5 Frontend data client and dynamic reference data | Done |
+| SourcePolicy registry | Done |
+| M6 Frontend user-state boundary | Done |
+| M7 Durable API for shared UI writes | Not started; needs a product requirement |
+| M8 Workspace packages | Optional; not started |
+
+How data flows today:
+
+- **Collectors** (`src/collectors/`) submit observations through the data-layer contracts. Each source's identity, merge, and detail rules are a `SourcePolicy` registered in `src/data-layer/ingestion/sourcePolicies.ts`.
+- **Storage** (`src/storage/json/`) keeps everything under `data/`: source files, derived listings, the managed reference catalog in `data/reference/v1`, captures, and backups. `DATA_DIR` in `src/node/dataPaths.ts` is the one root.
+- **Publishing:** `npm run data:web` (and `npm run build`) writes `public/data/listings.json` and `public/data/reference.json`.
+- **Web app** (`src/web/`): fetches those two files through `WebDataClient`, behind `WebDataBoundary`, and keeps browser-local preferences in `UserStateStore`. It never imports data files, storage, or browser storage outside its adapters. `tools/architecture` enforces all of this.
+- **Checks:** `npm test` (578 tests), `npm run typecheck` (both configurations), and `npm run build` (279 kB JS, 90 kB gzip).
+
 ## Compatibility rules
 
 - Every milestone must leave `npm run dev`, `npm test`, `npm run typecheck`, and `npm run build` usable.
@@ -178,7 +200,7 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 
 **Rollback:** Select the bundled compatibility client. The old JSON files remain unchanged until parity has been demonstrated; the directory move reverts independently.
 
-#### M5 starting brief (written at M4 close, 2026-09-30)
+#### M5 starting brief (written at M4 close, 2026-09-30; historical — M5 is complete, see "Progress")
 
 **Where the frontend gets data today**
 
@@ -320,13 +342,19 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 - **M5 validation:** `npm test` 554 tests (516 before), `npm run typecheck` (both configurations), `npm run build`, `npm run data:status`, `npm run refresh -- --plan`, `npm run rank`, and the reference migrate/upgrade/app-ids commands pass. The production JS is 279 kB (90 kB gzip), down from 4,523 kB (624 kB gzip), with no chunk-size warning. Tests show the published data reproduces the pre-M5 place catalog (every id, category, name, coordinate, subtitle, and the order) and gives every listing the same score, and pin the map extent and city label positions to the original boundary files. All 27 persisted files hash identically before and after the move (the original 26, minus `listings_web.json` now in `public/data/`, plus the new places revision and manifest checkpoint). The dev server renders all 3,661 listings with no console warnings. A pixel comparison with the pre-M5 build differs in 135 of 2,464,000 canvas pixels: the POI label now uses its catalog name ("Al Sanad School Japan"), and neighbouring boundaries are drawn in catalog order. Other visible changes: the map star and legend follow the currently selected `poi1` target, and city chip labels come from the catalog (same text for the current three cities). No live collector, capture import, enrichment, or canonical `data:build` was run.
 - **SourcePolicy registry complete.** Each source declares a `SourcePolicy` (`src/data-layer/ingestion/sourcePolicy.ts`): host, listing `prepare`, SUUMO-style exact-URL discovery rules, an optional legacy detail-import producer, and optional detail-patch and portal-discovery rules. The ingestion service, portal discovery session, and capture-run annotation look it up in `SOURCE_POLICIES` (`sourcePolicies.ts`) instead of importing policies or hard-coding sources, hosts, and producer names. A new site adds one policy file and one registry entry. Behaviour, messages, and journals are unchanged (every existing source-specific test passes as is); new tests ingest an extra registered source through the unchanged service. The public contract unions `PortalDiscoveryOptions.source`, `portalPageUrl`, and `CaptureRunSummary.source` still list today's sites; a new portal site widens them.
 - **M6 complete.** Scoring config, filters, place selection, marks, custom listings, and hidden columns go through `UserStateStore` (`src/web/userState/`): a localStorage adapter (the only code that touches browser storage, enforced by the architecture test) and an in-memory adapter for UI tests. Keys and stored formats are unchanged, so existing settings survive and earlier builds can still read them; rollback is a revert. Per-key decoders return exactly what the old loaders did for app-saved values (including the v1 Baitul Aman mosque-target migration) and fall back to defaults for corrupt or foreign values. Deviation from the scope wording: the store is synchronous and browser-local rather than the data layer's async, revision-checked `UserDataRepository`, which would add loading states and cross-tab conflicts without a product need; that contract remains the M7 boundary for shared writes. Validation: 572 tests (including a reload round trip and corrupt-state fallbacks through the full app), both typechecks, and the build pass; in the browser, pre-M6 values restore and a corrupt value falls back without errors.
+- **Merged into `main` (2026-09-30).** `main` was fast-forwarded to the M5/SourcePolicy/M6 branch (`11f3e6d`); nothing was pushed. In the main checkout, the untracked caches were then moved as described below: 190 files, `src/data/.captures` (22 MB) to `data/.captures` and `src/data/.backups` (55 MB) to `data/.backups`, after which `src/data/` was removed. `npm test` (578), `npm run typecheck`, `npm run data:status` (backups now under `data/.backups`), and `npm run refresh -- --plan` pass there.
 - **After merging the data move into an existing checkout:** `git` moves only tracked files. Untracked capture caches and backups stay in `src/data/` and the collectors no longer see them, so move them once (with no refresh or collector running): `mv src/data/.captures data/.captures && mv src/data/.backups data/.backups`, then remove the empty `src/data/`. If `data/.captures` or `data/.backups` already exist, merge their contents instead of overwriting. `.gitignore` still ignores the old locations so they cannot be committed by accident.
 - **M5 review fixes:** an independent review found no high-severity issues; these were fixed. Pinned ids of retired places stay reserved, so a new place with the same name never takes a saved selection's id. `npm run data:reference:app-ids` also pins places added after the migration (next free suffix, next order), and a test requires every published place to be pinned, so unpinned-id drift cannot reach users. Saved place ids missing from the catalog are dropped on load (a choice left empty reverts to its default; a deliberately cleared one stays cleared). A retry from stale data shows that it is running and why it failed. A render failure on loaded data shows an error with a reload button instead of a blank page. Accepted: the stale fallback applies per read, so fresh listings can pair with a cached reference snapshot (or the reverse); the notice names each stale read.
 - **Known follow-ups (not blockers):**
   - `public/data/reference.json` must be regenerated (`npm run data:web`) after any catalog change; a test fails until it is.
   - The original reference files in `data/` are now only migration inputs and parity oracles; they can be retired in a later cleanup once nothing needs to re-derive the catalog from them.
   - In development, React StrictMode starts and aborts one extra fetch of each asset; production fetches once.
-- **Restart here:** M7 only if shared or cross-device user data becomes a product requirement; M8 remains optional. Open question: `src/refresh/` is composition like the CLI and could fold into `scripts/`; not done, since the table above still lists it as a layer.
+- **Still open from M3** (unchanged by M4–M6): the ingestion journal grows without bound; collector `scrapedAt` is the latest capture time rather than the commit time; a native-import retry after a parser change hits `ScrapeReplayConflictError`; the SUUMO collector's replayed commit logs zero counts; AtHome's `property:` alias can merge two same-size rooms in one building.
+- **Restart here.** The migration plan is complete through M6. Choose what comes next:
+  - **M7**, only if user data must be shared across devices or with ingestion. It first needs decisions on hosting, authentication, and which data is shared; the data layer's `UserDataRepository` contract and the `WebDataClient` read models are its starting points.
+  - **M8**, only if independent builds, deployment, or versioning are needed.
+  - **Cleanup and hardening:** retire the original reference files in `data/` once nothing needs to re-derive the catalog from them (they now only feed the parity tests and `data:reference:*` commands); address the M3 follow-ups above, starting with capping or compacting the ingestion journal.
+  - **Open question:** `src/refresh/` is composition like the CLI and could fold into `scripts/`; not done, since the layer table still lists it.
 
 ## Per-milestone validation
 
