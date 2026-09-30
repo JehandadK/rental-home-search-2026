@@ -55,8 +55,6 @@ export const LEGACY_LOCATIONS: Record<string, Layer> = {
   "scripts/lib/niftyIngestion.ts": "collectors",
   "scripts/lib/suumoDetailIngestion.ts": "collectors",
   "scripts/lib/geocodeCache.ts": "collectors",
-  "scripts/lib/sourceObservationBatch.ts": "collectors",
-  "scripts/lib/suumoIncremental.ts": "collectors",
   "scripts/lib/refreshPlan.ts": "refresh",
   "scripts/lib/refreshLedger.ts": "refresh",
 };

@@ -37,8 +37,6 @@ export const KNOWN_VIOLATIONS: KnownViolation[] = [
   { from: "scripts/lib/niftyIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
   { from: "scripts/lib/suumoDetailIngestion.ts", to: "src/data-layer/ingestion/service.ts", until: "M4", fix: "Publish scrapeFingerprint as a public helper or stop needing it" },
   { from: "scripts/lib/portalCollector.ts", to: "src/data-layer/ingestion/portalDiscovery.ts", until: "M4", fix: "Publish portalPageUrl with the portal discovery contract" },
-  { from: "scripts/lib/sourceObservationBatch.ts", to: "src/data-layer/sourceObservationBatch.ts", until: "M4", fix: "Delete the compatibility shim" },
-  { from: "scripts/lib/suumoIncremental.ts", to: "src/data-layer/ingestion/suumoIdentity.ts", until: "M4", fix: "Delete the unreferenced compatibility shim" },
   // Collector → refresh
   { from: "scripts/lib/portalCollector.ts", to: "scripts/lib/refreshPlan.ts", until: "M4", fix: "Collectors own DEFAULT_INCREMENTAL_PAGE_CEILING; refresh passes overrides" },
   // Domain → web

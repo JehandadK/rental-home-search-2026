@@ -8,7 +8,7 @@ import { InvalidScrapeBatchError, ListingIngestionService, ScrapeReplayConflictE
 import { sourceRowKey, sourceRowLocator } from "../sourceRowIdentity";
 import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../../storage/json/dataStore";
 import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
-import { mergeSuumoIncremental, suumoMatchKeys } from "../../../scripts/lib/suumoIncremental";
+import { mergeSuumoIncremental, suumoMatchKeys } from "./suumoIdentity";
 import { trackingKey } from "../lifecycle";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
