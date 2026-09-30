@@ -3,7 +3,7 @@
  * reference data have loaded. It shows an explicit loading state, an error
  * with a retry, and notices for stale or empty data.
  */
-import type { ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import type { WebDataClient } from "../../data-layer/read/contracts";
 import { useWebData, type WebData } from "./useWebData";
 import styles from "./WebDataBoundary.module.css";
@@ -40,8 +40,9 @@ export function WebDataBoundary({ client, children }: Props) {
     notices.push(
       <div key="stale" className={styles.notice} role="status">
         Showing an older copy of the data. {data.stale.join(" · ")}
-        <button type="button" className="secondary" onClick={retry}>
-          Retry
+        {state.retryError && <span> · Retry failed: {state.retryError}</span>}
+        <button type="button" className="secondary" onClick={retry} disabled={state.retrying}>
+          {state.retrying ? "Retrying…" : "Retry"}
         </button>
       </div>,
     );
@@ -63,7 +64,35 @@ export function WebDataBoundary({ client, children }: Props) {
   return (
     <>
       {notices}
-      {children(data)}
+      <RenderErrorBoundary>{children(data)}</RenderErrorBoundary>
     </>
   );
+}
+
+/**
+ * Loaded data that passes the client's checks can still hold a record the
+ * app cannot draw. Show that as an error instead of a blank page.
+ */
+class RenderErrorBoundary extends Component<{ children: ReactNode }, { message: string | null }> {
+  state = { message: null as string | null };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { message: error instanceof Error ? error.message : String(error) };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    console.error("The app could not render the loaded data", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.message == null) return this.props.children;
+    return (
+      <div className={styles.state} role="alert">
+        <p>The app could not display the loaded data: {this.state.message}</p>
+        <button type="button" onClick={() => window.location.reload()}>
+          Reload
+        </button>
+      </div>
+    );
+  }
 }

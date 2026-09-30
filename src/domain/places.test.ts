@@ -32,6 +32,15 @@ describe("buildPlaceCatalog", () => {
     expect(catalog.places.map((p) => p.id)).toEqual(["busStop:東口", "busStop:東口#1", "busStop:東口#2"]);
   });
 
+  it("never hands a retired place's pinned id to a new place", () => {
+    const catalog = buildPlaceCatalog([
+      place("old", "station", "新田", { status: "retired", attributes: { appPlaceId: "station:新田", appOrder: 0 } }),
+      place("new", "station", "新田"),
+    ]);
+    expect(catalog.places.map((p) => p.id)).toEqual(["station:新田#1"]);
+    expect(catalog.byId.has("station:新田")).toBe(false);
+  });
+
   it("rejects two records pinned to one app id", () => {
     expect(() => buildPlaceCatalog([
       place("a", "poi", "A", { attributes: { appPlaceId: "poi:A" } }),

@@ -128,8 +128,10 @@ export function legacyPlaceRecords(legacy: LegacyReferenceData, updatedAt: strin
  * original files (`busStop:東口#1`), and saved selections store those ids.
  * The catalog is sorted by record id, so this records, for each migrated
  * place, the id and position the app gave it, plus the subtitle it showed
- * (address for POIs and mosques, operator for stations). Returns only the
- * records that change; an already-annotated catalog yields none.
+ * (address for POIs and mosques, operator for stations). Active places added
+ * to the catalog later are pinned too, to the id and position the app gives
+ * them now, so later additions or retirements cannot shift their ids.
+ * Returns only the records that change; an already-annotated catalog yields none.
  */
 export function planAppPlaceAnnotations(
   legacy: LegacyReferenceData,
@@ -160,6 +162,21 @@ export function planAppPlaceAnnotations(
     const next: ReferencePlaceRecord = { ...existing, ...(subtitle ? { subtitle } : {}), attributes };
     if (JSON.stringify(next) !== JSON.stringify(existing)) changes.push({ ...next, updatedAt });
   });
+
+  // Pin places added after the migration, in the order the app lists them.
+  const changed = new Map(changes.map((record) => [record.id, record]));
+  const merged = current.map((record) => changed.get(record.id) ?? record);
+  const appIds = new Map(buildPlaceCatalog(merged).places.map((place) => [place.recordId, place.id]));
+  let nextOrder = Math.max(-1, ...merged.map((record) => {
+    const order = record.attributes?.[APP_ORDER_ATTRIBUTE];
+    return typeof order === "number" ? order : -1;
+  })) + 1;
+  for (const record of merged) {
+    if (record.status !== "active" || typeof record.attributes?.[APP_PLACE_ID_ATTRIBUTE] === "string") continue;
+    const appPlaceId = appIds.get(record.id);
+    if (!appPlaceId) continue;
+    changes.push({ ...record, attributes: { ...record.attributes, [APP_PLACE_ID_ATTRIBUTE]: appPlaceId, [APP_ORDER_ATTRIBUTE]: nextOrder++ }, updatedAt });
+  }
   return changes;
 }
 

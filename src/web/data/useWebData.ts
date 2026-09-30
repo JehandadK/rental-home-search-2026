@@ -21,7 +21,14 @@ export interface WebData {
 export type WebDataState =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ready"; data: WebData };
+  | {
+      status: "ready";
+      data: WebData;
+      /** A retry is running; the current data stays on screen meanwhile. */
+      retrying?: boolean;
+      /** Why the last retry from this data failed. */
+      retryError?: string;
+    };
 
 export function useWebData(client: WebDataClient): { state: WebDataState; retry: () => void } {
   const [state, setState] = useState<WebDataState>({ status: "loading" });
@@ -31,7 +38,9 @@ export function useWebData(client: WebDataClient): { state: WebDataState; retry:
     const controller = new AbortController();
     // A retry from a ready (stale) state keeps the current data on screen
     // until the new data arrives, and keeps it if the retry fails too.
-    setState((current) => (current.status === "ready" ? current : { status: "loading" }));
+    setState((current) => (current.status === "ready"
+      ? (attempt > 0 ? { ...current, retrying: true, retryError: undefined } : current)
+      : { status: "loading" }));
     Promise.all([
       client.queryListings({ signal: controller.signal }),
       client.loadReferenceSnapshot({ signal: controller.signal }),
@@ -51,7 +60,9 @@ export function useWebData(client: WebDataClient): { state: WebDataState; retry:
         (error: unknown) => {
           if (controller.signal.aborted) return;
           const message = error instanceof Error ? error.message : String(error);
-          setState((current) => (current.status === "ready" ? current : { status: "error", message }));
+          setState((current) => (current.status === "ready"
+            ? { ...current, retrying: false, retryError: message }
+            : { status: "error", message }));
         },
       );
     return () => controller.abort();

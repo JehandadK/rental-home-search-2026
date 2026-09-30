@@ -60,16 +60,27 @@ export function decodeCustomListings(raw: unknown): EnrichedListing[] {
 
 /**
  * Saved place selections keep only well-formed entries over the defaults.
+ * Ids of places no longer in the catalog (retired since they were saved) are
+ * dropped; a choice left with none of its places reverts to the default,
+ * while a deliberately empty choice (`[]`, "clear") stays empty.
+ *
  * Migration (still v1): v1 once stored Baitul Aman as the single mosque
  * target. Mosque scoring now defaults to the nearest of all mosques, so that
  * legacy default becomes `null`, while curated multi-mosque choices are kept.
  */
-export function decodePlaceSelection(raw: unknown, defaults: PlaceSelection): PlaceSelection {
+export function decodePlaceSelection(
+  raw: unknown,
+  defaults: PlaceSelection,
+  knownIds?: { has(id: string): boolean },
+): PlaceSelection {
   if (!isPlainObject(raw) || !isPlainObject(raw.byParameter)) return defaults;
   const merged = { ...defaults.byParameter };
   for (const [key, ids] of Object.entries(raw.byParameter)) {
-    if (ids === null || (Array.isArray(ids) && ids.every((id) => typeof id === "string"))) {
-      merged[key as DistanceParameterKey] = ids as string[] | null;
+    if (ids === null) {
+      merged[key as DistanceParameterKey] = null;
+    } else if (Array.isArray(ids) && ids.every((id) => typeof id === "string")) {
+      const kept = knownIds ? ids.filter((id) => knownIds.has(id)) : ids;
+      if (ids.length === 0 || kept.length > 0) merged[key as DistanceParameterKey] = kept;
     }
   }
   const oldBaitulOnly = merged.poi2?.length === 1 && merged.poi2[0].includes("Baitul Aman");

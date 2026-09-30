@@ -38,6 +38,8 @@ export interface CatalogPlace extends NamedPlace {
    * for repeated names. Saved place selections store these ids.
    */
   id: string;
+  /** The reference record's own id (distinct from the app-facing id). */
+  recordId: string;
   category: PlaceCategory;
   /** Extra qualifier shown in the UI (operator, facility type…). */
   subtitle?: string;
@@ -69,25 +71,29 @@ const ROLE_ATTRIBUTE = "legacyRole";
 const EMPTY: readonly CatalogPlace[] = [];
 
 /**
- * Build the catalog from reference places. Retired places are skipped.
- * Places with an explicit app order come first, in that order; the rest keep
- * their input order. Places without a pinned id get `${category}:${name}`,
- * suffixed with `#n` when that id is already taken.
+ * Build the catalog from reference places. Retired places are skipped, but
+ * their pinned ids stay reserved so a saved selection never silently moves to
+ * a different place. Places with an explicit app order come first, in that
+ * order; the rest follow in input order. Places without a pinned id get
+ * `${category}:${name}`, suffixed with `#n` when that id is already taken.
+ *
+ * Unpinned ids are only as stable as the set of unpinned places, so every
+ * published catalog place should be pinned (`npm run data:reference:app-ids`).
  */
 export function buildPlaceCatalog(input: readonly ReferencePlace[]): PlaceCatalog {
-  const active = input
-    .map((place, position) => ({ place, position, order: numberAttribute(place, APP_ORDER_ATTRIBUTE) }))
-    .filter(({ place }) => place.status !== "retired")
-    .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.position - b.position)
-    .map(({ place }) => place);
-
   const used = new Set<string>();
-  for (const place of active) {
+  for (const place of input) {
     const pinned = stringAttribute(place, APP_PLACE_ID_ATTRIBUTE);
     if (pinned == null) continue;
     if (used.has(pinned)) throw new Error(`Duplicate app place id: ${pinned}`);
     used.add(pinned);
   }
+
+  const active = input
+    .map((place, position) => ({ place, position, order: numberAttribute(place, APP_ORDER_ATTRIBUTE) }))
+    .filter(({ place }) => place.status !== "retired")
+    .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.position - b.position)
+    .map(({ place }) => place);
   const suffixes = new Map<string, number>();
   const places = active.map((place): CatalogPlace => {
     let id = stringAttribute(place, APP_PLACE_ID_ATTRIBUTE);
@@ -102,6 +108,7 @@ export function buildPlaceCatalog(input: readonly ReferencePlace[]): PlaceCatalo
     const role = stringAttribute(place, ROLE_ATTRIBUTE);
     return {
       id,
+      recordId: place.id,
       name: place.name,
       lat: place.lat,
       lon: place.lon,

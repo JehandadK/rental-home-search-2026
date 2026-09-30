@@ -101,6 +101,34 @@ describe("pinning app place ids into the reference catalog", () => {
     expect(await snapshotFiles(catalog)).toEqual(after);
   });
 
+  it("pins places added after the migration, so later changes cannot shift their ids", async () => {
+    const catalog = await freshCatalog();
+    run(catalog);
+    const repository = new JsonReferenceDataRepository(catalog);
+    const pinned = await repository.loadSnapshot();
+    const now = new Date().toISOString();
+    const added = (id: string, name: string) => ({ id, category: "busStop", name, lat: 35.83, lon: 139.8, status: "active" as const, updatedAt: now });
+    const existingName = pinned.places.records.find((record) => record.category === "busStop")!.name;
+    await repository.updatePlaces({ upsert: [added("busStop:zz-new-1", "新しい停留所"), added("busStop:zz-new-2", existingName)] },
+      { expectedRevision: pinned.places.revision, changedBy: "test", reason: "add stops" });
+
+    expect(run(catalog)).toContain("Pinned app ids for 2 places");
+    const after = await repository.loadSnapshot();
+    const pins = new Map(after.places.records.map((record) => [record.id, record.attributes]));
+    expect(pins.get("busStop:zz-new-1")).toMatchObject({ appPlaceId: "busStop:新しい停留所" });
+    // A repeated name gets the next free suffix, never an existing place's id.
+    const repeated = pins.get("busStop:zz-new-2")?.appPlaceId as string;
+    expect(repeated).toMatch(new RegExp(`^busStop:${existingName}#\\d+$`));
+    const ids = after.places.records.map((record) => record.attributes?.appPlaceId);
+    expect(new Set(ids).size).toBe(ids.length);
+    const orders = after.places.records.map((record) => record.attributes?.appOrder as number);
+    expect(Math.max(...orders)).toBe(orders.length - 1);
+    // Existing places keep their pins and the catalog still reproduces the pre-M5 ids.
+    expect(buildReferenceModel(after).catalog.places.slice(0, -2).map(comparablePlace))
+      .toEqual(legacyPlaceCatalog(DATA_DIR).map(comparablePlace));
+    expect(run(catalog)).toContain("already pinned");
+  });
+
   it("refuses when the original files no longer match the catalog's migration inputs", async () => {
     const catalog = await freshCatalog();
     const legacy = await tempCopy(DATA_DIR, LEGACY_REFERENCE_FILES);

@@ -20,6 +20,7 @@ import { REFERENCE_CATALOG_DIR } from "../../storage/json/dataStore";
 import { JsonReferenceDataRepository } from "../../storage/json/jsonReferenceDataRepository";
 import { comparablePlace, legacyPlaceCatalog } from "../../storage/json/dataMigrations/legacyPlaceCatalog.contract";
 import { createHttpWebDataClient } from "./httpClient";
+import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
 
 /** Serve public/data/ the way Vite does. */
 const fileFetch: typeof fetch = async (input) => {
@@ -46,6 +47,14 @@ describe("published web data", () => {
     const published = JSON.parse(readFileSync(join(WEB_PUBLISH_DIR, "reference.json"), "utf8")) as unknown;
     const current = await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot();
     expect(published).toEqual(JSON.parse(JSON.stringify(current)));
+  });
+
+  it("pins an app id on every published place (run `npm run data:reference:app-ids` if this fails)", () => {
+    const published = JSON.parse(readFileSync(join(WEB_PUBLISH_DIR, "reference.json"), "utf8")) as ReferenceDataSnapshot;
+    const unpinned = published.places.records
+      .filter((record) => record.status === "active" && typeof record.attributes?.appPlaceId !== "string")
+      .map((record) => record.id);
+    expect(unpinned).toEqual([]);
   });
 
   it("reproduces the pre-M5 place catalog: every id, category, name, coordinate, subtitle, and the order", () => {

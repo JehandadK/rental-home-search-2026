@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
 import type { ListingQueryResult, ReadResult, WebDataClient } from "../../data-layer/read/contracts";
 import { FIXTURE_LISTINGS, FIXTURE_REFERENCE, snapshot } from "../testing/referenceFixture.contract";
@@ -126,6 +126,35 @@ describe("WebDataBoundary", () => {
     });
     expect(screen.getByText("ready: 2 listings, 4 places")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText(/older copy/).textContent).toMatch(/Retry failed: still offline/);
+  });
+
+  it("shows that a retry from stale data is running", async () => {
+    const script = scriptedClient();
+    renderBoundary(script.client);
+    await act(async () => {
+      script.listings[0].resolve({ data: { listings: FIXTURE_LISTINGS }, stale: { reason: "offline" } });
+      script.references[0].resolve({ data: FIXTURE_REFERENCE });
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect((screen.getByRole("button", { name: "Retrying…" }) as HTMLButtonElement).disabled).toBe(true);
+    await act(async () => {
+      script.listings[1].resolve({ data: { listings: FIXTURE_LISTINGS } });
+      script.references[1].resolve({ data: FIXTURE_REFERENCE });
+    });
+    expect(screen.queryByText(/older copy/)).toBeNull();
+  });
+
+  it("shows a render failure on loaded data as an error, not a blank page", async () => {
+    const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
+    const Broken = (): never => { throw new Error("boundary without coordinates"); };
+    render(
+      <WebDataBoundary client={createStaticWebDataClient({ listings: FIXTURE_LISTINGS, reference: FIXTURE_REFERENCE })}>
+        {() => <Broken />}
+      </WebDataBoundary>,
+    );
+    expect((await screen.findByRole("alert")).textContent).toMatch(/could not display the loaded data: boundary without coordinates/);
+    quiet.mockRestore();
   });
 
   it("ignores a superseded response that arrives after a retry", async () => {

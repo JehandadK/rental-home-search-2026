@@ -44,6 +44,19 @@ describe("user-state decoders", () => {
     expect(decodeHiddenColumns(["rent", "size"], new Set(["rent", "size", "city"]))).toEqual(new Set(["rent", "size"]));
   });
 
+  it("drop saved place ids that are no longer in the catalog", () => {
+    const known = new Set(["poi:Al Sanad School Japan", "station:草加", "school:A"]);
+    const saved = { byParameter: {
+      poi1: ["poi:Retired School"], // every id gone: back to the default target
+      station: ["station:草加", "station:Retired"], // partly gone: keep the rest
+      school: [], // deliberately cleared: stays cleared
+      busStop: null,
+    } };
+    expect(decodePlaceSelection(saved, DEFAULT_SELECTION, known).byParameter).toEqual({
+      ...DEFAULT_SELECTION.byParameter, station: ["station:草加"], school: [], busStop: null,
+    });
+  });
+
   it("migrate the v1 single Baitul Aman mosque target to nearest-of-all", () => {
     const legacy = { byParameter: { poi2: ["poi:Baitul Aman Masjid (蒲生モスク)"] } };
     expect(decodePlaceSelection(legacy, DEFAULT_SELECTION).byParameter.poi2).toBeNull();

@@ -14,7 +14,7 @@ export function usePlaceSelection(catalog: PlaceCatalog) {
   // Decoded once, against the catalog the app loaded with.
   const [selection, setSelection] = usePersistentState<PlaceSelection>(
     USER_STATE_KEYS.placeSelection,
-    (raw) => decodePlaceSelection(raw, defaults),
+    (raw) => decodePlaceSelection(raw, defaults, catalog.byId),
   );
 
   /** Replace the chosen ids for one parameter (null = any place). */
