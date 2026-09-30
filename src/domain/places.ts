@@ -145,7 +145,11 @@ function numberAttribute(place: ReferencePlace, key: string): number | undefined
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
-/** Childcare facilities that are 幼稚園/認定こども園, not daycares (保育園). */
+/**
+ * Childcare facilities that are 幼稚園/認定こども園, not daycares (保育園).
+ * `facilityType` is "kindergarten" (幼稚園), "kodomoen" (認定こども園), or
+ * "hoikuen" (保育園/保育所); OSM tags all three as amenity=kindergarten.
+ */
 export function isKindergarten(place: CatalogPlace): boolean {
   const type = place.attributes?.facilityType ?? place.subtitle;
   return type !== "hoikuen";

@@ -214,15 +214,7 @@ the two files the browser fetches into `public/data/` (below).
 
 | File | Contents | Source |
 |---|---|---|
-| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (the app's reference data) | `npm run data:reference:migrate` from the files below, then revisioned updates |
-| `pois.json` | General POIs (Al Sanad and legacy Baitul Aman reference) | Curated map pins |
-| `mosques.json` | Mosque/masjid/musalla candidates used by nearest-mosque scoring | OpenStreetMap + curated map pins |
-| `stations.json` | 20 stations across Soka + Koshigaya (Tobu Skytree, JR Musashino, Nippori-Toneri…) | OpenStreetMap |
-| `elementary_schools.json` | 62 小学校 across the search area and its neighbours | OpenStreetMap |
-| `kindergartens.json` | 90 childcare facilities tagged `kindergarten` / `hoikuen` | OpenStreetMap |
-| `bus_stops.json` | ~1,000 bus stops | OpenStreetMap |
-| `soka_boundary.json` | Soka city boundary polygon | OpenStreetMap (relation 1769056) |
-| `neighbor_boundaries.json` | Koshigaya, Yashio, Kawaguchi, Adachi boundary rings (for map context) | OpenStreetMap |
+| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (POIs, mosques, stations, schools, childcare, bus stops), originally from OpenStreetMap and curated map pins | Revisioned updates through `JsonReferenceDataRepository`; `npm run data:reference:app-ids` after adding places |
 | `sources/suumo.json` | SUUMO family rentals (2K+) | `npm run scrape` |
 | `sources/athome.json` | AtHome family rentals (2K+), including move-in money and amenity flags | `npm run scrape:athome` |
 | `sources/roomspot.json` | RoomSpot/POLUS family rentals (2K+), including exact addresses and move-in money | `npm run scrape:roomspot` |
@@ -231,10 +223,9 @@ the two files the browser fetches into `public/data/` (below).
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
 | `listings.json` | Full archival data, geocoded + enriched with baked nearest places | `npm run enrich` |
 
-The original reference files (`pois.json` … `neighbor_boundaries.json`) are the
-catalog's migration inputs; they stay unchanged. The catalog pins the place ids
-the app derived from them (`npm run data:reference:app-ids`), so saved place
-selections keep working.
+The catalog pins the id the app shows for each place (`attributes.appPlaceId`), so saved
+place selections survive added and retired places. The original per-category JSON
+files it was migrated from were retired after M5 (see `DATA_ARCHITECTURE.md`).
 
 Published for the browser (`public/data/`, served by Vite and copied into `dist/`):
 

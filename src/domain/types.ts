@@ -18,39 +18,6 @@ export interface NamedPlace extends GeoPoint {
   name: string;
 }
 
-/** One of the user-defined points of interest. */
-export interface PointOfInterest extends NamedPlace {
-  /** Stable catalog identity; POI count and IDs are data, not a fixed tuple. */
-  id: string;
-  nameJa: string;
-  address: string;
-}
-
-/** Mosque, masjid or musalla candidate for nearest-place scoring. */
-export interface Mosque extends NamedPlace {
-  nameJa?: string;
-  address?: string;
-  source?: string;
-}
-
-export interface Station extends NamedPlace {
-  nameEn: string | null;
-  operator: string | null;
-}
-
-/**
- * Childcare categories in Soka. OSM tags all of these as amenity=kindergarten,
- * so the facility type is derived from the name suffix:
- *   kindergarten — 幼稚園 (private kindergartens)
- *   kodomoen     — 認定こども園 (certified child centres)
- *   hoikuen      — 保育園/保育所 (daycares, optional in scoring)
- */
-export type ChildcareType = "kindergarten" | "kodomoen" | "hoikuen";
-
-export interface ChildcareFacility extends NamedPlace {
-  type: ChildcareType;
-}
-
 /**
  * Up-front and recurring costs beyond monthly rent, as printed by the
  * listing site. All amounts are yen. `null` means "the source did not say";

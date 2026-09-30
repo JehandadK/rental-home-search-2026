@@ -1,26 +1,17 @@
 /**
- * The published assets (public/data/) are what the app now loads. Saved
- * place selections store catalog ids, and M5 must not change any score, so
- * this checks the published data against the pre-M5 behaviour: the place
- * catalog the app derived from the original reference files, and the scores
- * it computed from them.
+ * The published assets (public/data/) are what the app loads. They must be
+ * current with the managed catalog, load through the runtime client, and
+ * pin an app id on every place, since saved place selections store those ids.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { beforeAll, describe, expect, it } from "vitest";
-import { DATA_DIR, WEB_PUBLISH_DIR } from "../../node/dataPaths";
-import { buildPlaceCatalog, type ReferencePlace } from "../../domain/places";
-import { ProximityIndex } from "../../domain/proximityIndex";
-import { applySelection, defaultSelection } from "../../domain/placeSelection";
-import { buildReferenceModel, type ReferenceModel } from "../../domain/referenceData";
-import { scoreListing } from "../../domain/scoring";
-import { DEFAULT_CONFIG } from "../../domain/scoringConfig";
-import type { ChildcareFacility, EnrichedListing, PointOfInterest } from "../../domain/types";
+import { describe, expect, it } from "vitest";
+import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
+import { WEB_PUBLISH_DIR } from "../../node/dataPaths";
+import { buildReferenceModel } from "../../domain/referenceData";
 import { REFERENCE_CATALOG_DIR } from "../../storage/json/dataStore";
 import { JsonReferenceDataRepository } from "../../storage/json/jsonReferenceDataRepository";
-import { comparablePlace, legacyPlaceCatalog } from "../../storage/json/dataMigrations/legacyPlaceCatalog.contract";
 import { createHttpWebDataClient } from "./httpClient";
-import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
 
 /** Serve public/data/ the way Vite does. */
 const fileFetch: typeof fetch = async (input) => {
@@ -32,56 +23,27 @@ const fileFetch: typeof fetch = async (input) => {
   }
 };
 
-let listings: readonly EnrichedListing[];
-let reference: ReferenceModel;
-
-beforeAll(async () => {
-  const client = createHttpWebDataClient({ baseUrl: "/data/", fetch: fileFetch });
-  const [listingResult, referenceResult] = await Promise.all([client.queryListings(), client.loadReferenceSnapshot()]);
-  listings = listingResult.data.listings;
-  reference = buildReferenceModel(referenceResult.data);
-});
+const published = () => JSON.parse(readFileSync(join(WEB_PUBLISH_DIR, "reference.json"), "utf8")) as ReferenceDataSnapshot;
 
 describe("published web data", () => {
   it("publishes the current managed reference catalog (re-run `npm run data:web` if this fails)", async () => {
-    const published = JSON.parse(readFileSync(join(WEB_PUBLISH_DIR, "reference.json"), "utf8")) as unknown;
     const current = await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot();
-    expect(published).toEqual(JSON.parse(JSON.stringify(current)));
+    expect(published()).toEqual(JSON.parse(JSON.stringify(current)));
   });
 
   it("pins an app id on every published place (run `npm run data:reference:app-ids` if this fails)", () => {
-    const published = JSON.parse(readFileSync(join(WEB_PUBLISH_DIR, "reference.json"), "utf8")) as ReferenceDataSnapshot;
-    const unpinned = published.places.records
+    const unpinned = published().places.records
       .filter((record) => record.status === "active" && typeof record.attributes?.appPlaceId !== "string")
       .map((record) => record.id);
     expect(unpinned).toEqual([]);
   });
 
-  it("reproduces the pre-M5 place catalog: every id, category, name, coordinate, subtitle, and the order", () => {
-    expect(reference.catalog.places.map(comparablePlace)).toEqual(legacyPlaceCatalog(DATA_DIR).map(comparablePlace));
-  });
-
-  it("gives every listing the same score as the original reference files did", () => {
-    // The pre-M5 app: the catalog derived from the original files, with the
-    // POI roles and facility types those files carried.
-    const legacy = legacyPlaceCatalog(DATA_DIR);
-    const pois = JSON.parse(readFileSync(join(DATA_DIR, "pois.json"), "utf8")) as PointOfInterest[];
-    const childcare = JSON.parse(readFileSync(join(DATA_DIR, "kindergartens.json"), "utf8")) as ChildcareFacility[];
-    let poi = 0;
-    let facility = 0;
-    const legacyPlaces = legacy.map((place): ReferencePlace => {
-      if (place.category === "poi") return { ...place, attributes: { legacyRole: pois[poi++].id } };
-      if (place.category === "childcare") return { ...place, attributes: { facilityType: childcare[facility++].type } };
-      return place;
-    });
-    const legacyCatalog = buildPlaceCatalog(legacyPlaces);
-
-    const scores = (catalog: typeof legacyCatalog) => {
-      const index = new ProximityIndex(listings, catalog);
-      const selection = defaultSelection(catalog);
-      return listings.map((listing, i) => scoreListing(applySelection(listing, i, index, selection), DEFAULT_CONFIG));
-    };
-    expect(listings.length).toBeGreaterThan(0);
-    expect(scores(reference.catalog)).toEqual(scores(legacyCatalog));
+  it("loads through the runtime client into a usable reference model", async () => {
+    const client = createHttpWebDataClient({ baseUrl: "/data/", fetch: fileFetch });
+    const [listings, reference] = await Promise.all([client.queryListings(), client.loadReferenceSnapshot()]);
+    expect(listings.data.listings.length).toBeGreaterThan(0);
+    const model = buildReferenceModel(reference.data);
+    expect(model.catalog.withRole("poi1")).toBeDefined();
+    expect(model.boundaries.length).toBeGreaterThan(0);
   });
 });

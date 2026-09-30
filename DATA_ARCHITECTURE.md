@@ -24,7 +24,8 @@ How data flows today:
 - **Storage** (`src/storage/json/`) keeps everything under `data/`: source files, derived listings, the managed reference catalog in `data/reference/v1`, captures, and backups. `DATA_DIR` in `src/node/dataPaths.ts` is the one root.
 - **Publishing:** `npm run data:web` (and `npm run build`) writes `public/data/listings.json` and `public/data/reference.json`.
 - **Web app** (`src/web/`): fetches those two files through `WebDataClient`, behind `WebDataBoundary`, and keeps browser-local preferences in `UserStateStore`. It never imports data files, storage, or browser storage outside its adapters. `tools/architecture` enforces all of this.
-- **Checks:** `npm test` (578 tests), `npm run typecheck` (both configurations), and `npm run build` (279 kB JS, 90 kB gzip).
+- **Reference data** exists only as the managed catalog. The eight original per-category files were retired after M5 (see "Progress"), and every catalog place is pinned to its app id.
+- **Checks:** `npm test` (569 tests), `npm run typecheck` (both configurations), and `npm run build` (279 kB JS, 90 kB gzip).
 
 ## Compatibility rules
 
@@ -347,13 +348,20 @@ M1 adds local-filesystem lock files, unique same-directory temp files, file sync
 - **M5 review fixes:** an independent review found no high-severity issues; these were fixed. Pinned ids of retired places stay reserved, so a new place with the same name never takes a saved selection's id. `npm run data:reference:app-ids` also pins places added after the migration (next free suffix, next order), and a test requires every published place to be pinned, so unpinned-id drift cannot reach users. Saved place ids missing from the catalog are dropped on load (a choice left empty reverts to its default; a deliberately cleared one stays cleared). A retry from stale data shows that it is running and why it failed. A render failure on loaded data shows an error with a reload button instead of a blank page. Accepted: the stale fallback applies per read, so fresh listings can pair with a cached reference snapshot (or the reverse); the notice names each stale read.
 - **Known follow-ups (not blockers):**
   - `public/data/reference.json` must be regenerated (`npm run data:web`) after any catalog change; a test fails until it is.
-  - The original reference files in `data/` are now only migration inputs and parity oracles; they can be retired in a later cleanup once nothing needs to re-derive the catalog from them.
   - In development, React StrictMode starts and aborts one extra fetch of each asset; production fetches once.
+- **Cleanup: original reference files retired (2026-09-30).** M5 demonstrated parity (every app id, order, coordinate, subtitle, and score), so the old representation was removed, as the compatibility rules allow:
+  - `data/{pois,mosques,stations,elementary_schools,kindergartens,bus_stops,soka_boundary,neighbor_boundaries}.json` were deleted. They remain in git history, and the catalog manifest keeps their SHA-256s under `sourceFiles`.
+  - The one-time `npm run data:reference:migrate` command, its legacy converter (`src/storage/json/dataMigrations/`), and the M5 parity tests that compared against those files were removed.
+  - `npm run data:reference:app-ids` no longer reads them: `planPlacePins` (`src/data-layer/referencePins.ts`) pins only places that lack a pin, avoiding every pinned id, retired ones included.
+  - The unused file-shape types (`PointOfInterest`, `Mosque`, `Station`, `ChildcareFacility`) were removed from `domain/types.ts`.
+  - The remaining 19 tracked data files hash identically, the published assets and the production bundle are byte-identical, and `npm test` (569), both typechecks, `npm run build`, `data:status`, `refresh -- --plan`, and the reference upgrade/app-ids commands pass.
+  - Rollback: restore the files and the command from git (commit before this cleanup). The catalog does not depend on them.
+  - Not done: compacting the ingestion journals (about 760 KB across four sources). The M3 rules make journals additive and never silently pruned, and their evidence is the audit trail, so a cap or compaction needs an explicit retention decision first.
 - **Still open from M3** (unchanged by M4–M6): the ingestion journal grows without bound; collector `scrapedAt` is the latest capture time rather than the commit time; a native-import retry after a parser change hits `ScrapeReplayConflictError`; the SUUMO collector's replayed commit logs zero counts; AtHome's `property:` alias can merge two same-size rooms in one building.
 - **Restart here.** The migration plan is complete through M6. Choose what comes next:
   - **M7**, only if user data must be shared across devices or with ingestion. It first needs decisions on hosting, authentication, and which data is shared; the data layer's `UserDataRepository` contract and the `WebDataClient` read models are its starting points.
   - **M8**, only if independent builds, deployment, or versioning are needed.
-  - **Cleanup and hardening:** retire the original reference files in `data/` once nothing needs to re-derive the catalog from them (they now only feed the parity tests and `data:reference:*` commands); address the M3 follow-ups above, starting with capping or compacting the ingestion journal.
+  - **Hardening:** the M3 follow-ups above. Journal compaction first needs a retention decision (how much per-observation evidence to keep, and whether compaction is an explicit, audited command).
   - **Open question:** `src/refresh/` is composition like the CLI and could fold into `scripts/`; not done, since the layer table still lists it.
 
 ## Per-milestone validation

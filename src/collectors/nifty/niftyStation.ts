@@ -26,7 +26,7 @@ export function parseStation(text: string): { station?: string; walkMin?: number
 
 /**
  * Reduces a station cell to the bare station name so it matches the naming
- * used by SUUMO entries and stations.json:
+ * used by SUUMO entries and the reference catalog's stations:
  *   "東武伊勢崎線/新田駅"                      → "新田駅"
  *   "利用可能駅（ニフティ不動産調べ）谷塚駅"        → "谷塚駅"
  */
