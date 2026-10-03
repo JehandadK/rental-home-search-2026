@@ -43,6 +43,13 @@ export interface SourcePolicy {
     readonly exactUrlDiscovery: boolean;
     /** Producer name when this source also accepts legacy detail-page listing imports. */
     readonly detailImportProducer?: string;
+    /**
+     * Parser versions accepted from the detail-import producer (default ["1"]).
+     * A producer that changes how it parses a capture bumps its version and
+     * puts it in the run identity, so re-parsing an imported capture is a new
+     * batch rather than a replay conflict.
+     */
+    readonly detailImportParserVersions?: readonly string[];
   };
   /** Partial detail observations for existing exact source URLs. */
   readonly detailPatches?: {

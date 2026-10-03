@@ -114,7 +114,17 @@ describe("sumOneOffFees", () => {
   it("sums signing charges while ignoring monthly ones", () => {
     const text =
       "退去時クリーニング費用￥90000が契約時必要。貸主インボイス登録あり/更新事務手数料22000円/ruumサポート費用（月額）1980円/鍵セット費3300円";
-    expect(sumOneOffFees(text)).toBe(115_300);
+    // Move-out cleaning ¥90,000 + key set ¥3,300; the ¥22,000 renewal fee is
+    // paid at 更新, not on moving in.
+    expect(sumOneOffFees(text)).toBe(93_300);
+  });
+
+  it("keeps full-width thousands separators inside amounts", () => {
+    // Parser 1 split on "，" and stored ¥500 for this key exchange and ¥320 of the
+    // monthly support fee as a one-off charge.
+    const text = "◆トラブルサポート24月額1，320円（税込）　◆鍵交換代27，500円（税込）　◆消臭・除菌17，600円（税込）";
+    expect(sumOneOffFees(text)).toBe(45_100);
+    expect(sumMonthlyExtras(text)).toBe(1_320);
   });
 
   it("returns null when nothing is stated", () => {

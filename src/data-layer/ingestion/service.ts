@@ -136,7 +136,11 @@ function validateScrapeBatch(batch: ScrapeSubmission, policies: SourcePolicyRegi
   }
   const validUrl = (value: unknown) => sourceUrl(value, policy.host);
   const expectedProducer = detailPatch ? detailPolicy!.producer : nativeCapture ? "native-capture" : batch.mode === "discovery" ? `${batch.source}-list` : detailImportProducer;
-  if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1" || batch.scraper.parserVersion !== "1") {
+  const parserVersions = !detailPatch && !nativeCapture && batch.mode === "detail-enrichment"
+    ? policy.listings.detailImportParserVersions ?? ["1"]
+    : ["1"];
+  if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1"
+    || !parserVersions.includes(batch.scraper.parserVersion)) {
     invalid("Unsupported or missing scraper name/version/parserVersion");
   }
   if (!nonempty(batch.runId) || !nonempty(batch.batchId) || !timestamp(batch.capturedAt)) invalid("Invalid run/batch identity or capture time");

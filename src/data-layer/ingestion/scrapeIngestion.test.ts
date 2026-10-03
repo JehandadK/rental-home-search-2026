@@ -103,7 +103,7 @@ describe("public scrape ingestion boundary", () => {
   it.each([
     ["missing producer", { scraper: undefined }],
     ["unsupported scraper version", { scraper: { name: "nifty-detail", version: "2", parserVersion: "1" } }],
-    ["unsupported parser version", { scraper: { name: "nifty-detail", version: "1", parserVersion: "2" } }],
+    ["unsupported parser version", { scraper: { name: "nifty-detail", version: "1", parserVersion: "3" } }],
     ["future schema", { schemaVersion: 2 }],
     ["unsafe source", { source: "../nifty" }],
     ["unverified complete snapshot", { mode: "full-snapshot" }],
@@ -117,6 +117,17 @@ describe("public scrape ingestion boundary", () => {
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "ingest");
     await expect(service.ingestScrape({ ...request(), ...overrides } as ScrapeBatch)).rejects.toBeInstanceOf(InvalidScrapeBatchError);
     expect(read).not.toHaveBeenCalled(); expect(write).not.toHaveBeenCalled();
+  });
+
+  it("treats a re-parse under a newer detail-parser version as a new batch, not a replay conflict", async () => {
+    await service.ingestScrape(request());
+    const reparsed = { ...request([row(undefined, { rent: 99999 })]), runId: "run-1:parser-2",
+      scraper: { name: "nifty-detail", version: "1", parserVersion: "2" } };
+    expect(await service.ingestScrape(reparsed)).toMatchObject({ replayed: false });
+    // Only the detail-import producer declares parser 2; list captures stay on 1.
+    const list = { ...request(), mode: "discovery" as const, runId: "list-1",
+      scraper: { name: "nifty-list", version: "1", parserVersion: "2" } };
+    await expect(service.ingestScrape(list)).rejects.toBeInstanceOf(InvalidScrapeBatchError);
   });
 
   it("rejects an entire batch containing an invalid observation, including canonical-field injection", async () => {

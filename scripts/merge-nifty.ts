@@ -36,6 +36,15 @@ export { normaliseStationName, parseStation, parseStationDistance };
 
 const NIFTY_PATH = join(DATA_DIR, "nifty_detail_raw.json");
 
+/**
+ * Bumped whenever `toRawListing` parses the same capture differently.
+ * 2: fee notes are itemised (full-width thousands separators, renewal and
+ *    conditional charges left out) instead of summing every amount.
+ * The version is part of the run ID, so re-importing a dump already imported
+ * by an older parser is a new batch, not a replay conflict.
+ */
+export const NIFTY_DETAIL_PARSER_VERSION = "2";
+
 export interface NiftyDetail {
   capturedAt?: string;
   url: string;
@@ -210,8 +219,8 @@ export async function prepareNiftyDetailImport(dump: NiftyDump) {
   const batch: ScrapeBatch = {
     schemaVersion: 1,
     source: "nifty",
-    scraper: { name: "nifty-detail", version: "1", parserVersion: "1" },
-    runId: `nifty-detail-import:${dump.scrapedAt}`,
+    scraper: { name: "nifty-detail", version: "1", parserVersion: NIFTY_DETAIL_PARSER_VERSION },
+    runId: `nifty-detail-import:${dump.scrapedAt}:parser-${NIFTY_DETAIL_PARSER_VERSION}`,
     batchId: await scrapeFingerprint(dump),
     mode: "detail-enrichment",
     capturedAt: dump.scrapedAt,

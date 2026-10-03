@@ -9,6 +9,7 @@
  */
 
 import { toHalfWidth } from "../../domain/japaneseText";
+import { parseFeeNotes, sumFees } from "../../domain/feeNotes";
 export { toHalfWidth, parseFloors } from "../../domain/japaneseText";
 
 const NONE_MARKERS = ["-", "－", "ー", "なし", "無", "無し", "不要"];
@@ -88,64 +89,24 @@ export function parseLease(text: string | undefined | null): {
 }
 
 /**
- * Sums every yen amount in a free-text fee blob, e.g.
+ * One-off charges in a free-text fee blob: signing fees plus any stated
+ * move-out cleaning, e.g.
  * "退去時クリーニング費用￥90000が契約時必要。…更新事務手数料22000円/鍵セット費3300円"
- * → 115300. Amounts marked as monthly (月額/毎月) are excluded.
+ * → 93300. Monthly, renewal, conditional and already-modelled charges are
+ * left out; see `parseFeeNotes`.
  */
 export function sumOneOffFees(text: string | undefined | null): number | null {
   if (!text || isExplicitNone(text)) return null;
-  const t = toHalfWidth(text);
-  let total = 0;
-  let found = false;
-  // Split on separators so each clause can be judged monthly vs one-off.
-  for (const clause of t.split(/[。、,/]|\s{2,}/)) {
-    if (/月額|毎月|\/月|月々/.test(clause)) continue;
-    for (const m of matchAmounts(clause)) {
-      total += m;
-      found = true;
-    }
-  }
-  return found ? total : null;
+  const fees = parseFeeNotes(text);
+  const total = sumFees(fees.signing) + (fees.cleaningYen ?? 0);
+  return total > 0 ? total : null;
 }
 
-/**
- * Every yen amount in a clause. Sites write amounts either suffixed
- * ("22000円", "8.5万円") or prefixed ("￥90000" with no 円 at all), so both
- * shapes are matched.
- */
-function* matchAmounts(clause: string): Generator<number> {
-  const suffixed = /([\d,]+(?:\.\d+)?)\s*(万円|円)/g;
-  const seen: [number, number][] = [];
-  for (const m of clause.matchAll(suffixed)) {
-    const value = parseFloat(m[1].replace(/,/g, ""));
-    seen.push([m.index, m.index + m[0].length]);
-    yield m[2] === "万円" ? Math.round(value * 10_000) : Math.round(value);
-  }
-  // ¥-prefixed amounts that were not already counted by the suffixed pass.
-  for (const m of clause.matchAll(/[￥¥]\s*([\d,]+(?:\.\d+)?)\s*(万)?/g)) {
-    const start = m.index;
-    if (seen.some(([from, to]) => start >= from - 1 && start < to)) continue;
-    const value = parseFloat(m[1].replace(/,/g, ""));
-    yield m[2] === "万" ? Math.round(value * 10_000) : Math.round(value);
-  }
-}
-
-/** Sums monthly-marked amounts, e.g. "ruumサポート費用（月額）1980円" → 1980. */
+/** Monthly charges outside rent, e.g. "ruumサポート費用（月額）1980円" → 1980. */
 export function sumMonthlyExtras(text: string | undefined | null): number | null {
   if (!text || isExplicitNone(text)) return null;
-  const t = toHalfWidth(text);
-  let total = 0;
-  let found = false;
-  for (const clause of t.split(/[。、,/]|\s{2,}/)) {
-    if (!/月額|毎月|\/月|月々/.test(clause)) continue;
-    // Percentages are rent-relative, not fixed yen — skip them.
-    if (/[\d.]+\s*[%％]/.test(clause)) continue;
-    for (const m of matchAmounts(clause)) {
-      total += m;
-      found = true;
-    }
-  }
-  return found ? total : null;
+  const total = sumFees(parseFeeNotes(text).monthly);
+  return total > 0 ? total : null;
 }
 
 /** 保証会社: "必加入備考:…" → true · "不要" → false · "" → null */

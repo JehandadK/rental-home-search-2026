@@ -69,5 +69,11 @@ export const niftySourcePolicy: SourcePolicy = {
   source: "nifty",
   host: "myhome.nifty.com",
   // Legacy detail-page dumps (`npm run import:nifty`) may add missing rows.
-  listings: { prepare: prepareNiftyBatch, exactUrlDiscovery: false, detailImportProducer: "nifty-detail" },
+  // Parser 2 itemises fee notes (full-width thousands separators, no renewal fees).
+  listings: {
+    prepare: prepareNiftyBatch,
+    exactUrlDiscovery: false,
+    detailImportProducer: "nifty-detail",
+    detailImportParserVersions: ["1", "2"],
+  },
 };

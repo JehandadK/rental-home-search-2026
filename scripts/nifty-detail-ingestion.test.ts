@@ -62,7 +62,7 @@ describe("Nifty detail import through the public data layer", () => {
     const prepared = await prepareNiftyDetailImport(input);
     expect(prepared.skipped).toBe(3);
     expect(prepared.batch).toMatchObject({ schemaVersion: 1, source: "nifty", mode: "detail-enrichment",
-      scraper: { name: "nifty-detail", version: "1", parserVersion: "1" },
+      scraper: { name: "nifty-detail", version: "1", parserVersion: "2" },
       observations: [expect.objectContaining({ sourceListingId: "nifty-aabbcc", observedAt: now }),
         expect.objectContaining({ sourceListingId: "nifty-ddeeff", observedAt: null })] });
     expect(prepared.batch).not.toHaveProperty("expectedRevision");
