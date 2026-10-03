@@ -4,6 +4,8 @@ import {
   parkingMonthlyYen,
   computeMoveInCosts,
   DEFAULT_MOVE_IN_ASSUMPTIONS,
+  monthlyOutlay,
+  stayCost,
   sunkCostInMonths,
 } from "./moveInCost";
 import type { EnrichedListing } from "./types";
@@ -198,5 +200,41 @@ describe("parking costs", () => {
 
   it("leaves rent untouched when parking is unknown", () => {
     expect(effectiveMonthlyCost(listing({ rent: 80_000 }), true)).toBe(80_000);
+  });
+});
+
+describe("monthlyOutlay", () => {
+  const parked = { monthlyYen: 8_000, available: true, location: "onsite" as const, distanceM: null, raw: "敷地内8000円" };
+
+  it("adds recurring extras listed outside rent, and parking only when asked", () => {
+    const l = listing({ rent: 80_000, costs: { parking: parked, monthlyExtrasYen: 1_100 } });
+    expect(monthlyOutlay(l, false)).toBe(81_100);
+    expect(monthlyOutlay(l, true)).toBe(89_100);
+  });
+
+  it("is plain rent when the ad lists nothing else", () => {
+    expect(monthlyOutlay(listing({ rent: 80_000 }), true)).toBe(80_000);
+  });
+});
+
+describe("stayCost", () => {
+  it("adds two years of monthly payments to the sunk move-in money", () => {
+    // Defaults on ¥100k rent, 50㎡: key money 100k + agency 110k + guarantor 50k
+    // + insurance 20k + cleaning 60k + 30% of the 100k deposit = ¥370k sunk.
+    const cost = stayCost(listing(), DEFAULT_MOVE_IN_ASSUMPTIONS, false);
+    expect(cost).toEqual({ months: 24, monthly: 100_000, sunk: 370_000, total: 2_770_000, parkingUnknown: false });
+  });
+
+  it("follows the move-in assumptions and the stay length", () => {
+    const cost = stayCost(listing({ depositYen: 0, keyMoneyYen: 0, cleaningFeeYen: 0 }),
+      { ...DEFAULT_MOVE_IN_ASSUMPTIONS, agencyFeeMonths: 0.55 }, false, 12);
+    expect(cost.sunk).toBe(55_000 + 50_000 + 20_000);
+    expect(cost.total).toBe(cost.sunk + 12 * 100_000);
+  });
+
+  it("flags parking that should count but has no stated price", () => {
+    expect(stayCost(listing(), DEFAULT_MOVE_IN_ASSUMPTIONS, true).parkingUnknown).toBe(true);
+    expect(stayCost(listing(), DEFAULT_MOVE_IN_ASSUMPTIONS, false).parkingUnknown).toBe(false);
+    expect(stayCost(listing({ costs: { parkingYen: 0 } }), DEFAULT_MOVE_IN_ASSUMPTIONS, true).parkingUnknown).toBe(false);
   });
 });

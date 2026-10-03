@@ -4,10 +4,12 @@ import { DEFAULT_CONFIG, DEFAULT_FEATURE_PREFERENCES, DEFAULT_FEATURE_WEIGHTS } 
 import type { PlaceSelection } from "../../domain/placeSelection";
 import {
   decodeAvailabilityMarks,
+  decodeCompare,
   decodeCustomListings,
   decodeFilters,
   decodeHiddenColumns,
   decodeMarks,
+  decodeNotes,
   decodePlaceSelection,
   decodeScoringConfig,
 } from "./decoders";
@@ -75,6 +77,8 @@ describe("user-state decoders", () => {
       expect(decodeMarks(raw)).toEqual({});
       expect(decodePlaceSelection(raw, DEFAULT_SELECTION)).toEqual(DEFAULT_SELECTION);
       expect(decodeHiddenColumns(raw, new Set(["rent"]))).toEqual(new Set());
+      expect(decodeNotes(raw)).toEqual({});
+      expect(decodeCompare(raw)).toEqual([]);
     }
     expect(decodeCustomListings("text")).toEqual([]);
   });
@@ -89,6 +93,25 @@ describe("user-state decoders", () => {
     expect(decodePlaceSelection({ byParameter: { station: "草加", school: [1], busStop: null } }, DEFAULT_SELECTION))
       .toEqual({ byParameter: { ...DEFAULT_SELECTION.byParameter, busStop: null } });
     expect(decodeHiddenColumns(["rent", "gone", 7], new Set(["rent"]))).toEqual(new Set(["rent"]));
+  });
+});
+
+describe("decodeNotes", () => {
+  it("keeps saved notes and drops malformed ones", () => {
+    const saved = { text: "Agent: guarantor needed", viewingAt: "2026-10-05T14:00", updatedAt: "2026-10-03T00:00:00.000Z" };
+    expect(decodeNotes({
+      a: saved,
+      b: { text: 3 },
+      c: { text: "kept", viewingAt: "soon" },
+      d: { text: " ", viewingAt: null },
+      e: "plain string",
+    })).toEqual({ a: saved, c: { text: "kept", viewingAt: null, updatedAt: "" } });
+  });
+});
+
+describe("decodeCompare", () => {
+  it("keeps distinct string keys, up to four", () => {
+    expect(decodeCompare(["a", 1, "a", "b", "c", "d", "e"])).toEqual(["a", "b", "c", "d"]);
   });
 });
 

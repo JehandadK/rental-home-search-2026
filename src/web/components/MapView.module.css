@@ -521,3 +521,39 @@
     max-width: calc(100% - 16px);
   }
 }
+
+.popupActions {
+  flex-wrap: wrap;
+}
+
+.popupActions button {
+  flex: 1 0 100%;
+  padding: 6px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.popupActions button.comparing {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.popupNote {
+  margin: 0 0 6px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: #fef9c3;
+  color: #713f12;
+  font-size: 10.5px;
+  white-space: pre-wrap;
+  max-height: 72px;
+  overflow-y: auto;
+}
+
+.hoverNote {
+  overflow: hidden;
+  color: #854d0e !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

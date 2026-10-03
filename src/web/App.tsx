@@ -18,9 +18,12 @@ import { useScoringConfig } from "./hooks/useScoringConfig";
 import { useFilters } from "./hooks/useFilters";
 import { useMarks } from "./hooks/useMarks";
 import { useAvailabilityMarks } from "./hooks/useAvailabilityMarks";
+import { useNotes } from "./hooks/useNotes";
+import { useCompare } from "./hooks/useCompare";
 import { toCsv, toMarkdown } from "./lib/export";
 import type { ScoredRow } from "../domain/scoring";
 import { AddListingForm } from "./components/AddListingForm";
+import { ComparePanel } from "./components/ComparePanel";
 import { FilterPanel } from "./components/FilterPanel";
 import { ListingTable } from "./components/ListingTable";
 import { MapView } from "./components/MapView";
@@ -45,6 +48,8 @@ export function App({ data }: { data: WebData }) {
   const { filters, update: updateFilters, reset: resetFilters } = useFilters();
   const { marks, setMark, clearMarks } = useMarks();
   const { availabilityMarks, markAd } = useAvailabilityMarks();
+  const { notes, setNote } = useNotes();
+  const { compare, toggleCompare, clearCompare } = useCompare();
   const { selection, setPlaces, togglePlace, setTarget, reset: resetPlaces } = usePlaceSelection(catalog);
 
   /**
@@ -107,6 +112,38 @@ export function App({ data }: { data: WebData }) {
     [scored, filters.minScore],
   );
 
+  /** The move-in assumptions and parking switch behind every cost figure. */
+  const costBasis = useMemo(
+    () => ({ moveIn: config.moveIn, includeParking: config.includeParking }),
+    [config.moveIn, config.includeParking],
+  );
+
+  /**
+   * The pinned homes, scored on their own so a comparison survives filters
+   * that would hide one of them. Keys whose listing has left the data are
+   * skipped.
+   */
+  const compareRows: ScoredRow[] = useMemo(() => {
+    if (!compare.length) return [];
+    const byKey = new Map(available.map((listing) => [listingKey(listing), listing]));
+    return compare.flatMap((key) => {
+      const listing = byKey.get(key);
+      return listing ? [{ listing, score: scoreListing(listing, config) }] : [];
+    });
+  }, [compare, available, config]);
+
+  /** Where each pinned home sits in the current ranking (1 = best). */
+  const compareRanks = useMemo(() => {
+    const ranks = new Map<string, number>();
+    for (const key of compare) {
+      const row = filtered.find(({ listing }) => listingKey(listing) === key);
+      if (!row) continue;
+      const total = row.score.total ?? -1;
+      ranks.set(key, 1 + filtered.filter(({ score }) => (score.total ?? -1) > total).length);
+    }
+    return ranks;
+  }, [compare, filtered]);
+
   /** Lifecycle headline numbers: fresh discoveries and sold stock. */
   const { newCount, soldCount, rentedOutCount } = useMemo(() => lifecycleCounts(available), [available]);
 
@@ -121,9 +158,9 @@ export function App({ data }: { data: WebData }) {
       // Export sorting is deferred until the user actually requests it. Keeping
       // a permanently sorted duplicate of 1,600 rows added work to each score change.
       const ranked = [...filtered].sort((a, b) => (b.score.total ?? -1) - (a.score.total ?? -1));
-      return navigator.clipboard.writeText(format(ranked, marks));
+      return navigator.clipboard.writeText(format(ranked, marks, notes));
     },
-    [filtered, marks],
+    [filtered, marks, notes],
   );
 
   /**
@@ -243,6 +280,9 @@ export function App({ data }: { data: WebData }) {
             centerTarget={mapCenterTarget}
             marks={marks}
             onSetMark={setMark}
+            notes={notes}
+            compare={compare}
+            onToggleCompare={toggleCompare}
           />
           <ListingTable
             items={filtered}
@@ -255,7 +295,27 @@ export function App({ data }: { data: WebData }) {
             marks={marks}
             onSetMark={setMark}
             onMarkAd={markAd}
+            costBasis={costBasis}
+            notes={notes}
+            onSetNote={setNote}
+            compare={compare}
+            onToggleCompare={toggleCompare}
           />
+          {compare.length > 0 && (
+            <div id="compare">
+              <ComparePanel
+                rows={compareRows}
+                ranks={compareRanks}
+                rankedCount={filtered.length}
+                costBasis={costBasis}
+                marks={marks}
+                notes={notes}
+                onRemove={toggleCompare}
+                onClear={clearCompare}
+                onLocate={centerMapOn}
+              />
+            </div>
+          )}
         </section>
       </main>
     </>

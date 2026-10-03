@@ -44,6 +44,8 @@ import {
   type Extent,
 } from "../../domain/mapGeometry";
 import { listingPhotos } from "../../domain/listingPhotos";
+import { describeNote, type ListingNote, type NoteMap } from "../../domain/notes";
+import { MAX_COMPARE } from "../../domain/compare";
 import type { ScoredRow } from "../../domain/scoring";
 import { ListingThumb, PhotoGallery } from "./ListingPhoto";
 import styles from "./MapView.module.css";
@@ -62,7 +64,15 @@ interface Props {
   /** The user's decision marks, keyed by listingKey. */
   marks: MarkMap;
   onSetMark: (key: string, mark: ListingMark | null) => void;
+  /** The user's notes, shown on the hover and selection cards. */
+  notes?: NoteMap;
+  /** Listing keys pinned for comparison; the selection card can pin or unpin. */
+  compare?: readonly string[];
+  onToggleCompare?: (key: string) => void;
 }
+
+const NO_NOTES: NoteMap = {};
+const NO_COMPARE: readonly string[] = [];
 
 interface Projected {
   x: number;
@@ -134,7 +144,21 @@ interface CityLayer {
   focus: boolean;
 }
 
-export const MapView = memo(function MapView({ items, reference, targetPoi, hovered, onHover, selected, onSelect, centerTarget, marks, onSetMark }: Props) {
+export const MapView = memo(function MapView({
+  items,
+  reference,
+  targetPoi,
+  hovered,
+  onHover,
+  selected,
+  onSelect,
+  centerTarget,
+  marks,
+  onSetMark,
+  notes = NO_NOTES,
+  compare = NO_COMPARE,
+  onToggleCompare,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
   const [view, setView] = useState<View>(IDENTITY);
@@ -570,6 +594,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
         {hoverPoint && hoverVisible && hoveredRow && (
           <MapHoverCard
             row={hoveredRow}
+            note={notes[listingKey(hoveredRow.listing)]}
             style={{
               // Centred on the dot, but clamped (in screen pixels) inside the map.
               left: `clamp(4px, calc(${(hoverPoint.x / WIDTH) * 100}% - ${HOVER_CARD_WIDTH / 2}px), calc(100% - ${HOVER_CARD_WIDTH + 4}px))`,
@@ -584,6 +609,10 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
             row={selectedRow}
             mark={marks[listingKey(selectedRow.listing)]}
             onSetMark={onSetMark}
+            note={notes[listingKey(selectedRow.listing)]}
+            comparing={compare.includes(listingKey(selectedRow.listing))}
+            compareFull={compare.length >= MAX_COMPARE}
+            onToggleCompare={onToggleCompare}
             clusterSize={selectionCluster.length}
             clusterIndex={selectedClusterIndex}
             onPrevious={() => cycleCluster(-1)}
@@ -660,7 +689,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
 });
 
 /** Lightweight hover preview: photo, name, the key numbers and the score. */
-function MapHoverCard({ row, style }: { row: ScoredRow; style: React.CSSProperties }) {
+function MapHoverCard({ row, note, style }: { row: ScoredRow; note: ListingNote | undefined; style: React.CSSProperties }) {
   const { listing, score } = row;
   return (
     <div className={styles.hoverCard} style={style} aria-hidden="true">
@@ -675,6 +704,7 @@ function MapHoverCard({ row, style }: { row: ScoredRow; style: React.CSSProperti
             ? `${listing.advertisedStation} ${listing.stationWalkMin} min`
             : null].filter(Boolean).join(" · ")}
         </small>
+        {note && <small className={styles.hoverNote}>📝 {describeNote(note)}</small>}
       </div>
       <span className={styles.hoverScore} style={{ background: scoreColor(score.total) }}>
         {score.total?.toFixed(0) ?? "—"}
@@ -687,6 +717,10 @@ function MapListingCard({
   row,
   mark,
   onSetMark,
+  note,
+  comparing,
+  compareFull,
+  onToggleCompare,
   clusterSize,
   clusterIndex,
   onPrevious,
@@ -696,6 +730,10 @@ function MapListingCard({
   row: ScoredRow;
   mark: ListingMark | undefined;
   onSetMark: (key: string, mark: ListingMark | null) => void;
+  note: ListingNote | undefined;
+  comparing: boolean;
+  compareFull: boolean;
+  onToggleCompare?: (key: string) => void;
   clusterSize: number;
   clusterIndex: number;
   onPrevious: () => void;
@@ -747,6 +785,7 @@ function MapListingCard({
         ))}
       </div>
       <p className={styles.popupAddress}>{listing.address}</p>
+      {note && <p className={styles.popupNote}>📝 {describeNote(note)}</p>}
       {clusterSize > 1 && (
         <div className={styles.clusterNav}>
           <button onClick={onPrevious} aria-label="Previous property at this location">‹</button>
@@ -772,6 +811,17 @@ function MapListingCard({
         </select>
       </div>
       <div className={styles.popupActions}>
+        {onToggleCompare && (
+          <button
+            type="button"
+            className={comparing ? styles.comparing : "secondary"}
+            disabled={!comparing && compareFull}
+            title={!comparing && compareFull ? `The comparison holds ${MAX_COMPARE} homes — remove one first` : undefined}
+            onClick={() => onToggleCompare(listingKey(listing))}
+          >
+            {comparing ? "✓ Comparing" : "+ Compare"}
+          </button>
+        )}
         {portalReferences(listing).filter(({ url }) => Boolean(url)).map(({ source, url }) => (
           <a key={`${source}-${url}`} href={url!} target="_blank" rel="noreferrer">
             View on {source} ↗

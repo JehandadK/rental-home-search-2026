@@ -113,6 +113,39 @@ describe("user state across reloads", () => {
     expect(screen.getByText(/★1 shortlisted/)).toBeTruthy();
   });
 
+  it("keeps the comparison and notes, and compares homes the filters hide", async () => {
+    const store = createMemoryUserStateStore();
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    const [houseA, houseB] = FIXTURE_LISTINGS;
+    expect(screen.queryByRole("region", { name: "Compare homes" })).toBeNull();
+
+    fireEvent.click(screen.getByLabelText(`Compare ${houseA.name}`));
+    fireEvent.click(screen.getByLabelText(`Compare ${houseB.name}`));
+    const panel = screen.getByRole("region", { name: "Compare homes" });
+    expect(within(panel).getByRole("columnheader", { name: new RegExp(houseA.name) })).toBeTruthy();
+    expect(within(panel).getByRole("columnheader", { name: new RegExp(houseB.name) })).toBeTruthy();
+    expect(store.read(USER_STATE_KEYS.compare)).toHaveLength(2);
+
+    // Open a row and leave a note; collapsing the row saves it.
+    const row = screen.getAllByText(houseA.name).find((el) => el.closest("tbody tr td"))!.closest("tr")!;
+    fireEvent.click(row);
+    fireEvent.change(screen.getByLabelText(/My notes/), { target: { value: "Ask about parking" } });
+    fireEvent.click(row);
+    expect(Object.values(store.read(USER_STATE_KEYS.notes) as object)).toEqual([
+      expect.objectContaining({ text: "Ask about parking", viewingAt: null }),
+    ]);
+    expect(within(panel).getByText("Ask about parking")).toBeTruthy();
+
+    // A reload, with a city filter that hides one of the pinned homes.
+    cleanup();
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    fireEvent.click(screen.getByRole("button", { name: "Koshigaya · 越谷" }));
+    const reloaded = screen.getByRole("region", { name: "Compare homes" });
+    expect(within(reloaded).getAllByRole("columnheader", { name: /Fixture House/ })).toHaveLength(2);
+    expect(within(reloaded).getByText("filtered out")).toBeTruthy();
+    expect(within(reloaded).getByText("Ask about parking")).toBeTruthy();
+  });
+
   it("falls back to defaults when stored state is corrupt", async () => {
     const store = createMemoryUserStateStore({
       [USER_STATE_KEYS.filters]: "not an object",

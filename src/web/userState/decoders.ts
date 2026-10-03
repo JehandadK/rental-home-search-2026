@@ -6,6 +6,8 @@
  */
 import { EMPTY_FILTERS, type ListingFilters } from "../../domain/filters";
 import { LISTING_MARKS, type MarkMap } from "../../domain/marks";
+import { isViewingTime, type ListingNote, type NoteMap } from "../../domain/notes";
+import { MAX_COMPARE } from "../../domain/compare";
 import type { PlaceSelection } from "../../domain/placeSelection";
 import type { DistanceParameterKey } from "../../domain/places";
 import {
@@ -50,6 +52,26 @@ export function decodeMarks(raw: unknown): MarkMap {
   return Object.fromEntries(
     Object.entries(raw).filter(([, mark]) => typeof mark === "string" && MARK_KEYS.has(mark)),
   ) as MarkMap;
+}
+
+/** Notes need text or a viewing time; a malformed viewing time is dropped, not the note. */
+export function decodeNotes(raw: unknown): NoteMap {
+  if (!isPlainObject(raw)) return {};
+  const notes: NoteMap = {};
+  for (const [key, note] of Object.entries(raw)) {
+    if (!isPlainObject(note) || typeof note.text !== "string") continue;
+    const viewingAt = isViewingTime(note.viewingAt) ? note.viewingAt : null;
+    if (note.text.trim() === "" && viewingAt == null) continue;
+    const updatedAt = typeof note.updatedAt === "string" ? note.updatedAt : "";
+    notes[key] = { text: note.text, viewingAt, updatedAt } satisfies ListingNote;
+  }
+  return notes;
+}
+
+/** The compare list: distinct listing keys, at most MAX_COMPARE of them. */
+export function decodeCompare(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.filter((key): key is string => typeof key === "string"))].slice(0, MAX_COMPARE);
 }
 
 /** Hand-made "this ad is gone / still listed" marks; malformed entries are dropped. */

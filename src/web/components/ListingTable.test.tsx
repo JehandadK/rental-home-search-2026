@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CONFIG } from "../../domain/scoringConfig";
 import { scoreListing } from "../../domain/scoring";
@@ -233,6 +234,125 @@ describe("ListingTable", () => {
       row.querySelector("select") as HTMLSelectElement;
     expect(selectIn(ruledOutRow).value).toBe("no-foreigners");
     expect(selectIn(candidateRow).value).toBe("shortlisted");
+  });
+
+  it("expands only the clicked row when two listings share a building name", () => {
+    const rows = [
+      makeRow({ name: "Leopalace Soka", id: "suumo:1", source: "suumo", rent: 70_000 }),
+      makeRow({ name: "Leopalace Soka", id: "suumo:2", source: "suumo", rent: 72_000 }),
+    ];
+    expect(listingKey(rows[0].listing)).not.toBe(listingKey(rows[1].listing));
+    renderTable(rows);
+    fireEvent.click(screen.getAllByText("Leopalace Soka")[0].closest("tr")!);
+    expect(screen.getAllByText("Move-in costs")).toHaveLength(1);
+  });
+
+  describe("cost columns", () => {
+    const parked = { monthlyYen: 8_000, available: true, location: "onsite" as const, distanceM: null, raw: "敷地内8000円" };
+
+    it("shows the monthly outlay and the 2-year cost, following the parking switch", () => {
+      // ¥100k rent, 55㎡, defaults: ¥100k key money + ¥110k agency + ¥50k guarantor
+      // + ¥20k insurance + ¥66k cleaning + ¥30k of the deposit = ¥376k sunk.
+      const row = makeRow({ name: "Costed", costs: { parking: parked, monthlyExtrasYen: 1_000 } });
+      const first = renderTable([row]);
+      expect(screen.getByRole("columnheader", { name: /Monthly/ })).toBeTruthy();
+      const cells = () => [...screen.getByText("Costed").closest("tr")!.querySelectorAll("td")].map((td) => td.textContent);
+      expect(cells()).toContain("¥101,000");
+      expect(cells()).toContain(`¥${(376_000 + 24 * 101_000).toLocaleString("ja-JP")}`);
+      first.unmount();
+
+      renderTable([row], { costBasis: { moveIn: DEFAULT_CONFIG.moveIn, includeParking: true } });
+      expect(cells()).toContain("¥109,000");
+    });
+
+    it("flags parking that should count but has no price", () => {
+      renderTable([makeRow({ name: "No parking price" })], { costBasis: { moveIn: DEFAULT_CONFIG.moveIn, includeParking: true } });
+      expect(screen.getByText("¥100,000*")).toBeTruthy();
+    });
+
+    it("sorts by the 2-year cost", () => {
+      const rows = [
+        makeRow({ name: "Pricey", id: "a", rent: 120_000 }),
+        makeRow({ name: "Cheap", id: "b", rent: 60_000 }),
+      ];
+      renderTable(rows);
+      const names = () => [...document.querySelectorAll("tbody tr")].map((tr) => tr.querySelector("td[title]")?.textContent);
+      // Like the other cost columns, the first click puts the cheapest first.
+      fireEvent.click(screen.getByRole("columnheader", { name: /2-yr cost/ }));
+      expect(names()[0]).toMatch(/^Cheap/);
+      fireEvent.click(screen.getByRole("columnheader", { name: /2-yr cost/ }));
+      expect(names()[0]).toMatch(/^Pricey/);
+    });
+  });
+
+  describe("notes", () => {
+    afterEach(() => vi.useRealTimers());
+
+    it("badges a row with a note, or with its booked viewing", () => {
+      const rows = [makeRow({ name: "Noted", id: "n1" }), makeRow({ name: "Viewing", id: "n2" })];
+      renderTable(rows, {
+        notes: {
+          [listingKey(rows[0].listing)]: { text: "Agent wants a guarantor", viewingAt: null, updatedAt: "" },
+          [listingKey(rows[1].listing)]: { text: "", viewingAt: "2026-10-05T14:00", updatedAt: "" },
+        },
+      });
+      expect(screen.getByTitle("Agent wants a guarantor").textContent).toBe("📝");
+      expect(screen.getByText("📅 Mon 5 Oct 14:00")).toBeTruthy();
+    });
+
+    it("saves a typed note after a pause, and a viewing time at once", () => {
+      vi.useFakeTimers();
+      const rows = [makeRow({ name: "Editable" })];
+      const onSetNote = vi.fn();
+      renderTable(rows, { onSetNote });
+      fireEvent.click(screen.getByText("Editable").closest("tr")!);
+
+      fireEvent.change(screen.getByLabelText(/My notes/), { target: { value: "Damp bathroom" } });
+      expect(onSetNote).not.toHaveBeenCalled();
+      act(() => vi.advanceTimersByTime(600));
+      expect(onSetNote).toHaveBeenLastCalledWith(listingKey(rows[0].listing), { text: "Damp bathroom", viewingAt: null });
+
+      fireEvent.change(screen.getByLabelText(/Viewing/), { target: { value: "2026-10-05T14:00" } });
+      expect(onSetNote).toHaveBeenLastCalledWith(listingKey(rows[0].listing), { text: "Damp bathroom", viewingAt: "2026-10-05T14:00" });
+      expect(onSetNote).toHaveBeenCalledTimes(2);
+    });
+
+    it("keeps a half-typed note when the row is collapsed", () => {
+      const rows = [makeRow({ name: "Collapsing" })];
+      const onSetNote = vi.fn();
+      renderTable(rows, { onSetNote });
+      const row = screen.getByText("Collapsing").closest("tr")!;
+      fireEvent.click(row);
+      fireEvent.change(screen.getByLabelText(/My notes/), { target: { value: "Call back Tue" } });
+      fireEvent.click(row);
+      expect(screen.queryByLabelText(/My notes/)).toBeNull();
+      expect(onSetNote).toHaveBeenCalledWith(listingKey(rows[0].listing), { text: "Call back Tue", viewingAt: null });
+    });
+  });
+
+  describe("compare", () => {
+    it("pins a row without expanding it, and stops at four", () => {
+      const rows = ["a", "b", "c", "d", "e"].map((id, i) => makeRow({ name: `Home ${id}`, id, rent: 80_000 + i }));
+      const onToggleCompare = vi.fn();
+      const onSelect = vi.fn();
+      renderTable(rows, {
+        onToggleCompare,
+        onSelect,
+        compare: rows.slice(0, 4).map(({ listing }) => listingKey(listing)),
+      });
+      fireEvent.click(screen.getByLabelText("Compare Home a"));
+      expect(onToggleCompare).toHaveBeenCalledWith(listingKey(rows[0].listing));
+      expect(onSelect).not.toHaveBeenCalled();
+      expect((screen.getByLabelText("Compare Home a") as HTMLInputElement).checked).toBe(true);
+      expect((screen.getByLabelText("Compare Home e") as HTMLInputElement).disabled).toBe(true);
+      expect(screen.getByRole("link", { name: /Compare 4/ }).getAttribute("href")).toBe("#compare");
+    });
+
+    it("offers no compare column when comparing is not wired", () => {
+      renderTable([makeRow({ name: "Plain" })]);
+      expect(screen.queryByLabelText("Compare Plain")).toBeNull();
+      expect(screen.queryByRole("columnheader", { name: "Compare" })).toBeNull();
+    });
   });
 
   describe("availability", () => {

@@ -186,3 +186,50 @@ export function effectiveMonthlyCost(
   if (!includeParking) return listing.rent;
   return listing.rent + (parkingMonthlyYen(listing) ?? 0);
 }
+
+/**
+ * Money that leaves the account every month: rent (already including
+ * 管理費・共益費), recurring extras the ad lists outside rent (サポート費 …),
+ * and parking when the household keeps a car.
+ */
+export function monthlyOutlay(listing: EnrichedListing, includeParking: boolean): number {
+  return effectiveMonthlyCost(listing, includeParking) + (listing.costs?.monthlyExtrasYen ?? 0);
+}
+
+/** A standard Japanese lease runs two years before 更新. */
+export const STAY_MONTHS = 24;
+
+/** What a stay of `months` really costs, as one comparable number. */
+export interface StayCost {
+  months: number;
+  /** Monthly outlay (see `monthlyOutlay`). */
+  monthly: number;
+  /** Move-in money that never comes back (see `computeMoveInCosts`). */
+  sunk: number;
+  /** sunk + monthly × months. */
+  total: number;
+  /** Parking was meant to count but the listing does not say what it costs. */
+  parkingUnknown: boolean;
+}
+
+/**
+ * Total cost of living somewhere for `months`: the sunk move-in money plus
+ * every monthly payment. The refundable part of the deposit is excluded, and
+ * so is 更新料 — it falls due when a two-year lease is renewed, not within it.
+ */
+export function stayCost(
+  listing: EnrichedListing,
+  assumptions: MoveInAssumptions,
+  includeParking: boolean,
+  months: number = STAY_MONTHS,
+): StayCost {
+  const monthly = monthlyOutlay(listing, includeParking);
+  const sunk = computeMoveInCosts(listing, assumptions).sunkCost;
+  return {
+    months,
+    monthly,
+    sunk,
+    total: sunk + monthly * months,
+    parkingUnknown: includeParking && parkingMonthlyYen(listing) == null,
+  };
+}
