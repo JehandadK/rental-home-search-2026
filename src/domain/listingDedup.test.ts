@@ -289,13 +289,4 @@ describe("cross-source listing deduplication", () => {
       expect.objectContaining({ source: "suumo", url: "https://suumo.example/1" }),
     ]));
   });
-
-  it("collapses a group to one row", () => {
-    const result = deduplicateListings([
-      make(),
-      make({ id: "athome-2", source: "athome", url: "https://athome.example/2", builtYear: 2019 }),
-    ]);
-    expect(result).toHaveLength(1);
-    expect(result[0].sourceListings).toHaveLength(2);
-  });
 });

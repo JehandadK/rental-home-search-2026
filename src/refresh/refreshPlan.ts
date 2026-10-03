@@ -22,11 +22,6 @@ export function planRefresh(stages: readonly RefreshStageRecord[], resume: boole
   return planned;
 }
 
-/** Empty parsed results, an overlap boundary or a page cap are NOT exhaustion evidence. */
-export function completeMarket(requestedFull: boolean, cities: readonly { exhausted: boolean }[]): boolean {
-  return requestedFull && cities.length > 0 && cities.every((city) => city.exhausted);
-}
-
 /**
  * Portal collectors read only the portal and write only their own source file,
  * so collectors for different sources can run at the same time. Everything

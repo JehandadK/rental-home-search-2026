@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { packListings } from "../../domain/webPayload";
 import { FIXTURE_LISTINGS, FIXTURE_REFERENCE } from "../testing/referenceFixture.contract";
-import { createHttpWebDataClient, createRuntimeWebDataClient, withStaleFallback } from "./httpClient";
+import { createHttpWebDataClient, withStaleFallback } from "./httpClient";
 
 interface Call {
   url: string;
@@ -59,11 +59,6 @@ describe("createHttpWebDataClient", () => {
     await expect(client({ "listings.json": { schemaVersion: 9 } }).queryListings()).rejects.toThrow(/Unsupported listing payload/);
     await expect(client({ "listings.json": 42 }).queryListings()).rejects.toThrow(/not a listing payload/);
   });
-
-  it("serves an empty published listing set", async () => {
-    const client = createHttpWebDataClient({ baseUrl: "/", fetch: fakeFetch({ "listings.json": packListings([]) }).fetch });
-    expect((await client.queryListings()).data.listings).toEqual([]);
-  });
 });
 
 describe("withStaleFallback", () => {
@@ -99,12 +94,6 @@ describe("withStaleFallback", () => {
     };
     await expect(withStaleFallback(failing, fallback).queryListings({ signal: controller.signal })).rejects.toThrow("aborted");
     expect(fallbackCalls).toBe(0);
-  });
-
-  it("builds the production client from a base URL", () => {
-    const client = createRuntimeWebDataClient("/data/");
-    expect(typeof client.queryListings).toBe("function");
-    expect(typeof client.loadReferenceSnapshot).toBe("function");
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RawListing } from "../../domain/types";
-import { isSuumoOverlap, mergeSuumoObserved, suumoKey } from "./suumoIdentity";
+import { mergeSuumoObserved, suumoKey } from "./suumoIdentity";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({
   name: "Sample",
@@ -29,26 +29,6 @@ describe("suumoKey", () => {
       "jnc:000100000002",
     );
     expect(suumoKey(make({ url: null }))).toMatch(/^property:/);
-  });
-});
-
-describe("isSuumoOverlap", () => {
-  it("matches the same property when rent changes despite a different bc", () => {
-    const before = make({ rent: 100_000, url: "https://suumo.jp/?bc=1" });
-    const after = make({ rent: 95_000, url: "https://suumo.jp/?bc=2" });
-    expect(isSuumoOverlap(before, after)).toBe(true);
-  });
-
-  it("matches differently named agency adverts for the same market room", () => {
-    const a = make({ name: "東武伊勢崎線 草加駅 2階建", url: "https://suumo.jp/?bc=1" });
-    const b = make({ name: "メゾン草加", url: "https://suumo.jp/?bc=2" });
-    expect(isSuumoOverlap(a, b)).toBe(true);
-  });
-
-  it("does not collapse different rooms at the same address", () => {
-    const a = make({ sizeM2: 55, rent: 100_000 });
-    const b = make({ sizeM2: 62, rent: 120_000, url: "https://suumo.jp/?bc=2" });
-    expect(isSuumoOverlap(a, b)).toBe(false);
   });
 });
 

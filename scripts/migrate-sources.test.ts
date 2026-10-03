@@ -13,7 +13,6 @@ import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
 import { DATA_DIR, JsonSourceStore } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
-import { newerRows } from "../src/data-layer/sourceObservationTime";
 import { reconcileLifecycle } from "../src/data-layer/lifecycle";
 import { restoreObservedLifecycle } from "../src/storage/json/observations";
 import { runSourceMigration } from "./migrate-sources";
@@ -190,9 +189,7 @@ describe("audited historical source bootstrap", () => {
     const old = row("nifty-aabbcc", "nifty", { url: "https://myhome.nifty.com/rent/detail_aabbcc/" });
     const other = row("nifty-ddeeff", "nifty", { url: "https://myhome.nifty.com/rent/detail_ddeeff/" });
     await service.bootstrapSources(request([old, other]));
-    const previous = (await store.readSource("nifty"))!;
     const fresh = { ...old, rent: 91000 }; const at = "2026-09-20T00:00:00.000Z";
-    expect(newerRows(previous, [fresh], at, (listing) => [listing.id!])).toEqual([fresh]);
     const scrape = (listing: RawListing, capturedAt: string, batchId: string): ScrapeBatch => ({ schemaVersion: 1, source: "nifty",
       scraper: { name: "nifty-list", version: "1", parserVersion: "1" }, runId: "capture-run", batchId, mode: "discovery", capturedAt,
       scope: { urls: [listing.url!], cities: ["Soka"], filters: {} }, observations: [{ sourceListingId: listing.id!, observedAt: capturedAt,

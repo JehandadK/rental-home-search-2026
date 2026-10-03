@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundaryExtent, circleOffCanvas, extentOf, labelPosition, longitudeScale, padExtent, polygonsOf, ringCentroid, ringRadiusPx, scaleBarLength } from "./mapGeometry";
+import { boundaryExtent, circleOffCanvas, labelPosition, longitudeScale, padExtent, polygonsOf, ringCentroid, ringRadiusPx, scaleBarLength } from "./mapGeometry";
 import type { ReferenceBoundary } from "./referenceData";
 
 const square = (lon: number, lat: number, size: number) =>
@@ -26,7 +26,6 @@ describe("map geometry", () => {
   it("fits the outer rings of every boundary, and pads degenerate extents", () => {
     expect(boundaryExtent([small, multi])).toEqual({ minLon: 0, maxLon: 24, minLat: 0, maxLat: 24 });
     expect(boundaryExtent([])).toBeNull();
-    expect(extentOf([])).toBeNull();
     const padded = padExtent({ minLon: 5, maxLon: 5, minLat: 7, maxLat: 7 });
     expect(padded.maxLon - padded.minLon).toBeCloseTo(0.01);
     expect(padded.maxLat - padded.minLat).toBeCloseTo(0.01);

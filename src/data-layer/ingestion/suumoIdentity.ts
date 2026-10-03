@@ -43,12 +43,6 @@ export function suumoDiscoveryMatchKeys(listing: RawListing): string[] {
   return [...new Set([...(listing.url ? [`url:${listing.url}`] : []), ...suumoMatchKeys(listing)])];
 }
 
-/** True when two records have any strong source/property/market alias in common. */
-export function isSuumoOverlap(a: RawListing, b: RawListing): boolean {
-  const aKeys = new Set(suumoMatchKeys(a));
-  return suumoMatchKeys(b).some((key) => aKeys.has(key));
-}
-
 /**
  * Fresh records first. Only aliases explained by this discovery are compacted,
  * not unseen old duplicates; the caller archives the replaced rows.

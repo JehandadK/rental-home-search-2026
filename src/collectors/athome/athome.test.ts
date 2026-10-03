@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isFamilyLayout, parseAthomePage } from "./athome";
-import { athomeKey, isAthomeOverlap } from "../../data-layer/ingestion/portalPolicy";
+import { athomeKey } from "../../data-layer/ingestion/portalPolicy";
 import { preparePortalRows } from "../../data-layer/ingestion/portalBatch.contract";
 import type { RawListing } from "../../domain/types";
 
@@ -92,10 +92,6 @@ describe("AtHome missing amenity evidence", () => {
 
 describe("AtHome identity and live merge", () => {
   it("uses the stable property number", () => expect(athomeKey(make())).toBe("athome:1119917524"));
-
-  it("recognizes a rent change as an overlap", () => {
-    expect(isAthomeOverlap(make(), make({ id: "athome-999", url: "https://www.athome.co.jp/chintai/999/", rent: 70_000 }))).toBe(true);
-  });
 
   it("keeps two same-size rooms of one building that appear in the same batch", () => {
     const a = make(), b = make({ id: "athome-2", url: "https://www.athome.co.jp/chintai/2/" });

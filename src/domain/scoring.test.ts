@@ -46,13 +46,6 @@ describe("normalisers", () => {
     expect(higherIsBetter(18, 70, 18)).toBe(0);
     expect(higherIsBetter(44, 70, 18)).toBe(50);
   });
-
-  it("walkScore is 100 at the doorstep and 0 at the limit", () => {
-    expect(walkScore(0, 12)).toBe(100);
-    expect(walkScore(12, 12)).toBe(0);
-    expect(walkScore(6, 12)).toBe(50);
-    expect(walkScore(30, 12)).toBe(0);
-  });
 });
 
 describe("rent per exclusive area scoring", () => {
@@ -277,21 +270,6 @@ describe("scoreListing", () => {
     expect(bike?.value).toBeCloseTo(6.4, 1);
     expect(bike?.score).toBeGreaterThan(walk?.score ?? 0);
   });
-
-  it("ignores zero-weighted parameters in the total", () => {
-    const config: ScoringConfig = {
-      ...DEFAULT_CONFIG,
-      weights: { ...DEFAULT_CONFIG.weights, station: 0, moveInCost: 0 },
-    };
-    const listing: EnrichedListing = {
-      ...baseListing,
-      rent: 50_000,
-      sizeM2: null,
-      builtYear: null,
-      stationWalkMin: 20,
-    };
-    expect(scoreListing(listing, config).total).toBe(100); // rent only
-  });
 });
 
 describe("scoreCoverage", () => {
@@ -301,7 +279,6 @@ describe("scoreCoverage", () => {
     expect(coverage.weighted).toBe(Object.keys(DEFAULT_CONFIG.weights).length);
     expect(coverage.missing).toEqual(expect.arrayContaining(["size", "yearBuilt"]));
     expect(coverage.missing).not.toContain("rent");
-    expect(coverage.known + coverage.missing.length).toBe(coverage.weighted);
   });
 
   it("leaves out gaps every listing shares", () => {

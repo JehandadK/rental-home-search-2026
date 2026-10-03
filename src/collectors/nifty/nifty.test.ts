@@ -30,13 +30,6 @@ describe("Nifty list-first collection", () => {
     expect(l.building?.features).toEqual(["駐車場あり", "バス・トイレ別"]);
   });
   it("excludes small layouts on the list page", () => expect(parseNiftyPage(fixture("1K"), "Soka")).toEqual([]));
-  it("projects the already-loaded DOM without any fetch, preserving parser fields", async () => {
-    const url = "https://myhome.nifty.com/rent/saitama/sokashi_ct/?sort=regDate-desc";
-    const doc = document.implementation.createHTMLDocument();
-    doc.body.innerHTML = fixture() + '<select name="sort"><option value="regDate-desc" selected>新着</option></select>';
-    const html = await new Function("document", "location", `return ${niftyCaptureExpression(url)}`)(doc, { href: url });
-    expect(parseNiftyPage(html, "Soka", 2026)).toEqual(parseNiftyPage(fixture(), "Soka", 2026));
-  });
   it("updates price using stable ad identity and retains expensive details", () => {
     const [l] = parseNiftyPage(fixture(), "Soka");
     const prior = { ...l, rent: 90000, parking: { ...l.parking!, monthlyYen: 6000 }, tenancy: { leaseType: "regular" as const } };

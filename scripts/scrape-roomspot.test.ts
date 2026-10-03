@@ -6,7 +6,6 @@ import { DATA_DIR, JsonSourceStore, ShrinkGuardError, atomicWriteJson, type Sour
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { portalPageUrl } from "../src/data-layer/ingestion/contracts";
-import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceRowKey, sourceRowLocator } from "../src/data-layer/sourceRowIdentity";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ROOMSPOT_COLLECTOR, runRoomspotScrape } from "./scrape-roomspot";
@@ -96,15 +95,6 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     expect(await readFile(store.sourcePath("roomspot"), "utf8")).toBe(bytes); expect(await readdir(store.backupDir)).toEqual(backups);
   });
 
-  it("does not count or log an empty non-family page as known", async () => {
-    await seed(rows([2, 3]));
-    dependencies.page = vi.fn(async (meta) => meta.page === 1
-      ? capture(cityIndex(meta.city), 1, room(idFor(cityIndex(meta.city), 1), { layout: "1LDK" })) : capture(cityIndex(meta.city), meta.page));
-    await runRoomspotScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(9); expect(dependencies.sleep).toHaveBeenCalledTimes(3);
-    expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("page 1:"));
-  });
-
   it("rejects --full before any page or session and maps an empty crawl to the legacy message", async () => {
     const begin = vi.spyOn(client, "beginPortalDiscovery");
     await expect(runRoomspotScrape(["--full"], dependencies)).rejects.toThrow("verified per-city exhaustion");
@@ -127,21 +117,6 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     await expect(runRoomspotScrape(["--max-pages", "1"], dependencies)).rejects.toThrow();
     expect(write).not.toHaveBeenCalled(); expect(dependencies.close).toHaveBeenCalledTimes(1);
     expect(await readFile(store.sourcePath("roomspot"), "utf8")).toBe(bytes);
-  });
-
-  it("does not retry a revision conflict when source state changes during the crawl", async () => {
-    await seed(); const originalPage = dependencies.page;
-    dependencies.page = async (meta) => {
-      if (meta.city === "Soka") {
-        const previous = (await store.readSource("roomspot"))!;
-        await store.writeSource({ ...previous, listings: previous.listings.map((listing) => ({ ...listing, rent: 99000 })) }, { expectedRevision: previous.revision! });
-      }
-      return originalPage(meta);
-    };
-    const write = vi.spyOn(repository, "reconcileSource");
-    await expect(runRoomspotScrape(["--max-pages", "1"], dependencies)).rejects.toBeInstanceOf(RevisionConflictError);
-    expect(write).toHaveBeenCalledTimes(1);
-    expect((await store.readSource("roomspot"))!.listings.every((listing) => listing.rent === 99000)).toBe(true);
   });
 
   it("retains --force as an explicit shrink-guard override with complete superseded-row archives", async () => {

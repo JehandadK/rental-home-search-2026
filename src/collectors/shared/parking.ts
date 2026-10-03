@@ -1,4 +1,3 @@
-import * as cheerio from "cheerio";
 export interface ParkingInfo {
   /** Monthly cost in yen; 0 when free, null when unknown. */
   monthlyYen: number | null;
@@ -55,18 +54,5 @@ export function parseParking(raw: string): ParkingInfo {
     distanceM: distance ? Number(distance[1]) : null,
     raw,
   };
-}
-
-/** Pull the 駐車場 cell out of a SUUMO detail page. */
-export function extractParkingCell(html: string): string | null {
-  const $ = cheerio.load(html);
-  let found: string | null = null;
-  $("th").each((_, th) => {
-    if (found != null) return;
-    if ($(th).text().trim() === "駐車場") {
-      found = $(th).next("td").text().replace(/\s+/g, " ").trim();
-    }
-  });
-  return found;
 }
 

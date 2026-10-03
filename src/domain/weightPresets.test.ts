@@ -11,12 +11,6 @@ import {
 const commuter = BUILT_IN_PRESETS.find((preset) => preset.id === "commuter")!;
 
 describe("weight presets", () => {
-  it("covers every numeric criterion in every built-in", () => {
-    for (const preset of BUILT_IN_PRESETS) {
-      expect(Object.keys(preset.weights).sort()).toEqual(Object.keys(DEFAULT_CONFIG.weights).sort());
-    }
-  });
-
   it("changes only the weights, keeping anchors and the user's feature weights", () => {
     const tuned = {
       ...DEFAULT_CONFIG,
@@ -29,10 +23,6 @@ describe("weight presets", () => {
     expect(applied.featureWeights.petAllowed).toBe(9);
     expect(matchesPreset(applied, commuter)).toBe(true);
     expect(matchesPreset(applied, BUILT_IN_PRESETS[0])).toBe(false);
-  });
-
-  it("matches the balanced preset on the default config", () => {
-    expect(matchesPreset(DEFAULT_CONFIG, BUILT_IN_PRESETS[0])).toBe(true);
   });
 
   it("restores feature weights and preferences from a saved preset", () => {

@@ -20,10 +20,6 @@ function keys(source: BrowserPortal, row: RawListing): string[] {
   return [...new Set([source === "athome" ? athomeKey(row) : roomspotKey(row), `property:${trackingKey(row)}`,
     `market:${norm(row.address)}|${row.rent}|${row.sizeM2 ?? ""}|${norm(row.layout)}`])];
 }
-export const athomeMatchKeys = (row: RawListing) => keys("athome", row);
-export const roomspotMatchKeys = (row: RawListing) => keys("roomspot", row);
-export const isAthomeOverlap = (a: RawListing, b: RawListing) => athomeMatchKeys(b).some((key) => athomeMatchKeys(a).includes(key));
-export const isRoomspotOverlap = (a: RawListing, b: RawListing) => roomspotMatchKeys(b).some((key) => roomspotMatchKeys(a).includes(key));
 export const portalDiscoveryKeys = (source: BrowserPortal, row: RawListing) => [...(row.url ? [`url:${row.url}`] : []), ...keys(source, row)];
 
 function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: readonly RawListing[]) {

@@ -91,12 +91,6 @@ export function latestResumableRun(ledger: RefreshLedger): RefreshRunRecord | un
   return latest && latest.status !== "success" ? latest : undefined;
 }
 
-/** Resume at the first stage that was not completed; downstream stages rerun. */
-export function resumeStageIndex(stages: readonly RefreshStageRecord[]): number {
-  const incomplete = stages.findIndex((stage) => stage.status !== "success" && stage.status !== "skipped");
-  return incomplete < 0 ? stages.length : incomplete;
-}
-
 /** Convert a process left running by a crash/interrupt into an explicit checkpoint. */
 export function markInterrupted(run: RefreshRunRecord, now = new Date().toISOString()): RefreshRunRecord {
   if (run.status !== "running" && !run.stages.some((stage) => stage.status === "running")) return run;
