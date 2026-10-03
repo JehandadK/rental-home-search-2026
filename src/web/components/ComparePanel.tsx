@@ -12,7 +12,7 @@ import { listingKey } from "../../domain/listingKey";
 import { listingPhotos } from "../../domain/listingPhotos";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig";
-import { scoreColor, type ScoredRow } from "../../domain/scoring";
+import { scoreColor, scoreCoverage, type ScoredRow } from "../../domain/scoring";
 import type { ScoringCriterionKey } from "../../domain/types";
 import type { CostBasis } from "./ListingTable";
 import { ListingThumb } from "./ListingPhoto";
@@ -191,6 +191,13 @@ function buildSections(
 
   const overall: Fact[] = [
     fact("Score", ({ row }) => known(row.score.total, (v) => v.toFixed(1)), { better: "high" }),
+    fact("Data", ({ row }) => {
+      const coverage = scoreCoverage(row.score);
+      return {
+        display: `${coverage.known}/${coverage.weighted} criteria`,
+        value: coverage.weighted ? coverage.known / coverage.weighted : null,
+      };
+    }, { better: "high", hint: "Weighted criteria this home has data for; missing ones are left out of its score" }),
     fact("Rank", ({ key }) => {
       const rank = ranks.get(key);
       return rank == null

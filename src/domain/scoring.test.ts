@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_CONFIG, type ScoringConfig } from "./scoringConfig";
 import type { EnrichedListing, Proximity } from "./types";
-import { higherIsBetter, lowerIsBetter, scoreListing, walkScore } from "./scoring";
+import { higherIsBetter, lowerIsBetter, scoreCoverage, scoreListing, sharedGaps, walkScore } from "./scoring";
 
 // Walk minutes are recomputed from distM at scoring time, so encode distM such
 // that the default knobs (80 m/min, 1.3 detour) reproduce the intended minutes.
@@ -291,5 +291,34 @@ describe("scoreListing", () => {
       stationWalkMin: 20,
     };
     expect(scoreListing(listing, config).total).toBe(100); // rent only
+  });
+});
+
+describe("scoreCoverage", () => {
+  it("counts the weighted criteria a score had data for, and names the rest", () => {
+    const listing = makeListing({ sizeM2: null, builtYear: null });
+    const coverage = scoreCoverage(scoreListing(listing, DEFAULT_CONFIG));
+    expect(coverage.weighted).toBe(Object.keys(DEFAULT_CONFIG.weights).length);
+    expect(coverage.missing).toEqual(expect.arrayContaining(["size", "yearBuilt"]));
+    expect(coverage.missing).not.toContain("rent");
+    expect(coverage.known + coverage.missing.length).toBe(coverage.weighted);
+  });
+
+  it("leaves out gaps every listing shares", () => {
+    const halfKnown = scoreListing(makeListing({ sizeM2: null }), DEFAULT_CONFIG);
+    const gaps = sharedGaps([halfKnown, scoreListing(makeListing({}), DEFAULT_CONFIG)]);
+    // Neither fixture has a POI distance; only the first lacks a size.
+    expect(gaps.has("poi1")).toBe(true);
+    expect(gaps.has("size")).toBe(false);
+    // No size also means no rent per ㎡.
+    expect(scoreCoverage(halfKnown, gaps).missing).toEqual(["rentPerM2", "size"]);
+    expect(sharedGaps([halfKnown]).size).toBe(0);
+  });
+
+  it("ignores criteria weighted zero, including unknown features", () => {
+    const config: ScoringConfig = { ...DEFAULT_CONFIG, weights: { ...DEFAULT_CONFIG.weights, size: 0 } };
+    const coverage = scoreCoverage(scoreListing(makeListing({ sizeM2: null }), config));
+    expect(coverage.missing).not.toContain("size");
+    expect(coverage.missing).not.toContain("petAllowed");
   });
 });

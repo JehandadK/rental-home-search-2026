@@ -16,6 +16,7 @@ import {
   DEFAULT_FEATURE_WEIGHTS,
   type ScoringConfig,
 } from "../../domain/scoringConfig";
+import type { WeightPreset } from "../../domain/weightPresets";
 import type { AvailabilityMap } from "../../domain/availability";
 import type { EnrichedListing } from "../../domain/types";
 
@@ -73,6 +74,38 @@ export function decodeCompare(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   return [...new Set(raw.filter((key): key is string => typeof key === "string"))].slice(0, MAX_COMPARE);
 }
+
+/**
+ * Saved weight presets need an id, a name and weights. Weights are merged
+ * over the defaults like the config's, so a preset saved before a criterion
+ * existed still applies cleanly.
+ */
+export function decodeWeightPresets(raw: unknown): WeightPreset[] {
+  if (!Array.isArray(raw)) return [];
+  const presets: WeightPreset[] = [];
+  for (const preset of raw) {
+    if (!isPlainObject(preset) || typeof preset.id !== "string" || typeof preset.label !== "string") continue;
+    if (!isPlainObject(preset.weights) || preset.label.trim() === "") continue;
+    if (presets.some((kept) => kept.id === preset.id)) continue;
+    presets.push({
+      id: preset.id,
+      label: preset.label,
+      description: typeof preset.description === "string" ? preset.description : "Saved by you",
+      weights: { ...DEFAULT_CONFIG.weights, ...numbersIn(preset.weights) },
+      featureWeights: { ...DEFAULT_FEATURE_WEIGHTS, ...numbersIn(objectOrEmpty(preset.featureWeights)) },
+      featurePreferences: {
+        ...DEFAULT_FEATURE_PREFERENCES,
+        ...Object.fromEntries(Object.entries(objectOrEmpty(preset.featurePreferences))
+          .filter(([, preference]) => preference === "prefer" || preference === "avoid")),
+      },
+      custom: true,
+    });
+  }
+  return presets;
+}
+
+const numbersIn = (raw: PlainObject) =>
+  Object.fromEntries(Object.entries(raw).filter(([, value]) => typeof value === "number" && Number.isFinite(value)));
 
 /** Hand-made "this ad is gone / still listed" marks; malformed entries are dropped. */
 export function decodeAvailabilityMarks(raw: unknown): AvailabilityMap {

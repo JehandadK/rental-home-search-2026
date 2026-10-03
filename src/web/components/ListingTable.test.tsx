@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_CONFIG } from "../../domain/scoringConfig";
@@ -413,5 +413,38 @@ describe("ListingTable", () => {
       renderTable([makeRow({ name: "Plain", sourceListings: [{ source: "suumo", url: SUUMO }] })]);
       expect(screen.queryByLabelText("Mark suumo ad as gone")).toBeNull();
     });
+  });
+});
+
+describe("ListingTable score evidence", () => {
+  it("draws a partial score as a hollow pill with its data coverage", () => {
+    const full = makeRow({ name: "Fully known" });
+    const partial = makeRow({ name: "Half known", sizeM2: null, builtYear: null });
+    renderTable([full, partial]);
+    const partialRow = screen.getByText("Half known").closest("tr")!;
+    const pill = within(partialRow).getByLabelText(/^Score \d+, from \d+ of \d+ criteria$/);
+    expect(pill.className).toMatch(/pillPartial/);
+    expect(pill.closest("[title]")!.getAttribute("title")).toMatch(/No data for: .*Size.*Age/);
+    expect(within(partialRow).getByText(/^\d+\/\d+$/)).toBeTruthy();
+  });
+
+  it("shows how far a row just moved in the ranking", () => {
+    const rows = [makeRow({ name: "Climber" }), makeRow({ name: "Faller", rent: 90_000 })];
+    renderTable(rows, {
+      rankMoves: new Map([[listingKey(rows[0].listing), 3], [listingKey(rows[1].listing), -1]]),
+    });
+    expect(within(screen.getByText("Climber").closest("tr")!).getByText("↑3").getAttribute("title"))
+      .toBe("Up 3 places after the last scoring change");
+    expect(within(screen.getByText("Faller").closest("tr")!).getByText("↓1")).toBeTruthy();
+  });
+
+  it("shows the empty state only when nothing matches", () => {
+    const { rerender } = renderTable([makeRow({ name: "Only one" })], { emptyState: <p>Nothing here</p> });
+    expect(screen.queryByText("Nothing here")).toBeNull();
+    rerender(
+      <ListingTable items={[]} onRemove={() => {}} hovered={null} onHover={() => {}} selected={null}
+        onSelect={() => {}} onCenterMap={() => {}} marks={{}} onSetMark={() => {}} emptyState={<p>Nothing here</p>} />,
+    );
+    expect(screen.getByText("Nothing here")).toBeTruthy();
   });
 });

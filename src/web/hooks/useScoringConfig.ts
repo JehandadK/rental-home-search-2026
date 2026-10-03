@@ -4,6 +4,7 @@
  */
 import { useCallback } from "react";
 import { DEFAULT_CONFIG, type ScoringConfig } from "../../domain/scoringConfig";
+import { applyPreset as withPreset, type WeightPreset } from "../../domain/weightPresets";
 import type { ListingFeatureKey, ScoreParameterKey } from "../../domain/types";
 import { decodeScoringConfig } from "../userState/decoders";
 import { USER_STATE_KEYS } from "../userState/store";
@@ -58,6 +59,11 @@ export function useScoringConfig() {
     setConfig(withAllWeightsZero);
   }, []);
 
+  /** Switch to a preset's weights, keeping anchors and options. */
+  const applyPreset = useCallback((preset: WeightPreset) => {
+    setConfig((c) => withPreset(c, preset));
+  }, []);
+
   const reset = useCallback(() => setConfig(DEFAULT_CONFIG), []);
 
   return {
@@ -68,6 +74,7 @@ export function useScoringConfig() {
     update,
     setWalkZero,
     zeroAllWeights,
+    applyPreset,
     reset,
   };
 }

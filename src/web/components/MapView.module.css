@@ -328,6 +328,8 @@
 .layerOn.layer_mosques i { background: #7c3aed; transform: rotate(45deg) scale(0.85); }
 .layer_newRings i { background: transparent; border: 1.5px solid #cbd5e1; border-radius: 50%; }
 .layerOn.layer_newRings i { border-color: #16a34a; }
+.layer_rings i { background: transparent; border: 1.5px dashed #cbd5e1; border-radius: 50%; }
+.layerOn.layer_rings i { border-color: #dc2626; }
 .layer_schools i { border-radius: 50%; }
 .layer_mosques i { transform: rotate(45deg) scale(0.85); }
 
@@ -405,6 +407,12 @@
   white-space: nowrap;
 }
 
+.legendKeys span.legendNote {
+  align-items: flex-start;
+  max-width: 220px;
+  white-space: normal;
+}
+
 .legendKeys i {
   display: inline-block;
   width: 9px;
@@ -424,7 +432,16 @@
 .keyStation { background: #2563eb; }
 .keySchool { background: #9db4ce; border-radius: 50%; transform: scale(0.65); }
 .keyNew { border: 1.5px solid #16a34a; border-radius: 50%; }
-.keyShortlist { border: 2px solid #d97706; border-radius: 50%; }
+.legendKeys .keyCandidate,
+.legendKeys .keyRuledOut {
+  width: auto;
+  height: auto;
+  line-height: 9px;
+}
+.legendKeys .keyCandidate { color: #fbbf24; font-size: 13px; -webkit-text-stroke: 1px #d97706; }
+.legendKeys .keyRuledOut { color: #9ca3af; font-size: 10px; font-weight: 700; }
+.keyUndecided { background: #f59e0b; border-radius: 50%; }
+.keyRing { border: 1.5px dashed #dc2626; border-radius: 50%; }
 .keyDimmed { background: #9ca3af; border-radius: 50%; opacity: 0.6; }
 
 .scaleBar {

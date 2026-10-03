@@ -12,6 +12,7 @@ import {
   decodeNotes,
   decodePlaceSelection,
   decodeScoringConfig,
+  decodeWeightPresets,
 } from "./decoders";
 
 const DEFAULT_SELECTION: PlaceSelection = {
@@ -125,5 +126,24 @@ describe("decodeAvailabilityMarks", () => {
 
   it("falls back to no marks for anything else", () => {
     for (const raw of [undefined, null, "x", 3, [good]]) expect(decodeAvailabilityMarks(raw)).toEqual({});
+  });
+});
+
+describe("decodeWeightPresets", () => {
+  it("keeps well-formed presets, filling criteria added since they were saved", () => {
+    const [preset, ...rest] = decodeWeightPresets([
+      { id: "custom:1", label: "Mine", weights: { rent: 3, station: "x" }, featureWeights: { cityGas: 4 }, featurePreferences: { elevator: "avoid", cityGas: "maybe" } },
+      { id: "custom:2", label: "  ", weights: {} },
+      { label: "No id", weights: {} },
+      "junk",
+    ]);
+    expect(rest).toEqual([]);
+    expect(preset).toMatchObject({ id: "custom:1", label: "Mine", custom: true });
+    expect(preset.weights.rent).toBe(3);
+    expect(preset.weights.station).toBe(DEFAULT_CONFIG.weights.station);
+    expect(preset.featureWeights!.cityGas).toBe(4);
+    expect(preset.featurePreferences!.elevator).toBe("avoid");
+    expect(preset.featurePreferences!.cityGas).toBe(DEFAULT_CONFIG.featurePreferences.cityGas);
+    expect(decodeWeightPresets({ not: "a list" })).toEqual([]);
   });
 });

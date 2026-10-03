@@ -1,7 +1,7 @@
 /**
  * Browser-local user state (M6): preferences, filters, place selection,
- * decision marks, notes, the compare list, custom listings, and hidden
- * columns.
+ * decision marks, notes, the compare list, saved weight presets, custom
+ * listings, and hidden columns.
  *
  * `UserStateStore` is the only way the app reads or writes that state. The
  * browser adapter below is the only code that touches `localStorage` (the
@@ -35,6 +35,7 @@ export const USER_STATE_KEYS = {
   hiddenColumns: "rental-search-hidden-columns-v1",
   notes: "soka-scorer-notes-v1",
   compare: "soka-scorer-compare-v1",
+  weightPresets: "soka-scorer-weight-presets-v1",
 } as const;
 
 /** localStorage adapter. Missing or blocked storage behaves like an empty store. */
