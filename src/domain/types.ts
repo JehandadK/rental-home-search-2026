@@ -268,6 +268,12 @@ export interface MoveInCosts {
   guarantorFee: number;
   fireInsurance: number;
   cleaningFee: number;
+  /**
+   * Other non-refundable signing charges itemised from the fee notes
+   * (鍵交換代, 消臭・除菌, 防災セット …); `otherFees` is their sum.
+   */
+  otherFees: number;
+  otherFeeItems: readonly { label: string; yen: number }[];
   firstMonthRent: number;
   /** Everything you must hand over before you get the keys. */
   totalUpfront: number;

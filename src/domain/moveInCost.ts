@@ -18,6 +18,7 @@
  * deposit that mostly comes back is far cheaper than ¥100k of key money.
  */
 import type { EnrichedListing, MoveInCosts, ParkingInfo } from "./types";
+import { parseFeeNotes, sumFees, type FeeItem } from "./feeNotes";
 
 export interface MoveInAssumptions {
   /** Deposit when the listing does not state one, in months of rent. */
@@ -77,7 +78,12 @@ export function computeMoveInCosts(
   // whichever actually states a value so real data always beats an estimate.
   const statedDeposit = firstStated(listing.depositYen, listing.costs?.depositYen);
   const statedKeyMoney = firstStated(listing.keyMoneyYen, listing.costs?.keyMoneyYen);
-  const statedCleaning = firstStated(listing.cleaningFeeYen, listing.costs?.cleaningFeeYen);
+  // Fee notes can state the cleaning fee (or that none is charged), and
+  // itemise the other signing charges.
+  const notes = parseFeeNotes(listing.costs?.feeNotes);
+  const statedCleaning = firstStated(listing.cleaningFeeYen, listing.costs?.cleaningFeeYen, notes.cleaningYen);
+  const otherFeeItems = otherSigningFees(listing);
+  const otherFees = sumFees(otherFeeItems);
 
   const depositStated = statedDeposit != null;
   const keyMoneyStated = statedKeyMoney != null;
@@ -99,7 +105,7 @@ export function computeMoveInCosts(
   const firstMonthRent = assumptions.includeFirstMonthRent ? rent : 0;
 
   const totalUpfront =
-    deposit + keyMoney + agencyFee + guarantorFee + fireInsurance + cleaningFee + firstMonthRent;
+    deposit + keyMoney + agencyFee + guarantorFee + fireInsurance + cleaningFee + otherFees + firstMonthRent;
 
   // The deposit is the only refundable component, and only partly so:
   // restoration costs are deducted from it on the way out.
@@ -109,7 +115,7 @@ export function computeMoveInCosts(
   // Money that never comes back. First month's rent buys you a month of
   // housing, so it is excluded — it is not a premium for taking the place.
   const sunkCost =
-    keyMoney + agencyFee + guarantorFee + fireInsurance + cleaningFee + depositLost;
+    keyMoney + agencyFee + guarantorFee + fireInsurance + cleaningFee + otherFees + depositLost;
 
   return {
     deposit,
@@ -118,6 +124,8 @@ export function computeMoveInCosts(
     guarantorFee,
     fireInsurance,
     cleaningFee,
+    otherFees,
+    otherFeeItems,
     firstMonthRent,
     totalUpfront,
     sunkCost,
@@ -128,6 +136,32 @@ export function computeMoveInCosts(
       cleaningFee: !cleaningStated,
     },
   };
+}
+
+/**
+ * Signing charges beyond the modelled ones. Itemised from the fee notes
+ * when they carry any amounts; otherwise the stored `oneOffFeesYen` total,
+ * which comes from another portal's text that this listing no longer holds.
+ *
+ * A single item costing more than a month's rent is taken for a typo in the
+ * ad ("ホームアシスト2416500円" on a ¥62,000 flat) and left out: real ones —
+ * key exchange, deodorising, a disaster kit — are a fraction of the rent.
+ */
+function otherSigningFees(listing: EnrichedListing): readonly FeeItem[] {
+  const notes = parseFeeNotes(listing.costs?.feeNotes);
+  if (notes.hasAmounts) return notes.signing.filter(({ yen }) => listing.rent <= 0 || yen <= listing.rent);
+  const stored = listing.costs?.oneOffFeesYen;
+  return stored ? [{ label: "Other one-off fees", yen: stored }] : [];
+}
+
+/**
+ * Recurring monthly charges outside rent: itemised from the fee notes when
+ * they carry amounts, else the stored `monthlyExtrasYen`.
+ */
+export function monthlyExtrasYen(listing: EnrichedListing): number {
+  const notes = parseFeeNotes(listing.costs?.feeNotes);
+  if (notes.hasAmounts) return sumFees(notes.monthly);
+  return listing.costs?.monthlyExtrasYen ?? 0;
 }
 
 /** First value that the source actually stated (0 is a real value, null is not). */
@@ -193,7 +227,7 @@ export function effectiveMonthlyCost(
  * and parking when the household keeps a car.
  */
 export function monthlyOutlay(listing: EnrichedListing, includeParking: boolean): number {
-  return effectiveMonthlyCost(listing, includeParking) + (listing.costs?.monthlyExtrasYen ?? 0);
+  return effectiveMonthlyCost(listing, includeParking) + monthlyExtrasYen(listing);
 }
 
 /** A standard Japanese lease runs two years before 更新. */

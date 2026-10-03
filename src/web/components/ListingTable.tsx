@@ -7,6 +7,7 @@ import { SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { scoreColor, type ScorePart } from "../../domain/scoring";
 import {
   computeMoveInCosts,
+  monthlyExtrasYen,
   parkingInfo,
   parkingMonthlyYen,
   stayCost,
@@ -129,9 +130,9 @@ function formatMonthly(cost: StayCost): string {
 
 function monthlyTitle(listing: ScoredRow["listing"], cost: StayCost): string {
   const parts = [`rent ¥${yen.format(listing.rent)} (incl. 管理費)`];
-  const extras = listing.costs?.monthlyExtrasYen;
+  const extras = monthlyExtrasYen(listing);
   if (extras) parts.push(`extras ¥${yen.format(extras)}`);
-  const parking = cost.monthly - listing.rent - (extras ?? 0);
+  const parking = cost.monthly - listing.rent - extras;
   if (parking > 0) parts.push(`parking ¥${yen.format(parking)}`);
   return parts.join(" + ") + (cost.parkingUnknown ? "\n* parking price not stated, so not included" : "");
 }
@@ -734,6 +735,7 @@ function MoveInBreakdown({ row, moveIn }: { row: ScoredRow; moveIn: CostBasis["m
     { label: "保証会社 guarantor", value: costs.guarantorFee, estimated: true },
     { label: "火災保険 insurance", value: costs.fireInsurance, estimated: true },
     { label: "清掃費 cleaning", value: costs.cleaningFee, estimated: costs.estimated.cleaningFee },
+    ...costs.otherFeeItems.map(({ label, yen }) => ({ label: `${label} · other fee`, value: yen })),
     { label: "First month rent", value: costs.firstMonthRent },
   ];
 
@@ -750,8 +752,8 @@ function MoveInBreakdown({ row, moveIn }: { row: ScoredRow; moveIn: CostBasis["m
       <ParkingLine listing={row.listing} />
       <AttributeSummary listing={row.listing} />
       <ul className={styles.moveInList}>
-        {items.map((item) => (
-          <li key={item.label} className={item.refundable ? styles.refundableItem : undefined}>
+        {items.map((item, index) => (
+          <li key={`${index}-${item.label}`} className={item.refundable ? styles.refundableItem : undefined}>
             <span>
               {item.label}
               {item.estimated && <em className={styles.est}> est.</em>}
@@ -763,7 +765,7 @@ function MoveInBreakdown({ row, moveIn }: { row: ScoredRow; moveIn: CostBasis["m
       <p className={styles.moveInNote}>
         敷金 is refundable minus 原状回復 (
         {Math.round(moveIn.depositLossRate * 100)}% assumed lost).
-        礼金, fees and cleaning are never returned. First month’s rent is excluded
+        礼金, fees (including any listed in the ad's notes) and cleaning are never returned. First month’s rent is excluded
         from the sunk total — it buys a month of housing.
       </p>
     </div>
