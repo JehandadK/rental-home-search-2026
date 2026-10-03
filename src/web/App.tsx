@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SCORE_PARAMETERS, type ScoringConfig } from "../domain/scoringConfig";
 import { scoreListing } from "../domain/scoring";
 import { diagnoseAll } from "../domain/diagnostics";
@@ -49,7 +49,7 @@ export function App({ data }: { data: WebData }) {
   const { marks, setMark, clearMarks } = useMarks();
   const { availabilityMarks, markAd } = useAvailabilityMarks();
   const { notes, setNote } = useNotes();
-  const { compare, toggleCompare, clearCompare } = useCompare();
+  const { compare, toggleCompare, clearCompare, retainCompare } = useCompare();
   const { selection, setPlaces, togglePlace, setTarget, reset: resetPlaces } = usePlaceSelection(catalog);
 
   /**
@@ -118,19 +118,29 @@ export function App({ data }: { data: WebData }) {
     [config.moveIn, config.includeParking],
   );
 
+  /** Every listing by key, for the pinned homes. Built once per listing set. */
+  const listingsByKey = useMemo(
+    () => new Map(available.map((listing) => [listingKey(listing), listing])),
+    [available],
+  );
+
+  // A pinned home can leave the data (a key-changing rescrape, a removed
+  // custom listing). Unpin it, or it would hold a compare slot nobody can see.
+  useEffect(() => {
+    if (compare.some((key) => !listingsByKey.has(key))) retainCompare(listingsByKey);
+  }, [compare, listingsByKey, retainCompare]);
+
   /**
    * The pinned homes, scored on their own so a comparison survives filters
-   * that would hide one of them. Keys whose listing has left the data are
-   * skipped.
+   * that would hide one of them.
    */
-  const compareRows: ScoredRow[] = useMemo(() => {
-    if (!compare.length) return [];
-    const byKey = new Map(available.map((listing) => [listingKey(listing), listing]));
-    return compare.flatMap((key) => {
-      const listing = byKey.get(key);
+  const compareRows: ScoredRow[] = useMemo(
+    () => compare.flatMap((key) => {
+      const listing = listingsByKey.get(key);
       return listing ? [{ listing, score: scoreListing(listing, config) }] : [];
-    });
-  }, [compare, available, config]);
+    }),
+    [compare, listingsByKey, config],
+  );
 
   /** Where each pinned home sits in the current ranking (1 = best). */
   const compareRanks = useMemo(() => {

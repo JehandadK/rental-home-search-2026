@@ -317,6 +317,24 @@ describe("ListingTable", () => {
       expect(onSetNote).toHaveBeenCalledTimes(2);
     });
 
+    it("keeps the open editor and its draft through a re-sort", () => {
+      const rows = [makeRow({ name: "Pricier", id: "p", rent: 120_000 }), makeRow({ name: "Cheaper", id: "c", rent: 60_000 })];
+      const onSetNote = vi.fn();
+      renderTable(rows, { onSetNote });
+      fireEvent.click(screen.getByText("Pricier").closest("tr")!);
+      const editor = screen.getByLabelText(/My notes/);
+      fireEvent.change(editor, { target: { value: "Half a thought" } });
+
+      // Score order puts the cheaper home first; rent descending moves the open row to the top.
+      const order = () => [...document.querySelectorAll("tbody tr td[title]")].map((td) => td.textContent);
+      expect(order()[0]).toMatch(/^Cheaper/);
+      fireEvent.click(screen.getByRole("columnheader", { name: /^Rent/ }));
+      fireEvent.click(screen.getByRole("columnheader", { name: /^Rent/ }));
+      expect(order()[0]).toMatch(/^Pricier/);
+      expect(screen.getByLabelText(/My notes/)).toBe(editor);
+      expect((editor as HTMLTextAreaElement).value).toBe("Half a thought");
+    });
+
     it("keeps a half-typed note when the row is collapsed", () => {
       const rows = [makeRow({ name: "Collapsing" })];
       const onSetNote = vi.fn();

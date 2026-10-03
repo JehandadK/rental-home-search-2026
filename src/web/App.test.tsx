@@ -146,6 +146,18 @@ describe("user state across reloads", () => {
     expect(within(reloaded).getByText("Ask about parking")).toBeTruthy();
   });
 
+  it("unpins compared homes that have left the data", async () => {
+    const store = createMemoryUserStateStore({
+      [USER_STATE_KEYS.compare]: ["gone|nowhere|1", "also-gone", "still-gone", "never-was"],
+    });
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    expect(store.read(USER_STATE_KEYS.compare)).toEqual([]);
+    const box = screen.getByLabelText(`Compare ${FIXTURE_LISTINGS[0].name}`) as HTMLInputElement;
+    expect(box.disabled).toBe(false);
+    fireEvent.click(box);
+    expect(store.read(USER_STATE_KEYS.compare)).toHaveLength(1);
+  });
+
   it("falls back to defaults when stored state is corrupt", async () => {
     const store = createMemoryUserStateStore({
       [USER_STATE_KEYS.filters]: "not an object",

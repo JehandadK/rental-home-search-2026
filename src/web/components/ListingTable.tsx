@@ -228,6 +228,18 @@ export const ListingTable = memo(function ListingTable({
   // Hovering a map marker updates this component frequently. Cache the slice
   // so those transient renders reuse the same row array.
   const visible = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+  // React keys that follow a row when the order changes, so an open row (and
+  // its note editor) is not remounted by a re-sort. Exact duplicate listings
+  // share a listingKey; they get a numbered suffix instead.
+  const rowKeys = useMemo(() => {
+    const seen = new Map<string, number>();
+    return visible.map(({ listing }) => {
+      const key = listingKey(listing);
+      const count = (seen.get(key) ?? 0) + 1;
+      seen.set(key, count);
+      return count === 1 ? key : `${key}#${count}`;
+    });
+  }, [visible]);
   const shows = (key: ColumnKey) => !hiddenColumns.has(key);
   // Portal ads ordered by preference (athome → suumo → nifty), all retained.
   const referencesFor = portalReferences;
@@ -345,6 +357,7 @@ export const ListingTable = memo(function ListingTable({
           <tbody>
             {visible.map(({ listing, score }, index) => {
               const key = listingKey(listing);
+              const rowKey = rowKeys[index];
               const isHover = key === hovered;
               const isSelected = key === selected;
               const sold = isSold(listing);
@@ -357,7 +370,7 @@ export const ListingTable = memo(function ListingTable({
               const comparing = compare.includes(key);
               const cost = stayCosts.get(listing)!;
               return (
-              <Fragment key={key + index}>
+              <Fragment key={rowKey}>
                 <tr
                   ref={isSelected ? selectedRowRef : undefined}
                   className={`${styles.listing} ${isHover ? styles.hovered : ""} ${

@@ -35,10 +35,35 @@ export function NoteEditor({ note, onSave, className }: Props) {
     return () => clearTimeout(timer);
   });
 
-  // Never lose a draft when the row collapses mid-sentence.
+  // Never lose a draft when the row collapses mid-sentence, the tab is
+  // hidden, or the page is closed.
   const latest = useRef<NoteDraft>({ text, viewingAt: viewingAt || null });
   latest.current = { text, viewingAt: viewingAt || null };
-  useEffect(() => () => flush(latest.current), []);
+  useEffect(() => {
+    const flushLatest = () => flush(latest.current);
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flushLatest();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", flushLatest);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", flushLatest);
+      flushLatest();
+    };
+  }, []);
+
+  // Follow a note saved elsewhere (another editor for the same home) as long
+  // as nothing is being typed here.
+  const storedText = note?.text ?? "";
+  const storedViewing = note?.viewingAt ?? null;
+  useEffect(() => {
+    const clean = latest.current.text === saved.current.text && latest.current.viewingAt === saved.current.viewingAt;
+    if (!clean) return;
+    saved.current = { text: storedText, viewingAt: storedViewing };
+    setText(storedText);
+    setViewingAt(storedViewing ?? "");
+  }, [storedText, storedViewing]);
 
   return (
     <div className={`${styles.editor} ${className ?? ""}`} onClick={(e) => e.stopPropagation()}>

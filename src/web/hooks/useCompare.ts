@@ -13,6 +13,13 @@ export function useCompare() {
 
   const toggle = useCallback((key: string) => setCompare((current) => toggleCompare(current, key)), [setCompare]);
   const clear = useCallback(() => setCompare([]), [setCompare]);
+  /** Drop keys whose listing has left the data, so they stop holding a slot. */
+  const retain = useCallback((known: { has(key: string): boolean }) => {
+    setCompare((current) => {
+      const kept = current.filter((key) => known.has(key));
+      return kept.length === current.length ? current : kept;
+    });
+  }, [setCompare]);
 
-  return { compare, toggleCompare: toggle, clearCompare: clear };
+  return { compare, toggleCompare: toggle, clearCompare: clear, retainCompare: retain };
 }
