@@ -61,6 +61,14 @@
   `ATHOME_VERIFY_WAIT_SECONDS=300` so the run waits (passively; no reloads or
   extra requests) while you complete it, and `--verbose` to see the prompt. As of
   2026-09-30 a fresh Playwright profile was shown the page on the homepage.
+- Chromium allows one instance per profile directory, so `npm run refresh` passes
+  `PLAYWRIGHT_USER_DATA_DIR` only to the AtHome stage (`stageEnv` in
+  `src/refresh/refreshPlan.ts`). SUUMO, RoomSpot and Nifty get a fresh,
+  non-persistent context and run in parallel with it. Before this, every collector
+  launched the shared profile and Chromium refused the second one ("Opening in
+  existing browser session… profile is already in use"); on 2026-10-02 AtHome
+  and RoomSpot failed at launch, and only `--concurrency 1` worked. The default
+  parallel run now works with the profile set.
 
 ## Rented-out detection
 
