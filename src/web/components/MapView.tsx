@@ -8,17 +8,21 @@
  * and the map extent all come from the loaded reference model.
  *
  * Interaction:
- *   - hover a dot            → highlights it + the matching table row (no scroll)
+ *   - hover a dot            → highlights it + the matching table row (no scroll),
+ *                              and shows a preview card with the listing's photo
  *   - click a dot            → selects it; the table scrolls that row into view
  *   - scroll wheel           → zoom toward the cursor
  *   - drag                   → pan
- *   - +/−/⤢ buttons          → zoom in / out / reset
+ *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / reset
+ *   - layer chips            → show or hide stations, schools, mosques, new rings
  *
- * The base projection is a plain equirectangular fit to the combined extent
- * of all boundaries (or of the places, when there are no boundaries); a separate view transform (scale + translation) layers
- * zoom and pan on top, so markers and labels keep a constant screen size.
+ * The base projection is an equirectangular fit to the combined extent of all
+ * boundaries (or of the places, when there are no boundaries), with longitude
+ * scaled by cos(latitude) so distances are true in both directions. A separate
+ * view transform (scale + translation) layers zoom and pan on top, so markers
+ * and labels keep a constant screen size.
  */
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { scoreColor } from "../../domain/scoring";
 import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { listingKey } from "../../domain/listingKey";
@@ -28,8 +32,20 @@ import { isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceData";
 import type { CatalogPlace } from "../../domain/places";
-import { boundaryExtent, extentOf, labelPosition, padExtent, polygonsOf, type Extent } from "../../domain/mapGeometry";
+import {
+  boundaryExtent,
+  extentOf,
+  KM_PER_DEGREE,
+  labelPosition,
+  longitudeScale,
+  padExtent,
+  polygonsOf,
+  scaleBarLength,
+  type Extent,
+} from "../../domain/mapGeometry";
+import { listingPhotos } from "../../domain/listingPhotos";
 import type { ScoredRow } from "../../domain/scoring";
+import { ListingThumb, PhotoGallery } from "./ListingPhoto";
 import styles from "./MapView.module.css";
 import appStyles from "../App.module.css";
 
@@ -63,7 +79,8 @@ interface View {
 }
 
 const WIDTH = 1100;
-const HEIGHT = 560;
+// Taller than wide screens need: the three cities stack north–south.
+const HEIGHT = 680;
 const PADDING = 28;
 const MIN_SCALE = 1;
 const MAX_SCALE = 14;
@@ -71,6 +88,27 @@ const LOCATE_SCALE = 5;
 const HIT_RADIUS = 12;
 const DRAG_THRESHOLD = 4;
 const IDENTITY: View = { scale: 1, tx: 0, ty: 0 };
+/** Margin kept around the listings when fitting the view to them. */
+const FIT_PADDING = 40;
+const HOVER_CARD_WIDTH = 300;
+/** Matches the narrow-screen breakpoint in MapView.module.css. */
+const NARROW_MAX = 650;
+/** Longest scale bar, in canvas pixels. */
+const SCALE_BAR_MAX = 110;
+const FONT = 'system-ui, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif';
+
+type LayerKey = "stations" | "schools" | "mosques" | "newRings";
+
+const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
+  { key: "stations", label: "Stations", title: "Railway stations (main hubs labelled)" },
+  { key: "schools", label: "Schools", title: "Public elementary schools" },
+  { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
+  { key: "newRings", label: "New rings", title: "Green ring around listings first seen in the last 14 days" },
+];
+const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true };
+
+/** CSS gradient matching scoreColor, for the legend. */
+const SCORE_GRADIENT = `linear-gradient(90deg, ${[0, 25, 50, 75, 100].map((score) => scoreColor(score)).join(", ")})`;
 
 /**
  * Stations worth labelling: the Soka Tobu hubs plus the Koshigaya-side
@@ -101,6 +139,11 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
   const dotsRef = useRef<Projected[]>([]);
   const [view, setView] = useState<View>(IDENTITY);
   const [dragging, setDragging] = useState(false);
+  const [layers, setLayers] = useState(ALL_LAYERS);
+  // The legend starts collapsed on narrow screens, where it would cover the map.
+  const [legendInitiallyOpen] = useState(() => window.matchMedia?.(`(min-width: ${NARROW_MAX + 1}px)`).matches ?? true);
+  /** True while the pointer is over a listing dot, for the pointer cursor. */
+  const [overDot, setOverDot] = useState(false);
   /** Keys under the last clicked screen point; repeated clicks cycle them. */
   const [selectionCluster, setSelectionCluster] = useState<string[]>([]);
   // Pointer-interaction bookkeeping (refs so handlers stay stable).
@@ -120,20 +163,25 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
   }, [reference]);
 
   // Base projection: fit the combined extent of every city boundary.
-  const project = useMemo(() => {
-    const { minLon, maxLon, minLat, maxLat } = padExtent(
+  const { project, basePxPerKm } = useMemo(() => {
+    const extent = padExtent(
       boundaryExtent(reference.boundaries) ?? extentOf(reference.catalog.places) ?? DEFAULT_EXTENT,
     );
+    const { minLon, maxLon, minLat, maxLat } = extent;
+    const kx = longitudeScale(extent);
     const scale = Math.min(
-      (WIDTH - 2 * PADDING) / (maxLon - minLon),
+      (WIDTH - 2 * PADDING) / ((maxLon - minLon) * kx),
       (HEIGHT - 2 * PADDING) / (maxLat - minLat),
     );
-    const offsetX = (WIDTH - scale * (maxLon - minLon)) / 2;
+    const offsetX = (WIDTH - scale * (maxLon - minLon) * kx) / 2;
     const offsetY = (HEIGHT - scale * (maxLat - minLat)) / 2;
-    return (lat: number, lon: number) => ({
-      x: offsetX + (lon - minLon) * scale,
-      y: HEIGHT - (offsetY + (lat - minLat) * scale),
-    });
+    return {
+      project: (lat: number, lon: number) => ({
+        x: offsetX + (lon - minLon) * kx * scale,
+        y: HEIGHT - (offsetY + (lat - minLat) * scale),
+      }),
+      basePxPerKm: scale / KM_PER_DEGREE,
+    };
   }, [reference]);
 
   // Compose base projection with the current view transform.
@@ -145,8 +193,22 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
     [project, view],
   );
 
+  // Open on the listings rather than the whole reference extent, once data
+  // arrives — before the first paint, and never over a view the user chose.
+  const autoFitted = useRef(false);
+  useLayoutEffect(() => {
+    if (autoFitted.current || !items.some(({ listing }) => listing.lat != null && listing.lon != null)) return;
+    autoFitted.current = true;
+    setView(fitView(items, project));
+  }, [items, project]);
+
   const rowsByKey = useMemo(
     () => new Map(items.map((row) => [listingKey(row.listing), row])),
+    [items],
+  );
+  // Draw the best scores last so they sit on top where dots overlap.
+  const drawOrder = useMemo(
+    () => [...items].sort((a, b) => (a.score.total ?? -1) - (b.score.total ?? -1)),
     [items],
   );
   const hoveredRow = hovered ? rowsByKey.get(hovered) ?? null : null;
@@ -183,12 +245,25 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
     if (!canvas || !ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = WIDTH * dpr;
-    canvas.height = HEIGHT * dpr;
+    // Resizing reallocates the backing store; only do it when the size changes.
+    if (canvas.width !== WIDTH * dpr) canvas.width = WIDTH * dpr;
+    if (canvas.height !== HEIGHT * dpr) canvas.height = HEIGHT * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
-    ctx.font = "11px sans-serif";
 
+    // Map text gets a white halo so it stays legible over dots and outlines.
+    const haloText = (text: string, x: number, y: number, color: string, font = `11px ${FONT}`, align: CanvasTextAlign = "left") => {
+      ctx.font = font;
+      ctx.textAlign = align;
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.strokeText(text, x, y);
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+      ctx.lineWidth = 1;
+      ctx.textAlign = "left";
+    };
     const trace = (boundaries: readonly ReferenceBoundary[]) => {
       ctx.beginPath();
       for (const boundary of boundaries) {
@@ -207,10 +282,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
       const position = labelPosition(layer.boundaries);
       if (!position) return;
       const { x, y } = toScreen(position[1], position[0]);
-      ctx.fillStyle = color;
-      ctx.font = "13px sans-serif";
-      ctx.fillText(layer.label, x - 18, y);
-      ctx.font = "11px sans-serif";
+      haloText(layer.label, x, y, color, `600 13px ${FONT}`, "center");
     };
 
     // Neighbouring municipalities: faint fill, dashed outline.
@@ -218,73 +290,43 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
     ctx.setLineDash([4, 4]);
     for (const layer of neighbours) {
       trace(layer.boundaries);
-      ctx.fillStyle = "#f6f7f9";
+      ctx.fillStyle = "#fbfcfd";
       ctx.fill("evenodd");
-      ctx.strokeStyle = "#d3d9e2";
+      ctx.strokeStyle = "#cfd7e3";
       ctx.stroke();
     }
     ctx.setLineDash([]);
-    for (const layer of neighbours) drawLabel(layer, CITY_LABEL_COLOR);
 
     // The focus city (Soka): solid, emphasised (the primary search area).
-    for (const layer of cityLayers.filter((candidate) => candidate.focus)) {
+    const focus = cityLayers.filter((candidate) => candidate.focus);
+    for (const layer of focus) {
       trace(layer.boundaries);
-      ctx.fillStyle = "rgba(238,244,251,0.65)";
+      ctx.fillStyle = "rgba(232,240,252,0.8)";
       ctx.fill("evenodd");
       ctx.strokeStyle = "#6f8bb5";
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.lineWidth = 1;
-      drawLabel(layer, "#5b7099");
     }
 
     // Elementary schools.
-    for (const school of reference.catalog.inCategory("school")) {
-      const { x, y } = toScreen(school.lat, school.lon);
-      ctx.fillStyle = "#9db4ce";
-      ctx.beginPath();
-      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Stations: squares, labelled for the main hubs.
-    for (const station of reference.catalog.inCategory("station")) {
-      const { x, y } = toScreen(station.lat, station.lon);
-      const major = LABELLED_STATIONS.has(station.name);
-      ctx.fillStyle = "#2563eb";
-      ctx.fillRect(x - (major ? 4 : 3), y - (major ? 4 : 3), major ? 8 : 6, major ? 8 : 6);
-      if (major) {
-        ctx.fillStyle = "#1e3a6e";
-        ctx.fillText(station.name.replace(/〈草加松原〉/, ""), x + 7, y - 5);
+    if (layers.schools) {
+      for (const school of reference.catalog.inCategory("school")) {
+        const { x, y } = toScreen(school.lat, school.lon);
+        ctx.fillStyle = "#9db4ce";
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    // The target POI (Al Sanad by default) as a red star.
-    if (targetPoi) {
-      const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
-      drawStar(ctx, x, y, 9, "#dc2626");
-      ctx.fillStyle = "#7f1d1d";
-      ctx.fillText(targetPoi.name, x + 11, y + 4);
-    }
-
-    // Mosque candidates as purple diamonds; scoring uses the nearest selected one.
-    for (const mosque of reference.catalog.inCategory("mosque")) {
-      const { x, y } = toScreen(mosque.lat, mosque.lon);
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillStyle = "#7c3aed";
-      ctx.fillRect(-5, -5, 10, 10);
-      ctx.restore();
-      ctx.fillStyle = "#5b21b6";
-      ctx.fillText(mosque.name, x + 9, y + 4);
-    }
-
-    // Listings, coloured by score. Hovered/selected dots are drawn last, on top.
+    // Listings, coloured by score; the best scores are drawn last, on top.
+    // Dots grow a little when zoomed in. Hovered/selected dots come after all.
+    const radius = 4.5 * Math.min(1.5, 1 + (view.scale - 1) * 0.06);
     dotsRef.current = [];
     let hoveredDot: Projected | null = null;
     let selectedDot: Projected | null = null;
-    for (const row of items) {
+    for (const row of drawOrder) {
       const { listing, score } = row;
       if (listing.lat == null || listing.lon == null) continue;
       const { x, y } = toScreen(listing.lat, listing.lon);
@@ -293,40 +335,84 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
       if (key === hovered) hoveredDot = { x, y, key, row };
       if (key === selected) selectedDot = { x, y, key, row };
       if (key === hovered || key === selected) continue;
+      if (x < -radius || y < -radius || x > WIDTH + radius || y > HEIGHT + radius) continue;
       const sold = isSold(listing);
       const mark = marks[key];
       // Sold listings and ruled-out decisions recede to grey.
       const dimmed = sold || isRentedOut(listing) || isRuledOut(mark);
       ctx.beginPath();
-      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);
-      ctx.globalAlpha = dimmed ? 0.4 : hovered || selected ? 0.45 : 0.82;
+      ctx.globalAlpha = dimmed ? 0.4 : hovered || selected ? 0.5 : 0.88;
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.strokeStyle = "#fff";
       ctx.stroke();
-      // New discoveries get a green halo so they pop on the map.
-      if (isNewListing(listing)) {
+      // New discoveries get a thin green halo (a layer: about half of all homes are new).
+      const fresh = layers.newRings && isNewListing(listing);
+      if (fresh) {
         ctx.beginPath();
-        ctx.arc(x, y, 7.5, 0, Math.PI * 2);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#16a34a";
+        ctx.arc(x, y, radius + 2.5, 0, Math.PI * 2);
+        ctx.lineWidth = 1.25;
+        ctx.strokeStyle = "rgba(22,163,74,0.7)";
         ctx.stroke();
         ctx.lineWidth = 1;
       }
       // Shortlisted/applied candidates get a gold ring.
       if (mark && !isRuledOut(mark)) {
         ctx.beginPath();
-        ctx.arc(x, y, isNewListing(listing) ? 10.5 : 7.5, 0, Math.PI * 2);
+        ctx.arc(x, y, radius + (fresh ? 5.5 : 3), 0, Math.PI * 2);
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#d97706";
         ctx.stroke();
         ctx.lineWidth = 1;
       }
     }
+
+    // Reference places sit above the listings so they are never buried.
+    // Stations: squares, labelled for the main hubs.
+    if (layers.stations) {
+      for (const station of reference.catalog.inCategory("station")) {
+        const { x, y } = toScreen(station.lat, station.lon);
+        const major = LABELLED_STATIONS.has(station.name);
+        const half = major ? 4 : 3;
+        ctx.fillStyle = "#2563eb";
+        ctx.strokeStyle = "#fff";
+        ctx.fillRect(x - half, y - half, half * 2, half * 2);
+        ctx.strokeRect(x - half, y - half, half * 2, half * 2);
+        if (major) haloText(station.name.replace(/〈草加松原〉/, ""), x + 7, y - 5, "#1e3a6e", `600 11px ${FONT}`);
+      }
+    }
+
+    // Mosque candidates as purple diamonds; scoring uses the nearest selected one.
+    if (layers.mosques) {
+      for (const mosque of reference.catalog.inCategory("mosque")) {
+        const { x, y } = toScreen(mosque.lat, mosque.lon);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = "#7c3aed";
+        ctx.strokeStyle = "#fff";
+        ctx.fillRect(-5, -5, 10, 10);
+        ctx.strokeRect(-5, -5, 10, 10);
+        ctx.restore();
+        haloText(mosque.name, x + 9, y + 4, "#5b21b6");
+      }
+    }
+
+    // The target POI (Al Sanad by default) as a red star.
+    if (targetPoi) {
+      const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
+      drawStar(ctx, x, y, 10, "#dc2626");
+      haloText(targetPoi.name, x + 12, y + 4, "#7f1d1d", `600 11px ${FONT}`);
+    }
+
+    for (const layer of neighbours) drawLabel(layer, CITY_LABEL_COLOR);
+    for (const layer of focus) drawLabel(layer, "#4b6290");
+
     if (selectedDot) drawEmphasis(ctx, selectedDot, "#2563eb");
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, "#111827");
-  }, [items, reference, targetPoi, cityLayers, toScreen, hovered, selected, marks]);
+  }, [drawOrder, reference, targetPoi, cityLayers, toScreen, view.scale, hovered, selected, marks, layers]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -335,6 +421,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
     if (!canvas) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      autoFitted.current = true;
       const { mx, my } = canvasCoords(canvas, e.clientX, e.clientY);
       setView((v) => {
         const factor = Math.exp(-e.deltaY * 0.0015);
@@ -381,6 +468,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const { mx, my } = canvasCoords(e.currentTarget, e.clientX, e.clientY);
     e.currentTarget.setPointerCapture(e.pointerId);
+    autoFitted.current = true;
     drag.current = { startX: mx, startY: my, view, moved: false };
     setDragging(true);
   };
@@ -401,6 +489,7 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
     const hit = hitTest(mx, my);
     const nextHovered = hit?.key ?? null;
     if (nextHovered !== hovered) onHover(nextHovered);
+    if (Boolean(hit) !== overDot) setOverDot(Boolean(hit));
   };
 
   const endDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -423,7 +512,8 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
     }
   };
 
-  const zoomBy = (factor: number) =>
+  const zoomBy = (factor: number) => {
+    autoFitted.current = true;
     setView((v) => {
       const scale = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
       const k = scale / v.scale;
@@ -431,23 +521,64 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
       const cy = HEIGHT / 2;
       return { scale, tx: cx - (cx - v.tx) * k, ty: cy - (cy - v.ty) * k };
     });
+  };
+
+  const fitToListings = () => setView(fitView(items, project));
+
+  const scaleBar = scaleBarLength(basePxPerKm * view.scale, SCALE_BAR_MAX);
+
+  // Preview card for the hovered home (from the map or a table row), pinned
+  // above its dot, or below it near the top edge. Hidden while dragging, for
+  // the pinned home, and when the dot is outside the current view.
+  const hoverPoint = hoveredRow && hovered !== selected && !dragging && hoveredRow.listing.lat != null && hoveredRow.listing.lon != null
+    ? toScreen(hoveredRow.listing.lat, hoveredRow.listing.lon)
+    : null;
+  const hoverVisible = hoverPoint && hoverPoint.x >= 0 && hoverPoint.x <= WIDTH && hoverPoint.y >= 0 && hoverPoint.y <= HEIGHT;
 
   return (
     <section className={appStyles.card}>
-      <h2 className={appStyles.cardTitle}>
-        Map — 草加市 &amp; 越谷市 · hover to link · click to pin · scroll/drag to zoom &amp; pan
-      </h2>
+      <h2 className={appStyles.cardTitle}>Map — 草加市 &amp; 越谷市</h2>
       <div className={styles.wrap}>
         <canvas
           ref={canvasRef}
-          className={`${styles.canvas} ${dragging ? styles.dragging : ""}`}
+          className={`${styles.canvas} ${dragging ? styles.dragging : overDot ? styles.overDot : ""}`}
           style={{ aspectRatio: `${WIDTH} / ${HEIGHT}` }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          onPointerLeave={() => onHover(null)}
+          onPointerLeave={() => {
+            onHover(null);
+            setOverDot(false);
+          }}
         />
+        <div className={styles.layers} role="group" aria-label="Map layers">
+          {LAYERS.map((layer) => (
+            <button
+              key={layer.key}
+              type="button"
+              title={layer.title}
+              aria-pressed={layers[layer.key]}
+              className={`${styles.layerChip} ${styles[`layer_${layer.key}`]} ${layers[layer.key] ? styles.layerOn : ""}`}
+              onClick={() => setLayers((current) => ({ ...current, [layer.key]: !current[layer.key] }))}
+            >
+              <i aria-hidden="true" />
+              {layer.label}
+            </button>
+          ))}
+        </div>
+        {hoverPoint && hoverVisible && hoveredRow && (
+          <MapHoverCard
+            row={hoveredRow}
+            style={{
+              // Centred on the dot, but clamped (in screen pixels) inside the map.
+              left: `clamp(4px, calc(${(hoverPoint.x / WIDTH) * 100}% - ${HOVER_CARD_WIDTH / 2}px), calc(100% - ${HOVER_CARD_WIDTH + 4}px))`,
+              top: `${(hoverPoint.y / HEIGHT) * 100}%`,
+              width: HOVER_CARD_WIDTH,
+              transform: hoverPoint.y < HEIGHT * 0.25 ? "translateY(18px)" : "translateY(calc(-100% - 18px))",
+            }}
+          />
+        )}
         {selectedRow && (
           <MapListingCard
             row={selectedRow}
@@ -464,21 +595,54 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
           />
         )}
         <div className={styles.controls}>
-          <button type="button" title="Zoom in" onClick={() => zoomBy(1.4)}>
+          <button type="button" title="Zoom in" aria-label="Zoom in" onClick={() => zoomBy(1.4)}>
             +
           </button>
-          <button type="button" title="Zoom out" onClick={() => zoomBy(1 / 1.4)}>
+          <button type="button" title="Zoom out" aria-label="Zoom out" onClick={() => zoomBy(1 / 1.4)}>
             −
           </button>
           <button
             type="button"
             className={styles.reset}
+            title="Fit the listings currently shown"
+            aria-label="Fit the listings currently shown"
+            onClick={fitToListings}
+          >
+            ◎
+          </button>
+          <button
+            type="button"
+            className={styles.reset}
             title="Reset view"
+            aria-label="Reset view"
             onClick={() => setView(IDENTITY)}
           >
             ⤢
           </button>
         </div>
+        <details className={styles.legend} open={legendInitiallyOpen}>
+          <summary>Legend</summary>
+          <div className={styles.legendScore}>
+            <span>Score</span>
+            <span className={styles.legendGradient} style={{ background: SCORE_GRADIENT }} />
+            <small>0</small>
+            <small>100</small>
+          </div>
+          <div className={styles.legendKeys}>
+            <span><i className={styles.keyStar}>★</i>{targetPoi?.name ?? "Target"}</span>
+            <span><i className={styles.keyMosque} />Mosque</span>
+            <span><i className={styles.keyStation} />Station</span>
+            <span><i className={styles.keySchool} />School</span>
+            <span><i className={styles.keyNew} />New</span>
+            <span><i className={styles.keyShortlist} />Shortlisted</span>
+            <span><i className={styles.keyDimmed} />Sold · ruled out</span>
+          </div>
+          <div className={styles.scaleBar}>
+            {/* The bar is drawn in canvas pixels; cqw converts them to the map's rendered width. */}
+            <span style={{ width: `calc(${(scaleBar.px / WIDTH) * 100} * 1cqw)` }} />
+            <small>{scaleBar.km < 1 ? `${scaleBar.km * 1000} m` : `${scaleBar.km} km`}</small>
+          </div>
+        </details>
       </div>
       <div className={styles.info}>
         {hoveredRow && !selectedRow
@@ -488,12 +652,36 @@ export const MapView = memo(function MapView({ items, reference, targetPoi, hove
               hoveredRow.listing.layout ?? "?"
             } · ${hoveredRow.listing.city ?? ""} · ${hoveredRow.listing.address}`
           : selectedRow
-            ? "Selected property is pinned above. Use View listing or Google Maps to continue. Click the same marker to cycle overlapping homes."
-            : `★ ${targetPoi?.name ?? "no target POI"} · ◆ mosques (nearest scores) · ■ stations · dots = listings · click for score/details/links · green ring = new · gold ring = shortlisted · grey = sold / ruled out`}
+            ? "Pinned above. Click the same marker again to cycle homes that share a location."
+            : "Hover or tap a home for its photo and details · scroll or pinch to zoom · drag to pan · ◎ fits the listings shown"}
       </div>
     </section>
   );
 });
+
+/** Lightweight hover preview: photo, name, the key numbers and the score. */
+function MapHoverCard({ row, style }: { row: ScoredRow; style: React.CSSProperties }) {
+  const { listing, score } = row;
+  return (
+    <div className={styles.hoverCard} style={style} aria-hidden="true">
+      <ListingThumb photos={listingPhotos(listing)} name={listing.name} className={styles.hoverThumb} />
+      <div className={styles.hoverText}>
+        <strong>{listing.name}</strong>
+        <span>
+          ¥{listing.rent.toLocaleString()} · {listing.layout ?? "?"} · {listing.sizeM2 ?? "—"}㎡
+        </span>
+        <small>
+          {[listing.city, listing.advertisedStation && listing.stationWalkMin != null
+            ? `${listing.advertisedStation} ${listing.stationWalkMin} min`
+            : null].filter(Boolean).join(" · ")}
+        </small>
+      </div>
+      <span className={styles.hoverScore} style={{ background: scoreColor(score.total) }}>
+        {score.total?.toFixed(0) ?? "—"}
+      </span>
+    </div>
+  );
+}
 
 function MapListingCard({
   row,
@@ -526,6 +714,8 @@ function MapListingCard({
   return (
     <aside className={styles.popup} aria-live="polite" aria-label="Selected property details">
       <button className={styles.popupClose} onClick={onClose} aria-label="Close selected property">×</button>
+      {/* Keyed so a newly pinned home starts on its own first photo. */}
+      <PhotoGallery key={listingKey(listing)} photos={listingPhotos(listing)} name={listing.name} className={styles.popupGallery} />
       <div className={styles.popupHeader}>
         <span
           className={styles.popupScore}
@@ -598,6 +788,27 @@ function MapListingCard({
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+/** The view that frames these listings, or the full map when they already fill it. */
+function fitView(items: readonly ScoredRow[], project: (lat: number, lon: number) => { x: number; y: number }): View {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const { listing } of items) {
+    if (listing.lat == null || listing.lon == null) continue;
+    const { x, y } = project(listing.lat, listing.lon);
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  }
+  if (minX === Infinity) return IDENTITY;
+  const scale = clamp(
+    Math.min((WIDTH - 2 * FIT_PADDING) / Math.max(maxX - minX, 1), (HEIGHT - 2 * FIT_PADDING) / Math.max(maxY - minY, 1)),
+    MIN_SCALE,
+    LOCATE_SCALE * 2,
+  );
+  if (scale <= MIN_SCALE * 1.05) return IDENTITY;
+  return { scale, tx: WIDTH / 2 - ((minX + maxX) / 2) * scale, ty: HEIGHT / 2 - ((minY + maxY) / 2) * scale };
+}
 
 /** Mouse client coords → canvas coordinate space (WIDTH×HEIGHT, pre-DPR). */
 function canvasCoords(canvas: HTMLCanvasElement, clientX: number, clientY: number) {

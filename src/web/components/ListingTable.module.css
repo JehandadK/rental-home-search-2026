@@ -569,3 +569,30 @@
   color: #64748b;
   text-decoration: line-through;
 }
+
+/* Listing photo thumbnail, first column after the rank. */
+.photoCell {
+  width: 56px;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  text-align: center !important;
+}
+
+/* Expanded row: the photo sits beside the move-in costs, stacking when narrow. */
+.detailTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 12px;
+}
+
+.detailTop > :last-child {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.detailGallery {
+  flex: 0 0 260px;
+  max-width: 100%;
+  margin: 8px 4px 4px;
+}

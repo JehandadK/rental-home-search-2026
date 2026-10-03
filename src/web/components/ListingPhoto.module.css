@@ -1,0 +1,97 @@
+.thumb {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  width: 56px;
+  height: 42px;
+  border-radius: 6px;
+  background: #eef2f7;
+  vertical-align: middle;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+/* Floor plans are line drawings: show all of them on white. */
+.contain {
+  object-fit: contain;
+  background: #fff;
+}
+
+.loading {
+  opacity: 0;
+}
+
+.loaded {
+  opacity: 1;
+  transition: opacity 0.18s ease-out;
+}
+
+.empty {
+  display: inline-grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(135deg, #f1f5f9 0 6px, #eef2f7 6px 12px);
+  color: #a3b1c4;
+}
+
+.empty small {
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.gallery {
+  margin: 0;
+}
+
+.stage {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #eef2f7;
+}
+
+.stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.tabs button {
+  padding: 2px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 99px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  font-size: 10.5px;
+}
+
+.tabs button small {
+  margin-left: 4px;
+  color: #94a3b8;
+}
+
+.tabs .activeTab {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}

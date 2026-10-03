@@ -7,6 +7,7 @@ import { listingKey } from "../../domain/listingKey";
 import type { EnrichedListing } from "../../domain/types";
 import type { ScoredRow } from "../../domain/scoring";
 import { ListingTable } from "./ListingTable";
+import { resetUnavailablePhotos } from "./ListingPhoto";
 
 // jsdom implements neither scrollIntoView nor Element.scrollTo; the table uses
 // scrollTo on its own container when a row is selected.
@@ -26,7 +27,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetUnavailablePhotos();
+});
 
 const makeRow = (over: Partial<EnrichedListing>): ScoredRow => {
   const listing: EnrichedListing = {
@@ -65,6 +69,37 @@ const renderTable = (items: ScoredRow[], over: Partial<Parameters<typeof Listing
   );
 
 describe("ListingTable", () => {
+  it("shows a portal photo thumbnail and falls back past missing pictures", () => {
+    const url = "https://suumo.jp/chintai/jnc_000000000001/?bc=100000000111";
+    renderTable([makeRow({ name: "Photo home", source: "suumo", url }), makeRow({ name: "No ad photos" })]);
+    const exterior = screen.getByAltText("Exterior of Photo home") as HTMLImageElement;
+    expect(exterior.src).toBe("https://img01.suumo.com/front/gazo/fr/bukken/111/100000000111/100000000111_gw.jpg");
+    expect(exterior.getAttribute("referrerpolicy")).toBe("no-referrer");
+
+    // A failed exterior gives way to the floor plan …
+    fireEvent.error(exterior);
+    const floorPlan = screen.getByAltText("Floor plan of Photo home");
+    // … and SUUMO's 100×100 "no image" placeholder counts as missing too.
+    fireEvent.load(floorPlan);
+    expect(screen.queryByAltText("Floor plan of Photo home")).toBeNull();
+    expect(screen.getAllByTitle("No photo from this listing's portals")).toHaveLength(2);
+  });
+
+  it("shows photos an AtHome, Nifty or RoomSpot collector captured", () => {
+    renderTable([makeRow({ name: "Captured home", source: "athome", url: "https://www.athome.co.jp/chintai/1/",
+      photos: [{ url: "https://www.athome.co.jp/image_files/path/AAA==", kind: "photo", source: "athome" }] })]);
+    expect((screen.getByAltText("Photo of Captured home") as HTMLImageElement).src).toBe("https://www.athome.co.jp/image_files/path/AAA==");
+  });
+
+  it("fades a real photo in once it has loaded", () => {
+    renderTable([makeRow({ name: "Loaded home", source: "suumo", url: "https://suumo.jp/chintai/jnc_000000000002/?bc=100000000222" })]);
+    const image = screen.getByAltText("Exterior of Loaded home");
+    Object.defineProperty(image, "naturalWidth", { value: 280 });
+    Object.defineProperty(image, "naturalHeight", { value: 210 });
+    fireEvent.load(image);
+    expect(screen.getByAltText("Exterior of Loaded home").className).toMatch(/loaded/);
+  });
+
   it("renders rows with the city column and reports hover", () => {
     const rows = [
       makeRow({ name: "Soka Place", city: "Soka" }),

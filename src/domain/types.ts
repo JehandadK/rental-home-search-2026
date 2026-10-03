@@ -121,6 +121,17 @@ export interface AdAvailability {
   method: "probe" | "manual";
 }
 
+/** What a listing picture shows; `photo` when the portal does not say. */
+export type ListingPhotoKind = "exterior" | "floorPlan" | "photo";
+
+/** A picture a portal showed with its ad. Only the URL is kept; the image stays on the portal. */
+export interface ListingPhoto {
+  url: string;
+  kind: ListingPhotoKind;
+  /** The portal whose page showed it. */
+  source: string;
+}
+
 /** One portal advertisement retained when equivalent listings are merged. */
 export interface SourceListingReference {
   source: string;
@@ -169,6 +180,11 @@ export interface RawListing {
   source: string;
   /** All portal ads for this room; populated when cross-listed records merge. */
   sourceListings?: SourceListingReference[];
+  /**
+   * Pictures from the portals' result pages. Absent (never empty) when a page
+   * showed none, so a refresh without pictures keeps the earlier ones.
+   */
+  photos?: ListingPhoto[];
   /**
    * Lifecycle across refreshes, assigned by `npm run data:build`:
    * listings absent from every source are kept and marked "sold" rather

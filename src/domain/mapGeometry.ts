@@ -85,3 +85,23 @@ export function padExtent(extent: Extent, minimumSpan = 0.01): Extent {
     maxLat: extent.maxLat + latPad,
   };
 }
+
+/** Kilometres per degree of latitude (and of longitude at the equator). */
+export const KM_PER_DEGREE = 111.32;
+
+/**
+ * Horizontal shrink for an equirectangular map centred on `latitude`: a degree
+ * of longitude is only cos(latitude) as long as a degree of latitude, so
+ * without it the map is stretched east–west (by ~23% around Soka).
+ */
+export function longitudeScale(extent: Extent): number {
+  return Math.cos((((extent.minLat + extent.maxLat) / 2) * Math.PI) / 180);
+}
+
+const SCALE_BAR_STEPS_KM = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20];
+
+/** The longest round distance whose bar fits in `maxPx`, for a map scale bar. */
+export function scaleBarLength(pxPerKm: number, maxPx: number): { km: number; px: number } {
+  const km = [...SCALE_BAR_STEPS_KM].reverse().find((step) => step * pxPerKm <= maxPx) ?? SCALE_BAR_STEPS_KM[0];
+  return { km, px: km * pxPerKm };
+}

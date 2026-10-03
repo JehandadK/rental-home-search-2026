@@ -13,11 +13,13 @@ import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
 import { describeAvailability, isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
+import { listingPhotos } from "../../domain/listingPhotos";
 import type { ScoredRow } from "../../domain/scoring";
 import type { ScoreParameterKey, SourceListingReference } from "../../domain/types";
 import { decodeHiddenColumns } from "../userState/decoders";
 import { USER_STATE_KEYS } from "../userState/store";
 import { useUserStateStore } from "../userState/UserStateContext";
+import { ListingThumb, PhotoGallery } from "./ListingPhoto";
 import styles from "./ListingTable.module.css";
 import appStyles from "../App.module.css";
 
@@ -37,7 +39,7 @@ interface Props {
 }
 
 type SortKey = "score" | "mark" | ScoreParameterKey;
-type ColumnKey = "locate" | "rank" | "city" | "mark" | "score" | ScoreParameterKey | "links";
+type ColumnKey = "locate" | "rank" | "photo" | "city" | "mark" | "score" | ScoreParameterKey | "links";
 
 interface TableColumn {
   key: ColumnKey;
@@ -49,6 +51,7 @@ const PAGE_SIZE = 100;
 const TABLE_COLUMNS: readonly TableColumn[] = [
   { key: "locate", label: "Map" },
   { key: "rank", label: "Rank" },
+  { key: "photo", label: "Photo" },
   { key: "city", label: "City" },
   { key: "mark", label: "Decision" },
   { key: "score", label: "Score" },
@@ -58,6 +61,7 @@ const TABLE_COLUMNS: readonly TableColumn[] = [
 const COLUMN_KEYS = new Set<ColumnKey>(TABLE_COLUMNS.map(({ key }) => key));
 const COMPACT_COLUMNS = new Set<ColumnKey>([
   "locate",
+  "photo",
   "city",
   "mark",
   "score",
@@ -215,6 +219,7 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
             <tr>
               {shows("locate") && <th className={styles.locateHeader} aria-label="Center on map" />}
               {shows("rank") && <th>#</th>}
+              {shows("photo") && <th className={styles.photoCell} aria-label="Photo" />}
               <th className={styles.left}>Name</th>
               {shows("city") && <th>City</th>}
               {shows("mark") && (
@@ -281,6 +286,11 @@ export const ListingTable = memo(function ListingTable({ items, onRemove, hovere
                     </td>
                   )}
                   {shows("rank") && <td>{index + 1}</td>}
+                  {shows("photo") && (
+                    <td className={styles.photoCell}>
+                      <ListingThumb photos={listingPhotos(listing)} name={listing.name} />
+                    </td>
+                  )}
                   <td className={`${styles.left} ${styles.name}`} title={listing.address}>
                     {listing.name}
                     {fresh && (
@@ -487,7 +497,10 @@ function ParkingLine({ listing }: { listing: ScoredRow["listing"] }) {
 function Breakdown({ row }: { row: ScoredRow }) {
   return (
     <>
-      <MoveInBreakdown row={row} />
+      <div className={styles.detailTop}>
+        <PhotoGallery photos={listingPhotos(row.listing)} name={row.listing.name} className={styles.detailGallery} />
+        <MoveInBreakdown row={row} />
+      </div>
       <div className={styles.bars}>
       {row.score.parts.map((part) => {
         const meta = [...SCORE_PARAMETERS, ...FEATURE_PARAMETERS].find((m) => m.key === part.key)!;
