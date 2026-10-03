@@ -2,6 +2,7 @@
 import * as cheerio from "cheerio";
 import type { RawListing } from "../../domain/types";
 import { isExplicitNone, parseYen } from "../shared/parseJa";
+import { collectPhotos, photoKind } from "../shared/photos";
 
 export function isFamilyLayout(layout: string | null): boolean {
   const rooms = layout?.normalize("NFKC").match(/^(\d+)/)?.[1];
@@ -40,6 +41,10 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
     const ageText = building.find(".kokoku-list-data__age").last().text().trim();
     const station = parseStation(traffic);
     const builtYear = Number(ageText.match(/(19\d{2}|20\d{2})年/)?.[1]) || null;
+    // The card's lead picture is the building; each room row carries its floor plan.
+    const imageOf = (img: Parameters<typeof $>[0], fallback: "exterior" | "photo") =>
+      ({ url: $(img).attr("data-src"), kind: photoKind($(img).attr("alt"), fallback) });
+    const buildingPhotos = building.find(".wp-block-image img").map((_, img) => imageOf(img, "exterior")).get();
 
     building.find(".room_data tbody tr").each((_, row) => {
       const tr = $(row);
@@ -58,6 +63,8 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
       const depositText = moveIn.match(/敷金\s*([^/]+?)(?=礼金|\/|$)/)?.[1]?.trim() ?? "";
       const keyText = moveIn.match(/礼金\s*([^/]+?)$/)?.[1]?.trim() ?? "";
       const floor = tr.find(".kokoku-list-condition__floor").text().trim() || null;
+      const photos = collectPhotos([...buildingPhotos, ...tr.find("img").map((_, img) => imageOf(img, "photo")).get()],
+        "roomspot", "https://www.roomspot.net");
 
       listings.push({
         id: `roomspot-${id}`,
@@ -81,6 +88,7 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
           keyMoneyYen: parseMonths(keyText, baseRent),
         },
         building: { floor },
+        ...(photos ? { photos } : {}),
       });
     });
   });

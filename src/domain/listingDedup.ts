@@ -1,6 +1,7 @@
 import type {
   ListingBuilding,
   ListingCosts,
+  ListingPhoto,
   ParkingInfo,
   RawListing,
   SourceListingReference,
@@ -288,7 +289,14 @@ export function mergeDuplicateListings(a: RawListing, b: RawListing): RawListing
       item,
     ])).values()],
     sourceListings: [...uniqueReferences.values()].sort((x, y) => referenceRank(x) - referenceRank(y)),
+    ...mergePhotos(primary.photos, secondary.photos),
   };
+}
+
+/** Every portal's pictures of the room, preferred portal first; omitted when neither has any. */
+function mergePhotos(primary?: ListingPhoto[], secondary?: ListingPhoto[]): { photos?: ListingPhoto[] } {
+  const photos = [...new Map([...(primary ?? []), ...(secondary ?? [])].map((photo) => [photo.url, photo])).values()];
+  return photos.length ? { photos } : {};
 }
 
 /**

@@ -48,9 +48,12 @@ export class RoomspotBrowser {
       const cards = [...doc.querySelectorAll('article.data')];
       if (!cards.length) throw new Error('RoomSpot returned no property cards; not verified exhaustion');
       for (const card of cards) {
-        card.querySelectorAll('script,style,img,svg,input,button,iframe').forEach(e => e.remove());
+        card.querySelectorAll('script,style,svg,input,button,iframe').forEach(e => e.remove());
+        // Keep the lazy-loaded photos (exterior, floor plans) as data-src + alt; drop icons.
+        card.querySelectorAll('img').forEach(img => { if (!/^https?:/.test(img.getAttribute('data-src') || '')) img.remove(); });
         for (const e of [card, ...card.querySelectorAll('*')]) for (const a of [...e.attributes]) {
-          if (!['class','title','href'].includes(a.name)) e.removeAttribute(a.name);
+          const keep = e.tagName === 'IMG' ? ['class','data-src','alt'] : ['class','title','href'];
+          if (!keep.includes(a.name)) e.removeAttribute(a.name);
         }
       }
       return cards.map(c => c.outerHTML).join('').replace(/>\\s+</g, '><');

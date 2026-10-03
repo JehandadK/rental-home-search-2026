@@ -199,8 +199,33 @@ exports all reflect the filtered set live.
 The map shows both cities (with the surrounding municipalities dashed in for
 context) and every listing as a score-coloured dot. **Hovering a dot highlights
 the matching table row; clicking a dot pins it and scrolls that row into view;
-hovering a table row highlights its dot on the map.** Scroll to zoom, drag to
-pan, and use the +/−/⤢ buttons to reset the view.
+hovering a table row highlights its dot on the map.** Hovering also shows a
+preview card with the home's photo, rent, layout and score. Scroll to zoom, drag
+to pan, use +/− to zoom, ◎ to fit the listings currently shown, and ⤢ to reset.
+The chips at the top toggle stations, schools, mosques and the green "new"
+rings; the legend holds the score scale and a distance scale bar. The map keeps
+true proportions (longitude is scaled by cos latitude).
+
+### Photos
+
+Listings show a thumbnail in the table, a gallery (exterior 外観, photo 写真,
+floor plan 間取り) in the expanded row, and a photo in the map's hover and
+pinned cards. Only image URLs are kept; the pictures stay on the portals and the
+browser loads them when shown.
+
+- **SUUMO:** nothing is stored. SUUMO builds its image paths from the `bc=`
+  property code already in every ad URL, so `src/domain/listingPhotos.ts`
+  derives them.
+- **AtHome, Nifty, RoomSpot:** their ad URLs carry no image path, so each
+  collector keeps the picture URLs its result page showed in `listing.photos`
+  (at most four, cleaned by `src/collectors/shared/photos.ts`: spinners and
+  "no image" art dropped, athome thumbnails asked for at gallery size).
+  Captures made before this existed have no pictures, so these listings gain
+  photos as they are refreshed. A refresh whose page shows none keeps the
+  earlier ones, and cross-listed rooms keep every portal's pictures.
+
+Photos a portal does not have (a load error or a ≤100×100 "no image"
+placeholder) are skipped in favour of the next picture, then a house icon.
 
 Walking minutes are estimated as `straight-line distance × 1.3 detour ÷ 80 m/min`
 (the 徒歩分 convention). For stations, the agent-listed 徒歩分 from SUUMO is

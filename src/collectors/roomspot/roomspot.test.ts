@@ -30,6 +30,21 @@ describe("RoomSpot parser", () => {
       keyMoneyYen: 0, advertisedStation: "谷塚駅", stationWalkMin: 5,
     });
   });
+  it("keeps the building exterior and the room's floor plan, skipping lazy-load stand-ins", () => {
+    const withPhotos = fixture
+      .replace('<h2>テストハイツ</h2>', '<h2>テストハイツ</h2><div class="tm_data"><figure class="wp-block-image img_4_3"><img class="ofi contain lazyload" data-src="https://property.es-img.jp/rent/img/1/1_10.jpg?iid=3" alt="テストハイツ(賃貸アパートの外観)"></figure></div>')
+      .replace('<td><a href="https://www.roomspot.net/rent/12345">', '<td><div class="img_4_3"><img data-src="https://property.es-img.jp/rent/img/1/1_1.jpg?iid=4" alt="テストハイツ(賃貸アパート201の間取り)"><img data-src="https://www.roomspot.net/app/images/transparent.gif"></div><a href="https://www.roomspot.net/rent/12345">');
+    expect(parseRoomspotPage(withPhotos, "Soka")[0].photos).toEqual([
+      { url: "https://property.es-img.jp/rent/img/1/1_10.jpg?iid=3", kind: "exterior", source: "roomspot" },
+      { url: "https://property.es-img.jp/rent/img/1/1_1.jpg?iid=4", kind: "floorPlan", source: "roomspot" },
+    ]);
+  });
+  it("omits photos when a card has none, so a merge keeps earlier ones", () => {
+    const [fresh] = parseRoomspotPage(fixture, "Soka");
+    expect(fresh).not.toHaveProperty("photos");
+    const photos = [{ url: "https://property.es-img.jp/rent/img/1/1_10.jpg", kind: "exterior" as const, source: "roomspot" }];
+    expect(mergeRoomspotIncremental([{ ...fresh, photos }], [fresh]).listings[0].photos).toEqual(photos);
+  });
   it("retires an old source ID only when the merge proves a superseding alias", () => {
     const old = make();
     const replacement = make({ id: "roomspot-67890", url: "https://www.roomspot.net/rent/67890", rent: 88_000 });

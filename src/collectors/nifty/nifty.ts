@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import type { RawListing } from "../../domain/types";
 import { parseYen } from "../shared/parseJa";
 import { parseStationDistance } from "./niftyStation";
+import { collectPhotos, photoKind } from "../shared/photos";
 export function parseNiftyPage(html: string, city: string, year = new Date().getFullYear()): RawListing[] {
   const $ = cheerio.load(html);
   const rows: RawListing[] = [];
@@ -16,6 +17,10 @@ export function parseNiftyPage(html: string, city: string, year = new Date().get
     const yearText = age.match(/((?:19|20)\d{2})年/);
     const builtYear = /新築/.test(age) ? year : yearText ? Number(yearText[1]) : age.match(/(\d+)年/) ? year - Number(age.match(/(\d+)年/)![1]) : null;
     const station = parseStationDistance(header.find("[data-transport-access]").first().text().trim());
+    // Lazy-loaded pictures keep their real URL in data-src; the header one is the building.
+    const imageOf = (img: Parameters<typeof $>[0], fallback: "exterior" | "photo") =>
+      ({ url: $(img).attr("data-src") || $(img).attr("src"), kind: photoKind($(img).attr("alt"), fallback) });
+    const headerPhotos = header.find("img.thumbnail").map((_, img) => imageOf(img, "exterior")).get();
     $(table).find("tbody.click-area").each((_, tbody) => {
       const body = $(tbody), cells = body.find("tr").first().children("td");
       const href = body.find('a[href*="detail_"]').first().attr("href");
@@ -33,13 +38,16 @@ export function parseNiftyPage(html: string, city: string, year = new Date().get
       };
       const features = [...new Set([...header.find(".badge.is-outline"), ...body.find(".badge.is-outline")].map((el) => $(el).text().trim()))];
       const parkingText = features.find((f) => /駐車場あり|駐車場なし/.test(f));
+      const photos = collectPhotos([...body.find("img.thumbnail, img.thumbnail-parent").map((_, img) => imageOf(img, "photo")).get(), ...headerPhotos],
+        "nifty", "https://myhome.nifty.com");
       rows.push({ id: `nifty-${href.match(/detail_([a-f0-9]+)/)?.[1]}`, source: "nifty", url: new URL(href, "https://myhome.nifty.com").href,
         ...(parkingText ? { parking: { available: parkingText.includes("あり"), monthlyYen: null, location: null, distanceM: null, raw: parkingText } } : {}),
         city, name, address, rent: baseRent + (adminFeeYen ?? 0), layout, sizeM2: Number(size[1]), builtYear,
         advertisedStation: station.station ?? null, stationWalkMin: station.walkMin ?? null,
         depositYen: money("敷"), keyMoneyYen: money("礼"), costs: { adminFeeYen, depositYen: money("敷"), keyMoneyYen: money("礼") },
         building: { floor: cells.eq(2).text().trim(), structure: kv.get("建物構造") ?? null, totalFloors: Number(kv.get("総階数")?.match(/\d+/)?.[0]) || null,
-          features }, 
+          features },
+        ...(photos ? { photos } : {}),
       });
     });
   });

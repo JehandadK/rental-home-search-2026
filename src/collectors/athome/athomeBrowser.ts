@@ -131,6 +131,10 @@ export class AthomeBrowser {
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
       })[char]);
       const text = (root, selector) => root.querySelector(selector)?.textContent?.trim() || '';
+      // Portal pictures (lazy URLs live in data-src/data-original) as data-src + alt only.
+      const photos = (imgs, className) => imgs.map((img) => [img, img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''])
+        .filter(([, url]) => url.includes('/image_files/'))
+        .map(([img, url]) => '<img class="' + className + '" data-src="' + esc(url) + '" alt="' + esc(img.getAttribute('alt')) + '">').join('');
       const compact = [...doc.querySelectorAll('.p-property')].map((property) => {
         const rooms = [...property.querySelectorAll('.p-property__room--detailbox')].map((room) => {
           const layout = text(room, '.p-property__floor');
@@ -149,6 +153,7 @@ export class AthomeBrowser {
             '<div class="p-property__room-floorplan"><div class="p-property__floor">' + esc(layout) +
               '</div><span>' + esc(text(room, '.p-property__room-floorplan span')) + '</span></div>' +
             '<div class="p-property__information-facility"><ul>' + facilities + '</ul></div>' +
+            photos([...room.querySelectorAll('img')], 'p-property__room-photo') +
             '<a href="' + esc(href) + '">detail</a></div>';
         }).join('');
         // Keep building structure even on a page containing only small rooms.
@@ -159,7 +164,9 @@ export class AthomeBrowser {
           esc(text(property, '.p-property__title--building')) + '</h2>' +
           '<dl><i title="所在地"></i><dd>' + esc(value('所在地')) + '</dd></dl>' +
           '<dl><i title="交通"></i><dd>' + esc(value('交通')) + '</dd></dl>' +
-          '<dl><i title="家"></i><dd>' + esc(value('家')) + '</dd></dl>' + rooms + '</div>';
+          '<dl><i title="家"></i><dd>' + esc(value('家')) + '</dd></dl>' +
+          '<div class="p-property__photos">' + photos([...property.querySelectorAll('img')]
+            .filter((img) => !img.closest('.p-property__room--detailbox')), '') + '</div>' + rooms + '</div>';
       }).join('');
       return '<html><body>' + compact + '</body></html>';
     })()`;

@@ -34,6 +34,22 @@ describe("offline native-download AtHome capture", () => {
     expect(capture.html).not.toMatch(/script|tracking|img|unrelated|doNotRun/);
   });
 
+  it("keeps the building carousel and loaded floor plans as full-size photos", () => {
+    const withPhotos = html
+      .replace('<h2 class="property-title">', `<div class="image-item swiper-slide"><img class="swiper-lazy" alt="物件画像" data-src="https://www.athome.co.jp/image_files/path/AAA==" src="https://www.athome.co.jp/image_files/path/AAA==?width=340&height=195&margin=true"></div>
+        <div class="image-item swiper-slide"><img class="swiper-lazy" alt="物件画像" data-src="https://www.athome.co.jp/image_files/path/BBB==" src="/static_app_contents/x/assets/common/loading_g.gif"></div>
+        <h2 class="property-title">`)
+      .replace('<div class="price">', `<div class="room-image zoom-icon"><img alt="テスト 101 3LDKの間取り図" src="https://www.athome.co.jp/image_files/path/CCC==?width=120&height=120&margin=true"></div>
+        <div class="new-icon"><img alt="NEW" src="/static_app_contents/x/assets/common/icon_new.svg"></div><div class="price">`);
+    const capture = athomeDownloadedCapture(withPhotos, url, time);
+    expect(capture.html).not.toMatch(/icon_new|swiper|tracking/);
+    expect(parseAthomePage(capture.html, capture.city)[0].photos).toEqual([
+      { url: "https://www.athome.co.jp/image_files/path/AAA==", kind: "photo", source: "athome" },
+      { url: "https://www.athome.co.jp/image_files/path/BBB==", kind: "photo", source: "athome" },
+      { url: "https://www.athome.co.jp/image_files/path/CCC==", kind: "floorPlan", source: "athome" },
+    ]);
+  });
+
   it("preserves unknown amenities rather than erasing historical parking", () => {
     const fresh = parseAthomePage(athomeDownloadedCapture(html, url, time).html, "Soka")[0];
     const parking = { available: true, monthlyYen: 8000, raw: "駐車場8000円", location: "onsite" as const, distanceM: null };

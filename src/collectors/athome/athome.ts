@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import type { ParkingInfo, RawListing } from "../../domain/types";
 import { isExplicitNone, parseYen as parseJapaneseYen } from "../shared/parseJa";
+import { collectPhotos, photoKind } from "../shared/photos";
 
 function parseMan(text: string): number | null {
   const m = text.replace(/\s/g, "").match(/([\d.]+)万円/);
@@ -63,6 +64,9 @@ export function parseAthomePage(html: string, city: string): RawListing[] {
     const traffic = building.find('i[title="交通"]').closest("dl").find("dd").text().replace(/\s+/g, " ").trim();
     const buildingText = building.find('i[title="家"]').closest("dl").find("dd").text().replace(/\s+/g, " ").trim();
     const station = parseStation(traffic);
+    // Captures carry the building's carousel and each room's floor plan as data-src.
+    const imageOf = (img: Parameters<typeof $>[0]) => ({ url: $(img).attr("data-src"), kind: photoKind($(img).attr("alt")) });
+    const buildingPhotos = building.find(".p-property__photos img").map((_, img) => imageOf(img)).get();
 
     building.find(".p-property__room--detailbox").each((_, room) => {
       const box = $(room);
@@ -84,6 +88,8 @@ export function parseAthomePage(html: string, city: string): RawListing[] {
       const parking = roomParking($, room) ?? roomParking($, property);
       const facilities = (box.find(".p-property__information-facility li").length ? box : building)
         .find(".p-property__information-facility li");
+      const photos = collectPhotos([...buildingPhotos, ...box.find("img.p-property__room-photo").map((_, img) => imageOf(img)).get()],
+        "athome", "https://www.athome.co.jp");
 
       listings.push({
         id: `athome-${id}`,
@@ -111,6 +117,7 @@ export function parseAthomePage(html: string, city: string): RawListing[] {
             .filter((_, li) => !$(li).hasClass("p-property__information-facility_disabled-list"))
             .map((_, li) => $(li).text().trim()).get() } : {}),
         },
+        ...(photos ? { photos } : {}),
       });
     });
   });

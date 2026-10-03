@@ -27,6 +27,11 @@ export function athomeDownloadedCapture(html: string, url: string, capturedAt: s
   if ($('select[name="SORT"]').val() !== "33") throw new Error("AtHome newest-first sort not verified in downloaded HTML");
   const cards = $(".property-card");
   if (!cards.length) throw new Error("No AtHome property cards; blocked/unsupported page is not exhaustion");
+  // Pictures ride along as data-src/alt only; the parser decides what is a real photo.
+  const photo = (img: Parameters<typeof $>[0], className: string) => {
+    const url = $(img).attr("data-src") || $(img).attr("src") || "";
+    return url ? `<img class="${className}" data-src="${esc(url)}" alt="${esc($(img).attr("alt") ?? "")}">` : "";
+  };
   const projected = cards.map((_, card) => {
     const p = $(card);
     const text = (selector: string) => p.find(selector).first().text().replace(/\s+/g, " ").trim();
@@ -53,12 +58,14 @@ export function athomeDownloadedCapture(html: string, url: string, capturedAt: s
         `<p class="p-property__information-price"><b class="p-property__information-rent">${esc(rent)}</b><span>${esc(admin)}</span></p>` +
         `<div class="p-property__room-keymoney">${money}</div>` +
         `<div class="p-property__room-floorplan"><div class="p-property__floor">${esc(layout)}</div><span>${esc(size)}</span></div>` +
+        r.find(".room-image img").map((_, img) => photo(img, "p-property__room-photo")).get().join("") +
         `<a href="${u.origin}/chintai/${id}/">detail</a></div>`;
     }).get().join("");
     return `<div class="p-property"><h2 class="p-property__title--building">${esc(name)}</h2>` +
       `<dl><i title="所在地"></i><dd>${esc(address)}</dd></dl>` +
       `<dl><i title="交通"></i><dd>${esc(text(".info-item--station"))}</dd></dl>` +
-      `<dl><i title="家"></i><dd>${esc(text(".info-item--type"))}</dd></dl>${rooms}</div>`;
+      `<dl><i title="家"></i><dd>${esc(text(".info-item--type"))}</dd></dl>` +
+      `<div class="p-property__photos">${p.find(".image-item img").map((_, img) => photo(img, "")).get().join("")}</div>${rooms}</div>`;
   }).get().join("");
   return { schemaVersion: 1, source: "athome", city: city.label, url: u.href,
     page: Number(path[2] ?? 1), capturedAt, httpStatus: 200, sortedNewest: true, html: projected };
