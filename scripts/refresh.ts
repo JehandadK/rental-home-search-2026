@@ -29,7 +29,7 @@ import {
   type RefreshStageRecord,
 } from "../src/refresh/refreshLedger";
 import type { EnrichedListing } from "../src/domain/types";
-import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, planRefresh, runLimited } from "../src/refresh/refreshPlan";
+import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, planRefresh, runLimited, stageEnv } from "../src/refresh/refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
 const ROOT = REPO_ROOT;
@@ -143,7 +143,8 @@ async function executeStage(
 
   const child = spawn(npm, definition.args, {
     cwd: ROOT,
-    env: { ...process.env, ...definition.env },
+    // Only AtHome launches the persistent Playwright profile, so parallel collectors never contend for it.
+    env: stageEnv(definition.id, { ...process.env, ...definition.env }),
   });
   let stdout = "", stderr = "";
   // Prefix streamed lines so concurrent collectors stay attributable.

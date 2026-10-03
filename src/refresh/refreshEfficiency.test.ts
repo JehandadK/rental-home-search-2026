@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planRefresh, completeMarket, runLimited } from "./refreshPlan";
+import { planRefresh, completeMarket, runLimited, PARALLEL_COLLECTOR_STAGES, collectorGroup, stageEnv } from "./refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../collectors/shared/pageBudget";
 import { addressKey, cachedGeocode, seedGeocodes } from "../collectors/enrichment/geocodeCache";
 import { parseDetail } from "../collectors/enrichment/detailEnrichment";
@@ -94,5 +94,24 @@ describe("efficient refresh", () => {
     expect(results).toEqual([2, 4, 6, 8, 10]);
     expect(peak).toBe(3);
     expect(await runLimited([], 4, async (n: number) => n)).toEqual([]);
+  });
+});
+
+describe("persistent Playwright profile under parallel collection", () => {
+  const env = { BROWSER_DRIVER: "playwright", PLAYWRIGHT_USER_DATA_DIR: ".context/athome-profile", PATH: "/bin" };
+
+  it("hands the profile to at most one concurrently running collector", () => {
+    // Chromium refuses a second instance on one user-data dir ("profile is already in use").
+    const groups = new Set([...PARALLEL_COLLECTOR_STAGES].map(collectorGroup));
+    expect(groups.size).toBeGreaterThan(1);
+    const holders = [...PARALLEL_COLLECTOR_STAGES].filter((id) => stageEnv(id, env).PLAYWRIGHT_USER_DATA_DIR != null);
+    expect(holders).toEqual(["athome"]);
+  });
+  it("keeps the rest of the environment and never mutates the parent's", () => {
+    expect(stageEnv("athome", env)).toEqual(env);
+    expect(stageEnv("roomspot", env)).toEqual({ BROWSER_DRIVER: "playwright", PATH: "/bin" });
+    expect(stageEnv("nifty-soka", env)).not.toHaveProperty("PLAYWRIGHT_USER_DATA_DIR");
+    expect(env.PLAYWRIGHT_USER_DATA_DIR).toBe(".context/athome-profile");
+    expect(stageEnv("suumo", { PATH: "/bin" })).toEqual({ PATH: "/bin" });
   });
 });
