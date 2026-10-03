@@ -366,6 +366,24 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
 - The task-local offline download adapters are in `.context/`; only sanitized
   captures and compact progress receipts are imported into the durable dataset.
 
+## 2026-10-02 recent-listing refresh (Playwright, no Chrome bridge) — completed
+
+- Run `2026-10-02T10-37-14-683Z-6b3c2254`: **SUCCESS**, all four portals, no
+  page cap; every source/city stopped on two all-known pages. Headed Playwright
+  (`BROWSER_DRIVER=playwright`) with the AtHome profile in `.context/`.
+- Source additions before cross-source merge: SUUMO **99**, AtHome **336**
+  (390 overlaps refreshed, 39 pages: 6/20/13), RoomSpot **37** (128 refreshed),
+  Nifty **83** (Soka 18, Koshigaya 25, Kawaguchi 40). Zero detail requests.
+- Rebuild: **3822 archival / 3820 dashboard rows**, ~160 newly tracked (Soka 21,
+  Koshigaya 56, Kawaguchi 83); 23 exceed 70m². All geocoded; none SOLD.
+- Gotcha: with `PLAYWRIGHT_USER_DATA_DIR` set, parallel collectors contend for
+  one Chromium profile and AtHome/RoomSpot fail at launch. Resume with
+  `--concurrency 1`. AtHome showed its verification page; passed by hand.
+- `check:availability --limit 150`: **112 rented out**, 38 still listed,
+  0 unresolved. One Nifty ad was recorded gone on HTTP 404 with its ad title
+  still shown (ソライエアイル草加 207, 1K); its sibling unit redirected as gone.
+- **610 tests, typecheck and production build pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
