@@ -368,6 +368,20 @@
         "status": "active",
         "via": "backfill:git:bf82b09"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000104843517|bc_100481654493|2026-10-04T08:56:25.138Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-04T08:56:25.138Z",
+      "recordedAt": "2026-10-04T09:23:06.644Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000104843517|bc_100481654493",
+      "url": "https://suumo.jp/chintai/jnc_000104843517/?bc=100481654493",
+      "data": {
+        "state": "gone",
+        "evidence": "detail page redirected off the ad page (detail:enrich)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -378,11 +392,17 @@
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000104843517/?bc=100481654493",
     "lastSeenAt": null,
     "lastListedAt": null,
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": null,
+      "before": "2026-10-04T08:56:25.138Z"
+    },
+    "daysOnMarket": {
+      "min": 0,
+      "max": 15.1
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "unknown",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-19T05:59:55.212Z",
@@ -398,7 +418,7 @@
         "firstSeenAt": null,
         "lastSeenAt": null,
         "lastListedAt": null,
-        "goneSince": null,
+        "goneSince": "2026-10-04T08:56:25.138Z",
         "relistCount": 0
       }
     },

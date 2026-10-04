@@ -110,7 +110,8 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
       const authoritative = canonical.groupingAuthoritative !== false;
       const builtAt = canonical.builtAt ?? asOf;
       const rows = canonical.rows.map((row) => {
-        const ads = sourceListings(row);
+        // The row's own ad too: sourceListings() can fold two SUUMO postings sharing a content id.
+        const ads = [...sourceListings(row), { source: row.source, id: row.id, url: row.url }];
         return { row, ads, keys: [...new Set(ads.map(keyOf))], primary: keyOf(row) };
       });
       const resolved: PropertyDocument[] = [];

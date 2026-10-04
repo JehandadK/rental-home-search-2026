@@ -47,7 +47,10 @@ export function previousMatcher(previous: readonly RawListing[]): (listing: RawL
   const previousByKey = new Map<string, RawListing>();
   for (const listing of previous) previousByKey.set(trackingKey(listing), listing);
   // Only real ads: a row with neither URL nor id has no ad identity to share.
-  const adsOf = (listing: RawListing) => sourceListings(listing).filter((ad) => ad.url || ad.id).map((ad) => listingAdKey(ad.source, ad.url, ad.id));
+  // The row's own ad counts too: sourceListings() folds SUUMO ads sharing a
+  // content-derived id into one reference, which can hide the row's own posting.
+  const adsOf = (listing: RawListing) => [...sourceListings(listing), listing]
+    .filter((ad) => ad.url || ad.id).map((ad) => listingAdKey(ad.source, ad.url, ad.id));
   const previousByAd = new Map<string, RawListing[]>();
   for (const listing of previous) {
     for (const ad of adsOf(listing)) previousByAd.set(ad, [...(previousByAd.get(ad) ?? []), listing]);
