@@ -4,9 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Soka Rental Scorer — 草加市</title>
+    <!-- The theme ships beside the app, not inside it: swap or merge it freely. -->
+    <link rel="stylesheet" href="./themes/default.css" vite-ignore />
+    <!-- The page belongs to the app; a host stylesheet merged into it may override this. -->
+    <style>
+      body {
+        margin: 0;
+        background: var(--rs-bg);
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root" class="rs-app"></div>
     <script type="module" src="/src/web/main.tsx"></script>
   </body>
 </html>

@@ -6,7 +6,7 @@
   width: 56px;
   height: 42px;
   border-radius: 6px;
-  background: #eef2f7;
+  background: var(--rs-photo-bg);
   vertical-align: middle;
 }
 
@@ -22,7 +22,7 @@
 /* Floor plans are line drawings: show all of them on white. */
 .contain {
   object-fit: contain;
-  background: #fff;
+  background: var(--rs-card);
 }
 
 .loading {
@@ -41,13 +41,13 @@
   gap: 4px;
   width: 100%;
   height: 100%;
-  background: repeating-linear-gradient(135deg, #f1f5f9 0 6px, #eef2f7 6px 12px);
-  color: #a3b1c4;
+  background: repeating-linear-gradient(135deg, var(--rs-slate-100) 0 6px, var(--rs-photo-bg) 6px 12px);
+  color: var(--rs-photo-ink);
 }
 
 .empty small {
   font-size: 10.5px;
-  color: #94a3b8;
+  color: var(--rs-slate-400);
 }
 
 .gallery {
@@ -57,9 +57,9 @@
 .stage {
   overflow: hidden;
   aspect-ratio: 4 / 3;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--rs-slate-200);
   border-radius: 8px;
-  background: #eef2f7;
+  background: var(--rs-photo-bg);
 }
 
 .stage img {
@@ -77,21 +77,21 @@
 
 .tabs button {
   padding: 2px 8px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--rs-slate-300);
   border-radius: 99px;
-  background: #fff;
-  color: #475569;
+  background: var(--rs-card);
+  color: var(--rs-slate-600);
   cursor: pointer;
   font-size: 10.5px;
 }
 
 .tabs button small {
   margin-left: 4px;
-  color: #94a3b8;
+  color: var(--rs-slate-400);
 }
 
 .tabs .activeTab {
-  border-color: #2563eb;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: var(--rs-accent);
+  background: var(--rs-blue-50);
+  color: var(--rs-blue-700);
 }
