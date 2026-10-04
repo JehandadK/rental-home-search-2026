@@ -1,5 +1,8 @@
 .wrap {
   position: relative;
+  /* Never taller than the viewport: past that, wider just means scrolling. */
+  max-width: calc((100vh - 110px) * 1100 / 680);
+  margin-inline: auto;
   /* Lets overlays size things in units of the map's rendered width (cqw). */
   container-type: inline-size;
 }
