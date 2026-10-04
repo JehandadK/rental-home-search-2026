@@ -1,8 +1,8 @@
 /**
  * Sidebar panel for filtering the listing set before scoring/ranking.
- * The everyday filters (city, rent, rooms, size, parking) stay open at the
- * top; the neighbourhood (町名) picker and less-used refinements fold into
- * collapsible sections whose headers show their current value.
+ * The everyday filters (min score, city, rent, rooms, size, parking) stay
+ * open at the top; the neighbourhood (町名) picker and less-used refinements
+ * fold into collapsible sections whose headers show their current value.
  */
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -150,6 +150,22 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
       <p className={styles.count}>
         {matchCount} of {listings.length} listings match
       </p>
+
+      {/* Min score: the ranking threshold, always in view. */}
+      <div className={styles.group}>
+        <div className={styles.groupLabel}>
+          Min score <span className={styles.scoreVal}>{filters.minScore}</span>
+        </div>
+        <input
+          className={styles.slider}
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={filters.minScore}
+          onChange={(e) => onUpdate({ minScore: Number(e.target.value) })}
+        />
+      </div>
 
       {/* Location: city chips up front; the neighbourhood picker folds away. */}
       <div className={styles.group}>
@@ -333,21 +349,6 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
       </div>
 
       {/* Less-used refinements fold away; each summary shows its current value. */}
-      <Section
-        title="Min score"
-        summary={filters.minScore > 0 ? `≥ ${filters.minScore}` : "off"}
-        active={filters.minScore > 0}
-      >
-        <input
-          className={styles.slider}
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={filters.minScore}
-          onChange={(e) => onUpdate({ minScore: Number(e.target.value) })}
-        />
-      </Section>
 
       {/* Lifecycle: new discoveries vs sold listings */}
       <Section title="Listing status" summary={statusSummary(filters)} active={statusActive}>
