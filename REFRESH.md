@@ -42,7 +42,7 @@
 ## Parallel collection and the Playwright driver
 
 - Collectors for different sources (SUUMO, AtHome, RoomSpot, Nifty) run at the
-  same time; the three Nifty cities share `nifty.json`, so they run in order
+  same time; the Nifty cities share `nifty.json`, so they run in order
   inside one group. `--concurrency N` caps it (`1` = fully sequential).
 - Without the Pi Control Chrome bridge, set `BROWSER_DRIVER=playwright` (for
   example `BROWSER_DRIVER=playwright npm run refresh -- --resume`). It launches
@@ -110,8 +110,8 @@ run the human CLI's direct-Bridge collectors from the agent shell.
    a cold tab at a deep search URL: that can trigger blocking and stuck reads.
    If the homepage is blocked or times out, stop for manual inspection; do not
    proceed to results, replay navigation, or restart the browser automatically.
-   Then use the city-path search `/chintai/saitama/<city>-city/list/?sort=33`
-   (`soka`, `koshigaya`, `kawaguchi`). As of 2026-09-29 the prefecture search
+   Then use the city-path search `/chintai/<pref>/<city>-city/list/?sort=33`
+   (`saitama/soka`, `saitama/koshigaya`, `saitama/kawaguchi`, `tokyo/katsushika`). As of 2026-09-29 the prefecture search
    `/chintai/saitama/list/?pref=11&cities=...&cityCds=...` ignores its city
    filter and returns Saitama-wide cards (the importer rejects them as wrong
    city). Pagination is `/list/pageN/`, retaining `?sort=33`. Verify
@@ -151,7 +151,8 @@ run the human CLI's direct-Bridge collectors from the agent shell.
    is needed; temporary Agent tabs follow normal host turn cleanup.
 
 PageCapture schema: `schemaVersion:1, source, city, url, page, capturedAt,
-httpStatus:200, sortedNewest:true, html`. Cities: Soka/Koshigaya/Kawaguchi.
+httpStatus:200, sortedNewest:true, html`. Cities: Soka/Koshigaya/Kawaguchi/Katsushika
+(`src/collectors/shared/targetCities.ts` is the one list every collector reads).
 Captures and progress receipts live in `data/.captures/`; never put full
 HTML, source JSON, browser storage, cookies or tokens into model context.
 
@@ -411,6 +412,28 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
   Cap with `--max-pages` at the smallest city's depth, or import the cached
   pages (6h) page by page with `capture:import` (what this run did for AtHome).
 - **697 tests, typecheck and production build pass.**
+
+## 2026-10-04 Katsushika-ku (Tokyo) first load (Playwright)
+
+- Added Katsushika as the fourth target city (`targetCities.ts`). Portal paths,
+  each checked in the headed browser first: SUUMO `tokyo/sc_katsushika`, AtHome
+  `tokyo/katsushika-city`, Nifty `tokyo/katsushikaku_ct`, RoomSpot
+  `pref_13/city_122`. SUUMO list pages now load in the headed browser too.
+- Loaded with `--city Katsushika`, to each portal's last page: SUUMO **38** pages
+  (572 rooms), AtHome **81** (1121), Nifty **110** (page 111 is a 404; one
+  transient HTTP 405 on page 59 was resumed from cache with `--deep`), RoomSpot
+  **2** (21). AtHome showed its verification page once; it was passed by hand.
+- Gotcha: each collector's last page is far below the 100-page ceiling, and
+  AtHome/RoomSpot/SUUMO throw on the page after it, so nothing commits. Re-run
+  with `--city <label> --max-pages <last page>`: the pages come from the
+  6-hour capture cache with zero requests.
+- RoomSpot dropped whole-man rents (`<strong>12</strong>万円`): the parser read
+  only `<strong>`. Fixed; Saitama ads with such rents were affected too and
+  reappear as refreshes revisit them.
+- Rebuild: **929 Katsushika properties** after cross-source dedup (3965 → 4894
+  dashboard rows), all geocoded (291 GSI queries, 0 unresolved); none SOLD.
+  Katsushika median rent ¥130,000; 155 at ≤¥150,000 and ≥50㎡; 143 ≥70㎡.
+- **766 tests, typecheck and production build pass.**
 
 ## Entry points
 

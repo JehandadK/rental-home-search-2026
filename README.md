@@ -4,7 +4,9 @@ A weighted scoring tool for comparing rental homes in **Soka City**,
 **Koshigaya City**, and nearby **Kawaguchi City**, Saitama, Japan. Kawaguchi's
 eastern/northern neighbourhoods can be close to Al Sanad School. Koshigaya's
 southern wards (蒲生・新越谷) and the 北越谷 area sit close to both POIs and
-offer strong rent/size options, so all three cities are searched.
+offer strong rent/size options, so all three cities are searched. **Katsushika
+Ward** (葛飾区, Tokyo), just south of Yashio and Misato, is searched as well.
+Cities live in `src/collectors/shared/targetCities.ts`.
 
 Every listing is scored 0–100 across numeric proximity/cost/size parameters
 plus any qualitative property features the user chooses. Every captured source
