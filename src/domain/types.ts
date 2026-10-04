@@ -365,6 +365,7 @@ export type ListingFeatureKey =
   | "southFacing"
   | "cornerUnit"
   | "secondFloorOrAbove"
+  | "groundFloorOrHouse"
   | "elevator"
   | "fixedTermLease";
 

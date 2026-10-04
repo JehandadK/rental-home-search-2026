@@ -123,7 +123,43 @@ export function normalizeListingAttributes(listing: RawListing): ListingAttribut
     if (term.yen(listing) !== 0) continue;
     attributes.set(term.key, { key: term.key, category: "tenancy", labelEn: term.labelEn, labelJa: term.labelJa, state: true, raw: term.labelJa });
   }
+  const groundOrHouse = groundFloorOrHouse(listing);
+  if (groundOrHouse) {
+    attributes.set("groundFloorOrHouse", {
+      key: "groundFloorOrHouse",
+      category: "building",
+      labelEn: "1st floor or house",
+      labelJa: "1階・戸建て",
+      ...groundOrHouse,
+    });
+  }
   return [...attributes.values()];
+}
+
+/** AtHome prints the building type first in its summary line ("賃貸一戸建て 2階建…"). */
+const PORTAL_TYPE = /^賃貸(一戸建て|テラスハウス|タウンハウス|マンション|アパート)/;
+const HOUSE_TYPE = /一戸建て|テラスハウス|タウンハウス/;
+const HOUSE_NAME = /戸建|貸家|テラスハウス|タウンハウス/;
+
+/**
+ * Nobody living below the unit: a 1階 unit, or a whole house (detached or
+ * terrace), which is where a family's footsteps disturb no neighbour.
+ *
+ * A portal's stated building type beats the name, since names such as
+ * "…テラスハウス" are sometimes used for ordinary apartments. Houses come
+ * first because portals often give a house's top floor ("2階") as its floor.
+ * Null when neither the type nor the floor is known.
+ */
+function groundFloorOrHouse(listing: RawListing): { state: boolean; raw: string } | null {
+  const portalType = listing.notes?.match(PORTAL_TYPE)?.[1];
+  if (portalType ? HOUSE_TYPE.test(portalType) : HOUSE_NAME.test(listing.name)) {
+    return { state: true, raw: portalType ?? listing.name };
+  }
+  const floor = listing.building?.floor?.normalize("NFKC").trim();
+  // The lowest floor the unit occupies: "1-2階" → 1, "B1階" → basement.
+  const match = floor?.match(/^(B)?(\d+)(?:-\d+)?階$/);
+  if (!floor || !match) return null;
+  return { state: Boolean(match[1]) || Number(match[2]) <= 1, raw: floor };
 }
 
 export function featureState(listing: Pick<EnrichedListing, "attributes">, key: ListingFeatureKey): boolean | null {

@@ -161,7 +161,7 @@ export function findPlaces(catalog: PlaceCatalog, query: PlaceQuery): FoundPlace
 /**
  * The scoring a response used: per criterion its weight, its share of all the
  * weight, where the value came from, and the request path that changes it.
- * Every numeric criterion is listed, weight 0 included. Of the 31 yes/no
+ * Every numeric criterion is listed, weight 0 included. Of the yes/no
  * features, the summary view details only the weighted ones and names the
  * rest in `unweightedFeatures` (most are 0, and listing each in full would
  * be over a quarter of a response); the full view details all of them.

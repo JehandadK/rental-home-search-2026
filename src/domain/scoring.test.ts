@@ -121,10 +121,11 @@ describe("scoreListing", () => {
       school: prox("Shogakko", 15), // → 0
     };
     // Isolate the nine location/property parameters from the move-in one,
-    // which has its own dedicated tests below.
+    // which has its own dedicated tests below, and from the yes/no features.
     const config = {
       ...DEFAULT_CONFIG,
       weights: { ...DEFAULT_CONFIG.weights, rentPerM2: 0, moveInCost: 0 },
+      featureWeights: { ...DEFAULT_CONFIG.featureWeights, groundFloorOrHouse: 0 },
     };
     const { total, parts } = scoreListing(listing, config);
     expect(parts.filter((p) => p.weight > 0).every((p) => p.score != null)).toBe(true);
@@ -276,7 +277,8 @@ describe("scoreCoverage", () => {
   it("counts the weighted criteria a score had data for, and names the rest", () => {
     const listing = makeListing({ sizeM2: null, builtYear: null });
     const coverage = scoreCoverage(scoreListing(listing, DEFAULT_CONFIG));
-    expect(coverage.weighted).toBe(Object.keys(DEFAULT_CONFIG.weights).length);
+    const weightedFeatures = Object.values(DEFAULT_CONFIG.featureWeights).filter((w) => w > 0).length;
+    expect(coverage.weighted).toBe(Object.keys(DEFAULT_CONFIG.weights).length + weightedFeatures);
     expect(coverage.missing).toEqual(expect.arrayContaining(["size", "yearBuilt"]));
     expect(coverage.missing).not.toContain("rent");
   });

@@ -200,7 +200,7 @@ one knob and ask again without guessing:
   request, a preset, or the default), the request path that changes it (`set`), the
   allowed range, its anchors (the values scoring 100 and 0, with their own `set`
   path), and which places it measures to.
-- **`scoring.features`** does the same for the 31 qualitative features: weight and
+- **`scoring.features`** does the same for the qualitative features (32 since the 1st-floor/house score): weight and
   whether Yes or No is preferred.
 - **`request`** is the canonical, fully resolved request. Resending it unchanged gives
   the same ranking for the same `dataRevision`. To tweak, the agent edits one path
@@ -268,7 +268,7 @@ catalogue and presets as resources.
 - To keep responses affordable for agents, the summary view details only the
   *weighted* yes/no features in `scoring.features` and names the rest in
   `unweightedFeatures` (with the path pattern that turns one on); `view: "full"`
-  details all 31. That cut a three-home response from 25 KB to 19 KB. A weight-0
+  details all of them. That cut a three-home response from 25 KB to 19 KB. A weight-0
   feature's `prefer` setting then shows only in the `request` echo. This changed the
   v1 HTTP response before anything consumed it; from now on v1 changes are additive.
 - Tool inputs describe the full request schema once, on `rank_homes`; `explain_home`

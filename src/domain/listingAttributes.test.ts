@@ -48,3 +48,44 @@ describe("normalizeListingAttributes", () => {
     expect(normalizeListingAttributes(charged)).toEqual([]);
   });
 });
+
+describe("1st floor or house", () => {
+  const unit = (overrides: Partial<EnrichedListing>, floor?: string | null): EnrichedListing => {
+    const base = { ...listing([]), ...overrides };
+    base.building = { ...base.building, floor };
+    base.attributes = normalizeListingAttributes(base);
+    return base;
+  };
+  const state = (overrides: Partial<EnrichedListing>, floor?: string | null) =>
+    featureState(unit(overrides, floor), "groundFloorOrHouse");
+
+  it("is true for a unit whose lowest floor is the ground floor", () => {
+    expect(state({}, "1階")).toBe(true);
+    expect(state({}, "1-2階")).toBe(true);
+    expect(state({}, "１階")).toBe(true);
+    expect(state({}, "B1階")).toBe(true);
+  });
+
+  it("is false for an apartment on an upper floor, including a maisonette", () => {
+    expect(state({}, "2階")).toBe(false);
+    expect(state({}, "12階")).toBe(false);
+    expect(state({}, "2-3階")).toBe(false);
+  });
+
+  it("is true for a house whatever floor the portal prints", () => {
+    expect(state({ notes: "賃貸一戸建て 2階建1988年3月(築38年7ヶ月)・管理費0円" }, "2階")).toBe(true);
+    expect(state({ notes: "賃貸テラスハウス 2階建2001年7月(築25年4ヶ月)" }, "-")).toBe(true);
+    expect(state({ name: "八幡町戸建て" }, "2階")).toBe(true);
+    expect(state({ name: "坂下町2丁目　貸家" }, null)).toBe(true);
+  });
+
+  it("trusts the portal's building type over a house-like name", () => {
+    expect(state({ name: "ＪＴテラスハウス見沼代", notes: "賃貸アパート 2階建 2016年2月" }, "2階")).toBe(false);
+  });
+
+  it("stays unknown when neither the type nor the floor is known", () => {
+    expect(state({}, "-")).toBeNull();
+    expect(state({}, null)).toBeNull();
+    expect(state({ notes: "賃貸マンション 10階建" }, undefined)).toBeNull();
+  });
+});

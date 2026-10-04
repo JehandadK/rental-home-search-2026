@@ -110,7 +110,10 @@ describe("decodeRequest", () => {
 
   it("warns about requests that are valid but probably not meant", () => {
     const zero = Object.fromEntries(Object.keys(DEFAULT_CONFIG.weights).map((key) => [key, 0]));
-    expect(ok(decodeRequest({ weights: zero }, CONTEXT)).warnings[0]).toContain("Every weight is 0");
+    const noFeatures = Object.fromEntries(Object.keys(DEFAULT_CONFIG.featureWeights).map((key) => [key, { weight: 0 }]));
+    expect(ok(decodeRequest({ weights: zero, features: noFeatures }, CONTEXT)).warnings[0]).toContain("Every weight is 0");
+    // A feature weighted by default still scores, so zeroing only the numeric weights is not "nothing".
+    expect(ok(decodeRequest({ weights: zero }, CONTEXT)).warnings).toEqual([]);
     expect(ok(decodeRequest({ filters: { markFilter: "shortlist" } }, CONTEXT)).warnings[0]).toContain("state.marks is empty");
     expect(ok(decodeRequest({ ranking: { sortBy: "cityGas" } }, CONTEXT)).warnings[0]).toContain("weight 0");
   });

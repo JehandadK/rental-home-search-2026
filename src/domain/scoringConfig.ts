@@ -114,6 +114,8 @@ export const DEFAULT_FEATURE_WEIGHTS: FeatureWeights = {
   motorbikeParking: 0, immediateMoveIn: 0, guarantorNotRequired: 0,
   coupleAllowed: 0, officeAllowed: 0, southFacing: 0, cornerUnit: 0,
   secondFloorOrAbove: 0, elevator: 0, fixedTermLease: 0,
+  // On by default: nobody living below is the quietest arrangement for a family.
+  groundFloorOrHouse: 5,
 };
 
 export const DEFAULT_FEATURE_PREFERENCES = Object.fromEntries(
@@ -208,6 +210,7 @@ export const FEATURE_PARAMETERS: readonly FeatureMeta[] = [
   { key: "southFacing", category: "building", label: "South-facing", labelJa: "南向き", unit: "yes/no", description: "South-facing unit or balcony" },
   { key: "cornerUnit", category: "building", label: "Corner unit", labelJa: "角部屋", unit: "yes/no", description: "Corner apartment" },
   { key: "secondFloorOrAbove", category: "building", label: "2nd floor or above", labelJa: "2階以上", unit: "yes/no", description: "Unit is above ground floor" },
+  { key: "groundFloorOrHouse", category: "building", label: "1st floor or house", labelJa: "1階・戸建て", unit: "yes/no", description: "Nobody lives below: a 1階 unit, or a detached or terrace house, so footsteps and children's noise disturb no neighbour" },
   { key: "elevator", category: "building", label: "Elevator", labelJa: "エレベーター", unit: "yes/no", description: "Elevator in the building" },
   { key: "petAllowed", category: "tenancy", label: "Pets allowed", labelJa: "ペット可・相談", unit: "yes/no", description: "Pets allowed or negotiable" },
   { key: "immediateMoveIn", category: "tenancy", label: "Immediate move-in", labelJa: "即入居可", unit: "yes/no", description: "Available for immediate occupancy" },
