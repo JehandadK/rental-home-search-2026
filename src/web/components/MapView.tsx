@@ -53,6 +53,7 @@ import {
   labelPosition,
   longitudeScale,
   padExtent,
+  pointInGeometry,
   polygonsOf,
   ringRadiusPx,
   scaleBarLength,
@@ -374,6 +375,21 @@ export const MapView = memo(function MapView({
       // Busiest first, so their names win the space when labels compete.
       .sort((a, b) => lineCount(b) - lineCount(a));
   }, [reference, areas]);
+
+  // Mosques and private schools inside the chosen areas (plus any with a travel ring),
+  // so hidden areas stay empty: the mosque list covers all of Japan.
+  const areaPlaces = useMemo(() => {
+    const inAreas = (place: CatalogPlace) => cityLayers.some((layer) =>
+      place.lon >= layer.extent.minLon && place.lon <= layer.extent.maxLon &&
+      place.lat >= layer.extent.minLat && place.lat <= layer.extent.maxLat &&
+      layer.boundaries.some((boundary) => pointInGeometry([place.lon, place.lat], boundary.geometry)));
+    const ringed = new Set(ringCenters.map((place) => place.id));
+    const keep = (place: CatalogPlace) => ringed.has(place.id) || inAreas(place);
+    return {
+      mosques: reference.catalog.inCategory("mosque").filter(keep),
+      pois: reference.catalog.inCategory("poi").filter(keep),
+    };
+  }, [reference, cityLayers, ringCenters]);
 
   const areaCities = useMemo((): AreaCity[] =>
     allCities.map(({ city, boundaries, extent }) => ({ city, boundaries, extent })), [allCities]);
@@ -751,7 +767,7 @@ export const MapView = memo(function MapView({
 
     // Mosque candidates as purple diamonds; scoring uses the nearest selected one.
     if (layers.mosques) {
-      for (const mosque of reference.catalog.inCategory("mosque")) {
+      for (const mosque of areaPlaces.mosques) {
         const { x, y } = toScreen(mosque.lat, mosque.lon);
         ctx.save();
         ctx.translate(x, y);
@@ -764,20 +780,35 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // The other private schools as outlined stars; any of them can be the target.
+    const otherPois = areaPlaces.pois.filter((poi) => poi.id !== targetPoi?.id);
+    for (const poi of otherPois) {
+      const { x, y } = toScreen(poi.lat, poi.lon);
+      starPath(ctx, x, y, 8);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = colors.target;
+      ctx.stroke();
+    }
+
     // The target POI (Al Sanad by default) as a red star.
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       drawStar(ctx, x, y, 10, colors.target);
     }
 
-    // Names, most important first. The target is always named; the mosques
-    // next, as far as they fit (they crowd together when zoomed out).
+    // Names, most important first. The target is always named; the other
+    // private schools and the mosques next, as far as they fit (they crowd
+    // together when zoomed out).
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       label(targetPoi.name, x + 12, y + 4, colors.targetLabel, { font: `600 11px ${FONT}`, force: true });
     }
+    for (const poi of otherPois) {
+      const { x, y } = toScreen(poi.lat, poi.lon);
+      label(poi.name, x + 10, y + 4, colors.targetLabel);
+    }
     if (layers.mosques) {
-      for (const mosque of reference.catalog.inCategory("mosque")) {
+      for (const mosque of areaPlaces.mosques) {
         const { x, y } = toScreen(mosque.lat, mosque.lon);
         label(mosque.name, x + 9, y + 4, colors.mosqueLabel);
       }
@@ -805,7 +836,7 @@ export const MapView = memo(function MapView({
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, targetPoi, cityLayers, prefectures, railStations, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, targetPoi, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -1058,6 +1089,9 @@ export const MapView = memo(function MapView({
           </div>
           <div className={styles.legendKeys}>
             <span><i className={styles.keyStar}>★</i>{targetPoi?.name ?? "Target"}</span>
+            {reference.catalog.inCategory("poi").length > (targetPoi ? 1 : 0) && (
+              <span><i className={styles.keyStar}>☆</i>Other private school</span>
+            )}
             <span><i className={styles.keyMosque} />Mosque</span>
             <span><i className={styles.keyStation} />Scored station</span>
             {layers.stations && <span><i className={styles.keyRailStation} />Other station</span>}
