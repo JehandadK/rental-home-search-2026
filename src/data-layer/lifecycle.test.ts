@@ -99,4 +99,17 @@ describe("reconcileLifecycle", () => {
     expect(listings.map((l) => l.name)).toEqual(["継続A", "新規C", "消えるB"]);
     expect(stats).toEqual({ continued: 1, added: 1, sold: 1, reactivated: 0 });
   });
+
+  it("keeps the discovery date when a merged row's name changes with its preferred ad", () => {
+    const ads = [
+      { source: "athome", id: "athome-1", url: "https://www.athome.co.jp/chintai/1111111111/" },
+      { source: "suumo", id: "suumo-x", url: "https://suumo.jp/chintai/jnc_000000000001/?bc=1" },
+    ];
+    const before = make({ name: "ネクサス東領家", sourceListings: ads, firstSeenAt: BEFORE, status: "active" });
+    const renamed = make({ name: "川口市 東領家５丁目（川口元郷駅）", sourceListings: ads });
+    const { listings, stats } = reconcileLifecycle([before], [renamed], NOW);
+    expect(stats).toMatchObject({ added: 0, continued: 1, sold: 0 });
+    expect(listings).toHaveLength(1);
+    expect(listings[0]).toMatchObject({ name: renamed.name, firstSeenAt: BEFORE, status: "active" });
+  });
 });

@@ -28,7 +28,7 @@ import type { ArchivedSourceListing } from "../../data-layer/contracts";
 import { mergeSourceProvenance } from "../../data-layer/sourceProvenance";
 import { RevisionConflictError } from "../../data-layer/errors";
 export { RevisionConflictError } from "../../data-layer/errors";
-import { reconcileLifecycle, trackingKey, type LifecycleStats } from "../../data-layer/lifecycle";
+import { previousMatcher, reconcileLifecycle, trackingKey, type LifecycleStats } from "../../data-layer/lifecycle";
 import { deduplicateListings, isSameUnit } from "../../domain/listingDedup";
 import { restoreObservedLifecycle } from "./observations";
 import {
@@ -343,10 +343,10 @@ function mergeWithPreviousHistory(
 }
 
 function lifecycleStats(previous: readonly RawListing[], current: readonly RawListing[]): LifecycleStats {
-  const previousByKey = new Map(previous.map((listing) => [trackingKey(listing), listing]));
+  const priorOf = previousMatcher(previous);
   const stats: LifecycleStats = { continued: 0, added: 0, sold: 0, reactivated: 0 };
   for (const listing of current) {
-    const prior = previousByKey.get(trackingKey(listing));
+    const prior = priorOf(listing);
     if (!prior) stats.added++;
     else if (prior.status === "sold" && listing.status !== "sold") stats.reactivated++;
     else if (prior.status !== "sold" && listing.status === "sold") stats.sold++;
