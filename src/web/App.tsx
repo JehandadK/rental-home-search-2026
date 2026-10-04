@@ -9,6 +9,7 @@ import { withAvailability } from "../domain/availability";
 import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
 import { ProximityIndex } from "../domain/proximityIndex";
+import { SCORED_CATEGORIES } from "../domain/places";
 import { applySelection, selectionAllowedSets } from "../domain/placeSelection";
 import type { WebData } from "./data/useWebData";
 import { usePlaceSelection } from "./hooks/usePlaceSelection";
@@ -65,7 +66,7 @@ export function App({ data }: { data: WebData }) {
    * reference place is measured, so changing which places count is a cheap
    * in-memory reduction rather than a pipeline re-run.
    */
-  const index = useMemo(() => new ProximityIndex(listings, catalog), [listings, catalog]);
+  const index = useMemo(() => new ProximityIndex(listings, catalog, SCORED_CATEGORIES), [listings, catalog]);
 
   /** The place the poi1 score measures to, marked on the map. */
   const targetPoi = useMemo(() => {

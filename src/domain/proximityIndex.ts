@@ -12,7 +12,10 @@
  * ~10 ms to build, ~0.7 ms to re-reduce after a selection change.
  *
  * The index measures whatever catalog it is given, so adding places or
- * categories to the reference data needs no code change here.
+ * categories to the reference data needs no code change here. Pass
+ * `categories` to measure only some of them: the app skips map-only
+ * categories such as the ~2,000 Kanto rail stations, which would cost
+ * seconds and tens of MB at this size.
  */
 import type { EnrichedListing, Proximity } from "./types";
 import { haversineM } from "./geo";
@@ -33,8 +36,10 @@ export class ProximityIndex {
   constructor(
     private readonly listings: readonly EnrichedListing[],
     catalog: PlaceCatalog,
+    categories: readonly PlaceCategory[] = catalog.categories,
   ) {
     for (const category of catalog.categories) {
+      if (!categories.includes(category)) continue;
       const places = catalog.inCategory(category);
       const distances = new Float32Array(listings.length * places.length);
       for (let i = 0; i < listings.length; i++) {
