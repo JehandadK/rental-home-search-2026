@@ -3,17 +3,31 @@
  *
  * The map can cover all of Kanto, but drawing ~350 municipalities and ~2,000
  * stations is slow and mostly noise, so it shows a chosen set of cities: by
- * default the search area (Soka and its neighbours). Areas are picked city by
- * city or a whole prefecture at once. Names read in English or Japanese.
+ * default the search area, which is every city the listings are in plus a few
+ * neighbours for context. Areas are picked city by city or a whole prefecture
+ * at once, and a city whose listings are shown is always drawn. Names read in
+ * English or Japanese.
  */
 import type { ReferenceCity } from "./referenceData";
 
 export type NameLanguage = "en" | "ja";
 
-/** The search area: Soka, the cities with listings beside it, and the neighbours drawn for context. */
-export const DEFAULT_AREA_CITY_IDS: readonly string[] = [
-  "city:soka", "city:koshigaya", "city:kawaguchi", "city:yashio", "city:adachi",
-];
+/** Neighbours between the searched cities, drawn for context though they have no listings. */
+export const CONTEXT_AREA_CITY_IDS: readonly string[] = ["city:yashio", "city:adachi"];
+
+/**
+ * The reference cities listings are in. Listings name their city in English
+ * ("Katsushika"), as the reference city's `name` does; unnamed ones are skipped.
+ */
+export function listingAreas(cities: readonly ReferenceCity[], listingCities: Iterable<string | null | undefined>): Set<string> {
+  const byName = new Map(cities.map((city) => [city.name, city.id]));
+  const ids = new Set<string>();
+  for (const name of listingCities) {
+    const id = name ? byName.get(name) : undefined;
+    if (id) ids.add(id);
+  }
+  return ids;
+}
 
 /** A city's name in the chosen language, falling back to whichever it has. */
 export function cityName(city: ReferenceCity, language: NameLanguage): string {
@@ -48,11 +62,30 @@ export function groupByPrefecture(cities: readonly ReferenceCity[]): PrefectureG
   return [...groups.values()].sort((a, b) => code(a.cities[0]).localeCompare(code(b.cities[0])));
 }
 
-/** The default area, limited to cities the data has (all of them when none of the defaults exist). */
-export function defaultAreas(cities: readonly ReferenceCity[]): Set<string> {
+/**
+ * The default area: every city with listings plus the context neighbours,
+ * limited to cities the reference has (all of them when none of those exist).
+ */
+export function defaultAreas(cities: readonly ReferenceCity[], withListings: ReadonlySet<string> = new Set()): Set<string> {
   const known = new Set(cities.map((city) => city.id));
-  const defaults = DEFAULT_AREA_CITY_IDS.filter((id) => known.has(id));
+  const defaults = [...withListings, ...CONTEXT_AREA_CITY_IDS].filter((id) => known.has(id));
   return new Set(defaults.length ? defaults : known);
+}
+
+/**
+ * The cities the map draws: the saved choice (the default area when nothing
+ * is saved), minus cities the reference no longer has, plus every city whose
+ * listings are on show, so a city new to the data is never left off the map.
+ */
+export function shownAreas(
+  cities: readonly ReferenceCity[],
+  saved: readonly string[] | null,
+  withListings: ReadonlySet<string>,
+  onShow: ReadonlySet<string>,
+): Set<string> {
+  const known = new Set(cities.map((city) => city.id));
+  const chosen = saved == null ? defaultAreas(cities, withListings) : saved.filter((id) => known.has(id));
+  return new Set([...chosen, ...onShow]);
 }
 
 /** How much of a prefecture is selected, for a tri-state checkbox. */
