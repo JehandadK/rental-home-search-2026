@@ -1229,6 +1229,20 @@
           "nifty|detail_14bd1c5d86d83f849b7abcb35b4fc302"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109924868|bc_100527775313|2026-10-04T09:30:01.632Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-04T09:30:01.632Z",
+      "recordedAt": "2026-10-04T09:42:26.249Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109924868|bc_100527775313",
+      "url": "https://suumo.jp/chintai/jnc_000109924868/?bc=100527775313",
+      "data": {
+        "state": "gone",
+        "evidence": "detail page redirected off the ad page (detail:enrich)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1239,11 +1253,17 @@
     "firstSeenUrl": "https://www.roomspot.net/rent/1139288674810000334065",
     "lastSeenAt": "2026-10-02T14:20:10.831Z",
     "lastListedAt": "2026-10-02T14:20:10.831Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-02T14:20:10.831Z",
+      "before": "2026-10-04T09:30:01.632Z"
+    },
+    "daysOnMarket": {
+      "min": 13.4,
+      "max": 15.1
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-19T05:59:55.212Z",
@@ -1286,7 +1306,7 @@
         "firstSeenAt": "2026-09-24T21:06:47.576Z",
         "lastSeenAt": "2026-09-24T21:06:47.576Z",
         "lastListedAt": "2026-09-24T21:06:47.576Z",
-        "goneSince": null,
+        "goneSince": "2026-10-04T09:30:01.632Z",
         "relistCount": 0
       }
     },
