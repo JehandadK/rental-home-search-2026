@@ -28,10 +28,49 @@ npm run dev        # http://localhost:5173
 
 ```bash
 npm test           # unit tests for the scoring engine and geo math
-npm run build      # typecheck + production build
+npm run build      # data:web + typecheck + production build + release check → dist/
 npm run rank       # print the current top listings in the terminal
 npm run rank -- -n 30
 ```
+
+## Static site
+
+The dashboard needs no server. `npm run build` writes a self-contained static
+site to `dist/`, and `npm run check:release` (the last build step) refuses to
+pass anything else:
+
+| Path | What it is | Changes when |
+| --- | --- | --- |
+| `index.html` | The page | the app changes |
+| `assets/` | The app bundle (hashed JS and CSS, no theme colours) | the app changes |
+| `themes/default.css` | The theme: the interface and map colours, the page font, the radius | the look changes |
+| `data/` | `listings.json` and `reference.json` | data is committed |
+
+Upload `dist/` as-is to any static host. Every URL is relative, so it works
+from a domain root or a sub-path (`https://example.com/rentals/`) with no
+rebuild. Serve a sub-path with its trailing slash (or redirect to it): from
+`/rentals` without one, the browser resolves `./assets/` against the domain
+root.
+
+- **Data** stays in Git: refresh, commit `data/`, and rebuild. The page
+  revalidates its JSON on every load, so a redeploy shows up without cache
+  busting.
+- **Your marks, notes, compare list, presets and custom listings** stay in the
+  visitor's browser (`localStorage`). They are never uploaded, and they do not
+  follow you to another browser or device.
+- **Theme**: `index.html` links `themes/default.css` separately from the app.
+  To match a host site, replace that file, or define the same `--rs-*`
+  properties in the host's own stylesheet. The file lists them all, with the
+  core ones first. The red → green score scale is not themed: it encodes the
+  score itself (`scoreColor` in `src/domain/scoring.ts`).
+- **Sharing a page with a host stylesheet**: the app's styles are scoped to
+  `.rs-app` and never reach the host's elements. Inside it, a host's bare
+  element rules (`body {…}`, `button {…}`, `* {…}`) are reset. Stronger host
+  selectors (`a:hover`, `input[type=checkbox]`, ids, a full reset such as
+  Bootstrap Reboot) can still reach in, so share the host's theme properties
+  with this page rather than its whole stylesheet.
+- **Outside requests**: listing photos load straight from the portals, and the
+  map links open Google Maps. Nothing else leaves the page.
 
 ## Numeric and qualitative scoring parameters
 

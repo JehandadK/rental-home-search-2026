@@ -11,13 +11,13 @@
 }
 
 .zeroAll {
-  color: #9f1239;
-  border-color: #fecdd3;
-  background: #fff1f2;
+  color: var(--rs-rose-800);
+  border-color: var(--rs-rose-200);
+  background: var(--rs-rose-50);
 }
 
 .zeroAll:hover {
-  background: #ffe4e6;
+  background: var(--rs-rose-100);
 }
 
 .modeRow {
@@ -31,12 +31,12 @@
 .modeLabel {
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: var(--rs-slate-600);
 }
 
 .modeToggle {
   display: inline-flex;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rs-line);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -44,20 +44,20 @@
 .modeToggle button {
   padding: 3px 10px;
   font-size: 12px;
-  background: #fff;
-  color: var(--muted);
+  background: var(--rs-card);
+  color: var(--rs-muted);
   border: none;
   cursor: pointer;
 }
 
 .modeToggle button.on {
-  background: var(--accent);
-  color: #fff;
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
 }
 
 .alert {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: var(--rs-orange-50);
+  border: 1px solid var(--rs-orange-200);
   border-radius: 8px;
   padding: 8px 10px;
   margin-bottom: 10px;
@@ -66,33 +66,33 @@
 .alert strong {
   display: block;
   font-size: 12px;
-  color: #9a3412;
+  color: var(--rs-orange-800);
 }
 
 .alert p {
   margin: 4px 0 7px;
   font-size: 11.5px;
-  color: #7c2d12;
+  color: var(--rs-orange-900);
   line-height: 1.4;
 }
 
 .fitAll {
   font-size: 11.5px;
   padding: 3px 10px;
-  background: #ea580c;
+  background: var(--rs-orange-600);
 }
 
 .warn {
   margin-left: 5px;
-  color: #ea580c;
+  color: var(--rs-orange-600);
   cursor: help;
 }
 
 .diagnosis {
   flex-basis: 100%;
   font-size: 11px;
-  color: #9a3412;
-  background: #fff7ed;
+  color: var(--rs-orange-800);
+  background: var(--rs-orange-50);
   border-radius: 6px;
   padding: 6px 8px;
   margin-bottom: 4px;
@@ -104,11 +104,11 @@
   margin-top: 5px;
   font-size: 11px;
   padding: 2px 8px;
-  background: #ea580c;
+  background: var(--rs-orange-600);
 }
 
 .row {
-  border-bottom: 1px solid #f0f3f9;
+  border-bottom: 1px solid var(--rs-row-divider);
   padding: 2px 0;
 }
 
@@ -128,7 +128,7 @@
 
 .row summary::before {
   content: "▸";
-  color: var(--muted);
+  color: var(--rs-muted);
   font-size: 10px;
   margin-right: 4px;
 }
@@ -160,7 +160,7 @@
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: var(--muted);
+  color: var(--rs-muted);
 }
 
 .anchor input {
@@ -170,7 +170,7 @@
 
 .featureSection {
   margin-top: 10px;
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--rs-line);
   padding-top: 8px;
 }
 
@@ -178,17 +178,17 @@
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  color: #334155;
+  color: var(--rs-slate-700);
   font-size: 12px;
 }
 
 .featureSection > summary span {
-  color: var(--muted);
+  color: var(--rs-muted);
   font-weight: 400;
 }
 
 .featureIntro {
-  color: var(--muted);
+  color: var(--rs-muted);
   font-size: 10.5px;
   line-height: 1.4;
   margin: 7px 0;
@@ -199,7 +199,7 @@
 }
 
 .featureGroup h3 {
-  color: #475569;
+  color: var(--rs-slate-600);
   font-size: 11.5px;
   margin-bottom: 4px;
 }
@@ -207,7 +207,7 @@
 .featureGroup h3 small,
 .featureRow > span small {
   display: block;
-  color: #94a3b8;
+  color: var(--rs-slate-400);
   font-size: 9.5px;
   font-weight: 400;
 }
@@ -218,7 +218,7 @@
   align-items: center;
   gap: 5px;
   padding: 3px 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--rs-slate-100);
   font-size: 11px;
 }
 
@@ -232,7 +232,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  color: var(--muted);
+  color: var(--rs-muted);
 }
 
 .featureRow input {
@@ -244,7 +244,7 @@
 .options {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--rs-line);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -271,13 +271,13 @@
 .note {
   flex-basis: 100%;
   font-size: 10.5px;
-  color: var(--muted);
+  color: var(--rs-muted);
   line-height: 1.45;
   margin: 2px 0 4px;
 }
 
 .note strong {
-  color: #b45309;
+  color: var(--rs-amber-700);
 }
 
 .presets {
@@ -292,43 +292,43 @@
 .preset {
   display: inline-flex;
   align-items: stretch;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rs-line);
   border-radius: 99px;
-  background: #fff;
+  background: var(--rs-card);
   overflow: hidden;
 }
 
 .preset button {
   border: none;
   background: transparent;
-  color: #334155;
+  color: var(--rs-slate-700);
   font-size: 11.5px;
   padding: 3px 9px;
   cursor: pointer;
 }
 
 .preset button:hover {
-  background: #f1f5f9;
+  background: var(--rs-slate-100);
 }
 
 .presetOn {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--rs-accent);
+  background: var(--rs-accent);
 }
 
 .presetOn button,
 .presetOn button:hover {
-  color: #fff;
+  color: var(--rs-on-accent);
   background: transparent;
 }
 
 .preset .presetDelete {
   padding: 3px 7px 3px 2px;
-  color: #94a3b8;
+  color: var(--rs-slate-400);
 }
 
 .presetOn .presetDelete {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgb(var(--rs-glass) / 0.75);
 }
 
 .presetAdd {

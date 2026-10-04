@@ -91,7 +91,6 @@ const NO_RING_CENTERS: readonly CatalogPlace[] = [];
 const RING_MINUTES = [5, 10, 15] as const;
 /** Rings smaller than this on screen get no minute label. */
 const RING_LABEL_MIN_RADIUS = 18;
-const CANDIDATE_GOLD = "#d97706";
 
 interface Projected {
   x: number;
@@ -126,6 +125,47 @@ const NARROW_MAX = 650;
 const SCALE_BAR_MAX = 110;
 const FONT = 'system-ui, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif';
 
+/**
+ * Canvas colours come from the theme stylesheet, like every other colour:
+ * each key names the `--rs-map-*` custom property it is read from.
+ */
+const MAP_COLOR_PROPERTIES = {
+  halo: "--rs-map-halo",
+  neighbourFill: "--rs-map-neighbour-fill",
+  neighbourLine: "--rs-map-neighbour-line",
+  focusFill: "--rs-map-focus-fill",
+  focusLine: "--rs-map-focus-line",
+  focusLabel: "--rs-map-focus-label",
+  cityLabel: "--rs-map-city-label",
+  school: "--rs-map-school",
+  ringStroke: "--rs-map-ring-stroke",
+  ringLabel: "--rs-map-ring-label",
+  mosqueRingStroke: "--rs-map-mosque-ring-stroke",
+  mosqueRingLabel: "--rs-map-mosque-ring-label",
+  newRingStroke: "--rs-map-new-ring-stroke",
+  candidate: "--rs-map-candidate",
+  dimmed: "--rs-map-dimmed",
+  ruledOut: "--rs-map-ruled-out",
+  markerOutline: "--rs-map-marker-outline",
+  station: "--rs-map-station",
+  stationLabel: "--rs-map-station-label",
+  mosque: "--rs-map-mosque",
+  mosqueLabel: "--rs-map-mosque-label",
+  target: "--rs-map-target",
+  targetLabel: "--rs-map-target-label",
+  selected: "--rs-map-selected",
+  hovered: "--rs-map-hovered",
+} as const;
+
+type MapColors = Record<keyof typeof MAP_COLOR_PROPERTIES, string>;
+
+/** The theme's map colours, as resolved for `element`. */
+function readMapColors(element: Element): MapColors {
+  const style = getComputedStyle(element);
+  return Object.fromEntries(Object.entries(MAP_COLOR_PROPERTIES)
+    .map(([key, property]) => [key, style.getPropertyValue(property).trim()])) as MapColors;
+}
+
 type LayerKey = "stations" | "schools" | "mosques" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
@@ -148,8 +188,6 @@ const SCORE_GRADIENT = `linear-gradient(90deg, ${[0, 25, 50, 75, 100].map((score
 const LABELLED_STATIONS = new Set([
   "草加", "谷塚", "獨協大学前〈草加松原〉", "新田", "蒲生", "新越谷", "南越谷", "越谷", "北越谷",
 ]);
-
-const CITY_LABEL_COLOR = "#94a3b8";
 
 /** The primary search area, drawn emphasised when the data contains it. */
 const FOCUS_CITY_ID = "city:soka";
@@ -297,6 +335,7 @@ export const MapView = memo(function MapView({
     if (canvas.height !== HEIGHT * dpr) canvas.height = HEIGHT * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    const colors = readMapColors(canvas);
 
     // Map text gets a white halo so it stays legible over dots and outlines.
     const haloText = (text: string, x: number, y: number, color: string, font = `11px ${FONT}`, align: CanvasTextAlign = "left") => {
@@ -304,7 +343,7 @@ export const MapView = memo(function MapView({
       ctx.textAlign = align;
       ctx.lineJoin = "round";
       ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.strokeStyle = colors.halo;
       ctx.strokeText(text, x, y);
       ctx.fillStyle = color;
       ctx.fillText(text, x, y);
@@ -337,9 +376,9 @@ export const MapView = memo(function MapView({
     ctx.setLineDash([4, 4]);
     for (const layer of neighbours) {
       trace(layer.boundaries);
-      ctx.fillStyle = "#fbfcfd";
+      ctx.fillStyle = colors.neighbourFill;
       ctx.fill("evenodd");
-      ctx.strokeStyle = "#cfd7e3";
+      ctx.strokeStyle = colors.neighbourLine;
       ctx.stroke();
     }
     ctx.setLineDash([]);
@@ -348,9 +387,9 @@ export const MapView = memo(function MapView({
     const focus = cityLayers.filter((candidate) => candidate.focus);
     for (const layer of focus) {
       trace(layer.boundaries);
-      ctx.fillStyle = "rgba(232,240,252,0.8)";
+      ctx.fillStyle = colors.focusFill;
       ctx.fill("evenodd");
-      ctx.strokeStyle = "#6f8bb5";
+      ctx.strokeStyle = colors.focusLine;
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.lineWidth = 1;
@@ -360,7 +399,7 @@ export const MapView = memo(function MapView({
     if (layers.schools) {
       for (const school of reference.catalog.inCategory("school")) {
         const { x, y } = toScreen(school.lat, school.lon);
-        ctx.fillStyle = "#9db4ce";
+        ctx.fillStyle = colors.school;
         ctx.beginPath();
         ctx.arc(x, y, 2.5, 0, Math.PI * 2);
         ctx.fill();
@@ -378,12 +417,12 @@ export const MapView = memo(function MapView({
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.setLineDash(minutes === RING_MINUTES[RING_MINUTES.length - 1] ? [] : [4, 3]);
-          ctx.strokeStyle = poi ? "rgba(220,38,38,0.5)" : "rgba(124,58,237,0.45)";
+          ctx.strokeStyle = poi ? colors.ringStroke : colors.mosqueRingStroke;
           ctx.stroke();
           ctx.setLineDash([]);
           const labelY = y - r - 3;
           if (r > RING_LABEL_MIN_RADIUS && x >= 0 && x <= WIDTH && labelY >= 8 && labelY <= HEIGHT) {
-            haloText(`${minutes}′`, x, labelY, poi ? "#991b1b" : "#5b21b6", `10px ${FONT}`, "center");
+            haloText(`${minutes}′`, x, labelY, poi ? colors.ringLabel : colors.mosqueRingLabel, `10px ${FONT}`, "center");
           }
         }
       }
@@ -413,29 +452,29 @@ export const MapView = memo(function MapView({
       const dimmed = sold || isRentedOut(listing);
       const fresh = layers.newRings && isNewListing(listing);
       if (ruledOut) {
-        drawCross(ctx, x, y, radius * 0.8, hovered || selected ? 0.2 : 0.4);
+        drawCross(ctx, x, y, radius * 0.8, hovered || selected ? 0.2 : 0.4, colors.ruledOut);
       } else if (candidate) {
         // Shortlisted/applied candidates are stars with a gold edge, a little larger than a dot.
         ctx.globalAlpha = dimmed ? 0.5 : hovered || selected ? 0.6 : 1;
         starPath(ctx, x, y, radius * 1.55);
         ctx.lineJoin = "round";
         ctx.lineWidth = 3;
-        ctx.strokeStyle = CANDIDATE_GOLD;
+        ctx.strokeStyle = colors.candidate;
         ctx.stroke();
-        ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);
+        ctx.fillStyle = dimmed ? colors.dimmed : scoreColor(score.total);
         ctx.fill();
         ctx.lineWidth = 1;
-        ctx.strokeStyle = "#fff";
+        ctx.strokeStyle = colors.markerOutline;
         ctx.stroke();
         ctx.globalAlpha = 1;
       } else {
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);
+        ctx.fillStyle = dimmed ? colors.dimmed : scoreColor(score.total);
         ctx.globalAlpha = dimmed ? 0.4 : hovered || selected ? 0.5 : 0.88;
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = "#fff";
+        ctx.strokeStyle = colors.markerOutline;
         ctx.stroke();
       }
       // New discoveries get a thin green halo (a layer: about half of all homes are new).
@@ -443,7 +482,7 @@ export const MapView = memo(function MapView({
         ctx.beginPath();
         ctx.arc(x, y, radius * (candidate ? 1.55 : 1) + 2.5, 0, Math.PI * 2);
         ctx.lineWidth = 1.25;
-        ctx.strokeStyle = "rgba(22,163,74,0.7)";
+        ctx.strokeStyle = colors.newRingStroke;
         ctx.stroke();
         ctx.lineWidth = 1;
       }
@@ -456,11 +495,11 @@ export const MapView = memo(function MapView({
         const { x, y } = toScreen(station.lat, station.lon);
         const major = LABELLED_STATIONS.has(station.name);
         const half = major ? 4 : 3;
-        ctx.fillStyle = "#2563eb";
-        ctx.strokeStyle = "#fff";
+        ctx.fillStyle = colors.station;
+        ctx.strokeStyle = colors.markerOutline;
         ctx.fillRect(x - half, y - half, half * 2, half * 2);
         ctx.strokeRect(x - half, y - half, half * 2, half * 2);
-        if (major) haloText(station.name.replace(/〈草加松原〉/, ""), x + 7, y - 5, "#1e3a6e", `600 11px ${FONT}`);
+        if (major) haloText(station.name.replace(/〈草加松原〉/, ""), x + 7, y - 5, colors.stationLabel, `600 11px ${FONT}`);
       }
     }
 
@@ -471,27 +510,27 @@ export const MapView = memo(function MapView({
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = "#7c3aed";
-        ctx.strokeStyle = "#fff";
+        ctx.fillStyle = colors.mosque;
+        ctx.strokeStyle = colors.markerOutline;
         ctx.fillRect(-5, -5, 10, 10);
         ctx.strokeRect(-5, -5, 10, 10);
         ctx.restore();
-        haloText(mosque.name, x + 9, y + 4, "#5b21b6");
+        haloText(mosque.name, x + 9, y + 4, colors.mosqueLabel);
       }
     }
 
     // The target POI (Al Sanad by default) as a red star.
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
-      drawStar(ctx, x, y, 10, "#dc2626");
-      haloText(targetPoi.name, x + 12, y + 4, "#7f1d1d", `600 11px ${FONT}`);
+      drawStar(ctx, x, y, 10, colors.target);
+      haloText(targetPoi.name, x + 12, y + 4, colors.targetLabel, `600 11px ${FONT}`);
     }
 
-    for (const layer of neighbours) drawLabel(layer, CITY_LABEL_COLOR);
-    for (const layer of focus) drawLabel(layer, "#4b6290");
+    for (const layer of neighbours) drawLabel(layer, colors.cityLabel);
+    for (const layer of focus) drawLabel(layer, colors.focusLabel);
 
-    if (selectedDot) drawEmphasis(ctx, selectedDot, "#2563eb", marks[selectedDot.key]);
-    if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, "#111827", marks[hoveredDot.key]);
+    if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
+    if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
   }, [drawOrder, reference, targetPoi, cityLayers, toScreen, basePxPerKm, view.scale, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
@@ -959,7 +998,7 @@ function drawEmphasis(ctx: CanvasRenderingContext2D, dot: Projected, ringColor: 
 }
 
 /** A faded grey ✕ marking a ruled-out listing. */
-function drawCross(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, alpha: number) {
+function drawCross(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, alpha: number, color: string) {
   ctx.beginPath();
   ctx.moveTo(cx - half, cy - half);
   ctx.lineTo(cx + half, cy + half);
@@ -968,7 +1007,7 @@ function drawCross(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: 
   ctx.globalAlpha = alpha;
   ctx.lineWidth = 1.75;
   ctx.lineCap = "round";
-  ctx.strokeStyle = "#6b7280";
+  ctx.strokeStyle = color;
   ctx.stroke();
   ctx.lineCap = "butt";
   ctx.lineWidth = 1;
