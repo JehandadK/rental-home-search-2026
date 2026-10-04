@@ -40,6 +40,15 @@ describe("availability store", () => {
     ]);
   });
 
+  it("remembers which URL each earlier check looked at when one record covers several ads", async () => {
+    const jnc = "https://suumo.jp/chintai/jnc_000107662512/";
+    await recordAvailability([{ source: "suumo", url: `${jnc}?bc=100508329517`, state: "gone", checkedAt: "2026-09-30T00:00:00.000Z", evidence: "redirected", method: "probe" }], path);
+    await recordAvailability([{ source: "suumo", url: `${jnc}?bc=100518201426`, state: "listed", checkedAt: "2026-10-03T00:00:00.000Z", evidence: "ad page", method: "probe" }], path);
+    const [record] = Object.values((await readAvailabilityFile(path)).records);
+    expect(record.url).toBe(`${jnc}?bc=100518201426`);
+    expect(record.history).toEqual([expect.objectContaining({ state: "gone", url: `${jnc}?bc=100508329517` })]);
+  });
+
   it("rejects an unsupported file instead of guessing", async () => {
     const { writeFile } = await import("node:fs/promises");
     await writeFile(path, JSON.stringify({ schemaVersion: 9, records: {} }));

@@ -40,13 +40,13 @@ describe("syncPropertyDocuments", () => {
     const first = await syncPropertyDocuments(store, input);
     expect(first).toMatchObject({ documents: 1, created: 1 });
     const [doc] = store.live();
-    expect(Object.keys(doc.ads)).toEqual(["athome|1222222222", "suumo|jnc_000111111111"]);
+    expect(Object.keys(doc.ads)).toEqual(["athome|1222222222", "suumo|jnc_000111111111|bc_1"]);
     // Conflicting rents are both kept; the latest observation is shown.
     expect(doc.facts.rent.values.map((v) => [v.source, v.value])).toEqual([["suumo", 100000], ["athome", 102000]]);
     expect(doc.facts.rent.chosen).toBe(102000);
     expect(doc.summary.conflicts).toContain("rent");
     expect(doc.summary).toMatchObject({ firstSeenAt: "2026-09-20T00:00:00.000Z", firstSeenSource: "suumo", status: "listed" });
-    expect(doc.ads["suumo|jnc_000111111111"].sightings).toEqual(["2026-09-21T00:00:00.000Z", "2026-09-25T00:00:00.000Z"]);
+    expect(doc.ads["suumo|jnc_000111111111|bc_1"].sightings).toEqual(["2026-09-21T00:00:00.000Z", "2026-09-25T00:00:00.000Z"]);
 
     const again = await syncPropertyDocuments(store, { ...input, recordedAt: "2026-10-02T00:00:00.000Z" });
     expect(again).toMatchObject({ created: 0, changed: 0, factValuesAdded: 0, sightingsAdded: 0, eventsAdded: 0 });
@@ -194,5 +194,36 @@ describe("syncPropertyDocuments", () => {
     await syncPropertyDocuments(store, twoRows("2026-09-01T00:00:00.000Z"));
     expect(store.live()[0].facts.sizeM2.values.map((v) => v.value)).toEqual([70.01, 74.15]);
     expect(await syncPropertyDocuments(store, twoRows("2026-09-02T00:00:00.000Z"))).toMatchObject({ changed: 0 });
+  });
+
+  it("keeps SUUMO ads apart by bc, and attributes each check to the bc it looked at", async () => {
+    const store = new MemoryStore();
+    const jnc = "https://suumo.jp/chintai/jnc_000107662512/";
+    const live = listing({ url: `${jnc}?bc=100518201426`, sizeM2: 70.01 });
+    const ended = listing({ url: `${jnc}?bc=100508329517`, sizeM2: 74.15, name: "別の部屋" });
+    await syncPropertyDocuments(store, evidence({
+      canonical: { builtAt: null, rows: [live, ended] },
+      availability: [{ key: "suumo|jnc_000107662512", source: "suumo", url: ended.url!, state: "gone", checkedAt: "2026-10-03T00:00:00.000Z", evidence: "redirected", method: "probe" }],
+    }));
+    const docs = store.live();
+    expect(docs).toHaveLength(2);
+    const endedDoc = docs.find((doc) => doc.ads["suumo|jnc_000107662512|bc_100508329517"])!;
+    expect(endedDoc.events.filter((e) => e.type === "ad.checked")).toHaveLength(1);
+    expect(docs.find((doc) => doc !== endedDoc)!.events.some((e) => e.type === "ad.checked")).toBe(false);
+  });
+
+  it("joins a SUUMO room re-posted under a new bc, but not a different room on the same jnc", async () => {
+    const store = new MemoryStore();
+    const jnc = "https://suumo.jp/chintai/jnc_000108148800/";
+    const first = listing({ url: `${jnc}?bc=100517801810`, layout: "2K", sizeM2: 29.49 });
+    await syncPropertyDocuments(store, evidence({ sources: [{ source: "suumo", rows: [{ listing: first, observedAt: "2026-09-28T00:00:00.000Z" }], archived: [], sightings: [] }] }));
+    const reposted = listing({ url: `${jnc}?bc=100517536456`, layout: "2K", sizeM2: 29.49 });
+    const otherRoom = listing({ url: `${jnc}?bc=100514348667`, layout: "2K", sizeM2: 29.75 });
+    await syncPropertyDocuments(store, evidence({ sources: [{ source: "suumo", rows: [{ listing: reposted, observedAt: "2026-10-02T00:00:00.000Z" }, { listing: otherRoom, observedAt: "2026-10-02T00:00:00.000Z" }], archived: [], sightings: [] }] }));
+    const docs = store.live();
+    expect(docs).toHaveLength(2);
+    expect(Object.keys(docs.find((doc) => doc.ads["suumo|jnc_000108148800|bc_100517801810"])!.ads)).toEqual([
+      "suumo|jnc_000108148800|bc_100517536456", "suumo|jnc_000108148800|bc_100517801810",
+    ]);
   });
 });

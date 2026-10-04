@@ -14,6 +14,10 @@ describe("portal listing dates", () => {
     });
   });
 
+  it("reads SUUMO's detail rows (情報更新日 / 次回更新予定日)", () => {
+    expect(portalListingDatesFrom({ 情報更新日: "2026/10/03", 次回更新予定日: "2026/10/18" })).toEqual({ updatedOn: "2026-10-03", nextUpdateOn: "2026-10-18" });
+  });
+
   it("reads detail-table rows", () => {
     expect(portalListingDatesFrom({ 情報更新日: "2026/9/28", 次回更新日: "2026/10/12", 賃料: "8.5万円" })).toEqual({ updatedOn: "2026-09-28", nextUpdateOn: "2026-10-12" });
     expect(portalListingDatesFrom(undefined, null)).toEqual({});

@@ -397,7 +397,7 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
 `import-capture.ts`, `lib/captureStore.ts`: native capture import/cache.
 `lib/{athome,roomspot,nifty}.ts`: pure list parsers and incremental merge.
-`enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded detail work.
+`enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded SUUMO detail work, loaded in the headed browser (`src/collectors/shared/browserFetch.ts`; set `BROWSER_DRIVER=playwright` without the Chrome bridge). Detail pages carry 情報更新日 / 次回更新予定日, which the property documents keep.
 `lib/observations.ts`: actual source evidence and lifecycle restoration.
 `sync-properties.ts`, `src/data-layer/properties/`: additive per-property documents (`data/properties/`), synced by `data:build` and `check:availability`.
 `enrich.ts`, `lib/geocodeCache.ts`: address caching.

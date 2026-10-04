@@ -55,9 +55,18 @@ export function adKeyFromRowId(source: string, id: string | null | undefined): s
   return match ? `${source}|${rule!.adId(match)}` : undefined;
 }
 
-/** {@link adKey}, but a URL-less row with a portal-derived id gets the same key as its URL would. */
+/**
+ * One advertisement, as finely as the portal distinguishes them. Like
+ * {@link adKey}, except:
+ *  - a URL-less row with a portal-derived id gets the key its URL would have;
+ *  - a SUUMO ad is its `jnc` page plus its `bc` code (SUUMO物件コード): a
+ *    re-posted room gets a new `bc`, and an ended `bc` redirects away while
+ *    the same `jnc` shows another room, so neither alone identifies an ad.
+ */
 export function listingAdKey(source: string, url: string | null | undefined, id?: string | null): string {
-  return url ? adKey(source, url, id) : adKeyFromRowId(source, id) ?? adKey(source, url, id);
+  if (!url) return adKeyFromRowId(source, id) ?? adKey(source, url, id);
+  const bc = source === "suumo" ? /[?&]bc=(\d+)/.exec(url)?.[1] : undefined;
+  return bc ? `${adKey(source, url, id)}|bc_${bc}` : adKey(source, url, id);
 }
 
 /** The more recent check; on a tie the existing value wins so re-applying records is a no-op. */

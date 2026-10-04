@@ -40,8 +40,9 @@ export function sourceFileEvidence(file: SourceFile): SourceEvidence {
 export function availabilityEvidence(file: AvailabilityFile): AvailabilityCheckEvidence[] {
   return Object.entries(file.records).flatMap(([key, record]) => {
     const { history = [], ...latest } = record;
+    // Older history entries have no URL; they were checks of the record's ad.
     return [latest, ...history].map((check) => ({
-      key, source: record.source, url: record.url,
+      key, source: record.source, url: ("url" in check && check.url) || record.url,
       state: check.state, checkedAt: check.checkedAt, evidence: check.evidence, method: check.method,
     }));
   });

@@ -1,8 +1,9 @@
-/** Bounded SUUMO detail fetching: queue, request budget, backoff and capture cache. The data layer picks URLs and merges details. */
+/** Bounded SUUMO detail loading (headed browser): queue, request budget, backoff and capture cache. The data layer picks URLs and merges details. */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { DetailEnrichmentPlanner, ScrapeIngestion } from "../../data-layer/ingestion/contracts";
 import { withFileLock, writeJsonAtomically } from "../../node/jsonFile";
+import { createBrowserFetch } from "../shared/browserFetch";
 import { captureKey } from "../shared/captureStore";
 import { positiveInteger } from "../shared/pageBudget";
 import { parseDetail } from "./detailEnrichment";
@@ -87,15 +88,19 @@ async function enrichDetailsLocked(args: readonly string[], dependencies: Detail
   return { requests, limit, reused, applied, failed, queued: queue.length };
 }
 
-/** Shared by `detail:enrich` and its `backfill:parking` alias: real network and clock, same output and exit codes. */
+/**
+ * Shared by `detail:enrich` and its `backfill:parking` alias: pages load in the
+ * headed browser (never a plain HTTP client), with the real clock.
+ */
 export async function enrichDetailsCli(
   args: readonly string[],
   dependencies: Pick<DetailEnrichmentDependencies, "dataDir" | "client">,
 ): Promise<void> {
+  const browser = createBrowserFetch("suumo-detail");
   const result = await runDetailEnrichment(args, {
     ...dependencies,
-    fetch, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-  });
+    fetch: browser.fetch, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  }).finally(() => browser.close());
   console.log(`Details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} applied; ${result.failed} failures; queue retained (${result.queued} URLs).`);
   if (result.failed) process.exitCode = 2;
 }

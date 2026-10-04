@@ -19,8 +19,12 @@ export const AVAILABILITY_PATH = join(DATA_DIR, "availability.json");
 
 export type AvailabilityEntry = AdAvailability & { source: string; url: string };
 
-/** The newest check for one ad, with every earlier check (oldest first). */
-export type StoredAvailability = AvailabilityEntry & { history?: AdAvailability[] };
+/**
+ * The newest check for one ad, with every earlier check (oldest first). A
+ * history entry keeps the URL it checked, since one record can cover several
+ * ads (a SUUMO jnc with several bc codes).
+ */
+export type StoredAvailability = AvailabilityEntry & { history?: (AdAvailability & { url?: string })[] };
 
 export interface AvailabilityFile {
   schemaVersion: 1;
@@ -45,9 +49,10 @@ export async function readAvailability(path = AVAILABILITY_PATH): Promise<Availa
   return (await readAvailabilityFile(path)).records;
 }
 
-const checkOf = ({ state, checkedAt, evidence, method }: AdAvailability): AdAvailability => ({ state, checkedAt, evidence, method });
-const sameCheck = (a: AdAvailability, b: AdAvailability) =>
-  a.checkedAt === b.checkedAt && a.state === b.state && a.method === b.method && a.evidence === b.evidence;
+type Check = AdAvailability & { url?: string };
+const checkOf = ({ state, checkedAt, evidence, method, url }: Check): Check => ({ state, checkedAt, evidence, method, ...(url ? { url } : {}) });
+const sameCheck = (a: Check, b: Check) =>
+  a.checkedAt === b.checkedAt && a.state === b.state && a.method === b.method && a.evidence === b.evidence && (!a.url || !b.url || a.url === b.url);
 
 /**
  * Add checks to the file under its lock. The newest check per ad becomes the
@@ -64,7 +69,8 @@ export async function recordAvailability(entries: readonly AvailabilityEntry[], 
       const history = [...(existing?.history ?? []), ...(existing ? [checkOf(existing)] : []), checkOf(entry)]
         .filter((check, i, all) => !sameCheck(check, current) && all.findIndex((other) => sameCheck(other, check)) === i)
         .sort((a, b) => Date.parse(a.checkedAt) - Date.parse(b.checkedAt));
-      file.records[key] = { ...checkOf(current), source: current.source, url: current.url, ...(history.length ? { history } : {}) };
+      const { url: _url, ...latest } = checkOf(current);
+      file.records[key] = { ...latest, source: current.source, url: current.url, ...(history.length ? { history } : {}) };
     }
     return file;
   });

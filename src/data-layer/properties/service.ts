@@ -6,6 +6,9 @@
  * Identity: a portal ad (`ad:<adKey>`, from its URL or a row id that embeds
  * the portal's ad id) always resolves to the property that first claimed it.
  * Content-derived row ids (SUUMO) are never identity: two rooms can share one.
+ * A SUUMO room re-posted under a new `bc` code keeps its `jnc` page, layout
+ * and floor area; that room key (`room:`) joins the new ad to the property
+ * holding the old one, when exactly one property has it.
  * The tracking key (name, address, area) is only a fallback for a merged row
  * none of whose ads is known yet, e.g. a room re-advertised under a new ad id,
  * and never takes a property another row of the same build already resolved
@@ -30,6 +33,15 @@ import type { PropertyDocumentStore, PropertyEvidence, PropertySyncReport } from
 
 const AD = "ad:";
 const KEY = "key:";
+const ROOM = "room:";
+/**
+ * SUUMO's re-posting continuity: same jnc page, layout and exact floor area.
+ * Not rounded: 34.7 and 35 m² on one jnc can be two rooms the build keeps apart.
+ */
+const roomAlias = (ad: { source: string; url?: string | null; layout?: string | null; sizeM2?: number | null }): string | undefined => {
+  const jnc = ad.source === "suumo" ? /jnc_\d+/.exec(ad.url ?? "")?.[0] : undefined;
+  return jnc && ad.layout && ad.sizeM2 ? `${ROOM}suumo|${jnc}|${ad.layout}|${ad.sizeM2.toFixed(2)}` : undefined;
+};
 const keyOf = (ad: { source: string; id?: string | null; url?: string | null }) => listingAdKey(ad.source, ad.url, ad.id);
 const later = (a: string, b: string | null | undefined) => (b && Date.parse(b) > Date.parse(a) ? b : a);
 
@@ -61,7 +73,7 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
     };
     for (const doc of documents.values()) {
       if (doc.mergedInto) continue;
-      for (const alias of doc.aliases) if (alias.startsWith(AD) || alias.startsWith(KEY)) link(alias, doc);
+      for (const alias of doc.aliases) if (alias.startsWith(AD) || alias.startsWith(KEY) || alias.startsWith(ROOM)) link(alias, doc);
     }
     const oldestFirst = (a: PropertyDocument, b: PropertyDocument) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.propertyId.localeCompare(b.propertyId);
     const lookup = (aliases: readonly string[]) =>
@@ -75,9 +87,16 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
       report.created++;
       return doc;
     };
-    const ensureAd = (key: string, ad: { source: string; id?: string | null; url?: string | null }): PropertyDocument => {
-      const doc = lookup([AD + key])[0] ?? create(AD + key);
+    /** The property of a re-posted SUUMO room, when exactly one holds its room key. */
+    const byRoom = (room: string | undefined) => {
+      const docs = room ? lookup([room]) : [];
+      return docs.length === 1 ? docs[0] : undefined;
+    };
+    const ensureAd = (key: string, ad: { source: string; id?: string | null; url?: string | null; layout?: string | null; sizeM2?: number | null }): PropertyDocument => {
+      const room = roomAlias(ad);
+      const doc = lookup([AD + key])[0] ?? byRoom(room) ?? create(AD + key);
       link(AD + key, doc);
+      if (room) link(room, doc);
       addAd(doc, key, ad, recordedAt);
       return doc;
     };
@@ -98,7 +117,8 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
       const claimed = new Set<string>();
       if (!authoritative) {
         rows.forEach(({ row, ads, primary }, i) => {
-          for (const ad of ads) ensureAd(keyOf(ad), ad);
+          // The row's room facts describe each of its ads (that is why they were grouped).
+          for (const ad of ads) ensureAd(keyOf(ad), { ...ad, layout: row.layout, sizeM2: row.sizeM2 });
           resolved[i] = live(lookup([AD + primary])[0] ?? ensureAd(primary, row));
         });
       }
@@ -123,18 +143,24 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
       //    unless that property already belongs to another row of this build.
       rows.forEach(({ row, keys }, i) => {
         if (resolved[i]) return;
+        const room = rows[i].ads.map((ad) => byRoom(roomAlias({ ...ad, layout: row.layout, sizeM2: row.sizeM2 }))).find(Boolean);
         const candidates = lookup([KEY + trackingKey(row)]).filter((doc) => !claimed.has(live(doc).propertyId));
-        const doc = candidates.length === 1 ? live(candidates[0]) : create(AD + (keys[0] ?? trackingKey(row)));
+        const doc = room && !claimed.has(live(room).propertyId) ? live(room)
+          : candidates.length === 1 ? live(candidates[0]) : create(AD + (keys[0] ?? trackingKey(row)));
         resolved[i] = doc;
         claimed.add(doc.propertyId);
       });
 
       rows.forEach(({ row, ads, primary }, i) => {
         const doc = live(resolved[i]);
+        const room = roomAlias(row);
+        if (room) link(room, doc);
         if (authoritative) {
           link(KEY + trackingKey(row), doc);
           for (const ad of ads) {
             link(AD + keyOf(ad), doc);
+            const adRoom = roomAlias({ ...ad, layout: row.layout, sizeM2: row.sizeM2 });
+            if (adRoom) link(adRoom, doc);
             addAd(doc, keyOf(ad), ad, recordedAt);
           }
         }
@@ -186,7 +212,7 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
         // Journals name an ad by its URL (SUUMO) or by its row id.
         const id = sighting.sourceListingId;
         const isUrl = /^https?:\/\//.test(id);
-        const derived = isUrl ? adKey(source.source, id) : adKeyFromRowId(source.source, id) ?? rowKeys.get(id);
+        const derived = isUrl ? listingAdKey(source.source, id) : adKeyFromRowId(source.source, id) ?? rowKeys.get(id);
         const key = derived ?? adKey(source.source, null, id);
         if (!lookup([AD + key]).length) report.orphanSightings++;
         // A sighting of a row no file still holds stays on its own document
@@ -198,15 +224,17 @@ export async function syncPropertyDocuments(store: PropertyDocumentStore, eviden
 
     // 3. Ad-page checks: every one is an event, so the first "gone" is never overwritten.
     for (const check of evidence.availability ?? []) {
-      const doc = lookup([AD + check.key])[0];
+      // The checked URL names the exact ad; the file's own key can be coarser (SUUMO jnc).
+      const key = listingAdKey(check.source, check.url);
+      const doc = lookup([AD + key])[0];
       if (!doc) {
         report.unresolvedChecks++;
         continue;
       }
-      addAd(doc, check.key, { source: check.source, url: check.url }, recordedAt);
+      addAd(doc, key, { source: check.source, url: check.url }, recordedAt);
       event(doc, {
-        id: `ad.checked|${check.key}|${check.checkedAt}|${check.state}|${check.method}`, type: "ad.checked", at: check.checkedAt,
-        recordedAt, source: check.source, adKey: check.key, url: check.url,
+        id: `ad.checked|${key}|${check.checkedAt}|${check.state}|${check.method}`, type: "ad.checked", at: check.checkedAt,
+        recordedAt, source: check.source, adKey: key, url: check.url,
         data: { state: check.state, evidence: check.evidence, method: check.method },
       });
     }
