@@ -56,7 +56,9 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
       if (!id || !href || !buildingName || !address || !isFamilyLayout(layout)) return;
       const size = layoutText.match(/([\d.]+)㎡/);
       const priceCell = tr.find(".kokoku-list-condition__price");
-      const baseRent = parseRent(priceCell.find("strong").text());
+      // Whole-man rents print the unit outside the emphasis ("<strong>12</strong>万円"),
+      // so read the cell's own text, without the admin-fee spans, not just <strong>.
+      const baseRent = parseRent(priceCell.clone().children("span, br").remove().end().text());
       if (baseRent == null) return;
       // The PC span is the canonical admin fee; avoid counting hidden mobile duplicate text.
       const adminFee = parseYen(priceCell.find("span.pc").first().text()) ?? 0;

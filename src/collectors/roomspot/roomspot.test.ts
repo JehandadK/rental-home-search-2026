@@ -31,6 +31,11 @@ describe("RoomSpot parser", () => {
       keyMoneyYen: 0, advertisedStation: "谷塚駅", stationWalkMin: 5,
     });
   });
+  it("reads a whole-man rent whose 万円 sits outside <strong>, ignoring the mobile admin-fee duplicate", () => {
+    const whole = fixture.replace('<strong>8万5000</strong>円<span class="pc">5,000円</span>',
+      '<strong class="color_em">12</strong>万円 <br><span class="sp"><div>(管理費：3,000円)</div></span><span class="pc"> 3,000円 </span>');
+    expect(parseRoomspotPage(whole, "Soka")[0]).toMatchObject({ rent: 123_000, depositYen: 120_000, costs: { adminFeeYen: 3_000 } });
+  });
   it("keeps the building exterior and the room's floor plan, skipping lazy-load stand-ins", () => {
     const withPhotos = fixture
       .replace('<h2>テストハイツ</h2>', '<h2>テストハイツ</h2><div class="tm_data"><figure class="wp-block-image img_4_3"><img class="ofi contain lazyload" data-src="https://property.es-img.jp/rent/img/1/1_10.jpg?iid=3" alt="テストハイツ(賃貸アパートの外観)"></figure></div>')
