@@ -4,7 +4,7 @@
  */
 import { Fragment, memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { SCORE_PARAMETERS } from "../../domain/scoringConfig";
-import { scoreColor, type ScorePart } from "../../domain/scoring";
+import { scoreColor, scoreCoverage, sharedGaps, type ListingScore, type ScorePart } from "../../domain/scoring";
 import {
   computeMoveInCosts,
   monthlyExtrasYen,
@@ -25,7 +25,7 @@ import { listingPhotos } from "../../domain/listingPhotos";
 import { describeNote, formatViewing, type NoteDraft, type NoteMap } from "../../domain/notes";
 import { MAX_COMPARE } from "../../domain/compare";
 import type { ScoredRow } from "../../domain/scoring";
-import type { ScoreParameterKey, SourceListingReference } from "../../domain/types";
+import type { ScoreParameterKey, ScoringCriterionKey, SourceListingReference } from "../../domain/types";
 import { decodeHiddenColumns } from "../userState/decoders";
 import { USER_STATE_KEYS } from "../userState/store";
 import { useUserStateStore } from "../userState/UserStateContext";
@@ -55,12 +55,20 @@ interface Props {
   /** Listing keys pinned for side-by-side comparison. */
   compare?: readonly string[];
   onToggleCompare?: (key: string) => void;
+  /** Places each listing just moved in the score ranking (+ = up), shown briefly after a weight change. */
+  rankMoves?: ReadonlyMap<string, number>;
+  /** Shown in place of the rows when nothing matches, e.g. which filter to relax. */
+  emptyState?: ReactNode;
 }
 
 export type CostBasis = Pick<ScoringConfig, "moveIn" | "includeParking">;
 
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
+const NO_MOVES: ReadonlyMap<string, number> = new Map();
+const CRITERION_LABELS = new Map<string, string>(
+  [...SCORE_PARAMETERS, ...FEATURE_PARAMETERS].map(({ key, label }) => [key, label]),
+);
 
 type SortKey = "score" | "mark" | "monthly" | "stay" | ScoreParameterKey;
 type ColumnKey =
@@ -137,6 +145,47 @@ function monthlyTitle(listing: ScoredRow["listing"], cost: StayCost): string {
   return parts.join(" + ") + (cost.parkingUnknown ? "\n* parking price not stated, so not included" : "");
 }
 
+/** The score pill, hollow when the total skipped weighted criteria it had no data for. */
+function ScorePill({ score, ignore }: { score: ListingScore; ignore: ReadonlySet<ScoringCriterionKey> }) {
+  const { known, weighted, missing } = scoreCoverage(score, ignore);
+  const partial = score.total != null && missing.length > 0;
+  const value = score.total != null ? score.total.toFixed(0) : "—";
+  const title = score.total == null
+    ? "No weighted criterion has data for this home"
+    : partial
+      ? `Scored on ${known} of ${weighted} weighted criteria. No data for: ${missing.map((key) => CRITERION_LABELS.get(key) ?? key).join(", ")}. `
+        + "Missing criteria are left out of the average, not scored 0."
+      : `Scored on all ${weighted} weighted criteria`;
+  return (
+    <span className={styles.scoreCell} title={title}>
+      <span
+        className={`${styles.pill} ${partial ? styles.pillPartial : ""}`}
+        style={partial
+          ? { borderColor: scoreColor(score.total), color: scoreColor(score.total) }
+          : { background: scoreColor(score.total) }}
+        role="img"
+        aria-label={partial ? `Score ${value}, from ${known} of ${weighted} criteria` : `Score ${value}`}
+      >
+        {value}
+      </span>
+      {partial && <small className={styles.coverage}>{known}/{weighted}</small>}
+    </span>
+  );
+}
+
+/** "↑3" or "↓5" beside the score after a weight change. */
+function RankMove({ places }: { places: number }) {
+  const up = places > 0;
+  return (
+    <span
+      className={`${styles.rankMove} ${up ? styles.rankUp : styles.rankDown}`}
+      title={`${up ? "Up" : "Down"} ${Math.abs(places)} place${Math.abs(places) === 1 ? "" : "s"} after the last scoring change`}
+    >
+      {up ? "↑" : "↓"}{Math.abs(places)}
+    </span>
+  );
+}
+
 function stayTitle(cost: StayCost): string {
   return `¥${yen.format(cost.sunk)} sunk move-in + ${cost.months} × ¥${yen.format(cost.monthly)}`
     + (cost.parkingUnknown ? "\n* parking price not stated, so not included" : "");
@@ -158,6 +207,8 @@ export const ListingTable = memo(function ListingTable({
   onSetNote,
   compare = NO_COMPARE,
   onToggleCompare,
+  rankMoves = NO_MOVES,
+  emptyState,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [ascending, setAscending] = useState(false);
@@ -178,6 +229,9 @@ export const ListingTable = memo(function ListingTable({
     () => new Map(items.map(({ listing }) => [listing, stayCost(listing, moveIn, includeParking)] as const)),
     [items, moveIn, includeParking],
   );
+
+  /** Criteria no listing here has data for; not held against any one row. */
+  const marketGaps = useMemo(() => sharedGaps(items.map(({ score }) => score)), [items]);
 
   const sorted = useMemo(() => {
     const valueOf = ({ listing, score }: ScoredRow): number => {
@@ -309,6 +363,7 @@ export const ListingTable = memo(function ListingTable({
           </div>
         </details>
       </div>
+      {items.length === 0 && emptyState}
       <div className={styles.scroll} ref={scrollRef}>
         <table className={styles.table}>
           <thead>
@@ -503,13 +558,9 @@ export const ListingTable = memo(function ListingTable({
                     </td>
                   )}
                   {shows("score") && (
-                    <td>
-                      <span
-                        className={styles.pill}
-                        style={{ background: scoreColor(score.total) }}
-                      >
-                        {score.total != null ? score.total.toFixed(0) : "—"}
-                      </span>
+                    <td className={styles.scoreTd}>
+                      <ScorePill score={score} ignore={marketGaps} />
+                      {rankMoves.has(key) && <RankMove places={rankMoves.get(key)!} />}
                     </td>
                   )}
                   {shows("monthly") && <td title={monthlyTitle(listing, cost)}>{formatMonthly(cost)}</td>}

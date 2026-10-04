@@ -22,8 +22,17 @@
   grid-template-columns: 310px 1fr;
   gap: 16px;
   padding: 16px 24px;
-  max-width: 1600px;
-  margin: 0 auto;
+}
+
+/* Wide screens: give the margins back to the map and table. */
+@media (min-width: 1600px) {
+  .header {
+    padding-inline: 16px;
+  }
+
+  .layout {
+    padding-inline: 16px;
+  }
 }
 
 @media (max-width: 1100px) {

@@ -7,6 +7,11 @@
  * Cities, boundaries (any number per city, polygons or multipolygons), places,
  * and the map extent all come from the loaded reference model.
  *
+ * Walk/ride rings (5, 10, 15 minutes) surround the school target and the
+ * selected mosques, sized by the same speed and detour the scoring uses.
+ * Listing markers read without colour: candidates are stars, ruled-out homes a
+ * faded cross, everything else a score-coloured dot.
+ *
  * Interaction:
  *   - hover a dot            → highlights it + the matching table row (no scroll),
  *                              and shows a preview card with the listing's photo
@@ -34,12 +39,14 @@ import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceDa
 import type { CatalogPlace } from "../../domain/places";
 import {
   boundaryExtent,
+  circleOffCanvas,
   extentOf,
   KM_PER_DEGREE,
   labelPosition,
   longitudeScale,
   padExtent,
   polygonsOf,
+  ringRadiusPx,
   scaleBarLength,
   type Extent,
 } from "../../domain/mapGeometry";
@@ -69,10 +76,22 @@ interface Props {
   /** Listing keys pinned for comparison; the selection card can pin or unpin. */
   compare?: readonly string[];
   onToggleCompare?: (key: string) => void;
+  /** Places to draw 5/10/15-minute travel rings around (the poi1 school target and the selected mosques). */
+  ringCenters?: readonly CatalogPlace[];
+  /** Straight-line metres covered per travel minute (travel speed ÷ detour factor), so a ring matches the scoring's travel-time estimate. */
+  ringMetresPerMinute?: number;
+  /** Travel mode label for the legend/tooltip. */
+  travelMode?: "walk" | "bicycle";
 }
 
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
+const NO_RING_CENTERS: readonly CatalogPlace[] = [];
+/** Travel-time rings, in minutes; the last is drawn solid, the others dashed. */
+const RING_MINUTES = [5, 10, 15] as const;
+/** Rings smaller than this on screen get no minute label. */
+const RING_LABEL_MIN_RADIUS = 18;
+const CANDIDATE_GOLD = "#d97706";
 
 interface Projected {
   x: number;
@@ -107,15 +126,16 @@ const NARROW_MAX = 650;
 const SCALE_BAR_MAX = 110;
 const FONT = 'system-ui, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif';
 
-type LayerKey = "stations" | "schools" | "mosques" | "newRings";
+type LayerKey = "stations" | "schools" | "mosques" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations (main hubs labelled)" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
   { key: "newRings", label: "New rings", title: "Green ring around listings first seen in the last 14 days" },
+  { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
-const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true };
+const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true, rings: true };
 
 /** CSS gradient matching scoreColor, for the legend. */
 const SCORE_GRADIENT = `linear-gradient(90deg, ${[0, 25, 50, 75, 100].map((score) => scoreColor(score)).join(", ")})`;
@@ -158,6 +178,9 @@ export const MapView = memo(function MapView({
   notes = NO_NOTES,
   compare = NO_COMPARE,
   onToggleCompare,
+  ringCenters = NO_RING_CENTERS,
+  ringMetresPerMinute,
+  travelMode = "walk",
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
@@ -344,6 +367,28 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // Travel-time rings under the listings: dashed at 5 and 10 minutes, solid at 15.
+    if (layers.rings && ringsDrawable(ringMetresPerMinute)) {
+      for (const center of ringCenters) {
+        const { x, y } = toScreen(center.lat, center.lon);
+        const poi = center.category === "poi";
+        for (const minutes of RING_MINUTES) {
+          const r = ringRadiusPx(minutes, ringMetresPerMinute, basePxPerKm * view.scale);
+          if (circleOffCanvas(x, y, r, WIDTH, HEIGHT)) continue;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.setLineDash(minutes === RING_MINUTES[RING_MINUTES.length - 1] ? [] : [4, 3]);
+          ctx.strokeStyle = poi ? "rgba(220,38,38,0.5)" : "rgba(124,58,237,0.45)";
+          ctx.stroke();
+          ctx.setLineDash([]);
+          const labelY = y - r - 3;
+          if (r > RING_LABEL_MIN_RADIUS && x >= 0 && x <= WIDTH && labelY >= 8 && labelY <= HEIGHT) {
+            haloText(`${minutes}′`, x, labelY, poi ? "#991b1b" : "#5b21b6", `10px ${FONT}`, "center");
+          }
+        }
+      }
+    }
+
     // Listings, coloured by score; the best scores are drawn last, on top.
     // Dots grow a little when zoomed in. Hovered/selected dots come after all.
     const radius = 4.5 * Math.min(1.5, 1 + (view.scale - 1) * 0.06);
@@ -362,32 +407,43 @@ export const MapView = memo(function MapView({
       if (x < -radius || y < -radius || x > WIDTH + radius || y > HEIGHT + radius) continue;
       const sold = isSold(listing);
       const mark = marks[key];
-      // Sold listings and ruled-out decisions recede to grey.
-      const dimmed = sold || isRentedOut(listing) || isRuledOut(mark);
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);
-      ctx.globalAlpha = dimmed ? 0.4 : hovered || selected ? 0.5 : 0.88;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = "#fff";
-      ctx.stroke();
-      // New discoveries get a thin green halo (a layer: about half of all homes are new).
+      const ruledOut = isRuledOut(mark);
+      const candidate = mark != null && !ruledOut;
+      // Sold listings recede to grey; ruled-out homes become a faded cross.
+      const dimmed = sold || isRentedOut(listing);
       const fresh = layers.newRings && isNewListing(listing);
+      if (ruledOut) {
+        drawCross(ctx, x, y, radius * 0.8, hovered || selected ? 0.2 : 0.4);
+      } else if (candidate) {
+        // Shortlisted/applied candidates are stars with a gold edge, a little larger than a dot.
+        ctx.globalAlpha = dimmed ? 0.5 : hovered || selected ? 0.6 : 1;
+        starPath(ctx, x, y, radius * 1.55);
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = CANDIDATE_GOLD;
+        ctx.stroke();
+        ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#fff";
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = dimmed ? "#9ca3af" : scoreColor(score.total);
+        ctx.globalAlpha = dimmed ? 0.4 : hovered || selected ? 0.5 : 0.88;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "#fff";
+        ctx.stroke();
+      }
+      // New discoveries get a thin green halo (a layer: about half of all homes are new).
       if (fresh) {
         ctx.beginPath();
-        ctx.arc(x, y, radius + 2.5, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * (candidate ? 1.55 : 1) + 2.5, 0, Math.PI * 2);
         ctx.lineWidth = 1.25;
         ctx.strokeStyle = "rgba(22,163,74,0.7)";
-        ctx.stroke();
-        ctx.lineWidth = 1;
-      }
-      // Shortlisted/applied candidates get a gold ring.
-      if (mark && !isRuledOut(mark)) {
-        ctx.beginPath();
-        ctx.arc(x, y, radius + (fresh ? 5.5 : 3), 0, Math.PI * 2);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#d97706";
         ctx.stroke();
         ctx.lineWidth = 1;
       }
@@ -434,9 +490,9 @@ export const MapView = memo(function MapView({
     for (const layer of neighbours) drawLabel(layer, CITY_LABEL_COLOR);
     for (const layer of focus) drawLabel(layer, "#4b6290");
 
-    if (selectedDot) drawEmphasis(ctx, selectedDot, "#2563eb");
-    if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, "#111827");
-  }, [drawOrder, reference, targetPoi, cityLayers, toScreen, view.scale, hovered, selected, marks, layers]);
+    if (selectedDot) drawEmphasis(ctx, selectedDot, "#2563eb", marks[selectedDot.key]);
+    if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, "#111827", marks[hoveredDot.key]);
+  }, [drawOrder, reference, targetPoi, cityLayers, toScreen, basePxPerKm, view.scale, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -549,6 +605,13 @@ export const MapView = memo(function MapView({
 
   const fitToListings = () => setView(fitView(items, project));
 
+  // The rings chip names the travel mode the scoring uses.
+  const layerChips = LAYERS.map((layer) =>
+    layer.key === "rings" && travelMode === "bicycle"
+      ? { ...layer, label: "Ride rings", title: layer.title.replace("travel", "bicycle") }
+      : layer,
+  );
+
   const scaleBar = scaleBarLength(basePxPerKm * view.scale, SCALE_BAR_MAX);
 
   // Preview card for the hovered home (from the map or a table row), pinned
@@ -577,7 +640,7 @@ export const MapView = memo(function MapView({
           }}
         />
         <div className={styles.layers} role="group" aria-label="Map layers">
-          {LAYERS.map((layer) => (
+          {layerChips.map((layer) => (
             <button
               key={layer.key}
               type="button"
@@ -663,8 +726,13 @@ export const MapView = memo(function MapView({
             <span><i className={styles.keyStation} />Station</span>
             <span><i className={styles.keySchool} />School</span>
             <span><i className={styles.keyNew} />New</span>
-            <span><i className={styles.keyShortlist} />Shortlisted</span>
-            <span><i className={styles.keyDimmed} />Sold · ruled out</span>
+            <span><i className={styles.keyCandidate}>★</i>Shortlisted · applied</span>
+            <span><i className={styles.keyUndecided} />Undecided</span>
+            <span><i className={styles.keyRuledOut}>✕</i>Ruled out</span>
+            <span><i className={styles.keyDimmed} />Sold</span>
+            {layers.rings && ringsDrawable(ringMetresPerMinute) && ringCenters.length > 0 && (
+              <span className={styles.legendNote}><i className={styles.keyRing} />Dashed rings: 5/10/15 min by {travelMode} (solid = 15) at the scoring's speed and detour</span>
+            )}
           </div>
           <div className={styles.scaleBar}>
             {/* The bar is drawn in canvas pixels; cqw converts them to the map's rendered width. */}
@@ -869,19 +937,46 @@ function canvasCoords(canvas: HTMLCanvasElement, clientX: number, clientY: numbe
   };
 }
 
-/** Draw an enlarged, ringed marker for the hovered/selected listing. */
-function drawEmphasis(ctx: CanvasRenderingContext2D, dot: Projected, ringColor: string) {
-  ctx.beginPath();
-  ctx.arc(dot.x, dot.y, 9, 0, Math.PI * 2);
+/** A usable ring scale: positive and finite (a zero detour factor makes it Infinity). */
+function ringsDrawable(metresPerMinute: number | undefined): metresPerMinute is number {
+  return metresPerMinute != null && Number.isFinite(metresPerMinute) && metresPerMinute > 0;
+}
+
+/** Draw an enlarged, ringed marker for the hovered/selected listing; candidates stay stars. */
+function drawEmphasis(ctx: CanvasRenderingContext2D, dot: Projected, ringColor: string, mark: ListingMark | undefined) {
+  if (mark != null && !isRuledOut(mark)) starPath(ctx, dot.x, dot.y, 14);
+  else {
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, 9, 0, Math.PI * 2);
+  }
   ctx.fillStyle = scoreColor(dot.row.score.total);
   ctx.fill();
   ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
   ctx.strokeStyle = ringColor;
   ctx.stroke();
   ctx.lineWidth = 1;
 }
 
-function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+/** A faded grey ✕ marking a ruled-out listing. */
+function drawCross(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: number, alpha: number) {
+  ctx.beginPath();
+  ctx.moveTo(cx - half, cy - half);
+  ctx.lineTo(cx + half, cy + half);
+  ctx.moveTo(cx + half, cy - half);
+  ctx.lineTo(cx - half, cy + half);
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 1.75;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#6b7280";
+  ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 1;
+}
+
+/** Trace a five-point star path (not yet filled or stroked). */
+function starPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
   ctx.beginPath();
   for (let i = 0; i < 10; i++) {
     const radius = i % 2 === 0 ? r : r * 0.45;
@@ -891,6 +986,10 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numb
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
   ctx.closePath();
+}
+
+function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string) {
+  starPath(ctx, cx, cy, r);
   ctx.fillStyle = color;
   ctx.fill();
 }

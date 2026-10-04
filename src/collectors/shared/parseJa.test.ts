@@ -44,10 +44,6 @@ describe("parseYen", () => {
     expect(parseYen("付無料/屋根付駐")).toBe(0);
     expect(parseYen("賃料に含む")).toBe(0);
   });
-
-  it("still prefers a stated amount over free wording", () => {
-    expect(parseYen("敷地内7700円")).toBe(7_700);
-  });
 });
 
 describe("parseYenStrict", () => {

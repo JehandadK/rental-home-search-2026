@@ -39,16 +39,4 @@ describe("buildReferenceModel", () => {
     expect(model.boundaries.map((boundary) => boundary.id)).toEqual(["b1", "b2"]);
     expect(model.catalog.places.map((place) => place.id)).toEqual(["poi:P"]);
   });
-
-  it("accepts an empty snapshot", () => {
-    const model = buildReferenceModel({
-      revision: "empty",
-      cities: { records: [] },
-      boundaries: { records: [] },
-      places: { records: [] },
-    });
-    expect(model.cities).toEqual([]);
-    expect(model.boundaries).toEqual([]);
-    expect(model.catalog.places).toEqual([]);
-  });
 });

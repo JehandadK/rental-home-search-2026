@@ -43,32 +43,15 @@ export function suumoDiscoveryMatchKeys(listing: RawListing): string[] {
   return [...new Set([...(listing.url ? [`url:${listing.url}`] : []), ...suumoMatchKeys(listing)])];
 }
 
-/** True when two records have any strong source/property/market alias in common. */
-export function isSuumoOverlap(a: RawListing, b: RawListing): boolean {
-  const aKeys = new Set(suumoMatchKeys(a));
-  return suumoMatchKeys(b).some((key) => aKeys.has(key));
-}
-
 /**
- * Legacy compatibility merge: fresh records first, with historical alias
- * compaction retained for callers not yet migrated to the public boundary.
- * New ingestion uses mergeSuumoObserved and explicitly archives replacements.
+ * Fresh records first. Only aliases explained by this discovery are compacted,
+ * not unseen old duplicates; the caller archives the replaced rows.
  */
-export function mergeSuumoIncremental(existing: readonly RawListing[], discovered: readonly RawListing[]) {
-  return merge(existing, discovered, true);
-}
-
-/** Public ingestion only compacts aliases explained by this discovery, not unseen old duplicates. */
-export function mergeSuumoObserved(existing: readonly RawListing[], discovered: readonly RawListing[]) {
-  return merge(existing, discovered, false);
-}
-
-function merge(
+export function mergeSuumoObserved(
   existing: readonly RawListing[],
   discovered: readonly RawListing[],
-  compactUnseen: boolean,
 ): { listings: RawListing[]; added: number; updated: number; overlaps: number } {
-  const matchKeys = compactUnseen ? suumoMatchKeys : suumoDiscoveryMatchKeys;
+  const matchKeys = suumoDiscoveryMatchKeys;
   const existingByAlias = new Map<string, RawListing>();
   for (const listing of existing) {
     for (const alias of matchKeys(listing)) {
@@ -116,7 +99,6 @@ function merge(
     // Also suppress a prior duplicate if its aliases overlap a discovery that
     // already represented it. This gracefully compacts historical agency ads.
     if (matchKeys(prior).some((alias) => seenAliases.has(alias))) continue;
-    if (compactUnseen) matchKeys(prior).forEach((alias) => seenAliases.add(alias));
     listings.push(prior);
   }
 

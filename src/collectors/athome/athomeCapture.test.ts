@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { athomeDownloadedCapture } from "./athomeCapture";
 import { parseAthomePage } from "./athome";
-import { mergeAthomeIncremental } from "../../data-layer/ingestion/portalPolicy";
+import { preparePortalRows } from "../../data-layer/ingestion/portalBatch.contract";
 import { validateCapture } from "../shared/captureStore";
 
 const url = "https://www.athome.co.jp/chintai/saitama/list/page2/?pref=11&cities=soka&cityCds=11221&sort=33&limit=30";
@@ -52,9 +52,12 @@ describe("offline native-download AtHome capture", () => {
 
   it("preserves unknown amenities rather than erasing historical parking", () => {
     const fresh = parseAthomePage(athomeDownloadedCapture(html, url, time).html, "Soka")[0];
+    // The modern card template carries no amenity list, so the parser must not invent one.
+    expect(fresh.parking).toBeUndefined();
+    expect(fresh.building?.conditions).toBeUndefined();
     const parking = { available: true, monthlyYen: 8000, raw: "駐車場8000円", location: "onsite" as const, distanceM: null };
     const prior = { ...fresh, parking, building: { ...fresh.building, conditions: ["都市ガス"] } };
-    const merged = mergeAthomeIncremental([prior], [fresh]).listings[0];
+    const merged = preparePortalRows("athome", [prior], [fresh]).listings[0];
     expect(merged.parking).toEqual(parking);
     expect(merged.building?.conditions).toEqual(["都市ガス"]);
   });

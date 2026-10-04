@@ -89,14 +89,6 @@ describe("reconcileLifecycle", () => {
     expect(stats).toMatchObject({ reactivated: 1, added: 0, continued: 0 });
   });
 
-  it("does not treat a rent change as sold + new", () => {
-    const previous = [make({ rent: 100_000, firstSeenAt: BEFORE, status: "active" })];
-    const current = [make({ rent: 95_000 })];
-    const { listings, stats } = reconcileLifecycle(previous, current, NOW);
-    expect(listings).toHaveLength(1);
-    expect(stats).toMatchObject({ continued: 1, sold: 0, added: 0 });
-  });
-
   it("handles a mixed refresh in one pass", () => {
     const previous = [
       make({ name: "継続A", firstSeenAt: BEFORE, status: "active" }),

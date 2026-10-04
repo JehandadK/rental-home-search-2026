@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { latestResumableRun, markInterrupted, parseDiscovered, resumeStageIndex, type RefreshRunRecord } from "./refreshLedger";
+import { latestResumableRun, markInterrupted, parseDiscovered, type RefreshRunRecord } from "./refreshLedger";
 
 function run(): RefreshRunRecord {
   return {
@@ -32,12 +32,6 @@ describe("refresh ledger", () => {
     for (const id of ["suumo", "athome", "nifty-soka", "nifty-import", "data-build", "enrich", "web-data"]) {
       expect(output).toMatch(new RegExp(`^${id}\\s+RUN$`, "m"));
     }
-  });
-
-  it("resumes at the first failed, pending, or interrupted stage", () => {
-    expect(resumeStageIndex(run().stages)).toBe(1);
-    const complete = run().stages.map((stage) => ({ ...stage, status: "success" as const }));
-    expect(resumeStageIndex(complete)).toBe(complete.length);
   });
 
   it("only resumes the latest run, never an obsolete older failure", () => {

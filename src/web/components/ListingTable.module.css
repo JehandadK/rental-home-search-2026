@@ -632,3 +632,55 @@
   text-decoration: none;
   white-space: nowrap;
 }
+
+.scoreTd {
+  white-space: nowrap;
+}
+
+.scoreCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Partial scores: a hollow ring, so incompleteness does not rely on colour. */
+.pillPartial {
+  background: #fff;
+  border: 2px dashed;
+  padding: 0 6px;
+}
+
+.coverage {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rankMove {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  /* Fades in only: it stays solid for the whole hold, which a later change can extend. */
+  animation: rankMoveIn 0.2s ease-out;
+}
+
+.rankUp {
+  color: #15803d;
+}
+
+.rankDown {
+  color: #b91c1c;
+}
+
+@keyframes rankMoveIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rankMove {
+    animation: none;
+  }
+}

@@ -12,7 +12,6 @@ import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ATHOME_COLLECTOR, runAthomeScrape } from "./scrape-athome";
 import type { PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
 import { parseAthomePage } from "../src/collectors/athome/athome";
-import { athomeObservationBatch, mergeAthomeIncremental } from "../src/data-layer/ingestion/portalPolicy";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
 import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
 import { trackingKey } from "../src/data-layer/lifecycle";
@@ -222,11 +221,16 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     expect((await store.readSource("athome"))!.provenance!.observedAtByKey).toEqual({ [trackingKey(prior)]: at });
   });
 
-  it("matches the legacy merge for every current AtHome row without rewriting production data", async () => {
+  it("supersedes exactly the current AtHome rows a fresh ad's aliases prove, without rewriting production data", async () => {
     const path = join(DATA_DIR, "sources", "athome.json"), bytes = await readFile(path, "utf8");
     const previous = JSON.parse(bytes) as SourceFile;
     await store.writeSource(previous, { expectedRevision: null });
-    const target = previous.listings.find((listing) => /^[2-9]/.test(listing.layout ?? "") && listing.rent > 0)!;
+    // Prefer an ad with a stored alias duplicate (today's data has many), so supersession beyond the ad
+    // itself is exercised; the synthetic --force tests cover that case independently of the data.
+    const shared = new Map<string, number>();
+    for (const listing of previous.listings) shared.set(trackingKey(listing), (shared.get(trackingKey(listing)) ?? 0) + 1);
+    const family = previous.listings.filter((listing) => /^[2-9]/.test(listing.layout ?? "") && listing.rent > 0);
+    const target = family.find((listing) => shared.get(trackingKey(listing))! > 1) ?? family[0];
     const { status: _status, firstSeenAt: _first, lastSeenAt: _last, soldAt: _sold, sourceListings: _links, ...fields } = target;
     const fresh = { ...fields, id: "athome-999999999", url: "https://www.athome.co.jp/chintai/999999999/", rent: target.rent + 1000 };
     const priorTimes = Object.values(previous.provenance?.observedAtByKey ?? {}).filter((value): value is string => typeof value === "string" && Number.isFinite(Date.parse(value)));
@@ -245,22 +249,15 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
       if (current.has(key(listing))) expect(current.get(key(listing))).toEqual(listing);
       else expect(retired.get(key(listing))).toEqual(listing);
     }
-    // Every legacy merge survivor is identical; unseen duplicates the legacy
-    // helper compacted implicitly are additionally retained.
-    for (const listing of mergeAthomeIncremental(previous.listings, [fresh]).listings) expect(current.get(key(listing))).toEqual(listing);
-    expect(saved.listings.length + archived.length).toBe(previous.listings.length + 1);
-    expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length });
-    // Retirements are exactly the legacy ones, minus unseen duplicates the new policy retains.
-    const legacy = athomeObservationBatch({ previous: previous.listings, current: mergeAthomeIncremental(previous.listings, [fresh]).listings,
-      expectedRevision: null, observedAt: capturedAt, observedAtByKey: {}, provenance: {} }).retirements!.map((entry) => entry.id);
-    const archivedIds = archived.map((entry) => entry.listing.id);
-    expect(archivedIds).toContain(target.id);
-    expect(archivedIds.every((id) => legacy.includes(id!))).toBe(true);
+    // A row is superseded exactly when it shares a discovery alias with the new ad; every
+    // other row, unseen duplicates included, survives in place and the new ad is appended.
     const freshKeys = portalDiscoveryKeys("athome", fresh);
-    for (const id of legacy.filter((id) => !archivedIds.includes(id))) {
-      const kept = saved.listings.find((listing) => listing.id === id)!;
-      expect(portalDiscoveryKeys("athome", kept).some((alias) => freshKeys.includes(alias))).toBe(false);
-    }
+    const absorbed = (listing: RawListing) => portalDiscoveryKeys("athome", listing).some((alias) => freshKeys.includes(alias));
+    expect(archived.map((entry) => key(entry.listing))).toEqual(previous.listings.filter(absorbed).map(key));
+    expect(archived.map((entry) => entry.listing.id)).toContain(target.id);
+    expect(saved.listings.map(key)).toEqual([...previous.listings.filter((listing) => !absorbed(listing)).map(key), key(fresh)]);
+    expect(current.get(key(fresh))).toMatchObject({ id: fresh.id, url: fresh.url, rent: fresh.rent });
+    expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length, currentCount: saved.listings.length });
     expect(await client.ingestScrape(input)).toMatchObject({ replayed: true, revision: saved.revision });
     expect(await readFile(path, "utf8")).toBe(bytes);
   });

@@ -5,7 +5,6 @@
  * neighbourhoods.
  */
 import type { EnrichedListing } from "./types";
-import type { ListingScore } from "./scoring";
 import { isNewListing, isSold } from "./lifecycle";
 import type { MarkFilter } from "./marks";
 import { isRentedOut } from "./availability";
@@ -205,17 +204,6 @@ function matchesParking(listing: EnrichedListing, filters: ListingFilters): bool
     if (cost != null && cost > filters.parkingMaxYen) return false;
   }
 
-  return true;
-}
-
-/** True when a scored listing passes the score-dependent filters too. */
-export function matchesScored(
-  listing: EnrichedListing,
-  score: ListingScore,
-  filters: ListingFilters,
-): boolean {
-  if (!matchesListing(listing, filters)) return false;
-  if (filters.minScore > 0 && (score.total ?? -1) < filters.minScore) return false;
   return true;
 }
 

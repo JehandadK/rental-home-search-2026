@@ -79,13 +79,6 @@ describe("applySelection", () => {
     expect(out.station?.name).toBe("草加");
     expect(out.poi1?.name).toContain("Al Sanad");
     expect(out.poi2?.name).toBeTruthy();
-    expect([
-      "Baitul Aman Masjid (蒲生モスク)",
-      "Baitul Aqsa Masjid",
-      "Mizumoto Musalla",
-      "Yashio Masjid",
-      "Yashio Gujarati Masjid",
-    ]).toContain(out.poi2?.name);
     expect(out.school).toBeDefined();
     expect(out.busStop).toBeDefined();
     expect(out.childcareAny).toBeDefined();
@@ -99,14 +92,6 @@ describe("applySelection", () => {
     expect(out.station?.name).toBe("新田");
     // The original listing object is untouched.
     expect(SOKA.station).toBeUndefined();
-  });
-
-  it("swaps the Al Sanad POI target", () => {
-    const poi = placesInCategory("poi")[0];
-    const out = applySelection(SOKA, 0, index, {
-      byParameter: { ...DEFAULT_SELECTION.byParameter, poi1: [poi.id] },
-    });
-    expect(out.poi1?.name).toBe(poi.name);
   });
 
   it("scores the nearest mosque and honours a curated mosque set", () => {

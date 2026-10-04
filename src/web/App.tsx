@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SCORE_PARAMETERS, type ScoringConfig } from "../domain/scoringConfig";
+import { SCORE_PARAMETERS, travelSpeed, type ScoringConfig } from "../domain/scoringConfig";
 import { scoreListing } from "../domain/scoring";
 import { diagnoseAll } from "../domain/diagnostics";
-import { matchesListing } from "../domain/filters";
+import { activeFilterCount, matchesListing, type ListingFilters } from "../domain/filters";
+import { relaxationHints, type RelaxationHint } from "../domain/filterRelaxation";
 import { lifecycleCounts } from "../domain/lifecycle";
 import { withAvailability } from "../domain/availability";
 import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
@@ -20,6 +21,8 @@ import { useMarks } from "./hooks/useMarks";
 import { useAvailabilityMarks } from "./hooks/useAvailabilityMarks";
 import { useNotes } from "./hooks/useNotes";
 import { useCompare } from "./hooks/useCompare";
+import { useWeightPresets } from "./hooks/useWeightPresets";
+import { useRankMovement } from "./hooks/useRankMovement";
 import { toCsv, toMarkdown } from "./lib/export";
 import type { ScoredRow } from "../domain/scoring";
 import { AddListingForm } from "./components/AddListingForm";
@@ -27,8 +30,11 @@ import { ComparePanel } from "./components/ComparePanel";
 import { FilterPanel } from "./components/FilterPanel";
 import { ListingTable } from "./components/ListingTable";
 import { MapView } from "./components/MapView";
+import { NoMatches } from "./components/NoMatches";
 import { WeightPanel } from "./components/WeightPanel";
 import styles from "./App.module.css";
+
+const NO_HINTS: RelaxationHint[] = [];
 
 /** The dashboard, over data the WebDataBoundary has already loaded. */
 export function App({ data }: { data: WebData }) {
@@ -42,8 +48,10 @@ export function App({ data }: { data: WebData }) {
     update,
     setWalkZero,
     zeroAllWeights,
+    applyPreset,
     reset,
   } = useScoringConfig();
+  const { presets, savePreset, deletePreset } = useWeightPresets();
   const { listings, addListing, removeListing } = useListings(data.listings);
   const { filters, update: updateFilters, reset: resetFilters } = useFilters();
   const { marks, setMark, clearMarks } = useMarks();
@@ -64,6 +72,19 @@ export function App({ data }: { data: WebData }) {
     const id = selection.byParameter.poi1?.[0];
     return id ? catalog.byId.get(id) ?? null : null;
   }, [catalog, selection]);
+
+  /**
+   * Places the map draws travel-time rings around: the school target and the
+   * mosques the poi2 score measures to (every mosque when none are chosen).
+   */
+  const ringCenters = useMemo(() => {
+    const ids = selection.byParameter.poi2;
+    // An empty choice ("clear") is unrestricted too, exactly as the score treats it.
+    const mosques = ids == null || ids.length === 0
+      ? catalog.inCategory("mosque")
+      : ids.flatMap((id) => catalog.byId.get(id) ?? []);
+    return targetPoi ? [targetPoi, ...mosques] : [...mosques];
+  }, [catalog, selection, targetPoi]);
 
   /** Listings with proximities resolved against the current place selection. */
   const resolved = useMemo(() => {
@@ -110,6 +131,45 @@ export function App({ data }: { data: WebData }) {
       ? scored.filter(({ score }) => (score.total ?? -1) >= filters.minScore)
       : scored,
     [scored, filters.minScore],
+  );
+
+  /**
+   * How far each home moved in the ranking after the last change to the
+   * scoring (weights, anchors, places), shown for a few seconds.
+   */
+  const rankMoves = useRankMovement(filtered, [config, selection]);
+
+  /**
+   * When nothing matches, which single filter to clear and what that would
+   * bring back. Only computed for the empty case, where it runs the whole
+   * filter pipeline once per active filter.
+   */
+  const relaxHints = useMemo(() => {
+    if (filtered.length > 0 || available.length === 0) return NO_HINTS;
+    const totals = new Map<(typeof available)[number], number>();
+    const totalOf = (listing: (typeof available)[number]) => {
+      if (!totals.has(listing)) totals.set(listing, scoreListing(listing, config).total ?? -1);
+      return totals.get(listing)!;
+    };
+    const countMatching = (relaxed: ListingFilters) => available.filter((listing) =>
+      matchesListing(listing, relaxed)
+      && matchesMarkFilter(marks[listingKey(listing)], relaxed.markFilter)
+      && (relaxed.minScore <= 0 || totalOf(listing) >= relaxed.minScore),
+    ).length;
+    return relaxationHints(filters, countMatching);
+  }, [filtered.length, available, filters, marks, config]);
+
+  // Memoised: a fresh element would re-render the memoised table on every hover.
+  const noMatches = useMemo(
+    () => (
+      <NoMatches
+        filtersActive={available.length > 0 && activeFilterCount(filters) > 0}
+        hints={relaxHints}
+        onRelax={updateFilters}
+        onResetFilters={resetFilters}
+      />
+    ),
+    [available.length, filters, relaxHints, updateFilters, resetFilters],
   );
 
   /** The move-in assumptions and parking switch behind every cost figure. */
@@ -267,6 +327,10 @@ export function App({ data }: { data: WebData }) {
             diagnoses={diagnoses}
             onFitAnchor={fitAnchor}
             onFitAll={fitAll}
+            presets={presets}
+            onApplyPreset={applyPreset}
+            onSavePreset={(label) => savePreset(config, label)}
+            onDeletePreset={deletePreset}
           />
           <PlacePanel
             catalog={catalog}
@@ -293,6 +357,9 @@ export function App({ data }: { data: WebData }) {
             notes={notes}
             compare={compare}
             onToggleCompare={toggleCompare}
+            ringCenters={ringCenters}
+            ringMetresPerMinute={travelSpeed(config) / config.detourFactor}
+            travelMode={config.travelMode}
           />
           <ListingTable
             items={filtered}
@@ -310,6 +377,8 @@ export function App({ data }: { data: WebData }) {
             onSetNote={setNote}
             compare={compare}
             onToggleCompare={toggleCompare}
+            rankMoves={rankMoves}
+            emptyState={noMatches}
           />
           {compare.length > 0 && (
             <div id="compare">

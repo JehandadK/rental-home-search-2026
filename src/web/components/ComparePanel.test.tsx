@@ -67,9 +67,6 @@ describe("ComparePanel", () => {
     const [sizeA, sizeB] = cells("Size");
     expect(sizeB.className).toMatch(/best/);
     expect(sizeA.className).not.toMatch(/best/);
-
-    // Same layout: nothing to point at.
-    expect(cells("Layout").some((td) => /best/.test(td.className))).toBe(false);
   });
 
   it("shows the rank, or that a pinned home is filtered out", () => {

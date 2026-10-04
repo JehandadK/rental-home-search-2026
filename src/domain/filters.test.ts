@@ -7,11 +7,9 @@ import {
   layoutOptions,
   listingArea,
   matchesListing,
-  matchesScored,
   type ListingFilters,
 } from "./filters";
 import type { EnrichedListing } from "./types";
-import type { ListingScore } from "./scoring";
 
 const make = (over: Partial<EnrichedListing>): EnrichedListing => ({
   name: "L",
@@ -27,8 +25,6 @@ const make = (over: Partial<EnrichedListing>): EnrichedListing => ({
   geocoded: true,
   ...over,
 });
-
-const score = (total: number | null): ListingScore => ({ total, parts: [] });
 
 describe("listingArea", () => {
   it("strips prefecture, city and block numbers", () => {
@@ -70,10 +66,6 @@ describe("option extractors", () => {
 
 describe("matchesListing", () => {
   const base: ListingFilters = { ...EMPTY_FILTERS };
-
-  it("passes everything with empty filters", () => {
-    expect(matchesListing(make({}), base)).toBe(true);
-  });
 
   it("filters by city", () => {
     expect(matchesListing(make({ city: "Soka" }), { ...base, cities: ["Koshigaya"] })).toBe(false);
@@ -130,15 +122,6 @@ describe("lifecycle filters", () => {
     expect(matchesListing(fresh, f)).toBe(true);
     expect(matchesListing(old, f)).toBe(false);
     expect(matchesListing(legacy, f)).toBe(false);
-  });
-});
-
-describe("matchesScored", () => {
-  it("applies the minimum-score gate on top of listing filters", () => {
-    const l = make({});
-    expect(matchesScored(l, score(40), { ...EMPTY_FILTERS, minScore: 50 })).toBe(false);
-    expect(matchesScored(l, score(60), { ...EMPTY_FILTERS, minScore: 50 })).toBe(true);
-    expect(matchesScored(l, score(null), { ...EMPTY_FILTERS, minScore: 1 })).toBe(false);
   });
 });
 

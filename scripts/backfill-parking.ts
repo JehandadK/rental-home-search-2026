@@ -1,5 +1,5 @@
 /** Compatibility alias: one optional detail fetch now captures ALL useful fields. */
-export { parseParking, extractParkingCell, type ParkingInfo } from "../src/collectors/shared/parking";
+export { parseParking, type ParkingInfo } from "../src/collectors/shared/parking";
 import { BACKUP_DIR, DATA_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";

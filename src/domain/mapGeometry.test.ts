@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundaryExtent, extentOf, labelPosition, longitudeScale, padExtent, polygonsOf, ringCentroid, scaleBarLength } from "./mapGeometry";
+import { boundaryExtent, circleOffCanvas, labelPosition, longitudeScale, padExtent, polygonsOf, ringCentroid, ringRadiusPx, scaleBarLength } from "./mapGeometry";
 import type { ReferenceBoundary } from "./referenceData";
 
 const square = (lon: number, lat: number, size: number) =>
@@ -26,7 +26,6 @@ describe("map geometry", () => {
   it("fits the outer rings of every boundary, and pads degenerate extents", () => {
     expect(boundaryExtent([small, multi])).toEqual({ minLon: 0, maxLon: 24, minLat: 0, maxLat: 24 });
     expect(boundaryExtent([])).toBeNull();
-    expect(extentOf([])).toBeNull();
     const padded = padExtent({ minLon: 5, maxLon: 5, minLat: 7, maxLat: 7 });
     expect(padded.maxLon - padded.minLon).toBeCloseTo(0.01);
     expect(padded.maxLat - padded.minLat).toBeCloseTo(0.01);
@@ -45,5 +44,21 @@ describe("map scale", () => {
   });
   it("falls back to the shortest step when even that overflows", () => {
     expect(scaleBarLength(5000, 110).km).toBe(0.1);
+  });
+});
+
+describe("travel rings", () => {
+  it("converts minutes at a speed into screen pixels", () => {
+    // 5 min at 67 m/min = 335 m; at 200 px/km that is 67 px.
+    expect(ringRadiusPx(5, 67, 200)).toBeCloseTo(67, 6);
+    expect(ringRadiusPx(15, 67, 200)).toBeCloseTo(201, 6);
+  });
+  it("skips circles whose bounding box is fully off the canvas", () => {
+    expect(circleOffCanvas(500, 300, 50, 1100, 680)).toBe(false);
+    expect(circleOffCanvas(-60, 300, 50, 1100, 680)).toBe(true);
+    expect(circleOffCanvas(-40, 300, 50, 1100, 680)).toBe(false);
+    expect(circleOffCanvas(500, 760, 50, 1100, 680)).toBe(true);
+    // A big ring that merely contains the canvas still draws.
+    expect(circleOffCanvas(550, 340, 2000, 1100, 680)).toBe(false);
   });
 });

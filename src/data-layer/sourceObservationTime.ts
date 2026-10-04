@@ -1,6 +1,3 @@
-import type { RawListing } from "../domain/types";
-import { trackingKey } from "../domain/listingIdentity";
-
 interface SourceTimes {
   scrapedAt: string;
   completeSnapshot?: boolean;
@@ -22,15 +19,4 @@ export function sourceSnapshotCaptureTime(source: SourceTimes): string | undefin
   if (!times || typeof times !== "object" || Array.isArray(times)) return undefined;
   return Object.values(times).filter((value): value is string => typeof value === "string" && Number.isFinite(Date.parse(value)))
     .sort((a, b) => Date.parse(a) - Date.parse(b)).at(-1);
-}
-
-/** Older replayed captures can enrich new IDs, but cannot overwrite newer ads. */
-export function newerRows(previous: (SourceTimes & { listings: readonly RawListing[] }) | null, rows: readonly RawListing[], at: string, aliases: (l: RawListing) => string[]): RawListing[] {
-  const index = new Map((previous?.listings ?? []).flatMap((l) => aliases(l).map((key) => [key, l] as const)));
-  const times = (previous?.provenance?.observedAtByKey ?? {}) as Record<string, string>;
-  return rows.filter((row) => {
-    const prior = aliases(row).map((key) => index.get(key)).find(Boolean);
-    const previousTime = prior ? times[trackingKey(prior)] ?? sourceObservationFallbackTime(previous) : undefined;
-    return previousTime === undefined || Date.parse(at) >= Date.parse(previousTime);
-  });
 }

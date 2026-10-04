@@ -105,3 +105,13 @@ export function scaleBarLength(pxPerKm: number, maxPx: number): { km: number; px
   const km = [...SCALE_BAR_STEPS_KM].reverse().find((step) => step * pxPerKm <= maxPx) ?? SCALE_BAR_STEPS_KM[0];
   return { km, px: km * pxPerKm };
 }
+
+/** Screen radius of a travel-time ring: straight-line metres covered in `minutes`, at `pxPerKm`. */
+export function ringRadiusPx(minutes: number, metresPerMinute: number, pxPerKm: number): number {
+  return ((minutes * metresPerMinute) / 1000) * pxPerKm;
+}
+
+/** True when a circle's bounding box lies fully outside a width×height canvas, so it can be skipped. */
+export function circleOffCanvas(x: number, y: number, radius: number, width: number, height: number): boolean {
+  return x + radius < 0 || y + radius < 0 || x - radius > width || y - radius > height;
+}

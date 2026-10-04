@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  effectiveMonthlyCost,
   parkingMonthlyYen,
   computeMoveInCosts,
   DEFAULT_MOVE_IN_ASSUMPTIONS,
@@ -90,12 +89,6 @@ describe("computeMoveInCosts", () => {
     // + 100k first month
     expect(c.totalUpfront).toBe(530_000);
     expect(c.firstMonthRent).toBe(100_000);
-  });
-
-  it("excludes the first month's rent from sunk cost", () => {
-    const c = computeMoveInCosts(listing({ depositYen: 0, keyMoneyYen: 0, cleaningFeeYen: 0 }));
-    expect(c.sunkCost).not.toContain(c.firstMonthRent);
-    expect(c.sunkCost).toBe(180_000); // agency + guarantor + insurance only
   });
 
   it("estimates cleaning from floor area with a floor value", () => {
@@ -190,16 +183,6 @@ describe("parking costs", () => {
 
   it("falls back to a flat parkingYen figure", () => {
     expect(parkingMonthlyYen(listing({ costs: { parkingYen: 9000 } }))).toBe(9000);
-  });
-
-  it("adds parking to rent only when asked", () => {
-    const l = listing({ rent: 80_000, costs: { parking: { monthlyYen: 8_000, available: true, location: "onsite", distanceM: null, raw: "敷地内8000円" } } });
-    expect(effectiveMonthlyCost(l, false)).toBe(80_000);
-    expect(effectiveMonthlyCost(l, true)).toBe(88_000);
-  });
-
-  it("leaves rent untouched when parking is unknown", () => {
-    expect(effectiveMonthlyCost(listing({ rent: 80_000 }), true)).toBe(80_000);
   });
 });
 

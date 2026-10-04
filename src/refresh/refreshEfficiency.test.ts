@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planRefresh, completeMarket, runLimited, PARALLEL_COLLECTOR_STAGES, collectorGroup, stageEnv } from "./refreshPlan";
+import { planRefresh, runLimited, PARALLEL_COLLECTOR_STAGES, collectorGroup, stageEnv } from "./refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../collectors/shared/pageBudget";
 import { addressKey, cachedGeocode, seedGeocodes } from "../collectors/enrichment/geocodeCache";
 import { parseDetail } from "../collectors/enrichment/detailEnrichment";
@@ -10,19 +10,12 @@ import { packListings, unpackListings } from "../domain/webPayload";
 import type { RawListing, EnrichedListing } from "../domain/types";
 import { trackingKey } from "../data-layer/lifecycle";
 import { assertParsedFamilies } from "../collectors/shared/captureValidation";
-import { newerRows } from "../data-layer/sourceObservationTime";
 const base: RawListing = { name: "Home", address: "埼玉県草加市１", source: "suumo", id: "s1", url: "https://suumo.jp/a", rent: 80000, layout: "2LDK", sizeM2: 50, builtYear: 2010, stationWalkMin: 5 };
 
 describe("efficient refresh", () => {
   it("retries failed collectors, not successful independent ones", () => {
     const stages = ["suumo", "athome", "roomspot", "nifty-soka", "nifty-import", "data-build", "enrich", "web-data"].map((id) => ({ id, label: id, status: id === "athome" ? "failed" as const : "success" as const, attempts: [] }));
     expect([...planRefresh(stages, true)]).toEqual(["athome", "data-build", "enrich", "web-data"]);
-  });
-  it("caps never establish absence", () => {
-    expect(completeMarket(true, [{ exhausted: false }, { exhausted: true }])).toBe(false);
-    expect(completeMarket(true, [])).toBe(false);
-    expect(completeMarket(true, [{ exhausted: true }])).toBe(true);
-    expect(completeMarket(false, [{ exhausted: true }])).toBe(false);
   });
   it("uses a generous safety ceiling so incremental scans reach prior observations", () => {
     expect(DEFAULT_INCREMENTAL_PAGE_CEILING).toBeGreaterThanOrEqual(100);
@@ -69,13 +62,10 @@ describe("efficient refresh", () => {
     expect(() => validateCapture({ ...c, html: '<div class="p-property"/>', httpStatus: 403 })).toThrow();
     expect(() => validateCapture({ ...c, html: '<div class="p-property"/>' })).not.toThrow();
   });
-  it("rejects silent family parser failures and stale price replays", () => {
+  it("rejects silent family parser failures", () => {
     const capture = { schemaVersion: 1 as const, source: "athome" as const, city: "Soka", url: "https://www.athome.co.jp/list/", page: 1, capturedAt: "2026-09-07", httpStatus: 200, html: '<div class="p-property"><span class="p-property__floor">2LDK</span></div>' };
     expect(() => assertParsedFamilies(capture, [])).toThrow();
     expect(() => assertParsedFamilies({ ...capture, html: '<span class="p-property__floor">1K</span>' }, [])).not.toThrow();
-    const source = { source: "suumo", scrapedAt: "2026-09-07", count: 1, listings: [base] };
-    expect(newerRows(source, [{ ...base, rent: 70000 }], "2026-09-06", (l) => [l.id!])).toEqual([]);
-    expect(newerRows(source, [{ ...base, rent: 70000 }], "2026-09-08", (l) => [l.id!])).toHaveLength(1);
   });
   it("dictionary payload is lossless and smaller for repeated features", () => {
     const listings: EnrichedListing[] = Array.from({ length: 10 }, () => ({ ...base, geocoded: false, attributes: [{ key: "cityGas", category: "kitchen", labelEn: "City gas", labelJa: "都市ガス", state: true, raw: "都市ガス" }] }));

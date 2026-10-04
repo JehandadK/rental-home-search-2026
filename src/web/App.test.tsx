@@ -171,3 +171,53 @@ describe("user state across reloads", () => {
     expect((within(placesPanel()).getByRole("radio", { name: "Test School" }) as HTMLInputElement).checked).toBe(true);
   });
 });
+
+describe("weight presets and empty results", () => {
+  it("applies a preset, saves the current weights under a name, and keeps it across reloads", async () => {
+    const store = createMemoryUserStateStore();
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    const presets = screen.getByRole("group", { name: "Weight presets" });
+    expect(within(presets).getByRole("button", { name: "Balanced" }).getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(within(presets).getByRole("button", { name: "Commuter" }));
+    expect(within(presets).getByRole("button", { name: "Commuter" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(presets).getByRole("button", { name: "Balanced" }).getAttribute("aria-pressed")).toBe("false");
+    expect((store.read(USER_STATE_KEYS.scoringConfig) as { weights: { station: number } }).weights.station).toBe(16);
+
+    fireEvent.click(within(presets).getByRole("button", { name: "Save current as…" }));
+    fireEvent.change(within(presets).getByLabelText("Preset name"), { target: { value: "Station first" } });
+    fireEvent.click(within(presets).getByRole("button", { name: "Save" }));
+    expect(store.read(USER_STATE_KEYS.weightPresets)).toEqual([expect.objectContaining({ label: "Station first" })]);
+
+    cleanup();
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    const reloaded = screen.getByRole("group", { name: "Weight presets" });
+    fireEvent.click(within(reloaded).getByRole("button", { name: "Balanced" }));
+    fireEvent.click(within(reloaded).getByRole("button", { name: "Station first" }));
+    expect(within(reloaded).getByRole("button", { name: "Station first" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(within(reloaded).getByRole("button", { name: "Delete preset Station first" }));
+    expect(store.read(USER_STATE_KEYS.weightPresets)).toEqual([]);
+
+    // A built-in's name is not reused, so the two chips stay distinguishable.
+    fireEvent.click(within(reloaded).getByRole("button", { name: "Save current as…" }));
+    fireEvent.change(within(reloaded).getByLabelText("Preset name"), { target: { value: "commuter" } });
+    fireEvent.click(within(reloaded).getByRole("button", { name: "Save" }));
+    expect(within(reloaded).getByRole("button", { name: "commuter (mine)" })).toBeTruthy();
+  });
+
+  it("says which filter to clear when nothing matches", async () => {
+    const store = createMemoryUserStateStore({ [USER_STATE_KEYS.filters]: { rentMax: 1_000 } });
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    expect(screen.getByText("No listings match these filters.")).toBeTruthy();
+    expect(screen.getByText("→ 2 listings")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Clear rent range" }));
+    expect(screen.getByText(/2 \/ 2 listings/)).toBeTruthy();
+    expect(screen.queryByText("No listings match these filters.")).toBeNull();
+  });
+
+  it("does not blame the filters when there is simply no data", async () => {
+    await renderApp(FIXTURE_REFERENCE, []);
+    expect(screen.getByText("No listings to show yet.")).toBeTruthy();
+    expect(screen.queryByText("No listings match these filters.")).toBeNull();
+  });
+});

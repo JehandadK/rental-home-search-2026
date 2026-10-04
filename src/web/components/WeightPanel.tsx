@@ -4,7 +4,9 @@
  * and global options. Rendered data-driven from SCORE_PARAMETERS so a
  * new parameter only needs one entry in domain/scoringConfig.ts.
  */
+import { useState } from "react";
 import { FEATURE_PARAMETERS, SCORE_PARAMETERS, type ScoringConfig } from "../../domain/scoringConfig";
+import { matchesPreset, type WeightPreset } from "../../domain/weightPresets";
 import type { ParameterDiagnosis } from "../../domain/diagnostics";
 import type { ListingAttributeCategory, ListingFeatureKey, ScoreParameterKey } from "../../domain/types";
 import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
@@ -28,6 +30,12 @@ interface Props {
   onFitAnchor: (key: ScoreParameterKey, suggested: number) => void;
   /** Apply data-fitted anchors for every flagged parameter at once. */
   onFitAll: () => void;
+  /** Built-in and saved weight presets; omitted, the presets row is hidden. */
+  presets?: readonly WeightPreset[];
+  onApplyPreset?: (preset: WeightPreset) => void;
+  /** Save the current weights under a name. */
+  onSavePreset?: (label: string) => void;
+  onDeletePreset?: (id: string) => void;
 }
 
 /** Parameters measured in walking minutes get a "zero at N min" anchor. */
@@ -78,6 +86,16 @@ export function WeightPanel(props: Props) {
           </button>
         </span>
       </h2>
+
+      {props.presets && props.onApplyPreset && (
+        <PresetRow
+          config={config}
+          presets={props.presets}
+          onApply={props.onApplyPreset}
+          onSave={props.onSavePreset}
+          onDelete={props.onDeletePreset}
+        />
+      )}
 
       <p className={styles.featureIntro}>
         Set any weight to 0–20. Property features are available below the numeric criteria.
@@ -352,6 +370,84 @@ export function WeightPanel(props: Props) {
         <button className="secondary" onClick={props.onExportMarkdown}>Copy Markdown</button>
       </div>
     </section>
+  );
+}
+
+/**
+ * One-click weighting schemes. The preset matching the current weights is
+ * highlighted, so after a manual tweak it is clear none is in force.
+ */
+function PresetRow(props: {
+  config: ScoringConfig;
+  presets: readonly WeightPreset[];
+  onApply: (preset: WeightPreset) => void;
+  onSave?: (label: string) => void;
+  onDelete?: (id: string) => void;
+}) {
+  const [naming, setNaming] = useState(false);
+  const [label, setLabel] = useState("");
+  const save = () => {
+    if (!label.trim() || !props.onSave) return;
+    props.onSave(label);
+    setLabel("");
+    setNaming(false);
+  };
+
+  return (
+    <div className={styles.presets} role="group" aria-label="Weight presets">
+      {props.presets.map((preset) => {
+        const active = matchesPreset(props.config, preset);
+        return (
+          <span key={preset.id} className={`${styles.preset} ${active ? styles.presetOn : ""}`}>
+            <button
+              type="button"
+              aria-pressed={active}
+              title={`${preset.description}. Changes weights only; anchors stay as they are.`}
+              onClick={() => props.onApply(preset)}
+            >
+              {preset.label}
+            </button>
+            {preset.custom && props.onDelete && (
+              <button
+                type="button"
+                className={styles.presetDelete}
+                aria-label={`Delete preset ${preset.label}`}
+                title="Delete this saved preset"
+                onClick={() => props.onDelete!(preset.id)}
+              >
+                ×
+              </button>
+            )}
+          </span>
+        );
+      })}
+      {props.onSave && (naming ? (
+        <form
+          className={styles.presetSave}
+          onSubmit={(event) => {
+            event.preventDefault();
+            save();
+          }}
+        >
+          <input
+            autoFocus
+            aria-label="Preset name"
+            placeholder="Preset name"
+            value={label}
+            onChange={(event) => setLabel(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setNaming(false);
+            }}
+          />
+          <button type="submit" disabled={!label.trim()}>Save</button>
+          <button type="button" className="secondary" onClick={() => setNaming(false)}>Cancel</button>
+        </form>
+      ) : (
+        <button type="button" className={`secondary ${styles.presetAdd}`} onClick={() => setNaming(true)}>
+          Save current as…
+        </button>
+      ))}
+    </div>
   );
 }
 

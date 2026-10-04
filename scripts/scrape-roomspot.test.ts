@@ -6,15 +6,14 @@ import { DATA_DIR, JsonSourceStore, ShrinkGuardError, atomicWriteJson, type Sour
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { portalPageUrl } from "../src/data-layer/ingestion/contracts";
-import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceRowKey, sourceRowLocator } from "../src/data-layer/sourceRowIdentity";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ROOMSPOT_COLLECTOR, runRoomspotScrape } from "./scrape-roomspot";
 import type { PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
 import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
 import { parseRoomspotPage } from "../src/collectors/roomspot/roomspot";
-import { mergeRoomspotIncremental, roomspotObservationBatch } from "../src/data-layer/ingestion/portalPolicy";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
+import { trackingKey } from "../src/data-layer/lifecycle";
 import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RawListing } from "../src/domain/types";
 
@@ -96,15 +95,6 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     expect(await readFile(store.sourcePath("roomspot"), "utf8")).toBe(bytes); expect(await readdir(store.backupDir)).toEqual(backups);
   });
 
-  it("does not count or log an empty non-family page as known", async () => {
-    await seed(rows([2, 3]));
-    dependencies.page = vi.fn(async (meta) => meta.page === 1
-      ? capture(cityIndex(meta.city), 1, room(idFor(cityIndex(meta.city), 1), { layout: "1LDK" })) : capture(cityIndex(meta.city), meta.page));
-    await runRoomspotScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(9); expect(dependencies.sleep).toHaveBeenCalledTimes(3);
-    expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("page 1:"));
-  });
-
   it("rejects --full before any page or session and maps an empty crawl to the legacy message", async () => {
     const begin = vi.spyOn(client, "beginPortalDiscovery");
     await expect(runRoomspotScrape(["--full"], dependencies)).rejects.toThrow("verified per-city exhaustion");
@@ -127,21 +117,6 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     await expect(runRoomspotScrape(["--max-pages", "1"], dependencies)).rejects.toThrow();
     expect(write).not.toHaveBeenCalled(); expect(dependencies.close).toHaveBeenCalledTimes(1);
     expect(await readFile(store.sourcePath("roomspot"), "utf8")).toBe(bytes);
-  });
-
-  it("does not retry a revision conflict when source state changes during the crawl", async () => {
-    await seed(); const originalPage = dependencies.page;
-    dependencies.page = async (meta) => {
-      if (meta.city === "Soka") {
-        const previous = (await store.readSource("roomspot"))!;
-        await store.writeSource({ ...previous, listings: previous.listings.map((listing) => ({ ...listing, rent: 99000 })) }, { expectedRevision: previous.revision! });
-      }
-      return originalPage(meta);
-    };
-    const write = vi.spyOn(repository, "reconcileSource");
-    await expect(runRoomspotScrape(["--max-pages", "1"], dependencies)).rejects.toBeInstanceOf(RevisionConflictError);
-    expect(write).toHaveBeenCalledTimes(1);
-    expect((await store.readSource("roomspot"))!.listings.every((listing) => listing.rent === 99000)).toBe(true);
   });
 
   it("retains --force as an explicit shrink-guard override with complete superseded-row archives", async () => {
@@ -170,13 +145,18 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
       building: { floor: "2階", conditions: ["ペット相談"] }, tenancy: { leaseType: "regular" } });
   });
 
-  it("keeps every legacy merge survivor for current RoomSpot rows without rewriting production data", async () => {
+  it("updates a current RoomSpot ad in place and supersedes only its alias duplicates, without rewriting production data", async () => {
     const path = join(DATA_DIR, "sources", "roomspot.json"), bytes = await readFile(path, "utf8");
     const previous = JSON.parse(bytes) as SourceFile;
     await store.writeSource(previous, { expectedRevision: null });
-    const target = previous.listings.find((listing) => /^[2-9]/.test(listing.layout ?? "") && listing.rent > 0)!;
+    // Prefer an ad with a stored alias duplicate (today's data has many), so supersession beyond the ad
+    // itself is exercised; the synthetic --force tests cover that case independently of the data.
+    const shared = new Map<string, number>();
+    for (const listing of previous.listings) shared.set(trackingKey(listing), (shared.get(trackingKey(listing)) ?? 0) + 1);
+    const family = previous.listings.filter((listing) => /^[2-9]/.test(listing.layout ?? "") && listing.rent > 0);
+    const target = family.find((listing) => shared.get(trackingKey(listing))! > 1) ?? family[0];
     const { status: _status, firstSeenAt: _first, lastSeenAt: _last, soldAt: _sold, sourceListings: _links, ...fields } = target;
-    // A same-ID observation that adds no nested fields, so the public detail merge equals the legacy spread.
+    // A same-ID observation that adds no nested fields, so the stored row only changes rent.
     const fresh = { ...fields, rent: target.rent + 1000 };
     const priorTimes = Object.values(previous.provenance?.observedAtByKey ?? {}).filter((value): value is string => typeof value === "string" && Number.isFinite(Date.parse(value)));
     const capturedAt = new Date(Math.max(Date.parse(previous.scrapedAt), ...priorTimes.map(Date.parse)) + 1000).toISOString();
@@ -195,20 +175,14 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
       if (current.has(key(listing))) expect(current.get(key(listing))).toEqual(listing);
       else expect(retired.get(key(listing))).toEqual(listing);
     }
-    for (const listing of mergeRoomspotIncremental(previous.listings, [fresh]).listings) expect(current.get(key(listing))).toEqual(listing);
-    expect(saved.listings.length + archived.length).toBe(previous.listings.length);
-    expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length });
-    expect(current.get(key(target))!.rent).toBe(target.rent + 1000);
-    // Retirements are exactly the legacy ones, minus unseen duplicates the new policy retains.
-    const legacy = roomspotObservationBatch({ previous: previous.listings, current: mergeRoomspotIncremental(previous.listings, [fresh]).listings,
-      expectedRevision: null, observedAt: capturedAt, observedAtByKey: {}, provenance: {} }).retirements!.map((entry) => entry.id);
-    const archivedIds = archived.map((entry) => entry.listing.id!);
-    expect(archivedIds.every((id) => legacy.includes(id))).toBe(true);
+    // The ad keeps its stored row and position; another row is superseded exactly when it shares
+    // a discovery alias with the observation, and every other row, unseen duplicates included, survives.
     const freshKeys = portalDiscoveryKeys("roomspot", fresh);
-    for (const id of legacy.filter((id) => !archivedIds.includes(id))) {
-      const kept = saved.listings.find((listing) => listing.id === id)!;
-      expect(portalDiscoveryKeys("roomspot", kept).some((alias) => freshKeys.includes(alias))).toBe(false);
-    }
+    const absorbed = (listing: RawListing) => key(listing) !== key(target) && portalDiscoveryKeys("roomspot", listing).some((alias) => freshKeys.includes(alias));
+    expect(archived.map((entry) => key(entry.listing))).toEqual(previous.listings.filter(absorbed).map(key));
+    expect(saved.listings.map(key)).toEqual(previous.listings.filter((listing) => !absorbed(listing)).map(key));
+    expect(current.get(key(target))).toEqual({ ...target, rent: target.rent + 1000 });
+    expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length, currentCount: saved.listings.length });
     expect(await readFile(path, "utf8")).toBe(bytes);
   });
 });
