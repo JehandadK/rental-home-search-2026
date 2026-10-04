@@ -648,7 +648,7 @@ export const ListingTable = memo(function ListingTable({
         </button>
       )}
       <p className={styles.sources}>
-        Sources: listings SUUMO · geography OpenStreetMap (ODbL) · geocoding GSI Japan.
+        Sources: listings SUUMO · geography OpenStreetMap (ODbL) · boundaries and rail stations 国土数値情報 (MLIT: 行政区域 N03, 鉄道 N02) · geocoding GSI Japan.
         Walk minutes are straight-line × detour factor ÷ walk speed, except the station
         time which prefers the agent-listed 徒歩分. Kindergarten column is the nearest
         幼稚園/こども園 unless daycare inclusion is enabled.

@@ -15,7 +15,7 @@ import type { GeoPoint, NamedPlace, ScoreParameterKey } from "./types";
 export type PlaceCategory = string;
 
 /** Categories the scoring parameters and UI know how to use. */
-export type KnownPlaceCategory = "poi" | "mosque" | "station" | "school" | "childcare" | "busStop";
+export type KnownPlaceCategory = "poi" | "mosque" | "station" | "school" | "childcare" | "busStop" | "railStation";
 
 type PlaceAttributes = Readonly<Record<string, string | number | boolean | null>>;
 
@@ -175,6 +175,7 @@ export const CATEGORY_LABELS: Record<KnownPlaceCategory, string> = {
   school: "Elementary schools",
   childcare: "Childcare",
   busStop: "Bus stops",
+  railStation: "Rail stations",
 };
 
 /** Label for any category, including ones added to the data later. */
@@ -202,6 +203,15 @@ export const PARAMETER_SOURCES: Record<DistanceParameterKey, ParameterSource> = 
   kindergarten: { category: "childcare", mode: "nearest" },
   school: { category: "school", mode: "nearest" },
 };
+
+/**
+ * Categories the scoring measures distances to. Other categories (the
+ * region-wide rail stations) are map context only, so the browser never
+ * builds a listing × place distance matrix for them.
+ */
+export const SCORED_CATEGORIES: readonly KnownPlaceCategory[] = [
+  ...new Set(Object.values(PARAMETER_SOURCES).map((source) => source.category)),
+];
 
 /** A geo point paired with its catalog entry, for distance computations. */
 export const asGeoPoint = (place: CatalogPlace): GeoPoint => ({ lat: place.lat, lon: place.lon });

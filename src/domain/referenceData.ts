@@ -21,6 +21,8 @@ export interface ReferenceCity {
   id: string;
   name: string;
   nameLocal?: string;
+  /** 埼玉県, 東京都…; the map draws borders between prefectures. */
+  prefecture?: string;
   status?: "active" | "retired";
 }
 

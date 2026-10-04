@@ -1,11 +1,15 @@
 /**
- * Canvas map of Soka City and its northern neighbour Koshigaya (plus the
- * surrounding municipalities for context): city boundaries, stations,
- * elementary schools, the target POI, mosques, and every geocoded listing
- * coloured by its current score.
+ * Canvas map of the Kanto region, centred on the search area (Soka City and
+ * its neighbours): municipal boundaries with prefecture borders, the region's
+ * rail stations, elementary schools, the target POI, mosques, and every
+ * geocoded listing coloured by its current score.
  *
  * Cities, boundaries (any number per city, polygons or multipolygons), places,
- * and the map extent all come from the loaded reference model.
+ * and the map extent all come from the loaded reference model. Prefecture
+ * borders are traced from the city boundaries (cities carry their
+ * prefecture). Names appear as the map is zoomed in: prefectures when zoomed
+ * out, then cities that are big enough on screen, then stations, busiest
+ * first; a label never overlaps one already drawn.
  *
  * Walk/ride rings (5, 10, 15 minutes) surround the school target and the
  * selected mosques, sized by the same speed and detour the scoring uses.
@@ -18,14 +22,15 @@
  *   - click a dot            → selects it; the table scrolls that row into view
  *   - scroll wheel           → zoom toward the cursor
  *   - drag                   → pan
- *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / reset
+ *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / all of Kanto
  *   - layer chips            → show or hide stations, schools, mosques, new rings
  *
  * The base projection is an equirectangular fit to the combined extent of all
  * boundaries (or of the places, when there are no boundaries), with longitude
  * scaled by cos(latitude) so distances are true in both directions. A separate
  * view transform (scale + translation) layers zoom and pan on top, so markers
- * and labels keep a constant screen size.
+ * and labels keep a constant screen size. Zoom limits are set in pixels per
+ * kilometre, so they hold whatever extent the reference data covers.
  */
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { scoreColor } from "../../domain/scoring";
@@ -38,9 +43,11 @@ import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../..
 import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceData";
 import type { CatalogPlace } from "../../domain/places";
 import {
+  areaCentroid,
   boundaryExtent,
   circleOffCanvas,
   extentOf,
+  groupBorders,
   KM_PER_DEGREE,
   labelPosition,
   longitudeScale,
@@ -50,6 +57,7 @@ import {
   scaleBarLength,
   type Extent,
 } from "../../domain/mapGeometry";
+import type { Position } from "../../domain/referenceData";
 import { listingPhotos } from "../../domain/listingPhotos";
 import { formatKm, listingDistances, type ListingDistance } from "../../domain/listingDistances";
 import { describeNote, type ListingNote, type NoteMap } from "../../domain/notes";
@@ -115,8 +123,11 @@ const WIDTH = 1100;
 const HEIGHT = 680;
 const PADDING = 28;
 const MIN_SCALE = 1;
-const MAX_SCALE = 14;
-const LOCATE_SCALE = 5;
+/** Closest zoom, and the zoom a table row's locate button jumps to, in screen pixels per km. */
+const MAX_PX_PER_KM = 400;
+const LOCATE_PX_PER_KM = 140;
+/** Listing dots start growing past this zoom (the old Soka-only map's opening scale). */
+const DOT_BASE_PX_PER_KM = 30;
 const HIT_RADIUS = 12;
 const DRAG_THRESHOLD = 4;
 const IDENTITY: View = { scale: 1, tx: 0, ty: 0 };
@@ -153,6 +164,10 @@ const MAP_COLOR_PROPERTIES = {
   markerOutline: "--rs-map-marker-outline",
   station: "--rs-map-station",
   stationLabel: "--rs-map-station-label",
+  railStation: "--rs-map-rail-station",
+  railStationLabel: "--rs-map-rail-station-label",
+  prefectureLine: "--rs-map-prefecture-line",
+  prefectureLabel: "--rs-map-prefecture-label",
   mosque: "--rs-map-mosque",
   mosqueLabel: "--rs-map-mosque-label",
   target: "--rs-map-target",
@@ -173,13 +188,19 @@ function readMapColors(element: Element): MapColors {
 type LayerKey = "stations" | "schools" | "mosques" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
-  { key: "stations", label: "Stations", title: "Railway stations (main hubs labelled)" },
+  { key: "stations", label: "Stations", title: "Railway stations across Kanto; the scored stations are larger, and names appear as you zoom in" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
   { key: "newRings", label: "New rings", title: "Green ring around listings first seen in the last 14 days" },
   { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
 const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true, rings: true };
+
+/** How many lines serve a station (from the station import), for label priority. */
+function lineCount(place: CatalogPlace): number {
+  const count = place.attributes?.lineCount;
+  return typeof count === "number" ? count : 0;
+}
 
 /** CSS gradient matching scoreColor, for the legend. */
 const SCORE_GRADIENT = `linear-gradient(90deg, ${[0, 25, 50, 75, 100].map((score) => scoreColor(score)).join(", ")})`;
@@ -196,15 +217,44 @@ const LABELLED_STATIONS = new Set([
 /** The primary search area, drawn emphasised when the data contains it. */
 const FOCUS_CITY_ID = "city:soka";
 
+/** Region-wide stations: map context, not scored. */
+const RAIL_STATION_CATEGORY = "railStation";
+/** A rail station this close to a scored station of the same name is that station, drawn once. */
+const SAME_STATION_KM = 1.5;
+
+/** Zoom (screen pixels per km) at which each kind of name appears. */
+const PREFECTURE_LABEL_MAX_PX_PER_KM = 7;
+const RAIL_STATION_LABEL_MIN_PX_PER_KM = 14;
+/** A city is named once its outline is at least this large on screen. */
+const CITY_LABEL_MIN_PX = { width: 46, height: 16 };
+
+interface LabelBox {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
 /** Soka and its neighbours; only used when the data has nothing to fit. */
 const DEFAULT_EXTENT: Extent = { minLon: 139.68, maxLon: 139.86, minLat: 35.74, maxLat: 35.93 };
 
 interface CityLayer {
   id: string;
   label: string;
+  prefecture: string;
   boundaries: ReferenceBoundary[];
   focus: boolean;
+  /** Bounding box of the outlines, for skipping cities off screen. */
+  extent: Extent;
+  /** Where the name goes (the centroid of the largest piece). */
+  labelAt: Position | null;
 }
+
+interface PrefectureLayer {
+  name: string;
+  labelAt: Position | null;
+}
+
 
 export const MapView = memo(function MapView({
   items,
@@ -238,18 +288,62 @@ export const MapView = memo(function MapView({
   const [selectionCluster, setSelectionCluster] = useState<string[]>([]);
   // Pointer-interaction bookkeeping (refs so handlers stay stable).
   const drag = useRef<{ startX: number; startY: number; view: View; moved: boolean } | null>(null);
+  /** Measured label widths by font and text; measuring hundreds of names per frame adds up. */
+  const labelWidths = useRef(new Map<string, number>());
+  /** Boundary outlines as canvas paths, rebuilt when the reference changes. */
+  const outlinesRef = useRef<{ source: unknown; neighbours: Path2D; focus: Path2D; borders: Path2D } | null>(null);
 
   /** Cities with at least one boundary; the focus city is drawn last, on top. */
   const cityLayers = useMemo((): CityLayer[] => {
-    const layers = reference.cities
-      .map((city) => ({
+    const byCity = new Map<string, ReferenceBoundary[]>();
+    for (const boundary of reference.boundaries) {
+      const list = byCity.get(boundary.cityId);
+      if (list) list.push(boundary);
+      else byCity.set(boundary.cityId, [boundary]);
+    }
+    const layers = reference.cities.flatMap((city): CityLayer[] => {
+      const boundaries = byCity.get(city.id) ?? [];
+      const extent = boundaryExtent(boundaries);
+      if (!extent) return [];
+      return [{
         id: city.id,
         label: city.nameLocal ?? city.name,
-        boundaries: reference.boundaries.filter((boundary) => boundary.cityId === city.id),
+        prefecture: city.prefecture ?? "",
+        boundaries,
         focus: city.id === FOCUS_CITY_ID,
-      }))
-      .filter((layer) => layer.boundaries.length > 0);
+        extent,
+        labelAt: labelPosition(boundaries),
+      }];
+    });
     return [...layers.filter((layer) => !layer.focus), ...layers.filter((layer) => layer.focus)];
+  }, [reference]);
+
+  // Prefecture borders and names, traced from the cities' outlines.
+  const prefectures = useMemo(() => {
+    const byPrefecture = new Map<string, ReferenceBoundary[]>();
+    for (const layer of cityLayers) {
+      if (!layer.prefecture) continue;
+      const list = byPrefecture.get(layer.prefecture);
+      if (list) list.push(...layer.boundaries);
+      else byPrefecture.set(layer.prefecture, [...layer.boundaries]);
+    }
+    const layers: PrefectureLayer[] = [...byPrefecture].map(([name, boundaries]) => ({ name, labelAt: areaCentroid(boundaries) }));
+    // Only worth drawing when the map spans more than one prefecture.
+    const borders = byPrefecture.size < 2 ? [] : groupBorders(cityLayers
+      .filter((layer) => layer.prefecture)
+      .flatMap((layer) => layer.boundaries.map((boundary) => ({ geometry: boundary.geometry, group: layer.prefecture }))));
+    return { layers: byPrefecture.size < 2 ? [] : layers, borders };
+  }, [cityLayers]);
+
+  // Region-wide stations, minus those already drawn as a scored station.
+  const railStations = useMemo(() => {
+    const scored = reference.catalog.inCategory("station");
+    return reference.catalog.inCategory(RAIL_STATION_CATEGORY)
+      .filter((station) => !scored.some((other) =>
+        other.name.replace(/〈.*〉$/u, "") === station.name.replace(/〈.*〉$/u, "") &&
+        Math.hypot((other.lon - station.lon) * Math.cos((station.lat * Math.PI) / 180), other.lat - station.lat) * KM_PER_DEGREE < SAME_STATION_KM))
+      // Busiest first, so their names win the space when labels compete.
+      .sort((a, b) => lineCount(b) - lineCount(a));
   }, [reference]);
 
   // Base projection: fit the combined extent of every city boundary.
@@ -273,6 +367,10 @@ export const MapView = memo(function MapView({
       basePxPerKm: scale / KM_PER_DEGREE,
     };
   }, [reference]);
+  const maxScale = Math.max(MIN_SCALE, MAX_PX_PER_KM / basePxPerKm);
+  const locateScale = clamp(LOCATE_PX_PER_KM / basePxPerKm, MIN_SCALE, maxScale);
+  const maxScaleRef = useRef(maxScale);
+  maxScaleRef.current = maxScale;
 
   // Compose base projection with the current view transform.
   const toScreen = useCallback(
@@ -289,8 +387,8 @@ export const MapView = memo(function MapView({
   useLayoutEffect(() => {
     if (autoFitted.current || !items.some(({ listing }) => listing.lat != null && listing.lon != null)) return;
     autoFitted.current = true;
-    setView(fitView(items, project));
-  }, [items, project]);
+    setView(fitView(items, project, Math.min(locateScale * 2, maxScale)));
+  }, [items, project, locateScale, maxScale]);
 
   const rowsByKey = useMemo(
     () => new Map(items.map((row) => [listingKey(row.listing), row])),
@@ -322,7 +420,7 @@ export const MapView = memo(function MapView({
   useEffect(() => {
     if (!centerTarget) return;
     setView((current) => {
-      const scale = Math.max(current.scale, LOCATE_SCALE);
+      const scale = Math.max(current.scale, locateScale);
       const point = project(centerTarget.lat, centerTarget.lon);
       return {
         scale,
@@ -332,7 +430,7 @@ export const MapView = memo(function MapView({
     });
     setSelectionCluster([]);
     canvasRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [centerTarget, project]);
+  }, [centerTarget, project, locateScale]);
 
   const cycleCluster = (direction: 1 | -1) => {
     if (selectionCluster.length < 2) return;
@@ -367,50 +465,72 @@ export const MapView = memo(function MapView({
       ctx.lineWidth = 1;
       ctx.textAlign = "left";
     };
-    const trace = (boundaries: readonly ReferenceBoundary[]) => {
-      ctx.beginPath();
-      for (const boundary of boundaries) {
-        for (const polygon of polygonsOf(boundary.geometry)) {
-          for (const ring of polygon) {
-            ring.forEach(([lon, lat], i) => {
-              const { x, y } = toScreen(lat, lon);
-              i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-            });
-            ctx.closePath();
+    const pxPerKm = basePxPerKm * view.scale;
+    /** True when a lon/lat box overlaps the canvas (the projection keeps north up). */
+    const onScreen = (extent: Extent) => {
+      const topLeft = toScreen(extent.maxLat, extent.minLon);
+      const bottomRight = toScreen(extent.minLat, extent.maxLon);
+      return bottomRight.x >= 0 && topLeft.x <= WIDTH && bottomRight.y >= 0 && topLeft.y <= HEIGHT;
+    };
+    // Outlines are built once per reference as paths in base-projection pixels
+    // and drawn through the view transform, so panning and zooming never
+    // re-trace the region's ~100k boundary vertices. Line widths and dashes
+    // are divided by the zoom to stay constant on screen.
+    let outlines = outlinesRef.current;
+    if (outlines?.source !== prefectures) {
+      const tracePath = (path: Path2D, rings: Iterable<readonly Position[]>, close: boolean) => {
+        for (const ring of rings) {
+          ring.forEach(([lon, lat], i) => {
+            const { x, y } = project(lat, lon);
+            i === 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+          });
+          if (close) path.closePath();
+        }
+      };
+      const cityPath = (cities: readonly CityLayer[]) => {
+        const path = new Path2D();
+        for (const layer of cities) {
+          for (const boundary of layer.boundaries) {
+            for (const polygon of polygonsOf(boundary.geometry)) tracePath(path, polygon, true);
           }
         }
-      }
-    };
-    const drawLabel = (layer: CityLayer, color: string) => {
-      const position = labelPosition(layer.boundaries);
-      if (!position) return;
-      const { x, y } = toScreen(position[1], position[0]);
-      haloText(layer.label, x, y, color, `600 13px ${FONT}`, "center");
-    };
-
-    // Neighbouring municipalities: faint fill, dashed outline.
-    const neighbours = cityLayers.filter((layer) => !layer.focus);
-    ctx.setLineDash([4, 4]);
-    for (const layer of neighbours) {
-      trace(layer.boundaries);
-      ctx.fillStyle = colors.neighbourFill;
-      ctx.fill("evenodd");
-      ctx.strokeStyle = colors.neighbourLine;
-      ctx.stroke();
+        return path;
+      };
+      const borders = new Path2D();
+      tracePath(borders, prefectures.borders, false);
+      outlines = {
+        source: prefectures,
+        neighbours: cityPath(cityLayers.filter((layer) => !layer.focus)),
+        focus: cityPath(cityLayers.filter((layer) => layer.focus)),
+        borders,
+      };
+      outlinesRef.current = outlines;
     }
+    ctx.save();
+    ctx.setTransform(dpr * view.scale, 0, 0, dpr * view.scale, dpr * view.tx, dpr * view.ty);
+    const px = 1 / view.scale;
+    // Municipalities around the search area: faint fill, dashed outline.
+    ctx.fillStyle = colors.neighbourFill;
+    ctx.fill(outlines.neighbours, "evenodd");
+    ctx.setLineDash([4 * px, 4 * px]);
+    ctx.lineWidth = px;
+    ctx.strokeStyle = colors.neighbourLine;
+    ctx.stroke(outlines.neighbours);
     ctx.setLineDash([]);
-
+    // Prefecture borders (and the coast), solid over the municipal outlines.
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 1.25 * px;
+    ctx.strokeStyle = colors.prefectureLine;
+    ctx.stroke(outlines.borders);
     // The focus city (Soka): solid, emphasised (the primary search area).
+    ctx.fillStyle = colors.focusFill;
+    ctx.fill(outlines.focus, "evenodd");
+    ctx.lineWidth = 1.5 * px;
+    ctx.strokeStyle = colors.focusLine;
+    ctx.stroke(outlines.focus);
+    ctx.restore();
+    const neighbours = cityLayers.filter((layer) => !layer.focus);
     const focus = cityLayers.filter((candidate) => candidate.focus);
-    for (const layer of focus) {
-      trace(layer.boundaries);
-      ctx.fillStyle = colors.focusFill;
-      ctx.fill("evenodd");
-      ctx.strokeStyle = colors.focusLine;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.lineWidth = 1;
-    }
 
     // Elementary schools.
     if (layers.schools) {
@@ -447,7 +567,7 @@ export const MapView = memo(function MapView({
 
     // Listings, coloured by score; the best scores are drawn last, on top.
     // Dots grow a little when zoomed in. Hovered/selected dots come after all.
-    const radius = 4.5 * Math.min(1.5, 1 + (view.scale - 1) * 0.06);
+    const radius = 4.5 * Math.min(1.5, 1 + Math.max(0, pxPerKm / DOT_BASE_PX_PER_KM - 1) * 0.06);
     dotsRef.current = [];
     let hoveredDot: Projected | null = null;
     let selectedDot: Projected | null = null;
@@ -505,18 +625,77 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // Names are placed after every marker, most important first; one that would
+    // overlap a name already placed is skipped.
+    const placed: LabelBox[] = [];
+    const label = (
+      text: string, x: number, y: number, color: string,
+      { font = `11px ${FONT}`, size = 11, align = "left" as CanvasTextAlign, force = false } = {},
+    ) => {
+      ctx.font = font;
+      const widthKey = `${font}|${text}`;
+      let width = labelWidths.current.get(widthKey);
+      if (width == null) {
+        width = ctx.measureText(text).width;
+        labelWidths.current.set(widthKey, width);
+      }
+      const left = align === "center" ? x - width / 2 : x;
+      const box = { left: left - 2, top: y - size - 1, right: left + width + 2, bottom: y + 3 };
+      if (box.right < 0 || box.left > WIDTH || box.bottom < 0 || box.top > HEIGHT) return;
+      if (!force && placed.some((other) =>
+        box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top)) return;
+      placed.push(box);
+      haloText(text, x, y, color, font, align);
+    };
+    // Station names wait for the label pass: the hubs early, the rest last.
+    let hubLabels = () => {};
+    let stationLabels = () => {};
+
     // Reference places sit above the listings so they are never buried.
-    // Stations: squares, labelled for the main hubs.
+    // Stations: small squares across the region, larger ones for the scored stations.
     if (layers.stations) {
-      for (const station of reference.catalog.inCategory("station")) {
+      const half = pxPerKm < 8 ? 1.25 : pxPerKm < 30 ? 2 : 2.75;
+      ctx.fillStyle = colors.railStation;
+      ctx.strokeStyle = colors.markerOutline;
+      ctx.lineWidth = half > 1.5 ? 1 : 0.5;
+      const railLabels: CatalogPlace[] = [];
+      for (const station of railStations) {
+        const { x, y } = toScreen(station.lat, station.lon);
+        if (x < -4 || y < -4 || x > WIDTH + 4 || y > HEIGHT + 4) continue;
+        ctx.fillRect(x - half, y - half, half * 2, half * 2);
+        if (half > 1.5) ctx.strokeRect(x - half, y - half, half * 2, half * 2);
+        railLabels.push(station);
+      }
+      ctx.lineWidth = 1;
+      const scored = reference.catalog.inCategory("station");
+      for (const station of scored) {
         const { x, y } = toScreen(station.lat, station.lon);
         const major = LABELLED_STATIONS.has(station.name);
-        const half = major ? 4 : 3;
+        const size = major ? 4 : 3;
         ctx.fillStyle = colors.station;
         ctx.strokeStyle = colors.markerOutline;
-        ctx.fillRect(x - half, y - half, half * 2, half * 2);
-        ctx.strokeRect(x - half, y - half, half * 2, half * 2);
-        if (major) haloText(station.name.replace(/〈草加松原〉/, ""), x + 7, y - 5, colors.stationLabel, `600 11px ${FONT}`);
+        ctx.fillRect(x - size, y - size, size * 2, size * 2);
+        ctx.strokeRect(x - size, y - size, size * 2, size * 2);
+      }
+      const stationName = (station: CatalogPlace) => station.name.replace(/〈.*〉$/u, "");
+      hubLabels = () => {
+        for (const station of scored.filter((candidate) => LABELLED_STATIONS.has(candidate.name))) {
+          const { x, y } = toScreen(station.lat, station.lon);
+          label(stationName(station), x + 7, y - 5, colors.stationLabel, { font: `600 11px ${FONT}` });
+        }
+      };
+      if (pxPerKm >= RAIL_STATION_LABEL_MIN_PX_PER_KM) {
+        // Scored stations first, then the region's stations, busiest first.
+        stationLabels = () => {
+          for (const station of scored.filter((candidate) => !LABELLED_STATIONS.has(candidate.name))) {
+            const { x, y } = toScreen(station.lat, station.lon);
+            label(stationName(station), x + 6, y - 4, colors.stationLabel, { font: `600 10px ${FONT}`, size: 10 });
+          }
+          for (const station of railLabels) {
+            const { x, y } = toScreen(station.lat, station.lon);
+            label(stationName(station), x + half + 3, y - half - 1, colors.railStationLabel, { font: `10px ${FONT}`, size: 10 });
+          }
+        };
       }
     }
 
@@ -532,7 +711,6 @@ export const MapView = memo(function MapView({
         ctx.fillRect(-5, -5, 10, 10);
         ctx.strokeRect(-5, -5, 10, 10);
         ctx.restore();
-        haloText(mosque.name, x + 9, y + 4, colors.mosqueLabel);
       }
     }
 
@@ -540,15 +718,43 @@ export const MapView = memo(function MapView({
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       drawStar(ctx, x, y, 10, colors.target);
-      haloText(targetPoi.name, x + 12, y + 4, colors.targetLabel, `600 11px ${FONT}`);
     }
 
-    for (const layer of neighbours) drawLabel(layer, colors.cityLabel);
-    for (const layer of focus) drawLabel(layer, colors.focusLabel);
+    // Names, most important first. The target is always named; the mosques
+    // next, as far as they fit (they crowd together when zoomed out).
+    if (targetPoi) {
+      const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
+      label(targetPoi.name, x + 12, y + 4, colors.targetLabel, { font: `600 11px ${FONT}`, force: true });
+    }
+    if (layers.mosques) {
+      for (const mosque of reference.catalog.inCategory("mosque")) {
+        const { x, y } = toScreen(mosque.lat, mosque.lon);
+        label(mosque.name, x + 9, y + 4, colors.mosqueLabel);
+      }
+    }
+    const cityName = (layer: CityLayer, color: string, font: string, force = false) => {
+      if (!layer.labelAt || !onScreen(layer.extent)) return;
+      const topLeft = toScreen(layer.extent.maxLat, layer.extent.minLon);
+      const bottomRight = toScreen(layer.extent.minLat, layer.extent.maxLon);
+      if (!layer.focus && (bottomRight.x - topLeft.x < CITY_LABEL_MIN_PX.width || bottomRight.y - topLeft.y < CITY_LABEL_MIN_PX.height)) return;
+      const { x, y } = toScreen(layer.labelAt[1], layer.labelAt[0]);
+      label(layer.label, x, y, color, { font, size: 13, align: "center", force });
+    };
+    for (const layer of focus) cityName(layer, colors.focusLabel, `600 13px ${FONT}`, true);
+    hubLabels();
+    if (pxPerKm <= PREFECTURE_LABEL_MAX_PX_PER_KM) {
+      for (const prefecture of prefectures.layers) {
+        if (!prefecture.labelAt) continue;
+        const { x, y } = toScreen(prefecture.labelAt[1], prefecture.labelAt[0]);
+        label(prefecture.name, x, y, colors.prefectureLabel, { font: `700 15px ${FONT}`, size: 15, align: "center" });
+      }
+    }
+    for (const layer of neighbours) cityName(layer, colors.cityLabel, `600 12px ${FONT}`);
+    stationLabels();
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, targetPoi, cityLayers, toScreen, basePxPerKm, view.scale, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute]);
+  }, [drawOrder, reference, targetPoi, cityLayers, prefectures, railStations, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -561,7 +767,7 @@ export const MapView = memo(function MapView({
       const { mx, my } = canvasCoords(canvas, e.clientX, e.clientY);
       setView((v) => {
         const factor = Math.exp(-e.deltaY * 0.0015);
-        const scale = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
+        const scale = clamp(v.scale * factor, MIN_SCALE, maxScaleRef.current);
         const k = scale / v.scale;
         // Keep the base point under the cursor fixed.
         return { scale, tx: mx - (mx - v.tx) * k, ty: my - (my - v.ty) * k };
@@ -651,7 +857,7 @@ export const MapView = memo(function MapView({
   const zoomBy = (factor: number) => {
     autoFitted.current = true;
     setView((v) => {
-      const scale = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
+      const scale = clamp(v.scale * factor, MIN_SCALE, maxScale);
       const k = scale / v.scale;
       const cx = WIDTH / 2;
       const cy = HEIGHT / 2;
@@ -659,7 +865,7 @@ export const MapView = memo(function MapView({
     });
   };
 
-  const fitToListings = () => setView(fitView(items, project));
+  const fitToListings = () => setView(fitView(items, project, Math.min(locateScale * 2, maxScale)));
 
   // The rings chip names the travel mode the scoring uses.
   const layerChips = LAYERS.map((layer) =>
@@ -680,7 +886,7 @@ export const MapView = memo(function MapView({
 
   return (
     <section className={appStyles.card}>
-      <h2 className={appStyles.cardTitle}>Map — 草加市 &amp; 越谷市</h2>
+      <h2 className={appStyles.cardTitle}>Map — Kanto · 関東</h2>
       <div className={styles.wrap}>
         <canvas
           ref={canvasRef}
@@ -763,8 +969,8 @@ export const MapView = memo(function MapView({
           <button
             type="button"
             className={styles.reset}
-            title="Reset view"
-            aria-label="Reset view"
+            title="Show all of Kanto"
+            aria-label="Show all of Kanto"
             onClick={() => setView(IDENTITY)}
           >
             ⤢
@@ -781,7 +987,9 @@ export const MapView = memo(function MapView({
           <div className={styles.legendKeys}>
             <span><i className={styles.keyStar}>★</i>{targetPoi?.name ?? "Target"}</span>
             <span><i className={styles.keyMosque} />Mosque</span>
-            <span><i className={styles.keyStation} />Station</span>
+            <span><i className={styles.keyStation} />Scored station</span>
+            {layers.stations && <span><i className={styles.keyRailStation} />Other station</span>}
+            {prefectures.borders.length > 0 && <span><i className={styles.keyPrefecture} />Prefecture border</span>}
             <span><i className={styles.keySchool} />School</span>
             <span><i className={styles.keyNew} />New</span>
             <span><i className={styles.keyCandidate}>★</i>Shortlisted · applied</span>
@@ -993,7 +1201,11 @@ function MapListingCard({
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 /** The view that frames these listings, or the full map when they already fill it. */
-function fitView(items: readonly ScoredRow[], project: (lat: number, lon: number) => { x: number; y: number }): View {
+function fitView(
+  items: readonly ScoredRow[],
+  project: (lat: number, lon: number) => { x: number; y: number },
+  maxFitScale: number,
+): View {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const { listing } of items) {
     if (listing.lat == null || listing.lon == null) continue;
@@ -1007,7 +1219,7 @@ function fitView(items: readonly ScoredRow[], project: (lat: number, lon: number
   const scale = clamp(
     Math.min((WIDTH - 2 * FIT_PADDING) / Math.max(maxX - minX, 1), (HEIGHT - 2 * FIT_PADDING) / Math.max(maxY - minY, 1)),
     MIN_SCALE,
-    LOCATE_SCALE * 2,
+    Math.max(MIN_SCALE, maxFitScale),
   );
   if (scale <= MIN_SCALE * 1.05) return IDENTITY;
   return { scale, tx: WIDTH / 2 - ((minX + maxX) / 2) * scale, ty: HEIGHT / 2 - ((minY + maxY) / 2) * scale };

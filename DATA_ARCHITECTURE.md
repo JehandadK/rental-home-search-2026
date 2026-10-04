@@ -59,6 +59,14 @@ How data flows today:
 - **Absence is not evidence.** Incremental crawls cannot show a property left the market, so the documents record the last time each ad was seen and leave "gone" to positive evidence: an ad-page check, or a complete-snapshot build. `summary.offMarket` is the window between the last evidence it was up and the check that found every ad gone.
 - `data/availability.json` now keeps every check per ad in `history`; the newest check is still the record consumers overlay.
 
+## Kanto reference data (2026-10-04)
+
+The map covers all of Kanto. `npm run data:reference:ksj` (`scripts/import-ksj-reference.ts`) imports MLIT 国土数値情報 files downloaded by hand from https://nlftp.mlit.go.jp/ksj/ (inputs only, not kept in the repository): N03 行政区域 for the seven prefectures, and the N02 鉄道 station file.
+
+- **Cities and boundaries.** One city per municipality code: cities, towns, villages, Tokyo's special wards, and each ward of a designated city. A city already in the catalog (same prefecture and local name) keeps its id; new ones are `city:jp-<code>`. Each gets the boundary `boundary:<cityId>:n03-<date>`, and the older boundaries it replaces are retired. Tokyo's remote islands (大島・三宅・八丈・小笠原 支庁) and 所属未定地 are left out. Boundaries are simplified to about 20 m with topology preserved (`src/collectors/ksj/topology.ts`), so neighbours share identical border vertices; the map traces prefecture borders from those shared edges.
+- **Rail stations.** One `railStation` place per N02 station group, inside an imported municipality, with operators, lines, line count, and city. They are map context: the station score still uses the 20 curated `station` places, and the browser's distance index measures only the scored categories (`SCORED_CATEGORIES`). Scoring every listing against ~2,000 stations would take over a second at load and is deferred until listings cover Kanto.
+- **Re-running** with the same files is a no-op; a newer edition upserts changed records and retires stations it no longer has.
+
 ## Target layers and dependency rules
 
 Established by M4. Locations are directories inside this one package; converting them to workspace packages is the optional M8.

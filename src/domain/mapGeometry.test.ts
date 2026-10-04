@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundaryExtent, circleOffCanvas, labelPosition, longitudeScale, padExtent, polygonsOf, ringCentroid, ringRadiusPx, scaleBarLength } from "./mapGeometry";
+import { areaCentroid, boundaryExtent, circleOffCanvas, groupBorders, pointInGeometry, labelPosition, longitudeScale, padExtent, polygonsOf, ringCentroid, ringRadiusPx, scaleBarLength } from "./mapGeometry";
 import type { ReferenceBoundary } from "./referenceData";
 
 const square = (lon: number, lat: number, size: number) =>
@@ -60,5 +60,47 @@ describe("travel rings", () => {
     expect(circleOffCanvas(500, 760, 50, 1100, 680)).toBe(true);
     // A big ring that merely contains the canvas still draws.
     expect(circleOffCanvas(550, 340, 2000, 1100, 680)).toBe(false);
+  });
+});
+
+describe("point in a boundary", () => {
+  const withHole = { type: "Polygon" as const, coordinates: [square(0, 0, 4), square(1, 1, 2)] };
+
+  it("is inside an outer ring and outside its holes", () => {
+    expect(pointInGeometry([0.5, 0.5], withHole)).toBe(true);
+    expect(pointInGeometry([2, 2], withHole)).toBe(false);
+    expect(pointInGeometry([5, 5], withHole)).toBe(false);
+    expect(pointInGeometry([12, 12], { type: "MultiPolygon", coordinates: [[square(0, 0, 1)], [square(11, 11, 2)]] })).toBe(true);
+  });
+});
+
+describe("borders between groups", () => {
+  // Three unit squares in a row: a and b in one prefecture, c in another.
+  const cell = (lon: number) => ({ type: "Polygon" as const, coordinates: [square(lon, 0, 1)] });
+  const lines = groupBorders([
+    { geometry: cell(0), group: "埼玉県" },
+    { geometry: cell(1), group: "埼玉県" },
+    { geometry: cell(2), group: "東京都" },
+  ]);
+  const edges = new Set(lines.flatMap((line) =>
+    line.slice(1).map((point, i) => [line[i], point].map((p) => p.join(",")).sort().join("|"))));
+
+  it("keeps the edge between groups and the outer edge, not edges inside a group", () => {
+    expect(edges.has(["2,0", "2,1"].join("|"))).toBe(true);
+    expect(edges.has(["1,0", "1,1"].join("|"))).toBe(false);
+    // Outer perimeter: 3 + 3 + 1 + 1 unit edges, plus the one shared border.
+    expect(edges.size).toBe(9);
+  });
+
+  it("links touching edges into polylines", () => {
+    expect(lines.length).toBeLessThanOrEqual(3);
+  });
+
+  it("labels a group at its area-weighted centroid", () => {
+    const boundaries = [cell(0), cell(1)].map((geometry, i) => ({ id: `b${i}`, cityId: `c${i}`, geometry }));
+    const [lon, lat] = areaCentroid(boundaries)!;
+    expect(lon).toBeCloseTo(1, 6);
+    expect(lat).toBeCloseTo(0.5, 6);
+    expect(areaCentroid([])).toBeNull();
   });
 });

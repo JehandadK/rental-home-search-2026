@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlaceCatalog, isKindergarten, type ReferencePlace } from "./places";
+import { buildPlaceCatalog, isKindergarten, SCORED_CATEGORIES, type ReferencePlace } from "./places";
 import { ProximityIndex } from "./proximityIndex";
 import { enrichListing } from "./enrichListing";
 import { defaultSelection, describeSelection } from "./placeSelection";
@@ -75,6 +75,20 @@ describe("buildPlaceCatalog", () => {
     const enriched = enrichListing(listing, { lat: 35.8, lon: 139.8 }, undefined, catalog);
     expect(enriched.poi1).toBeUndefined();
     expect(enriched.station).toBeUndefined();
+  });
+
+  it("measures only the scored categories when asked, leaving map-only places out of the index", () => {
+    const catalog = buildPlaceCatalog([
+      place("s", "station", "草加"),
+      place("r", "railStation", "北千住", { lat: 35.749, lon: 139.805 }),
+    ]);
+    expect(SCORED_CATEGORIES).toContain("station");
+    expect(SCORED_CATEGORIES).not.toContain("railStation");
+    const index = new ProximityIndex([{ ...listing, geocoded: true, lat: 35.8, lon: 139.8 }], catalog, SCORED_CATEGORIES);
+    expect(index.nearestIn(0, "station", null)?.name).toBe("草加");
+    expect(index.nearestIn(0, "railStation", null)).toBeNull();
+    expect(new ProximityIndex([{ ...listing, geocoded: true, lat: 35.8, lon: 139.8 }], catalog).nearestIn(0, "railStation", null)?.name)
+      .toBe("北千住");
   });
 
   it("uses the facility type, not the label, to tell kindergartens from daycares", () => {

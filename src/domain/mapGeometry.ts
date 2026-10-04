@@ -1,6 +1,8 @@
 /**
  * Pure geometry for drawing reference boundaries: flattening polygon and
- * multipolygon boundaries, choosing a label point, and fitting an extent.
+ * multipolygon boundaries, choosing a label point, fitting an extent, testing
+ * points against a boundary, and tracing the borders between groups of
+ * boundaries (prefectures).
  */
 import type { BoundaryGeometry, PolygonCoordinates, Position, ReferenceBoundary } from "./referenceData";
 import type { GeoPoint } from "./types";
@@ -54,6 +56,128 @@ function ringArea(ring: readonly Position[]): number {
   return sum / 2;
 }
 
+/** Centroid of the boundaries' outer rings taken together (by area), for labelling a group of them; null when empty. */
+export function areaCentroid(boundaries: readonly ReferenceBoundary[]): Position | null {
+  let area = 0;
+  let sx = 0;
+  let sy = 0;
+  for (const boundary of boundaries) {
+    for (const polygon of polygonsOf(boundary.geometry)) {
+      const ring = polygon[0];
+      if (!ring?.length) continue;
+      // Shoelace centroid, with the ring's orientation normalised so every piece adds.
+      const sign = ringArea(ring) < 0 ? -1 : 1;
+      for (let i = 0; i < ring.length - 1; i++) {
+        const [x0, y0] = ring[i];
+        const [x1, y1] = ring[i + 1];
+        const cross = (x0 * y1 - x1 * y0) * sign;
+        area += cross / 2;
+        sx += (x0 + x1) * cross;
+        sy += (y0 + y1) * cross;
+      }
+    }
+  }
+  return area > 0 ? [sx / (6 * area), sy / (6 * area)] : null;
+}
+
+/** True when the point lies inside the geometry: inside an outer ring and not in one of its holes. */
+export function pointInGeometry(point: Position, geometry: BoundaryGeometry): boolean {
+  return polygonsOf(geometry).some((polygon) =>
+    polygon.length > 0 && insideRing(point, polygon[0]) && !polygon.slice(1).some((hole) => insideRing(point, hole)));
+}
+
+function insideRing([x, y]: Position, ring: readonly Position[]): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * The borders between groups of boundaries (prefectures, given each city's
+ * prefecture as its group), as polylines: every edge whose two sides belong to
+ * different groups, plus every edge only one boundary uses (a coast, or the
+ * edge of the data). Neighbours must share identical vertices along a common
+ * border, as the topology-preserving import guarantees; edges are matched by
+ * their exact coordinates.
+ */
+export function groupBorders(
+  boundaries: readonly { geometry: BoundaryGeometry; group: string }[],
+): Position[][] {
+  const edges = new Map<string, { a: Position; b: Position; group: string; count: number; mixed: boolean }>();
+  for (const { geometry, group } of boundaries) {
+    for (const polygon of polygonsOf(geometry)) {
+      for (const ring of polygon) {
+        for (let i = 0; i < ring.length - 1; i++) {
+          const a = ring[i];
+          const b = ring[i + 1];
+          const ka = pointKey(a);
+          const kb = pointKey(b);
+          if (ka === kb) continue;
+          const key = ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
+          const edge = edges.get(key);
+          if (edge) {
+            edge.count++;
+            if (edge.group !== group) edge.mixed = true;
+          } else {
+            edges.set(key, { a, b, group, count: 1, mixed: false });
+          }
+        }
+      }
+    }
+  }
+  return joinSegments([...edges.values()].filter((edge) => edge.count === 1 || edge.mixed));
+}
+
+/** Link segments that share endpoints into as few polylines as possible. */
+function joinSegments(segments: readonly { a: Position; b: Position }[]): Position[][] {
+  const at = new Map<string, number[]>();
+  segments.forEach(({ a, b }, index) => {
+    for (const key of [pointKey(a), pointKey(b)]) {
+      const list = at.get(key);
+      if (list) list.push(index);
+      else at.set(key, [index]);
+    }
+  });
+  const used = new Uint8Array(segments.length);
+  const walk = (start: Position): Position[] => {
+    const line: Position[] = [start];
+    let current = start;
+    for (;;) {
+      const next = (at.get(pointKey(current)) ?? []).find((index) => !used[index]);
+      if (next == null) return line;
+      used[next] = 1;
+      const { a, b } = segments[next];
+      current = pointKey(a) === pointKey(current) ? b : a;
+      line.push(current);
+    }
+  };
+  const lines: Position[][] = [];
+  // Open polylines first (from endpoints that are not on a through-line), then closed loops.
+  for (const [key, list] of at) {
+    if (list.length === 2) continue;
+    for (const index of list) {
+      if (used[index]) continue;
+      const { a, b } = segments[index];
+      used[index] = 1;
+      const from = pointKey(a) === key ? a : b;
+      const to = from === a ? b : a;
+      lines.push([from, ...walk(to)]);
+    }
+  }
+  segments.forEach(({ a, b }, index) => {
+    if (used[index]) return;
+    used[index] = 1;
+    lines.push([a, ...walk(b)]);
+  });
+  return lines;
+}
+
+const pointKey = ([lon, lat]: Position) => `${lon},${lat}`;
+
 /** Bounding box of the boundaries' outer rings; null when there are none. */
 export function boundaryExtent(boundaries: readonly ReferenceBoundary[]): Extent | null {
   const positions = boundaries.flatMap((boundary) =>
@@ -98,7 +222,7 @@ export function longitudeScale(extent: Extent): number {
   return Math.cos((((extent.minLat + extent.maxLat) / 2) * Math.PI) / 180);
 }
 
-const SCALE_BAR_STEPS_KM = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20];
+const SCALE_BAR_STEPS_KM = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100];
 
 /** The longest round distance whose bar fits in `maxPx`, for a map scale bar. */
 export function scaleBarLength(pxPerKm: number, maxPx: number): { km: number; px: number } {

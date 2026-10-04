@@ -190,7 +190,7 @@ describe("JSON reference-data repository", () => {
   it("supports multipolygon boundary updates and validates city references", async () => {
     const { repo } = await makeRepository();
     const before = await repo.loadSnapshot();
-    const current = before.boundaries.records[0];
+    const current = before.boundaries.records.find((record) => record.status === "active")!;
     const ring = current.geometry.type === "Polygon"
       ? current.geometry.coordinates
       : current.geometry.coordinates[0];
