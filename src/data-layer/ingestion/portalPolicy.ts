@@ -1,7 +1,6 @@
 import type { RawListing } from "../../domain/types";
 import type { ListingSourceSnapshot } from "../contracts";
 import { trackingKey } from "../../domain/listingIdentity";
-import { sourceObservationBatch } from "../sourceObservationBatch";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sourceObservationTime";
 import { exactReconciliation } from "./reconciliation";
 import type { ScrapeBatch } from "./contracts";
@@ -27,8 +26,8 @@ export const isAthomeOverlap = (a: RawListing, b: RawListing) => athomeMatchKeys
 export const isRoomspotOverlap = (a: RawListing, b: RawListing) => roomspotMatchKeys(b).some((key) => roomspotMatchKeys(a).includes(key));
 export const portalDiscoveryKeys = (source: BrowserPortal, row: RawListing) => [...(row.url ? [`url:${row.url}`] : []), ...keys(source, row)];
 
-function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: readonly RawListing[], publicPolicy: boolean) {
-  const match = (row: RawListing) => publicPolicy ? portalDiscoveryKeys(source, row) : keys(source, row);
+function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: readonly RawListing[]) {
+  const match = (row: RawListing) => portalDiscoveryKeys(source, row);
   const byAlias = new Map<string, RawListing>();
   for (const row of existing) for (const alias of match(row)) if (!byAlias.has(alias)) byAlias.set(alias, row);
   // Rooms in one building often share name/address/size, so the shared `property:` alias
@@ -49,40 +48,25 @@ function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: re
     used.add(prior); updated++; overlaps++;
     // The same ad (source ID) keeps its stored locator: AtHome list hrefs carry a
     // changing sibling-room query, which is not evidence of a new advertisement.
-    const locator = publicPolicy && prior.id === row.id && prior.url ? { url: prior.url } : {};
+    const locator = prior.id === row.id && prior.url ? { url: prior.url } : {};
     if (source === "athome") {
       const parking = row.parking == null ? prior.parking
         : row.parking.available !== false && row.parking.monthlyYen == null && prior.parking?.monthlyYen != null ? prior.parking : row.parking;
       listings.push({ ...prior, ...row, ...locator, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } });
     } else {
-      listings.push({ ...prior, ...row, ...locator, ...(publicPolicy ? {
+      listings.push({ ...prior, ...row, ...locator,
         ...(prior.costs || row.costs ? { costs: { ...prior.costs, ...row.costs } } : {}),
         ...(prior.building || row.building ? { building: { ...prior.building, ...row.building } } : {}),
-        ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}),
-      } : {}) });
+        ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}) });
     }
   }
   for (const prior of existing) {
     // Stored rows superseded by a fresh alias are still absorbed (and archived by the caller).
     if (used.has(prior) || match(prior).some((alias) => seen.has(alias))) continue;
-    if (!publicPolicy) match(prior).forEach((alias) => seen.set(alias, prior.id ?? null));
     listings.push(prior);
   }
   return { listings, added, updated, overlaps };
 }
-export const mergeAthomeIncremental = (existing: readonly RawListing[], fresh: readonly RawListing[]) => merge("athome", existing, fresh, false);
-export const mergeRoomspotIncremental = (existing: readonly RawListing[], fresh: readonly RawListing[]) => merge("roomspot", existing, fresh, false);
-
-/** Compatibility batch builders; new collectors submit observations to the public service instead. */
-type LegacyBatchInput = Omit<Parameters<typeof sourceObservationBatch>[0], "source" | "matchKeys"> & { completeness?: "incremental" | "complete" };
-function legacyBatch(source: BrowserPortal, input: LegacyBatchInput) {
-  if (input.current.some((row) => !row.id)) throw new Error(`${source} listing has no stable source ID`);
-  const batch = sourceObservationBatch({ ...input, source, matchKeys: (row) => keys(source, row) });
-  return { ...batch, completeness: input.completeness ?? "incremental" as const,
-    retirements: batch.retirements?.map((entry) => ({ ...entry, reason: `Superseded by a newer ${source} advertisement with matching unit aliases` })) };
-}
-export const athomeObservationBatch = (input: LegacyBatchInput) => legacyBatch("athome", input);
-export const roomspotObservationBatch = (input: LegacyBatchInput) => legacyBatch("roomspot", input);
 
 export function preparePortalBatch(request: ScrapeBatch, previous: ListingSourceSnapshot | null) {
   const source = request.source as BrowserPortal;
@@ -98,7 +82,7 @@ export function preparePortalBatch(request: ScrapeBatch, previous: ListingSource
       return at === undefined || Date.parse(observation.observedAt!) >= Date.parse(at);
     });
   });
-  const merged = merge(source, previous?.listings ?? [], eligible.map((observation) => observation.listing), true);
+  const merged = merge(source, previous?.listings ?? [], eligible.map((observation) => observation.listing));
   for (const observation of eligible) {
     // A cached page staged after a fresher one must not move stored evidence backwards.
     const key = trackingKey(observation.listing), at = times[key];

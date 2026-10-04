@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isFamilyLayout, parseRoomspotPage } from "./roomspot";
-import { mergeRoomspotIncremental, roomspotKey, roomspotObservationBatch } from "../../data-layer/ingestion/portalPolicy";
+import { roomspotKey } from "../../data-layer/ingestion/portalPolicy";
+import { preparePortalRows } from "../../data-layer/ingestion/portalBatch.contract";
 import type { RawListing } from "../../domain/types";
 
 const fixture = `<article class="data"><h2>テストハイツ</h2><table class="spec">
@@ -43,45 +44,15 @@ describe("RoomSpot parser", () => {
     const [fresh] = parseRoomspotPage(fixture, "Soka");
     expect(fresh).not.toHaveProperty("photos");
     const photos = [{ url: "https://property.es-img.jp/rent/img/1/1_10.jpg", kind: "exterior" as const, source: "roomspot" }];
-    expect(mergeRoomspotIncremental([{ ...fresh, photos }], [fresh]).listings[0].photos).toEqual(photos);
+    expect(preparePortalRows("roomspot", [{ ...fresh, photos }], [fresh]).listings[0].photos).toEqual(photos);
   });
-  it("retires an old source ID only when the merge proves a superseding alias", () => {
-    const old = make();
-    const replacement = make({ id: "roomspot-67890", url: "https://www.roomspot.net/rent/67890", rent: 88_000 });
-    const merged = mergeRoomspotIncremental([old], [replacement]);
-    const batch = roomspotObservationBatch({
-      previous: [old],
-      current: merged.listings,
-      expectedRevision: "revision-1",
-      observedAt: "2026-09-25T00:00:00.000Z",
-      observedAtByKey: {},
-      provenance: {},
-    });
-    expect(batch.observations.map((observation) => observation.sourceListingId)).toEqual(["roomspot-67890"]);
-    expect(batch.retirements).toEqual([expect.objectContaining({
-      id: "roomspot-12345",
-      reason: expect.stringContaining("matching unit aliases"),
-    })]);
-  });
-
-  it("does not infer retirement from an incremental absence without a matching alias", () => {
-    const old = make();
-    const other = make({ id: "roomspot-2", name: "Other", address: "埼玉県越谷市蒲生", url: "https://www.roomspot.net/rent/2" });
-    const batch = roomspotObservationBatch({
-      previous: [old, other],
-      current: [other],
-      expectedRevision: "revision-1",
-      observedAt: "2026-09-25T00:00:00.000Z",
-      observedAtByKey: {},
-      provenance: {},
-    });
-    expect(batch.retirements).toEqual([]);
-  });
-
-  it("uses stable ids and preserves unseen history", () => {
+  it("uses stable ids", () => {
     expect(roomspotKey(make())).toBe("roomspot:12345");
+  });
+  it("updates the observed ad and keeps an unseen, unrelated one", () => {
     const other = make({ id: "roomspot-2", name: "Other", address: "埼玉県越谷市蒲生", url: "https://www.roomspot.net/rent/2" });
-    const result = mergeRoomspotIncremental([make(), other], [make({ rent: 88_000 })]);
-    expect(result.listings).toHaveLength(2); expect(result.listings[0].rent).toBe(88_000);
+    const result = preparePortalRows("roomspot", [make(), other], [make({ rent: 88_000 })]);
+    expect(result.listings.map((row) => [row.id, row.rent])).toEqual([["roomspot-12345", 88_000], ["roomspot-2", 90_000]]);
+    expect(result.retirements).toEqual([]);
   });
 });

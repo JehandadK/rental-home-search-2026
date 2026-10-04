@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isFamilyLayout, parseAthomePage } from "./athome";
-import { athomeKey, athomeObservationBatch, isAthomeOverlap, mergeAthomeIncremental } from "../../data-layer/ingestion/portalPolicy";
+import { athomeKey, isAthomeOverlap } from "../../data-layer/ingestion/portalPolicy";
+import { preparePortalRows } from "../../data-layer/ingestion/portalBatch.contract";
 import type { RawListing } from "../../domain/types";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({
@@ -71,7 +72,7 @@ describe("AtHome missing amenity evidence", () => {
     const [fresh] = parseAthomePage(withoutFacilities, "Soka");
     expect(fresh.parking).toBeUndefined();
     expect(fresh.building?.conditions).toBeUndefined();
-    const [merged] = mergeAthomeIncremental([prior], [{ ...fresh, rent: 73_000 }]).listings;
+    const [merged] = preparePortalRows("athome", [prior], [{ ...fresh, rent: 73_000 }]).listings;
     expect(merged.rent).toBe(73_000);
     expect(merged.parking).toEqual(prior.parking);
     expect(merged.costs?.parking).toEqual(prior.parking);
@@ -82,14 +83,14 @@ describe("AtHome missing amenity evidence", () => {
     const [prior] = parseAthomePage(fixture, "Soka");
     prior.parking = { ...prior.parking!, monthlyYen: 8000 };
     const [fresh] = parseAthomePage(fixture.replace('<li>駐車場', '<li class="p-property__information-facility_disabled-list">駐車場'), "Soka");
-    const [merged] = mergeAthomeIncremental([prior], [fresh]).listings;
+    const [merged] = preparePortalRows("athome", [prior], [fresh]).listings;
     expect(merged.parking?.available).toBe(false);
     expect(merged.costs?.parking?.available).toBe(false);
     expect(merged.building?.conditions).not.toContain("駐車場（近隣含む）");
   });
 });
 
-describe("AtHome identity and incremental merge", () => {
+describe("AtHome identity and live merge", () => {
   it("uses the stable property number", () => expect(athomeKey(make())).toBe("athome:1119917524"));
 
   it("recognizes a rent change as an overlap", () => {
@@ -98,42 +99,12 @@ describe("AtHome identity and incremental merge", () => {
 
   it("keeps two same-size rooms of one building that appear in the same batch", () => {
     const a = make(), b = make({ id: "athome-2", url: "https://www.athome.co.jp/chintai/2/" });
-    expect(mergeAthomeIncremental([], [a, b])).toMatchObject({ added: 2, listings: [{ id: a.id }, { id: b.id }] });
+    expect(preparePortalRows("athome", [], [a, b])).toMatchObject({ added: 2, listings: [{ id: a.id }, { id: b.id }] });
     // A stored room is claimed by one fresh row only; the sibling is a new room, not its update.
-    const merged = mergeAthomeIncremental([a], [a, b]);
+    const merged = preparePortalRows("athome", [a], [a, b]);
     expect(merged.listings.map((row) => row.id)).toEqual([a.id, b.id]);
-    expect(merged).toMatchObject({ added: 1, updated: 1 });
+    expect(merged).toMatchObject({ added: 1, updated: 1, retirements: [] });
     // The same ad seen twice (same ID) is still one row.
-    expect(mergeAthomeIncremental([], [a, { ...a, rent: 73_000 }]).listings).toHaveLength(1);
-  });
-
-  it("retires an old source ID only when the merge proves a superseding alias", () => {
-    const old = make();
-    const replacement = make({ id: "athome-999", url: "https://www.athome.co.jp/chintai/999/", rent: 70_000 });
-    const merged = mergeAthomeIncremental([old], [replacement]);
-    const batch = athomeObservationBatch({
-      previous: [old],
-      current: merged.listings,
-      expectedRevision: "revision-1",
-      observedAt: "2026-09-25T00:00:00.000Z",
-      observedAtByKey: {},
-      provenance: {},
-    });
-    expect(batch.observations.map((observation) => observation.sourceListingId)).toEqual(["athome-999"]);
-    expect(batch.retirements).toEqual([expect.objectContaining({
-      id: "athome-1119917524",
-      reason: expect.stringContaining("matching unit aliases"),
-    })]);
-  });
-
-  it("updates observed records and preserves unseen history", () => {
-    const old = make({ rent: 72_000 });
-    const unseen = make({ id: "athome-2", name: "Other", address: "埼玉県越谷市蒲生", url: "https://www.athome.co.jp/chintai/2/" });
-    const current = make({ rent: 70_000 });
-    const result = mergeAthomeIncremental([old, unseen], [current]);
-    expect(result.listings).toHaveLength(2);
-    expect(result.listings[0].rent).toBe(70_000);
-    expect(result.listings[1].name).toBe("Other");
-    expect(result).toMatchObject({ added: 0, updated: 1, overlaps: 1 });
+    expect(preparePortalRows("athome", [], [a, { ...a, rent: 73_000 }]).listings).toHaveLength(1);
   });
 });

@@ -8,7 +8,7 @@ import { InvalidScrapeBatchError, ListingIngestionService, ScrapeReplayConflictE
 import { sourceRowKey, sourceRowLocator } from "../sourceRowIdentity";
 import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "../../storage/json/dataStore";
 import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
-import { mergeSuumoIncremental, suumoMatchKeys } from "./suumoIdentity";
+import { suumoDiscoveryMatchKeys } from "./suumoIdentity";
 import { trackingKey } from "../lifecycle";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
@@ -176,12 +176,16 @@ describe("SUUMO public discovery ingestion", () => {
       if (current.has(key(listing))) expect(current.get(key(listing))).toEqual(listing);
       else expect(retired.get(key(listing))).toEqual(listing);
     }
-    // All old merger survivors remain equivalent. The new policy additionally
-    // keeps unseen duplicates that the legacy helper would compact implicitly.
-    for (const listing of mergeSuumoIncremental(previous.listings, [fresh]).listings) expect(current.get(key(listing))).toEqual(listing);
+    // Every row sharing an alias with the observation is superseded, and a retired row is always
+    // linked to it by an alias, directly or through a row it replaced; unseen duplicates survive.
+    const aliases = suumoDiscoveryMatchKeys, freshKeys = new Set(aliases(fresh));
+    const matched = previous.listings.filter((listing) => aliases(listing).some((alias) => freshKeys.has(alias)));
+    const linked = new Set([...freshKeys, ...matched.flatMap(aliases)]);
+    expect(matched.map((listing) => retired.has(key(listing)))).toEqual(matched.map(() => true));
+    expect(archived.filter((entry) => !aliases(entry.listing).some((alias) => linked.has(alias)))).toEqual([]);
     expect(saved.listings.length + archived.length).toBe(previous.listings.length + 1);
-    expect(result.retired).toBe(archived.length);
-    expect(saved.listings.some((listing) => suumoMatchKeys(listing).some((alias) => suumoMatchKeys(fresh).includes(alias)))).toBe(true);
+    expect(current.get(key(fresh))).toMatchObject({ id: fresh.id, url: fresh.url, rent: fresh.rent });
+    expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length });
     expect(await service.ingestScrape(input)).toMatchObject({ replayed: true, revision: saved.revision });
     expect(await readFile(path, "utf8")).toBe(bytes);
   });
