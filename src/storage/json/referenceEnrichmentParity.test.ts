@@ -12,9 +12,9 @@ import type { EnrichedListing } from "../../domain/types";
 import { DATA_DIR, REFERENCE_CATALOG_DIR } from "./dataStore";
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
 
-// Baked poi2 values measure to the Baitul Aman POI, since retired from the
-// private-school list; they stay as recorded, and enrichment now bakes the
-// nearest mosque instead, so poi2 is not expected to match.
+// Baked poi2 is the nearest mosque at the last enrichment; the catalog gains
+// mosques without re-enriching (the masjid list import), and the recorded
+// values stay as they are, so poi2 is not expected to match.
 const PROXIMITY_FIELDS = ["poi1", "station", "busStop", "school", "kindergarten", "childcareAny"] as const;
 
 describe("enrichment against the managed reference catalog", () => {

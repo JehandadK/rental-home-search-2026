@@ -283,7 +283,7 @@ the two files the browser fetches into `public/data/` (below).
 
 | File | Contents | Source |
 |---|---|---|
-| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (POIs, mosques, stations, schools, childcare, bus stops), originally from OpenStreetMap and curated map pins; Kanto municipalities, boundaries and rail stations (`railStation`, map only) from MLIT 国土数値情報 N03/N02 | Revisioned updates through `JsonReferenceDataRepository`; `npm run data:reference:app-ids` after adding places; `npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson>` to import a new N03/N02 edition |
+| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (private schools, mosques, stations, schools, childcare, bus stops), originally from OpenStreetMap and curated map pins; Kanto municipalities, boundaries and rail stations (`railStation`, map only) from MLIT 国土数値情報 N03/N02 | Revisioned updates through `JsonReferenceDataRepository`; `npm run data:reference:app-ids` after adding places; `npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson>` to import a new N03/N02 edition; `npm run data:reference:masjids` to add the saved Google Maps masjid list (`reference/imports/`) to the scored mosques |
 | `sources/suumo.json` | SUUMO family rentals (2K+) | `npm run scrape` |
 | `sources/athome.json` | AtHome family rentals (2K+), including move-in money and amenity flags | `npm run scrape:athome` |
 | `sources/roomspot.json` | RoomSpot/POLUS family rentals (2K+), including exact addresses and move-in money | `npm run scrape:roomspot` |
