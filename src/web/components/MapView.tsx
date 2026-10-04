@@ -74,8 +74,8 @@ import appStyles from "../App.module.css";
 interface Props {
   items: ScoredRow[];
   reference: ReferenceModel;
-  /** The place the poi1 score measures to; drawn as a star. */
-  targetPoi: CatalogPlace | null;
+  /** The private schools the poi1 score takes the nearest of; drawn as solid stars. */
+  scoredPois: readonly CatalogPlace[];
   hovered: string | null;
   onHover: (key: string | null) => void;
   selected: string | null;
@@ -274,7 +274,7 @@ interface PrefectureLayer {
 export const MapView = memo(function MapView({
   items,
   reference,
-  targetPoi,
+  scoredPois,
   hovered,
   onHover,
   selected,
@@ -463,17 +463,22 @@ export const MapView = memo(function MapView({
   const hoveredRow = hovered ? rowsByKey.get(hovered) ?? null : null;
   const selectedRow = selected ? rowsByKey.get(selected) ?? null : null;
   const selectedClusterIndex = selected == null ? -1 : selectionCluster.indexOf(selected);
+  // The private school this home's poi1 score measured to: the nearest scored one.
+  const scoredPoiId = useMemo(() => {
+    const name = selectedRow?.listing.poi1?.name;
+    return name == null ? undefined : scoredPois.find((poi) => poi.name === name)?.id;
+  }, [selectedRow, scoredPois]);
   const selectedDistances = useMemo(
     () => selectedRow
       ? listingDistances(selectedRow.listing, {
           pois: reference.catalog.inCategory("poi"),
-          targetPoiId: targetPoi?.id,
+          targetPoiId: scoredPoiId,
           walkSpeedMPerMin: walking.speedMPerMin,
           detourFactor: walking.detourFactor,
           includeHoikuen: walking.includeHoikuen,
         })
       : [],
-    [selectedRow, reference, targetPoi, walking.speedMPerMin, walking.detourFactor, walking.includeHoikuen],
+    [selectedRow, reference, scoredPoiId, walking.speedMPerMin, walking.detourFactor, walking.includeHoikuen],
   );
 
   // Table-row locate buttons issue an explicit center request. Use the current
@@ -784,8 +789,9 @@ export const MapView = memo(function MapView({
       }
     }
 
-    // The other private schools as outlined stars; any of them can be the target.
-    const otherPois = areaPlaces.pois.filter((poi) => poi.id !== targetPoi?.id);
+    // Private schools left out of the poi1 score as outlined stars.
+    const scoredIds = new Set(scoredPois.map((poi) => poi.id));
+    const otherPois = areaPlaces.pois.filter((poi) => !scoredIds.has(poi.id));
     for (const poi of otherPois) {
       const { x, y } = toScreen(poi.lat, poi.lon);
       starPath(ctx, x, y, 8);
@@ -794,18 +800,18 @@ export const MapView = memo(function MapView({
       ctx.stroke();
     }
 
-    // The target POI (Al Sanad by default) as a red star.
-    if (targetPoi) {
-      const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
+    // The scored private schools (every one by default) as red stars.
+    for (const poi of scoredPois) {
+      const { x, y } = toScreen(poi.lat, poi.lon);
       drawStar(ctx, x, y, 10, colors.target);
     }
 
-    // Names, most important first. The target is always named; the other
-    // private schools and the mosques next, as far as they fit (they crowd
-    // together when zoomed out).
-    if (targetPoi) {
-      const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
-      label(targetPoi.name, x + 12, y + 4, colors.targetLabel, { font: `600 11px ${FONT}`, force: true });
+    // Names, most important first. The scored schools are always named; the
+    // other private schools and the mosques next, as far as they fit (they
+    // crowd together when zoomed out).
+    for (const poi of scoredPois) {
+      const { x, y } = toScreen(poi.lat, poi.lon);
+      label(poi.name, x + 12, y + 4, colors.targetLabel, { font: `600 11px ${FONT}`, force: true });
     }
     for (const poi of otherPois) {
       const { x, y } = toScreen(poi.lat, poi.lon);
@@ -840,7 +846,7 @@ export const MapView = memo(function MapView({
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, targetPoi, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, scoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -1041,7 +1047,7 @@ export const MapView = memo(function MapView({
           <MapListingCard
             row={selectedRow}
             distances={selectedDistances}
-            targetPoiId={targetPoi?.id}
+            targetPoiId={scoredPoiId}
             mark={marks[listingKey(selectedRow.listing)]}
             onSetMark={onSetMark}
             note={notes[listingKey(selectedRow.listing)]}
@@ -1093,8 +1099,8 @@ export const MapView = memo(function MapView({
             <small>100</small>
           </div>
           <div className={styles.legendKeys}>
-            <span><i className={styles.keyStar}>★</i>{targetPoi?.name ?? "Target"}</span>
-            {reference.catalog.inCategory("poi").length > (targetPoi ? 1 : 0) && (
+            {scoredPois.length > 0 && <span><i className={styles.keyStar}>★</i>Scored private school</span>}
+            {reference.catalog.inCategory("poi").length > scoredPois.length && (
               <span><i className={styles.keyStar}>☆</i>Other private school</span>
             )}
             <span><i className={styles.keyMosque} />Mosque</span>

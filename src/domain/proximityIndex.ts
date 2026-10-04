@@ -96,17 +96,6 @@ export class ProximityIndex {
     return { name: bestPlace.name, distM: Math.round(bestDist), walkMin: 0 };
   }
 
-  /** Proximity to one specific place, shaped like the nearest-* results. */
-  proximityToPlace(listingIndex: number, placeId: string): Proximity | null {
-    const at = this.locate.get(placeId);
-    if (!at) return null;
-    const block = this.blocks.get(at.category);
-    const place = block?.places[at.column];
-    const d = this.distanceTo(listingIndex, placeId);
-    if (!place || d == null) return null;
-    return { name: place.name, distM: Math.round(d), walkMin: 0 };
-  }
-
   get size(): number {
     return this.listings.length;
   }

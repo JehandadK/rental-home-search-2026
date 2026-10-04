@@ -3,8 +3,8 @@
  *
  * Every reference place is measured for every listing at load time, so the
  * choices here are pure selection — no re-scraping, no re-enriching. Pick a
- * single station you would really commute from, restrict schools to your
- * catchment shortlist, or swap the POI target outright.
+ * single station you would really commute from, or restrict schools to your
+ * catchment shortlist.
  */
 import { useMemo, useState } from "react";
 import { SCORE_PARAMETERS } from "../../domain/scoringConfig";
@@ -23,7 +23,6 @@ interface Props {
   catalog: PlaceCatalog;
   selection: PlaceSelection;
   onToggle: (key: DistanceParameterKey, id: string) => void;
-  onSetTarget: (key: DistanceParameterKey, id: string) => void;
   onSetPlaces: (key: DistanceParameterKey, ids: string[] | null) => void;
   onReset: () => void;
 }
@@ -31,7 +30,7 @@ interface Props {
 const labelFor = (key: DistanceParameterKey) =>
   SCORE_PARAMETERS.find((p) => p.key === key)?.label ?? key;
 
-export function PlacePanel({ catalog, selection, onToggle, onSetTarget, onSetPlaces, onReset }: Props) {
+export function PlacePanel({ catalog, selection, onToggle, onSetPlaces, onReset }: Props) {
   return (
     <section className={appStyles.card}>
       <h2 className={appStyles.cardTitle}>
@@ -52,7 +51,6 @@ export function PlacePanel({ catalog, selection, onToggle, onSetTarget, onSetPla
           defaultOpen={index < 2}
           selection={selection}
           onToggle={onToggle}
-          onSetTarget={onSetTarget}
           onSetPlaces={onSetPlaces}
         />
       ))}
@@ -66,7 +64,6 @@ function ParameterPlaces({
   defaultOpen,
   selection,
   onToggle,
-  onSetTarget,
   onSetPlaces,
 }: {
   paramKey: DistanceParameterKey;
@@ -84,8 +81,6 @@ function ParameterPlaces({
     return base.slice(0, 80);
   }, [places, query]);
 
-  const isTarget = source.mode === "target";
-
   return (
     <details className={styles.group} open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
       <summary>
@@ -96,16 +91,12 @@ function ParameterPlaces({
       <div className={styles.body}>
         <div className={styles.actions}>
           <span className={styles.hint}>
-            {isTarget
-              ? `Measure distance to one of the ${categoryLabel(source.category).toLowerCase()}`
-              : `Nearest of the selected ${categoryLabel(source.category).toLowerCase()}`}
+            {`Nearest of the selected ${categoryLabel(source.category).toLowerCase()}`}
           </span>
-          {!isTarget && (
-            <span className={styles.bulk}>
-              <button onClick={() => onSetPlaces(paramKey, null)}>all</button>
-              <button onClick={() => onSetPlaces(paramKey, [])}>clear</button>
-            </span>
-          )}
+          <span className={styles.bulk}>
+            <button onClick={() => onSetPlaces(paramKey, null)}>all</button>
+            <button onClick={() => onSetPlaces(paramKey, [])}>clear</button>
+          </span>
         </div>
 
         {places.length > 12 && (
@@ -120,18 +111,13 @@ function ParameterPlaces({
 
         <div className={styles.list}>
           {shown.map((place) => {
-            const active = isTarget
-              ? chosen?.[0] === place.id
-              : chosen == null || chosen.includes(place.id);
+            const active = chosen == null || chosen.includes(place.id);
             return (
               <label key={place.id} className={styles.item}>
                 <input
-                  type={isTarget ? "radio" : "checkbox"}
-                  name={isTarget ? `target-${paramKey}` : undefined}
+                  type="checkbox"
                   checked={active}
-                  onChange={() =>
-                    isTarget ? onSetTarget(paramKey, place.id) : onToggle(paramKey, place.id)
-                  }
+                  onChange={() => onToggle(paramKey, place.id)}
                 />
                 <span className={styles.itemName} title={place.subtitle ?? place.name}>
                   {place.name}

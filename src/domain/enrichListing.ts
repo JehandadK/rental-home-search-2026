@@ -10,9 +10,8 @@
  * for the CLI ranker, exports and eyeballing the data) and they are the
  * fallback for any consumer that does not build an index.
  *
- * The baked `poi1` follows the private school carrying that scoring role (any
- * number of other private schools can exist in the catalog); `poi2` is the
- * nearest mosque, as the dashboard measures it by default.
+ * The baked `poi1` is the nearest private school and `poi2` the nearest
+ * mosque, as the dashboard measures them by default.
  */
 import type { EnrichedListing, GeoPoint, RawListing } from "./types";
 import { nearestPlace, toProximity } from "./geo";
@@ -38,7 +37,7 @@ export function enrichListing(
     lat: coords.lat,
     lon: coords.lon,
     geocodeMatched: matched,
-    poi1: toPlace(catalog.withRole("poi1")),
+    poi1: proximityTo(catalog.inCategory("poi")),
     poi2: proximityTo(catalog.inCategory("mosque")),
     station: proximityTo(catalog.inCategory("station")),
     busStop: proximityTo(catalog.inCategory("busStop")),

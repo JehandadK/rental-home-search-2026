@@ -92,7 +92,7 @@ for (const [i, { listing, score }] of rows.slice(0, topN).entries()) {
       `${listing.city?.padEnd(9) ?? "?        "} ¥${yen.format(listing.rent).padStart(7)}  ` +
       `${String(listing.sizeM2 ?? "?").padStart(5)}㎡ ${String(listing.layout ?? "?").padEnd(5)} ` +
       `${listing.name}\n` +
-      `    station ${Math.round(part("station") ?? 0)}m · Al Sanad ${Math.round(part("poi1") ?? 0)}m` +
+      `    station ${Math.round(part("station") ?? 0)}m · private school ${Math.round(part("poi1") ?? 0)}m` +
       ` · Masjid ${Math.round(part("poi2") ?? 0)}m · parking ${parkingText}` +
       `${listing.url ? `\n    ${listing.url}` : ""}`,
   );

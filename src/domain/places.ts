@@ -183,25 +183,23 @@ export const categoryLabel = (category: PlaceCategory): string =>
   (CATEGORY_LABELS as Record<string, string>)[category] ?? category;
 
 /**
- * Which catalog category each distance parameter draws candidates from,
- * and whether the user picks one specific place ("target") or the nearest
- * of a selected set ("nearest").
+ * Which catalog category each distance parameter draws candidates from. Every
+ * parameter scores the nearest of a selected set of places in its category.
  */
 export interface ParameterSource {
   category: KnownPlaceCategory;
-  mode: "target" | "nearest";
 }
 
 export const PARAMETER_SOURCES: Record<DistanceParameterKey, ParameterSource> = {
-  poi1: { category: "poi", mode: "target" },
-  // Mosque score is always the nearest of the chosen mosque set. By default
-  // all bundled mosques count; users may curate the set but cannot accidentally
-  // turn this back into a single hard-coded mosque unless they explicitly select one.
-  poi2: { category: "mosque", mode: "nearest" },
-  station: { category: "station", mode: "nearest" },
-  busStop: { category: "busStop", mode: "nearest" },
-  kindergarten: { category: "childcare", mode: "nearest" },
-  school: { category: "school", mode: "nearest" },
+  // Private school and mosque scores are the nearest of the chosen set. By
+  // default every bundled place counts; users may curate the set, down to a
+  // single school or mosque if they explicitly select only that one.
+  poi1: { category: "poi" },
+  poi2: { category: "mosque" },
+  station: { category: "station" },
+  busStop: { category: "busStop" },
+  kindergarten: { category: "childcare" },
+  school: { category: "school" },
 };
 
 /**

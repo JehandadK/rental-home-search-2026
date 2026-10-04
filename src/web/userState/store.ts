@@ -28,7 +28,7 @@ export interface UserStateStore {
 export const USER_STATE_KEYS = {
   scoringConfig: "soka-scorer-config-v1",
   filters: "soka-scorer-filters-v1",
-  placeSelection: "soka-scorer-places-v1",
+  placeSelection: "soka-scorer-places-v2",
   marks: "soka-scorer-marks-v1",
   availabilityMarks: "soka-scorer-availability-v1",
   customListings: "soka-scorer-custom-listings-v1",
@@ -38,6 +38,14 @@ export const USER_STATE_KEYS = {
   weightPresets: "soka-scorer-weight-presets-v1",
   mapAreas: "rental-search-map-areas-v1",
   nameLanguage: "rental-search-name-language-v1",
+} as const;
+
+/**
+ * Keys a newer key replaced, read once to migrate when the newer key is
+ * absent. v1 place selections stored the private school as a single target.
+ */
+export const LEGACY_USER_STATE_KEYS = {
+  placeSelection: "soka-scorer-places-v1",
 } as const;
 
 /** localStorage adapter. Missing or blocked storage behaves like an empty store. */

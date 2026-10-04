@@ -5,16 +5,21 @@
 import { useCallback, useMemo } from "react";
 import { defaultSelection, type PlaceSelection } from "../../domain/placeSelection";
 import type { DistanceParameterKey, PlaceCatalog } from "../../domain/places";
-import { decodePlaceSelection } from "../userState/decoders";
-import { USER_STATE_KEYS } from "../userState/store";
-import { usePersistentState } from "../userState/UserStateContext";
+import { decodeLegacyPlaceSelection, decodePlaceSelection } from "../userState/decoders";
+import { LEGACY_USER_STATE_KEYS, USER_STATE_KEYS } from "../userState/store";
+import { usePersistentState, useUserStateStore } from "../userState/UserStateContext";
 
 export function usePlaceSelection(catalog: PlaceCatalog) {
-  const defaults = useMemo(() => defaultSelection(catalog), [catalog]);
-  // Decoded once, against the catalog the app loaded with.
+  const store = useUserStateStore();
+  const defaults = useMemo(() => defaultSelection(), []);
+  // Decoded once, against the catalog the app loaded with. With nothing saved
+  // under the current key, migrate a v1 selection (private school as target).
   const [selection, setSelection] = usePersistentState<PlaceSelection>(
     USER_STATE_KEYS.placeSelection,
-    (raw) => decodePlaceSelection(raw, defaults, catalog.byId),
+    (raw) => raw === undefined
+      ? decodeLegacyPlaceSelection(
+          store.read(LEGACY_USER_STATE_KEYS.placeSelection), defaults, catalog.byId, catalog.withRole("poi1")?.id)
+      : decodePlaceSelection(raw, defaults, catalog.byId),
   );
 
   /** Replace the chosen ids for one parameter (null = any place). */
@@ -37,12 +42,7 @@ export function usePlaceSelection(catalog: PlaceCatalog) {
     });
   }, []);
 
-  /** Choose a single place as the target (poi1/poi2). */
-  const setTarget = useCallback((key: DistanceParameterKey, id: string) => {
-    setSelection((s) => ({ byParameter: { ...s.byParameter, [key]: [id] } }));
-  }, []);
-
   const reset = useCallback(() => setSelection(defaults), [defaults]);
 
-  return { selection, setPlaces, togglePlace, setTarget, reset };
+  return { selection, setPlaces, togglePlace, reset };
 }

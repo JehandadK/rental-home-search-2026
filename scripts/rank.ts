@@ -43,9 +43,9 @@ const row = (r: (typeof ranked)[number], i: number) => {
     `${s.parts.find((p) => p.key === key)?.value?.toFixed(0) ?? "?"}m`;
   const stationName = l.station?.name ?? l.advertisedStation ?? "?";
   const stn = `${stationName} ${minutes("station")}`;
-  const alSanad = minutes("poi1");
+  const privateSchool = minutes("poi1");
   const masjid = minutes("poi2");
-  return `${String(i + 1).padStart(3)}. ${score} ${city} ${rent} ${size} ${layout} ${l.name.slice(0, 22).padEnd(22)} ${stn.padEnd(16)} alSanad:${alSanad.padEnd(6)} masjid:${masjid}${flags}`;
+  return `${String(i + 1).padStart(3)}. ${score} ${city} ${rent} ${size} ${layout} ${l.name.slice(0, 22).padEnd(22)} ${stn.padEnd(16)} school:${privateSchool.padEnd(6)} masjid:${masjid}${flags}`;
 };
 
 console.log(

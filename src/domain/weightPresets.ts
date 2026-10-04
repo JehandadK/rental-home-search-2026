@@ -34,7 +34,7 @@ export const BUILT_IN_PRESETS: readonly WeightPreset[] = [
   {
     id: "school-run",
     label: "School-run family",
-    description: "Al Sanad, schools and kindergartens close by, with room for the kids",
+    description: "Private school, schools and kindergartens close by, with room for the kids",
     weights: {
       rent: 6, rentPerM2: 6, moveInCost: 3, size: 8, yearBuilt: 2,
       poi1: 15, poi2: 8, station: 4, busStop: 2, kindergarten: 10, school: 10,

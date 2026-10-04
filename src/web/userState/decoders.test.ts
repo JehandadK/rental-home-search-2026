@@ -8,6 +8,7 @@ import {
   decodeCustomListings,
   decodeFilters,
   decodeHiddenColumns,
+  decodeLegacyPlaceSelection,
   decodeMarks,
   decodeNotes,
   decodePlaceSelection,
@@ -16,7 +17,7 @@ import {
 } from "./decoders";
 
 const DEFAULT_SELECTION: PlaceSelection = {
-  byParameter: { poi1: ["poi:Al Sanad School Japan"], poi2: null, station: null, busStop: null, kindergarten: null, school: null },
+  byParameter: { poi1: null, poi2: null, station: null, busStop: null, kindergarten: null, school: null },
 };
 
 /** Values the app itself could have saved before M6. */
@@ -51,7 +52,7 @@ describe("user-state decoders", () => {
   it("drop saved place ids that are no longer in the catalog", () => {
     const known = new Set(["poi:Al Sanad School Japan", "station:草加", "school:A"]);
     const saved = { byParameter: {
-      poi1: ["poi:Retired School"], // every id gone: back to the default target
+      poi1: ["poi:Retired School"], // every id gone: back to the default (nearest of all)
       station: ["station:草加", "station:Retired"], // partly gone: keep the rest
       school: [], // deliberately cleared: stays cleared
       busStop: null,
@@ -61,11 +62,19 @@ describe("user-state decoders", () => {
     });
   });
 
-  it("migrate the v1 single Baitul Aman mosque target to nearest-of-all", () => {
-    const legacy = { byParameter: { poi2: ["poi:Baitul Aman Masjid (蒲生モスク)"] } };
-    expect(decodePlaceSelection(legacy, DEFAULT_SELECTION).byParameter.poi2).toBeNull();
-    const oneOtherMosque = { byParameter: { poi2: ["mosque:Yashio Masjid"] } };
-    expect(decodePlaceSelection(oneOtherMosque, DEFAULT_SELECTION).byParameter.poi2).toEqual(["mosque:Yashio Masjid"]);
+  it("migrate v1 single school and mosque targets to nearest-of-all", () => {
+    const alSanad = "poi:Al Sanad School Japan";
+    const legacy = { byParameter: { poi1: [alSanad], poi2: ["poi:Baitul Aman Masjid (蒲生モスク)"] } };
+    const migrated = decodeLegacyPlaceSelection(legacy, DEFAULT_SELECTION, undefined, alSanad).byParameter;
+    expect(migrated.poi1).toBeNull();
+    expect(migrated.poi2).toBeNull();
+    // Any other single pick is kept, now meaning "only that one".
+    const picked = { byParameter: { poi1: ["poi:Tokyo IQRA Int'l School"], poi2: ["mosque:Yashio Masjid"] } };
+    expect(decodeLegacyPlaceSelection(picked, DEFAULT_SELECTION, undefined, alSanad).byParameter).toMatchObject({
+      poi1: ["poi:Tokyo IQRA Int'l School"], poi2: ["mosque:Yashio Masjid"],
+    });
+    // The current key keeps a deliberate "only Al Sanad" or "only Baitul Aman" choice.
+    expect(decodePlaceSelection(legacy, DEFAULT_SELECTION).byParameter).toMatchObject(legacy.byParameter);
   });
 
   it("fall back to defaults for missing or corrupt values", () => {

@@ -10,7 +10,7 @@ let PLACE_CATALOG: PlaceCatalog;
 let DEFAULT_SELECTION: PlaceSelection;
 beforeAll(async () => {
   PLACE_CATALOG = (await loadCurrentReferenceModel()).catalog;
-  DEFAULT_SELECTION = defaultSelection(PLACE_CATALOG);
+  DEFAULT_SELECTION = defaultSelection();
 });
 import { haversineM } from "./geo";
 import type { EnrichedListing } from "./types";
@@ -77,6 +77,7 @@ describe("applySelection", () => {
   it("resolves every distance parameter with the default selection", () => {
     const out = applySelection(SOKA, 0, index, DEFAULT_SELECTION);
     expect(out.station?.name).toBe("草加");
+    // Soka is far nearer Al Sanad than Tokyo IQRA (Katsushika).
     expect(out.poi1?.name).toContain("Al Sanad");
     expect(out.poi2?.name).toBeTruthy();
     expect(out.school).toBeDefined();
@@ -106,6 +107,19 @@ describe("applySelection", () => {
       byParameter: { ...DEFAULT_SELECTION.byParameter, poi2: [chosen.id] },
     });
     expect(restricted.poi2?.name).toBe(chosen.name);
+  });
+
+  it("scores the nearest private school and honours a curated school set", () => {
+    const schools = placesInCategory("poi");
+    expect(schools.length).toBeGreaterThan(1);
+    const nearest = [...schools].sort((a, b) => haversineM(SOKA as never, a) - haversineM(SOKA as never, b))[0];
+    expect(applySelection(SOKA, 0, index, DEFAULT_SELECTION).poi1?.name).toBe(nearest.name);
+
+    const chosen = schools.find((school) => school.name !== nearest.name)!;
+    const restricted = applySelection(SOKA, 0, index, {
+      byParameter: { ...DEFAULT_SELECTION.byParameter, poi1: [chosen.id] },
+    });
+    expect(restricted.poi1?.name).toBe(chosen.name);
   });
 
   it("clears a parameter when its selection is empty", () => {
