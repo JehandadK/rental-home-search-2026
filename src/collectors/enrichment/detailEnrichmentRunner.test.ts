@@ -35,7 +35,7 @@ describe("detail enrichment collector (offline)", () => {
   it("replays cached HTML with zero requests and submits only captured fields and original timestamps", async () => {
     await seed(); await cache();
     const submit = vi.spyOn(client, "ingestScrape");
-    expect(await runDetailEnrichment(["--replay", "--limit", "0"], dependencies)).toEqual({ requests: 0, limit: 0, reused: 1, applied: 1, failed: 0, queued: 1 });
+    expect(await runDetailEnrichment(["--replay", "--limit", "0"], dependencies)).toEqual({ requests: 0, limit: 0, reused: 1, applied: 1, failed: 0, queued: 1, ended: [] });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(submit.mock.calls[0][0]).toMatchObject({ observationKind: "detail-patch", observations: [{ observedAt: capturedAt, details: { parking: { monthlyYen: 6600 } } }] });
     expect(submit.mock.calls[0][0].observations[0]).not.toHaveProperty("listing");
@@ -54,6 +54,14 @@ describe("detail enrichment collector (offline)", () => {
     expect(await queue()).toEqual(rows.map((listing, index) => ({ url: listing.url, queuedAt: now, ...(index === 0 ? { checkedAt: now } : {}) })));
     expect(dependencies.sleep).toHaveBeenCalledWith(2000);
     expect(JSON.parse(await readFile(pathFor(rows[0].url!), "utf8"))).toMatchObject({ html, capturedAt: now });
+  });
+
+  it("reports an ended ad (404), keeps going, and waits a week before retrying it", async () => {
+    const rows = [row("a"), row("b")]; await seed(rows);
+    fetchMock.mockResolvedValueOnce(new Response("moved", { status: 404 })).mockResolvedValueOnce(new Response(html));
+    const result = await runDetailEnrichment(["--limit", "10"], dependencies);
+    expect(result).toMatchObject({ requests: 2, applied: 1, failed: 1, ended: [{ url: rows[0].url, checkedAt: now }] });
+    expect((await queue())[0]).toMatchObject({ error: "HTTP 404", retryAfter: new Date(Date.parse(now) + 7 * 86400000).toISOString() });
   });
 
   it("retains a valid capture/checkpoint when a later response trips the circuit breaker", async () => {

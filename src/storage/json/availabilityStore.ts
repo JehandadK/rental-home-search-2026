@@ -75,3 +75,10 @@ export async function recordAvailability(entries: readonly AvailabilityEntry[], 
     return file;
   });
 }
+
+/** SUUMO detail pages that redirected off the ad page: the same evidence the availability checker records. */
+export async function recordEndedDetailAds(ended: readonly { url: string; checkedAt: string }[], path = AVAILABILITY_PATH): Promise<void> {
+  await recordAvailability(ended.map(({ url, checkedAt }) => ({
+    source: "suumo", url, state: "gone" as const, checkedAt, evidence: "detail page redirected off the ad page (detail:enrich)", method: "probe" as const,
+  })), path);
+}

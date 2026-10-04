@@ -45,6 +45,8 @@ async function enrichDetailsLocked(args: readonly string[], dependencies: Detail
   }
   await writeJsonAtomically(queuePath, queue); // deferred URLs survive later scrapes
   let requests = 0, reused = 0, failed = 0;
+  /** Ads whose page redirected away (ended): portal evidence the ad is gone. */
+  const ended: { url: string; checkedAt: string }[] = [];
   const details = new Map<string, DetailCapture>();
   for (const item of queue) {
     if (!activeUrls.has(item.url)) continue;
@@ -66,7 +68,11 @@ async function enrichDetailsLocked(args: readonly string[], dependencies: Detail
         parseDetail(html); // invalid/verification pages cannot become successful captures
         await writeJsonAtomically(path, capture);
       } catch (e) {
-        item.error = (e as Error).message; item.retryAfter = new Date(dependencies.now().getTime() + 3600000).toISOString(); failed++;
+        item.error = (e as Error).message;
+        // An ended ad stays ended: wait a week rather than spend a request on it every hour.
+        const isEnded = item.error === "HTTP 404";
+        if (isEnded) ended.push({ url: item.url, checkedAt: dependencies.now().toISOString() });
+        item.retryAfter = new Date(dependencies.now().getTime() + (isEnded ? 7 * 86400000 : 3600000)).toISOString(); failed++;
         await writeJsonAtomically(queuePath, queue);
         // One source circuit breaker: no repeated challenge/throttle requests.
         if (/403|405|429|Unrecognized/.test(item.error)) break;
@@ -85,7 +91,7 @@ async function enrichDetailsLocked(args: readonly string[], dependencies: Detail
     const receipt = await dependencies.client.ingestScrape(batch);
     applied = receipt.updated;
   }
-  return { requests, limit, reused, applied, failed, queued: queue.length };
+  return { requests, limit, reused, applied, failed, queued: queue.length, ended };
 }
 
 /**
@@ -95,12 +101,14 @@ async function enrichDetailsLocked(args: readonly string[], dependencies: Detail
 export async function enrichDetailsCli(
   args: readonly string[],
   dependencies: Pick<DetailEnrichmentDependencies, "dataDir" | "client">,
+  onEnded: (ads: readonly { url: string; checkedAt: string }[]) => Promise<void> = async () => {},
 ): Promise<void> {
   const browser = createBrowserFetch("suumo-detail");
   const result = await runDetailEnrichment(args, {
     ...dependencies,
     fetch: browser.fetch, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   }).finally(() => browser.close());
-  console.log(`Details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} applied; ${result.failed} failures; queue retained (${result.queued} URLs).`);
+  await onEnded(result.ended);
+  console.log(`Details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} applied; ${result.failed} failures (${result.ended.length} ended ads); queue retained (${result.queued} URLs).`);
   if (result.failed) process.exitCode = 2;
 }
