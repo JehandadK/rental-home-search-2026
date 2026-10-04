@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normaliseStationName, parseStation, parseStationDistance } from "./merge-nifty";
+import { normaliseStationName, parseStation, parseStationDistance, toRawListing } from "./merge-nifty";
 import { parseDepositKeyMoney } from "../src/collectors/shared/parseJa";
 
 describe("Nifty move-in text", () => {
@@ -52,5 +52,17 @@ describe("parseStation", () => {
 
   it("returns empty when no walk time is given", () => {
     expect(parseStation("新田駅")).toEqual({});
+  });
+});
+
+describe("Nifty portal dates", () => {
+  it("keeps 情報公開日 / 次回更新日 printed outside the detail table", () => {
+    const listing = toRawListing({
+      url: "https://myhome.nifty.com/rent/detail_0123abcd/",
+      h1: "テストハイツ",
+      kv: { 賃料: "8.5万円", 所在地: "埼玉県草加市松原1" },
+      text: "不動産会社情報を見る情報公開日：2026/08/29 次回更新日：2026/09/06バス・トイレ別",
+    });
+    expect(listing?.sourceDetails).toMatchObject({ 情報公開日: "2026-08-29", 次回更新日: "2026-09-06", 賃料: "8.5万円" });
   });
 });

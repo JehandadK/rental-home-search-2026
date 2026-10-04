@@ -36,6 +36,30 @@ export function adKey(source: string, url: string | null | undefined, id?: strin
   return `${source}|${id ?? ""}`;
 }
 
+/**
+ * Row ids that embed the portal's own ad id, as each collector builds them.
+ * SUUMO row ids are built from listing content (name, layout, rent) and are
+ * neither unique nor stable, so they have no entry.
+ */
+const ROW_ID_PATTERNS: Record<string, { pattern: RegExp; adId: (match: RegExpExecArray) => string }> = {
+  athome: { pattern: /^athome-(\d+)$/, adId: (m) => m[1] },
+  nifty: { pattern: /^nifty-([0-9a-f]+)$/, adId: (m) => `detail_${m[1]}` },
+  roomspot: { pattern: /^roomspot-(\d+)$/, adId: (m) => m[1] },
+  yahoo: { pattern: /^yahoo-(\d+)$/, adId: (m) => m[1] },
+};
+
+/** The ad key a row id stands for, when the id embeds the portal's ad id. */
+export function adKeyFromRowId(source: string, id: string | null | undefined): string | undefined {
+  const rule = id ? ROW_ID_PATTERNS[source] : undefined;
+  const match = rule?.pattern.exec(id!);
+  return match ? `${source}|${rule!.adId(match)}` : undefined;
+}
+
+/** {@link adKey}, but a URL-less row with a portal-derived id gets the same key as its URL would. */
+export function listingAdKey(source: string, url: string | null | undefined, id?: string | null): string {
+  return url ? adKey(source, url, id) : adKeyFromRowId(source, id) ?? adKey(source, url, id);
+}
+
 /** The more recent check; on a tie the existing value wins so re-applying records is a no-op. */
 const newer = (a?: AdAvailability, b?: AdAvailability): AdAvailability | undefined =>
   !a ? b : !b ? a : Date.parse(b.checkedAt) > Date.parse(a.checkedAt) ? b : a;

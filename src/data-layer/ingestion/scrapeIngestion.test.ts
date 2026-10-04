@@ -103,7 +103,7 @@ describe("public scrape ingestion boundary", () => {
   it.each([
     ["missing producer", { scraper: undefined }],
     ["unsupported scraper version", { scraper: { name: "nifty-detail", version: "2", parserVersion: "1" } }],
-    ["unsupported parser version", { scraper: { name: "nifty-detail", version: "1", parserVersion: "3" } }],
+    ["unsupported parser version", { scraper: { name: "nifty-detail", version: "1", parserVersion: "99" } }],
     ["future schema", { schemaVersion: 2 }],
     ["unsafe source", { source: "../nifty" }],
     ["unverified complete snapshot", { mode: "full-snapshot" }],

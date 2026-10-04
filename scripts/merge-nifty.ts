@@ -12,6 +12,7 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { parsePortalListingDates } from "../src/domain/portalDates";
 import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
@@ -40,10 +41,12 @@ const NIFTY_PATH = join(DATA_DIR, "nifty_detail_raw.json");
  * Bumped whenever `toRawListing` parses the same capture differently.
  * 2: fee notes are itemised (full-width thousands separators, renewal and
  *    conditional charges left out) instead of summing every amount.
+ * 3: the portal's own dates (情報公開日 / 次回更新日), which Nifty prints as
+ *    free text outside the detail table, are read from the page text.
  * The version is part of the run ID, so re-importing a dump already imported
  * by an older parser is a new batch, not a replay conflict.
  */
-export const NIFTY_DETAIL_PARSER_VERSION = "2";
+export const NIFTY_DETAIL_PARSER_VERSION = "3";
 
 export interface NiftyDetail {
   capturedAt?: string;
@@ -51,6 +54,8 @@ export interface NiftyDetail {
   httpStatus?: number;
   h1?: string;
   kv?: Record<string, string>;
+  /** The page's visible text, when the capture kept it. */
+  text?: string;
   error?: string;
 }
 
@@ -114,6 +119,13 @@ function parseAgency(kv: Record<string, string>): string | null {
   return label ?? null;
 }
 
+/** 情報公開日 / 情報更新日 / 次回更新日 from free text, as detail rows (kv rows win). */
+function portalDateDetails(text: string | undefined): Record<string, string> {
+  const dates = parsePortalListingDates(text ?? "");
+  const rows: [string, string | undefined][] = [["情報公開日", dates.publishedOn], ["情報更新日", dates.updatedOn], ["次回更新日", dates.nextUpdateOn]];
+  return Object.fromEntries(rows.filter((row): row is [string, string] => Boolean(row[1])));
+}
+
 export function toRawListing(detail: NiftyDetail): RawListing | null {
   if (detail.error || !detail.kv || (detail.httpStatus != null && detail.httpStatus !== 200)) return null;
   const kv = detail.kv;
@@ -170,7 +182,7 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
     source: "nifty",
     notes: noteParts.join("・"),
     agency: parseAgency(kv),
-    sourceDetails: kv,
+    sourceDetails: { ...portalDateDetails(detail.text), ...kv },
     // Missing detail text is not a request to erase previously captured parking.
     ...(parking && !/^[－-]$/.test(parking) ? { parking: parseParking(parking) } : {}),
     costs: {

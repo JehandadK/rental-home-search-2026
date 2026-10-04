@@ -8,7 +8,7 @@ import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "..
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { mergeNiftyIncremental, niftyMatchKeys } from "../src/data-layer/ingestion/niftyPolicy";
 import { trackingKey } from "../src/data-layer/lifecycle";
-import { prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
+import { NIFTY_DETAIL_PARSER_VERSION, prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
 
 const before = "2026-09-24T00:00:00.000Z", now = "2026-09-25T00:00:00.000Z";
 function detail(id = "aabbcc", changes: Partial<NiftyDetail> = {}): NiftyDetail {
@@ -62,7 +62,7 @@ describe("Nifty detail import through the public data layer", () => {
     const prepared = await prepareNiftyDetailImport(input);
     expect(prepared.skipped).toBe(3);
     expect(prepared.batch).toMatchObject({ schemaVersion: 1, source: "nifty", mode: "detail-enrichment",
-      scraper: { name: "nifty-detail", version: "1", parserVersion: "2" },
+      scraper: { name: "nifty-detail", version: "1", parserVersion: NIFTY_DETAIL_PARSER_VERSION },
       observations: [expect.objectContaining({ sourceListingId: "nifty-aabbcc", observedAt: now }),
         expect.objectContaining({ sourceListingId: "nifty-ddeeff", observedAt: null })] });
     expect(prepared.batch).not.toHaveProperty("expectedRevision");

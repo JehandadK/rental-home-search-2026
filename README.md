@@ -247,6 +247,17 @@ the two files the browser fetches into `public/data/` (below).
 | `sources/yahoo.json` | User-selected Yahoo! Real Estate detail listings, retained across rebuilds | Native-browser detail extraction; no automatic market crawl |
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
 | `listings.json` | Full archival data, geocoded + enriched with baked nearest places | `npm run enrich` |
+| `availability.json` | Every ad-page check (listed / gone), newest per ad plus its full `history` | `npm run check:availability` |
+| `properties/<id>.json` | One additive document per property: every value each portal reported (conflicts kept side by side, plus the value shown), every sighting, every check and lifecycle event, and a derived summary (first seen and where, last seen, off-market window, days on market, portal posting dates) | `npm run data:properties` (run by `data:build`, `check:availability`, `data:journal:compact`); `npm run data:properties:backfill` replays git history and backups |
+
+Property documents are the analysis record: they only ever grow. A value that
+changes (rent, fees, address spelling) is added beside the earlier one with
+the portal and the capture times that reported it; `chosen` is the latest one
+and is what a view should show. Events (`ad.checked`, `lifecycle.status`,
+`ad.superseded`, `property.merged`) are appended once and never edited, so a
+re-listing never erases the earlier sold or gone time. See
+`src/domain/propertyDocument.ts` for the schema; readers must ignore fields
+they do not know.
 
 The catalog pins the id the app shows for each place (`attributes.appPlaceId`), so saved
 place selections survive added and retired places. The original per-category JSON

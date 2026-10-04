@@ -399,5 +399,6 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
 `lib/{athome,roomspot,nifty}.ts`: pure list parsers and incremental merge.
 `enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded detail work.
 `lib/observations.ts`: actual source evidence and lifecycle restoration.
+`sync-properties.ts`, `src/data-layer/properties/`: additive per-property documents (`data/properties/`), synced by `data:build` and `check:availability`.
 `enrich.ts`, `lib/geocodeCache.ts`: address caching.
 `build-web-data.ts`, `src/domain/webPayload.ts`: dictionary payload + hydration.

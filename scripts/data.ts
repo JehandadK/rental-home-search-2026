@@ -12,6 +12,8 @@ import { readFile } from "node:fs/promises";
 import { BACKUP_DIR, MANIFEST_PATH, RAW_PATH, buildRaw, listSources } from "../src/storage/json/dataStore";
 import type { BuildManifest } from "../src/storage/json/dataStore";
 import { sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
+import { describePropertySync } from "../src/data-layer/properties/service";
+import { syncCurrentProperties } from "../src/storage/json/propertyEvidence";
 
 const ago = (iso: string): string => {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -85,6 +87,8 @@ async function build(): Promise<void> {
         (reactivated ? `, ${reactivated} re-listed` : ""),
     );
   }
+  // Record this build's evidence before anything can overwrite or compact it.
+  console.log(`\n${describePropertySync(await syncCurrentProperties("data:build"))}`);
   console.log(`\nNext: npm run enrich`);
 }
 

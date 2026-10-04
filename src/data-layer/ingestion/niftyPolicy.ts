@@ -74,6 +74,6 @@ export const niftySourcePolicy: SourcePolicy = {
     prepare: prepareNiftyBatch,
     exactUrlDiscovery: false,
     detailImportProducer: "nifty-detail",
-    detailImportParserVersions: ["1", "2"],
+    detailImportParserVersions: ["1", "2", "3"],
   },
 };

@@ -8,6 +8,8 @@ import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/da
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { DEFAULT_KEEP_EVIDENCE_BATCHES, compactIngestionJournal } from "../src/data-layer/ingestion/journalCompaction";
 import type { ListingRepository } from "../src/data-layer/contracts";
+import { describePropertySync } from "../src/data-layer/properties/service";
+import { syncCurrentProperties } from "../src/storage/json/propertyEvidence";
 
 export async function runJournalCompaction(args: readonly string[], repository: ListingRepository, log: (message: string) => void = console.log) {
   const option = (name: string) => { const index = args.indexOf(name); return index >= 0 ? args[index + 1] : undefined; };
@@ -28,6 +30,7 @@ export async function runJournalCompaction(args: readonly string[], repository: 
 }
 
 if (process.argv[1]?.endsWith("compact-journal.ts")) {
-  runJournalCompaction(process.argv.slice(2), new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR)))
+  // Compaction drops journal sightings; copy them into the property documents first.
+  syncCurrentProperties("data:journal:compact").then((report) => console.log(describePropertySync(report))).then(() => runJournalCompaction(process.argv.slice(2), new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR))))
     .catch((error) => { console.error(error); process.exit(1); });
 }

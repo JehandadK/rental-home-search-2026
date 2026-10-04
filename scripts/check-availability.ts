@@ -19,6 +19,8 @@ import { deduplicateListings, sourceListings } from "../src/domain/listingDedup"
 import type { EnrichedListing, RawListing } from "../src/domain/types";
 import { DATA_DIR } from "../src/storage/json/dataStore";
 import { readAvailability, recordAvailability } from "../src/storage/json/availabilityStore";
+import { describePropertySync } from "../src/data-layer/properties/service";
+import { syncCurrentProperties } from "../src/storage/json/propertyEvidence";
 import { AdPageVisitor } from "../src/collectors/availability/adPageVisitor";
 import { checkProperty } from "../src/collectors/availability/checkProperty";
 import { selectCandidates } from "../src/collectors/availability/selectCandidates";
@@ -81,4 +83,5 @@ try {
 } finally {
   await visitor.close();
 }
+console.log(describePropertySync(await syncCurrentProperties("check:availability")));
 console.log(`\nRented out: ${rentedOut} · still listed: ${stillListed} · unresolved: ${unresolved}. Publish with \`npm run data:web\`.`);
