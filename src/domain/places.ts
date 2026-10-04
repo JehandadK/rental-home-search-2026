@@ -169,7 +169,7 @@ export type DistanceParameterKey = (typeof DISTANCE_PARAMETERS)[number];
 
 /** Human labels for the category headings. */
 export const CATEGORY_LABELS: Record<KnownPlaceCategory, string> = {
-  poi: "Points of interest",
+  poi: "Private schools",
   mosque: "Mosques / Masjids / Musallas",
   station: "Stations",
   school: "Elementary schools",

@@ -97,7 +97,7 @@ function ParameterPlaces({
         <div className={styles.actions}>
           <span className={styles.hint}>
             {isTarget
-              ? `Measure distance to one ${categoryLabel(source.category).toLowerCase()}`
+              ? `Measure distance to one of the ${categoryLabel(source.category).toLowerCase()}`
               : `Nearest of the selected ${categoryLabel(source.category).toLowerCase()}`}
           </span>
           {!isTarget && (
