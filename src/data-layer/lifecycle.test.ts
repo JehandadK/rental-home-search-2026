@@ -112,4 +112,18 @@ describe("reconcileLifecycle", () => {
     expect(listings).toHaveLength(1);
     expect(listings[0]).toMatchObject({ name: renamed.name, firstSeenAt: BEFORE, status: "active" });
   });
+
+  it("matches on the row's own ad when its ad list holds another posting", () => {
+    const own = "https://suumo.jp/chintai/jnc_000109057273/?bc=100526646716";
+    const before = make({ name: "越谷市 大字大泊", sizeM2: 54.25, firstSeenAt: BEFORE, status: "active", sourceListings: [
+      { source: "athome", id: "athome-1", url: "https://www.athome.co.jp/chintai/1123727426/" },
+      { source: "suumo", id: "suumo-大泊貸家-3LDK-70000", url: own },
+    ] });
+    const split = make({ name: "大泊貸家", sizeM2: 52.16, url: own, id: "suumo-大泊貸家-3LDK-70000", sourceListings: [
+      { source: "suumo", id: "suumo-大泊貸家-3LDK-70000", url: "https://suumo.jp/chintai/jnc_000109057273/?bc=100521232578" },
+    ] });
+    const { listings, stats } = reconcileLifecycle([before], [split], NOW);
+    expect(stats.added).toBe(0);
+    expect(listings.find((l) => l.name === "大泊貸家")?.firstSeenAt).toBe(BEFORE);
+  });
 });
