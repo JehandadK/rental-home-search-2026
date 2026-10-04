@@ -96,6 +96,13 @@ function insideRing([x, y]: Position, ring: readonly Position[]): boolean {
   return inside;
 }
 
+/** One edge of a group border, with the boundaries (owners) on either side. */
+export interface BorderSegment {
+  a: Position;
+  b: Position;
+  owners: readonly string[];
+}
+
 /**
  * The borders between groups of boundaries (prefectures, given each city's
  * prefecture as its group), as polylines: every edge whose two sides belong to
@@ -105,10 +112,17 @@ function insideRing([x, y]: Position, ring: readonly Position[]): boolean {
  * their exact coordinates.
  */
 export function groupBorders(
-  boundaries: readonly { geometry: BoundaryGeometry; group: string }[],
+  boundaries: readonly { geometry: BoundaryGeometry; group: string; owner?: string }[],
 ): Position[][] {
-  const edges = new Map<string, { a: Position; b: Position; group: string; count: number; mixed: boolean }>();
-  for (const { geometry, group } of boundaries) {
+  return joinSegments(borderSegments(boundaries));
+}
+
+/** The edges `groupBorders` draws, each with its owners, so a caller can keep only some before joining. */
+export function borderSegments(
+  boundaries: readonly { geometry: BoundaryGeometry; group: string; owner?: string }[],
+): BorderSegment[] {
+  const edges = new Map<string, { a: Position; b: Position; group: string; owners: string[]; mixed: boolean }>();
+  for (const { geometry, group, owner = "" } of boundaries) {
     for (const polygon of polygonsOf(geometry)) {
       for (const ring of polygon) {
         for (let i = 0; i < ring.length - 1; i++) {
@@ -120,20 +134,22 @@ export function groupBorders(
           const key = ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
           const edge = edges.get(key);
           if (edge) {
-            edge.count++;
+            edge.owners.push(owner);
             if (edge.group !== group) edge.mixed = true;
           } else {
-            edges.set(key, { a, b, group, count: 1, mixed: false });
+            edges.set(key, { a, b, group, owners: [owner], mixed: false });
           }
         }
       }
     }
   }
-  return joinSegments([...edges.values()].filter((edge) => edge.count === 1 || edge.mixed));
+  return [...edges.values()]
+    .filter((edge) => edge.owners.length === 1 || edge.mixed)
+    .map(({ a, b, owners }) => ({ a, b, owners }));
 }
 
 /** Link segments that share endpoints into as few polylines as possible. */
-function joinSegments(segments: readonly { a: Position; b: Position }[]): Position[][] {
+export function joinSegments(segments: readonly { a: Position; b: Position }[]): Position[][] {
   const at = new Map<string, number[]>();
   segments.forEach(({ a, b }, index) => {
     for (const key of [pointKey(a), pointKey(b)]) {

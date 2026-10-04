@@ -162,3 +162,14 @@ export function decodeHiddenColumns<K extends string>(raw: unknown, known: Reado
   if (!Array.isArray(raw)) return new Set();
   return new Set(raw.filter((key): key is K => known.has(key as K)));
 }
+
+/** Map areas: the chosen city ids, or null for the default search area. */
+export function decodeMapAreas(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  return [...new Set(raw.filter((id): id is string => typeof id === "string"))];
+}
+
+/** Place-name language; Japanese unless English was chosen. */
+export function decodeNameLanguage(raw: unknown): "en" | "ja" {
+  return raw === "en" ? "en" : "ja";
+}

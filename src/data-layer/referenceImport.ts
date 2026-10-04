@@ -4,8 +4,10 @@
  *
  * The plan is explicit upserts and retirements, as the catalog requires:
  *   - every municipality becomes a city; a city already in the catalog (same
- *     prefecture and local name) keeps its id and record, new ones get
- *     `city:jp-<code>` from the municipality code;
+ *     prefecture and local name) keeps its id and name, new ones get
+ *     `city:jp-<code>` and their English name when one is given (the local
+ *     name otherwise), updated when it changes; every city records its code
+ *     and English prefecture;
  *   - each city gets one boundary for the edition, and the city's older active
  *     boundaries are retired as replaced;
  *   - every station becomes a `railStation` place (map context, not scored),
@@ -31,6 +33,9 @@ export interface ImportedMunicipality {
   prefecture: string;
   name: string;
   county?: string;
+  /** English names (from the 総務省 code list), when known. */
+  nameEn?: string;
+  prefectureEn?: string;
   geometry: BoundaryGeometry;
 }
 
@@ -79,17 +84,21 @@ export function planReferenceImport(current: CurrentReference, input: ReferenceI
   const knownCities = new Map(current.cities.map((city) => [city.id, city]));
   for (const municipality of input.municipalities) {
     const existing = existingCity.get(`${municipality.prefecture}|${municipality.name}`);
-    if (existing) {
-      cityIdByCode.set(municipality.code, existing.id);
-      continue;
-    }
-    const id = `city:jp-${municipality.code}`;
+    const id = existing?.id ?? `city:jp-${municipality.code}`;
     cityIdByCode.set(municipality.code, id);
     const record: CityRecord = {
+      ...existing,
       id,
-      name: municipality.name,
+      // Cities this import created (city:jp-…) take the current English name, so a
+      // corrected reading reaches them; curated cities (city:soka…) keep theirs
+      // unless they only have the Japanese one.
+      name: existing && !existing.id.startsWith("city:jp-") && existing.name !== existing.nameLocal
+        ? existing.name
+        : municipality.nameEn ?? existing?.name ?? municipality.name,
       nameLocal: municipality.name,
       prefecture: municipality.prefecture,
+      ...(municipality.prefectureEn ? { prefectureEn: municipality.prefectureEn } : {}),
+      code: municipality.code,
       status: "active",
       updatedAt: now,
     };

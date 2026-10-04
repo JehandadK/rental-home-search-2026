@@ -2,26 +2,31 @@
  * Import municipal boundaries and railway stations from MLIT 国土数値情報
  * into the reference catalog (`npm run data:reference:ksj`).
  *
- *   npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson> [--catalog <dir>] [--dry-run]
+ *   npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson> [--names <code.xlsx>] [--catalog <dir>] [--dry-run]
  *
  * `--n03` is a directory holding one `N03-YYYYMMDD_PP.geojson` per prefecture
  * (from the unzipped `N03-YYYYMMDD_PP_GML.zip` downloads); every prefecture
  * file in it is imported together, so borders between prefectures stay
  * identical on both sides. `--n02` is the station file from `N02-xx_GML.zip`.
- * Downloads: https://nlftp.mlit.go.jp/ksj/ (N03 行政区域, N02 鉄道). The
- * downloads are inputs only and are not kept in the repository.
+ * Downloads: https://nlftp.mlit.go.jp/ksj/ (N03 行政区域, N02 鉄道). `--names`
+ * is the 総務省 全国地方公共団体コード workbook
+ * (https://www.soumu.go.jp/denshijiti/code.html), whose kana readings give
+ * every city and prefecture its English name. The downloads are inputs only
+ * and are not kept in the repository.
  *
  * Boundaries are simplified (topology preserved) to about 20 m. Stations are
  * kept when they lie inside an imported municipality. The catalog update is a
  * revisioned upsert/retire per dataset; re-running with the same files is a
  * no-op. Next: `npm run data:web`.
  */
+import { execFileSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
 import { REFERENCE_CATALOG_DIR } from "../src/storage/json/dataStore";
 import { importMunicipalities, type N03FeatureCollection } from "../src/collectors/ksj/municipalities";
 import { importStations, type N02StationCollection } from "../src/collectors/ksj/stations";
+import { municipalityNamesFromWorkbook } from "../src/collectors/soumu/municipalityNames";
 import { planReferenceImport } from "../src/data-layer/referenceImport";
 
 /** ≈ 22 m: borders stay true at street zoom while the catalog stays a few MB. */
@@ -35,6 +40,7 @@ async function main(): Promise<void> {
   const n03Dir = requiredArg("--n03");
   const n02File = requiredArg("--n02");
   const catalog = argValue("--catalog") ?? REFERENCE_CATALOG_DIR;
+  const namesFile = argValue("--names");
   const dryRun = process.argv.includes("--dry-run");
 
   const n03Files = (await readdir(n03Dir)).filter((name) => /^N03-\d{8}_\d{2}\.geojson$/.test(name)).sort();
@@ -52,6 +58,16 @@ async function main(): Promise<void> {
     precision: PRECISION,
     minIslandAreaKm2: MIN_ISLAND_AREA_KM2,
   });
+  // The workbook is a zip of XML parts; the system unzip reads them.
+  const part = (name: string) => execFileSync("unzip", ["-p", namesFile!, name], { encoding: "utf8", maxBuffer: 1 << 28 });
+  const names = namesFile
+    ? municipalityNamesFromWorkbook(part("xl/sharedStrings.xml"), [part("xl/worksheets/sheet1.xml"), part("xl/worksheets/sheet2.xml")])
+    : new Map();
+  const englishFor = (m: { code: string; name: string }) => {
+    const name = names.get(m.code);
+    return name && name.name === m.name ? name : undefined;
+  };
+  const unnamed = namesFile ? municipalities.filter((m) => !englishFor(m)) : [];
   const stationData = JSON.parse(await readFile(n02File, "utf8")) as N02StationCollection;
   const stations = importStations(stationData, municipalities.map((m) => ({ key: m.code, geometry: m.geometry })));
 
@@ -62,7 +78,10 @@ async function main(): Promise<void> {
     {
       boundaryEdition,
       stationEdition,
-      municipalities,
+      municipalities: municipalities.map((m) => {
+        const name = englishFor(m);
+        return name ? { ...m, nameEn: name.nameEn, prefectureEn: name.prefectureEn } : m;
+      }),
       stations: stations.map(({ area, ...station }) => ({ ...station, municipalityCode: area })),
     },
     new Date().toISOString(),
@@ -73,6 +92,10 @@ async function main(): Promise<void> {
   console.log(`${boundaryEdition}: ${municipalities.length} municipalities from ${n03Files.length} prefecture files`);
   for (const [prefecture, count] of prefectures) console.log(`  ${prefecture} ${count}`);
   for (const entry of skipped) console.log(`  skipped ${entry.name} (${entry.code ?? "no code"}): ${entry.reason}, ${entry.features} features`);
+  if (namesFile) {
+    console.log(`English names for ${municipalities.length - unnamed.length} municipalities`);
+    for (const m of unnamed) console.log(`  no English name for ${m.name} (${m.code}); it keeps its local name`);
+  }
   console.log(`${stationEdition}: ${stations.length} stations inside those municipalities`);
   console.log(
     `Plan: cities +${plan.cities.upsert.length}; ` +

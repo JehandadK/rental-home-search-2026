@@ -1,0 +1,185 @@
+/* The area chooser opens from the map's bottom-left corner, over the map. */
+.panel {
+  position: absolute;
+  left: 8px;
+  bottom: 44px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(340px, calc(100% - 16px));
+  max-height: calc(100% - 56px);
+  padding: 9px 10px;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 10px;
+  background: rgb(var(--rs-glass) / 0.97);
+  color: var(--rs-slate-700);
+  font-size: 12px;
+  box-shadow: 0 6px 24px rgb(var(--rs-shadow) / 0.18);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header strong {
+  font-size: 13px;
+}
+
+.count {
+  color: var(--rs-slate-400);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.language {
+  display: inline-flex;
+  margin-left: auto;
+  border: 1px solid var(--rs-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.language button {
+  padding: 2px 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--rs-slate-600);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.language button[aria-pressed="true"] {
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
+}
+
+.close {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--rs-slate-400);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.overview {
+  position: relative;
+  flex: none;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  background: var(--rs-map-bg);
+  cursor: pointer;
+}
+
+.tooltip {
+  display: block;
+  min-height: 1.4em;
+  margin-top: 3px;
+  color: var(--rs-slate-600);
+  font-size: 11px;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.actions button {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.search {
+  flex: 1 1 110px;
+  min-width: 0;
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+.prefectures {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.prefecture + .prefecture {
+  border-top: 1px solid var(--rs-row-divider);
+}
+
+.prefectureRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 0;
+}
+
+.prefectureRow label {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.prefectureName {
+  font-weight: 600;
+}
+
+.expand {
+  width: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--rs-slate-400);
+  cursor: pointer;
+}
+
+.cities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1px 8px;
+  padding: 0 0 6px 22px;
+}
+
+.cities label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.cities label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Narrow screens: the map is too short to hold the panel, so it opens below it. */
+@media (max-width: 650px) {
+  .panel {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    max-height: 75vh;
+    margin-top: 8px;
+  }
+}

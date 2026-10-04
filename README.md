@@ -235,17 +235,22 @@ exports all reflect the filtered set live.
 
 ### Map ↔ table linking
 
-The map covers the whole Kanto region: every municipality (wards of designated
-cities separately) dashed in, prefecture borders solid, Soka emphasised, the
-region's ~2,000 rail stations, and every listing as a score-coloured dot. Names
-appear as you zoom in (prefectures when zoomed out, then cities, then stations,
-busiest first) and never overlap. Only the 20 scored stations around the search
-area count for the station score; the others are map context. **Hovering a dot highlights
-the matching table row; clicking a dot pins it and scrolls that row into view;
-hovering a table row highlights its dot on the map.** Hovering also shows a
+The map draws the areas you choose, by default the search area (Soka,
+Koshigaya, Kawaguchi, Yashio and Adachi): their municipal outlines (dashed),
+prefecture borders (solid), Soka emphasised, their rail stations, and every
+listing as a score-coloured dot. **⚙ Areas** (bottom-left) opens the area
+picker: a small overview map of Kanto where clicking a municipality shows or
+hides it, a checkbox list by prefecture (a prefecture's box takes all its
+cities), search, *Search area* / *All* / *None*, and an **EN / 日本語** switch
+for city, prefecture and scored-station names (the region's other stations are
+named in Japanese only). The choice is remembered in the browser. Names appear
+as you zoom in and never overlap. Only the 20 scored stations around the search
+area count for the station score; the others are map context. **Hovering a dot
+highlights the matching table row; clicking a dot pins it and scrolls that row
+into view; hovering a table row highlights its dot on the map.** Hovering also shows a
 preview card with the home's photo, rent, layout and score. Scroll to zoom, drag
 to pan, use +/− to zoom, ◎ to fit the listings currently shown, and ⤢ to show
-all of Kanto.
+all the chosen areas.
 The chips at the top toggle stations, schools, mosques and the green "new"
 rings; the legend holds the score scale and a distance scale bar. The map keeps
 true proportions (longitude is scaled by cos latitude).
@@ -283,7 +288,7 @@ the two files the browser fetches into `public/data/` (below).
 
 | File | Contents | Source |
 |---|---|---|
-| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (POIs, mosques, stations, schools, childcare, bus stops), originally from OpenStreetMap and curated map pins; Kanto municipalities, boundaries and rail stations (`railStation`, map only) from MLIT 国土数値情報 N03/N02 | Revisioned updates through `JsonReferenceDataRepository`; `npm run data:reference:app-ids` after adding places; `npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson>` to import a new N03/N02 edition |
+| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (POIs, mosques, stations, schools, childcare, bus stops), originally from OpenStreetMap and curated map pins; Kanto municipalities, boundaries and rail stations (`railStation`, map only) from MLIT 国土数値情報 N03/N02 | Revisioned updates through `JsonReferenceDataRepository`; `npm run data:reference:app-ids` after adding places; `npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson> --names <総務省 code.xlsx>` to import a new N03/N02 edition with English names |
 | `sources/suumo.json` | SUUMO family rentals (2K+) | `npm run scrape` |
 | `sources/athome.json` | AtHome family rentals (2K+), including move-in money and amenity flags | `npm run scrape:athome` |
 | `sources/roomspot.json` | RoomSpot/POLUS family rentals (2K+), including exact addresses and move-in money | `npm run scrape:roomspot` |

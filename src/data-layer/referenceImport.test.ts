@@ -48,8 +48,31 @@ function apply(state: CurrentReference, plan: ReturnType<typeof planReferenceImp
 describe("reference import plan", () => {
   const plan = planReferenceImport(current, input, T1);
 
-  it("keeps an existing city and adds new ones under their municipality code", () => {
-    expect(plan.cities.upsert.map((city) => [city.id, city.name, city.prefecture])).toEqual([["city:jp-11222", "越谷市", "埼玉県"]]);
+  it("keeps an existing city's id and name, adds new ones under their municipality code, and records codes", () => {
+    expect(plan.cities.upsert.map((city) => [city.id, city.name, city.prefecture, city.code])).toEqual([
+      ["city:soka", "Soka", "埼玉県", "11221"],
+      ["city:jp-11222", "越谷市", "埼玉県", "11222"],
+    ]);
+  });
+
+  it("names cities in English when the import has English names", () => {
+    const named: ReferenceImport = {
+      ...input,
+      municipalities: input.municipalities.map((m) => ({ ...m, nameEn: m.code === "11221" ? "Soka (renamed)" : "Koshigaya", prefectureEn: "Saitama" })),
+    };
+    const once = apply(current, plan);
+    const result = planReferenceImport(once, named, T2);
+    expect(result.cities.upsert.map((city) => [city.id, city.name, city.nameLocal, city.prefectureEn])).toEqual([
+      // Soka already had an English name, so it keeps it.
+      ["city:soka", "Soka", "草加市", "Saitama"],
+      // Koshigaya was named only in Japanese, so it gains the English name.
+      ["city:jp-11222", "Koshigaya", "越谷市", "Saitama"],
+    ]);
+    expect(planReferenceImport(apply(once, result), named, T2).cities.upsert).toEqual([]);
+    // A corrected English name reaches the cities this import created.
+    const corrected = { ...named, municipalities: named.municipalities.map((m) => m.code === "11222" ? { ...m, nameEn: "Koshigaya (fixed)" } : m) };
+    expect(planReferenceImport(apply(once, result), corrected, T2).cities.upsert.map((city) => [city.id, city.name]))
+      .toEqual([["city:jp-11222", "Koshigaya (fixed)"]]);
   });
 
   it("gives every city an edition boundary and retires the one it replaces", () => {

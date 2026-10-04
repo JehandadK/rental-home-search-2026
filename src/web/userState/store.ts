@@ -36,6 +36,8 @@ export const USER_STATE_KEYS = {
   notes: "soka-scorer-notes-v1",
   compare: "soka-scorer-compare-v1",
   weightPresets: "soka-scorer-weight-presets-v1",
+  mapAreas: "rental-search-map-areas-v1",
+  nameLanguage: "rental-search-name-language-v1",
 } as const;
 
 /** localStorage adapter. Missing or blocked storage behaves like an empty store. */
