@@ -636,6 +636,20 @@
           "suumo|jnc_000109047824|bc_100520916469"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109047824|bc_100520916469|2026-10-04T10:30:13.789Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-04T10:30:13.789Z",
+      "recordedAt": "2026-10-04T10:41:29.710Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109047824|bc_100520916469",
+      "url": "https://suumo.jp/chintai/jnc_000109047824/?bc=100520916469",
+      "data": {
+        "state": "gone",
+        "evidence": "detail page redirected off the ad page (detail:enrich)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -646,11 +660,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1141803529/?DOWN=1&BKLISTID=001LPC&sref=list_simple&bi=nayose&HEYA_NAYOSE_FLG=1",
     "lastSeenAt": "2026-09-20T11:53:57.641Z",
     "lastListedAt": "2026-09-20T11:53:57.641Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-09-20T11:53:57.641Z",
+      "before": "2026-10-04T10:30:13.789Z"
+    },
+    "daysOnMarket": {
+      "min": 7.2,
+      "max": 21.2
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-13T06:16:36.339Z",
@@ -675,7 +695,7 @@
         "firstSeenAt": null,
         "lastSeenAt": null,
         "lastListedAt": null,
-        "goneSince": null,
+        "goneSince": "2026-10-04T10:30:13.789Z",
         "relistCount": 0
       }
     },

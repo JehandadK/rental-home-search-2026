@@ -1033,6 +1033,20 @@
           "suumo|jnc_000109986015|bc_100528137472"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109986015|bc_100528137472|2026-10-04T10:29:50.471Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-04T10:29:50.471Z",
+      "recordedAt": "2026-10-04T10:41:29.710Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109986015|bc_100528137472",
+      "url": "https://suumo.jp/chintai/jnc_000109986015/?bc=100528137472",
+      "data": {
+        "state": "gone",
+        "evidence": "detail page redirected off the ad page (detail:enrich)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1043,11 +1057,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/kawaguchishi_ct/detail_d9465a023b37300abf959c24d16ab5b3/",
     "lastSeenAt": "2026-10-04T06:11:26.102Z",
     "lastListedAt": "2026-10-04T06:11:26.102Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-04T06:11:26.102Z",
+      "before": "2026-10-04T10:29:50.471Z"
+    },
+    "daysOnMarket": {
+      "min": 13.8,
+      "max": 13.9
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-23T05:41:20.846Z",
@@ -1081,7 +1101,7 @@
         "firstSeenAt": "2026-09-23T05:23:02.256Z",
         "lastSeenAt": "2026-09-23T05:23:02.256Z",
         "lastListedAt": "2026-09-23T05:23:02.256Z",
-        "goneSince": null,
+        "goneSince": "2026-10-04T10:29:50.471Z",
         "relistCount": 0
       }
     },
