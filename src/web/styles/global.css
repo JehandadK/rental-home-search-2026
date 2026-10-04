@@ -1,31 +1,61 @@
-:root {
-  --ink: #1a2332;
-  --muted: #64748b;
-  --line: #dde4ee;
-  --bg: #f6f8fb;
-  --card: #ffffff;
-  --accent: #2563eb;
-  --radius: 10px;
+/*
+ * Base styles for the app's own elements. They apply only inside .rs-app (the
+ * root element in index.html), so a host site's stylesheet can share the page
+ * without either restyling the other:
+ *
+ *   - nothing here matches outside .rs-app, so the app never restyles the host
+ *     (the page's own body margin is set in index.html, not here);
+ *   - the root starts from `all: initial`, so host rules on `body`, `*` or
+ *     `div` pass nothing down by inheritance;
+ *   - every other rule is `.rs-app :where(…)`, one class strong, so it beats a
+ *     host's bare element rules (`button {…}`, `* {…}`) in any order, while
+ *     component classes, which load after this file, still win ties.
+ *     (`.secondary` and `:disabled` add a class each, so they still override
+ *     component classes.)
+ *
+ * Host rules stronger than one class (`a:hover`, `input[type=checkbox]`, an
+ * id) can still reach in; a host should share its theme properties with this
+ * page rather than a full reset such as Bootstrap Reboot.
+ *
+ * No colours or font stacks live here or in any component stylesheet: they
+ * come from the separate theme stylesheet (public/themes/), which is never
+ * bundled into the app.
+ */
+
+.rs-app {
+  all: initial;
+  display: block;
+  /* Separate longhands: a missing --rs-font must not void the size too. */
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: var(--rs-font, sans-serif);
+  color: var(--rs-ink);
+  background: var(--rs-bg);
 }
 
-* {
+/*
+ * A clean slate: undo whatever a host stylesheet sets on bare elements, back
+ * to the browser's defaults. SVG and canvas keep their attribute-driven sizes
+ * and paints. Custom properties are untouched, so a host can still theme.
+ * `all: revert` also drops HTML presentational attributes (`<img width>`,
+ * `<td align>`): size such elements in CSS.
+ */
+.rs-app::before,
+.rs-app::after,
+.rs-app :where(:not(svg, svg *, canvas)),
+.rs-app :where(:not(svg, svg *, canvas))::before,
+.rs-app :where(:not(svg, svg *, canvas))::after {
+  all: revert;
+}
+
+.rs-app,
+.rs-app :where(*) {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font:
-    14px/1.5 -apple-system,
-    "Hiragino Sans",
-    "Noto Sans JP",
-    sans-serif;
-  color: var(--ink);
-  background: var(--bg);
-}
-
-button {
-  background: var(--accent);
-  color: #fff;
+.rs-app :where(button) {
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
   border: 0;
   border-radius: 6px;
   padding: 6px 12px;
@@ -33,29 +63,28 @@ button {
   cursor: pointer;
 }
 
-button.secondary {
-  background: #eef2f8;
-  color: var(--ink);
+.rs-app :where(button).secondary {
+  background: var(--rs-button-secondary);
+  color: var(--rs-ink);
 }
 
-button:disabled {
+.rs-app :where(button):disabled {
   opacity: 0.55;
   cursor: wait;
 }
 
-input {
-  border: 1px solid var(--line);
+.rs-app :where(input) {
+  border: 1px solid var(--rs-line);
   border-radius: 6px;
   padding: 5px 7px;
   font-size: 13px;
 }
 
-a {
-  color: var(--accent);
+.rs-app :where(a) {
+  color: var(--rs-accent);
   text-decoration: none;
 }
 
-h1,
-h2 {
+.rs-app :where(h1, h2) {
   margin: 0;
 }

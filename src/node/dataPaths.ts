@@ -10,7 +10,8 @@ export const DATA_DIR = join(REPO_ROOT, "data");
 
 /**
  * Derived files the web app fetches at runtime (`npm run data:web`). Vite
- * serves `public/` in dev and copies it into `dist/`, so only files meant
- * for the browser belong here — never sources, captures, or backups.
+ * serves `public/` in dev and copies it into `dist/` (beside the theme in
+ * `public/themes/`), so only files meant for the browser belong here — never
+ * sources, captures, or backups.
  */
 export const WEB_PUBLISH_DIR = join(REPO_ROOT, "public", "data");

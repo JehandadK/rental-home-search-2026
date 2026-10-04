@@ -20,7 +20,7 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--rs-muted);
   cursor: pointer;
 }
 
@@ -32,7 +32,7 @@
 .hint {
   margin: 0 0 8px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--rs-muted);
 }
 
 .scroll {
@@ -50,7 +50,7 @@
 .table th,
 .table td {
   padding: 5px 8px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--rs-line);
   text-align: left;
   vertical-align: top;
 }
@@ -62,8 +62,8 @@
   left: 0;
   z-index: 1;
   width: 150px;
-  background: var(--card);
-  color: var(--muted);
+  background: var(--rs-card);
+  color: var(--rs-muted);
   font-weight: 500;
   font-size: 12px;
 }
@@ -71,7 +71,7 @@
 .fact small {
   display: block;
   font-size: 10px;
-  color: #94a3b8;
+  color: var(--rs-slate-400);
 }
 
 .home {
@@ -83,7 +83,7 @@
 .home small {
   display: block;
   font-weight: 400;
-  color: var(--muted);
+  color: var(--rs-muted);
 }
 
 .thumb {
@@ -102,18 +102,18 @@
   min-width: 30px;
   padding: 1px 7px;
   border-radius: 99px;
-  color: #fff;
+  color: var(--rs-on-accent);
   font-size: 12px;
   font-weight: 700;
   text-align: center;
-  box-shadow: 0 1px 3px rgb(15 23 42 / 30%);
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.3);
 }
 
 .homeName {
   display: block;
   padding: 0;
   background: none;
-  color: var(--ink);
+  color: var(--rs-ink);
   font: inherit;
   font-weight: 600;
   text-align: left;
@@ -121,7 +121,7 @@
 }
 
 button.homeName:hover {
-  color: var(--accent);
+  color: var(--rs-accent);
   text-decoration: underline;
 }
 
@@ -133,15 +133,15 @@ button.homeName:hover {
   height: 22px;
   padding: 0;
   border-radius: 99px;
-  background: #fff;
-  color: var(--muted);
-  border: 1px solid var(--line);
+  background: var(--rs-card);
+  color: var(--rs-muted);
+  border: 1px solid var(--rs-line);
   line-height: 1;
 }
 
 .removeHome:hover {
-  color: #b91c1c;
-  border-color: #fca5a5;
+  color: var(--rs-red-700);
+  border-color: var(--rs-red-300);
 }
 
 .section th {
@@ -149,8 +149,8 @@ button.homeName:hover {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--accent);
-  background: var(--card);
+  color: var(--rs-accent);
+  background: var(--rs-card);
   text-align: left;
 }
 
@@ -161,14 +161,14 @@ button.homeName:hover {
 
 /* Best value in its row. */
 .best {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--rs-emerald-50);
+  color: var(--rs-emerald-700);
   font-weight: 700;
 }
 
 .detail {
   display: block;
-  color: var(--muted);
+  color: var(--rs-muted);
   font-size: 10.5px;
   font-weight: 400;
 }

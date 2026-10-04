@@ -392,6 +392,26 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
   still shown (ソライエアイル草加 207, 1K); its sibling unit redirected as gone.
 - **610 tests, typecheck and production build pass.**
 
+## 2026-10-04 recent-listing refresh + photo backfill (Playwright)
+
+- Run `2026-10-04T05-50-30-782Z-39b938f4`: **SUCCESS**, all four portals,
+  every source/city stopped on two all-known pages. Source additions: SUUMO
+  **20**, AtHome **92**, RoomSpot **34**, Nifty **39** (8/5/26). Zero detail
+  requests; **57 unique properties added** (3860 → 3897). AtHome reused the
+  October 3 profile without a verification page.
+- Photo backfill: photo capture landed after the October 3 run, so 1235 active
+  AtHome/Nifty/RoomSpot-only rows had no picture. Deep newest-first passes
+  re-read older result pages: RoomSpot 18 pages, Nifty 39/40/40 (Soka 404'd
+  past its last page), AtHome 34/34/16 (Kawaguchi then showed its verification
+  page; not bypassed). Photo-less active rows: **1235 → 803**. The deep passes
+  also found ads the incremental pass never reached: **3968 archival / 3964
+  dashboard rows**, all geocoded (18 queries, 0 unresolved). None SOLD.
+- Gotcha: `--deep` AtHome/RoomSpot runs off the end of a city's results and
+  then throws, and they commit only after every city, so nothing is saved.
+  Cap with `--max-pages` at the smallest city's depth, or import the cached
+  pages (6h) page by page with `capture:import` (what this run did for AtHome).
+- **697 tests, typecheck and production build pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.

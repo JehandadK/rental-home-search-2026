@@ -9,8 +9,8 @@
   margin-left: 6px;
   padding: 0 6px;
   border-radius: 99px;
-  background: #2563eb;
-  color: #fff;
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
   font-size: 11px;
   line-height: 16px;
   vertical-align: middle;
@@ -18,39 +18,39 @@
 
 .count {
   font-size: 12px;
-  color: var(--muted);
+  color: var(--rs-muted);
   margin: 0 0 10px;
 }
 
 .group {
   padding: 8px 0;
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--rs-line);
 }
 
 .locationGroup {
   margin: 4px -4px 2px;
   padding: 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--rs-slate-300);
   border-radius: 8px;
-  background: #f8fafc;
+  background: var(--rs-slate-50);
 }
 
 .locationTitle {
   font-size: 13px;
   font-weight: 700;
-  color: #1e3a5f;
+  color: var(--rs-heading-strong);
   margin-bottom: 2px;
 }
 
 .help {
   margin: 5px 0 6px;
-  color: var(--muted);
+  color: var(--rs-muted);
   font-size: 10.5px;
   line-height: 1.35;
 }
 
 .areaDivider {
-  border-top: 1px dashed #cbd5e1;
+  border-top: 1px dashed var(--rs-slate-300);
   margin: 10px 0 5px;
 }
 
@@ -60,7 +60,7 @@
   align-items: center;
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: var(--rs-slate-600);
   margin-bottom: 6px;
 }
 
@@ -72,49 +72,49 @@
 
 .chip {
   padding: 3px 9px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rs-line);
   border-radius: 99px;
-  background: #fff;
+  background: var(--rs-card);
   font-size: 12px;
   cursor: pointer;
-  color: #334155;
+  color: var(--rs-slate-700);
 }
 
 .chip:hover {
-  border-color: #b8c6dd;
+  border-color: var(--rs-hover-border);
 }
 
 .chip.on {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: var(--rs-accent);
+  border-color: var(--rs-accent);
+  color: var(--rs-on-accent);
 }
 
 /* The "new only" chip gets its own green identity to match the NEW badges. */
 .chipNew.on {
-  background: #16a34a;
-  border-color: #16a34a;
+  background: var(--rs-green-600);
+  border-color: var(--rs-green-600);
 }
 
 /* Small inline reset for the decision-marks group. */
 .clearMarks {
   padding: 1px 8px;
   font-size: 10.5px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rs-line);
   border-radius: 99px;
-  background: #fff;
-  color: #64748b;
+  background: var(--rs-card);
+  color: var(--rs-muted);
   cursor: pointer;
 }
 
 .clearMarks:hover {
-  border-color: #dc2626;
-  color: #dc2626;
+  border-color: var(--rs-red-600);
+  color: var(--rs-red-600);
 }
 
 .modeToggle {
   display: inline-flex;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rs-line);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -122,15 +122,15 @@
 .modeToggle button {
   padding: 2px 8px;
   font-size: 11px;
-  background: #fff;
-  color: var(--muted);
+  background: var(--rs-card);
+  color: var(--rs-muted);
   cursor: pointer;
   border: none;
 }
 
 .modeToggle button.on {
-  background: #2563eb;
-  color: #fff;
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
 }
 
 .selectedRow {
@@ -139,8 +139,8 @@
   align-items: center;
   gap: 8px;
   font-size: 11.5px;
-  color: #1e3a6e;
-  background: #eef4ff;
+  color: var(--rs-link-strong);
+  background: var(--rs-accent-wash);
   border-radius: 6px;
   padding: 4px 8px;
   margin-bottom: 6px;
@@ -156,7 +156,7 @@
   flex-shrink: 0;
   background: none;
   border: none;
-  color: #1e3a6e;
+  color: var(--rs-link-strong);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
@@ -176,7 +176,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 2px 8px;
   padding: 2px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--rs-line);
   border-radius: 6px;
 }
 
@@ -198,7 +198,7 @@
 .empty {
   grid-column: 1 / -1;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--rs-muted);
   padding: 6px;
 }
 
@@ -215,7 +215,7 @@
 }
 
 .range span {
-  color: var(--muted);
+  color: var(--rs-muted);
 }
 
 .slider {
@@ -223,7 +223,7 @@
 }
 
 .scoreVal {
-  color: #2563eb;
+  color: var(--rs-accent);
   font-weight: 700;
 }
 
@@ -232,7 +232,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--rs-muted);
   margin-top: 6px;
 }
 

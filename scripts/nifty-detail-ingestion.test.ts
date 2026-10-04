@@ -142,8 +142,6 @@ describe("Nifty detail import through the public data layer", () => {
     const { batch } = await prepareNiftyDetailImport(input);
     const result = await service.ingestScrape(batch);
     const saved = (await store.readSource("nifty"))!;
-    expect(byId(saved.listings)).toEqual(byId(serialized(expected.merged.listings)));
-    expect(result).toMatchObject({ added: expected.merged.added, updated: expected.merged.updated, currentCount: expected.merged.listings.length });
     // The journal is data-layer managed, so the legacy copy cannot predict it; compare it separately.
     const { ingestionJournal: journal, ...provenance } = saved.provenance! as { ingestionJournal?: { batches: unknown[] } };
     const { ingestionJournal: priorJournal, ...legacyProvenance } = expected.provenance as { ingestionJournal?: { batches: unknown[] } };
@@ -153,6 +151,15 @@ describe("Nifty detail import through the public data layer", () => {
     const priorBatches = (priorJournal?.batches ?? []) as { runId: string; batchId: string }[];
     const alreadyImported = priorBatches.some((entry) => entry.runId === batch.runId && entry.batchId === batch.batchId);
     const { ingestionJournal: _journal, ...priorProvenance } = (previous.provenance ?? {}) as { ingestionJournal?: unknown };
+    // A replay keeps the current rows: later crawls may have retired some of the dump's ads
+    // as superseded, which the legacy merge would add back.
+    if (alreadyImported) {
+      expect(byId(saved.listings)).toEqual(byId(previous.listings));
+      expect(result).toMatchObject({ currentCount: previous.listings.length });
+    } else {
+      expect(byId(saved.listings)).toEqual(byId(serialized(expected.merged.listings)));
+      expect(result).toMatchObject({ added: expected.merged.added, updated: expected.merged.updated, currentCount: expected.merged.listings.length });
+    }
     expect(provenance).toEqual(alreadyImported ? priorProvenance : legacyProvenance);
     expect(result.replayed).toBe(alreadyImported);
     expect(journal?.batches.slice(0, priorBatches.length)).toEqual(priorBatches);
