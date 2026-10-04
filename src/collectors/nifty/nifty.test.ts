@@ -30,6 +30,15 @@ describe("Nifty list-first collection", () => {
     expect(l.building?.features).toEqual(["駐車場あり", "バス・トイレ別"]);
   });
   it("excludes small layouts on the list page", () => expect(parseNiftyPage(fixture("1K"), "Soka")).toEqual([]));
+  it("finds a Tokyo ward's 東京都 address line in the card and in the capture projection", async () => {
+    const ward = fixture().replace("<p>埼玉県草加市1丁目</p>", "<p>東京都葛飾区高砂7丁目</p>");
+    expect(parseNiftyPage(ward, "Katsushika", 2026)[0]).toMatchObject({ city: "Katsushika", address: "東京都葛飾区高砂7丁目" });
+    const url = "https://myhome.nifty.com/rent/tokyo/katsushikaku_ct/?sort=regDate-desc";
+    const doc = document.implementation.createHTMLDocument();
+    doc.body.innerHTML = ward + '<select name="sort"><option value="regDate-desc" selected>新着</option></select>';
+    const html = await new Function("document", "location", `return ${niftyCaptureExpression(url)}`)(doc, { href: url });
+    expect(parseNiftyPage(html, "Katsushika", 2026)[0].address).toBe("東京都葛飾区高砂7丁目");
+  });
   it("updates price using stable ad identity and retains expensive details", () => {
     const [l] = parseNiftyPage(fixture(), "Soka");
     const prior = { ...l, rent: 90000, parking: { ...l.parking!, monthlyYen: 6000 }, tenancy: { leaseType: "regular" as const } };

@@ -62,15 +62,15 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     const result = await runAthomeScrape(["--max-pages", "2"], dependencies);
     expect(dependencies.log).toHaveBeenCalledWith("No AtHome snapshot yet; automatically bootstrapping a deep discovery crawl.");
     expect(dependencies.log).toHaveBeenCalledWith("AtHome deep newest-first bootstrap");
-    expect(dependencies.page).toHaveBeenCalledTimes(6); expect(write).toHaveBeenCalledTimes(1);
+    expect(dependencies.page).toHaveBeenCalledTimes(8); expect(write).toHaveBeenCalledTimes(1);
     expect(dependencies.close).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ added: 6, updated: 0, retired: 0, previousCount: 0, currentCount: 6 });
+    expect(result).toMatchObject({ added: 8, updated: 0, retired: 0, previousCount: 0, currentCount: 8 });
     const saved = (await store.readSource("athome"))!;
     expect(saved.listings).toEqual(rows());
     expect(saved.completeSnapshot).toBe(false); expect(saved.scrapedAt).toBe(at);
-    expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 6, newListings: 6, capturedBy: "scripts/scrape-athome.ts",
-      cities: ["soka-city", "koshigaya-city", "kawaguchi-city"], newListingIds: rows().map((row) => row.id) });
-    expect(dependencies.log).toHaveBeenCalledWith("\nWrote 6 AtHome listings (was 0)");
+    expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 8, newListings: 8, capturedBy: "scripts/scrape-athome.ts",
+      cities: ["soka-city", "koshigaya-city", "kawaguchi-city", "katsushika-city"], newListingIds: rows().map((row) => row.id) });
+    expect(dependencies.log).toHaveBeenCalledWith("\nWrote 8 AtHome listings (was 0)");
     expect(dependencies.log).toHaveBeenCalledWith("Next: npm run data:build && npm run enrich && npm run find:new");
   });
 
@@ -78,22 +78,22 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     await seed();
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "reconcileSource");
     const result = await runAthomeScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(6);
+    expect(dependencies.page).toHaveBeenCalledTimes(8);
     expect(read).toHaveBeenCalledTimes(1); expect(write).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ added: 0, updated: 6, retired: 0, currentCount: 6 });
+    expect(result).toMatchObject({ added: 0, updated: 8, retired: 0, currentCount: 8 });
     expect(dependencies.log).toHaveBeenCalledWith("AtHome incremental newest-first discovery");
     expect(dependencies.log).toHaveBeenCalledWith("\n=== Soka (soka-city) ===");
     expect(dependencies.log).toHaveBeenCalledWith("  page 1: 1 rooms (0 new, 1 known, 0 duplicate)");
     expect(dependencies.log).toHaveBeenCalledWith("  stopped: 2 consecutive pages were entirely known");
-    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 6 overlaps; retired 0 superseded source ad(s); fetched 6 pages.");
+    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 8 overlaps; retired 0 superseded source ad(s); fetched 8 pages.");
     expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("No AtHome snapshot"));
     const saved = (await store.readSource("athome"))!;
-    expect(saved.provenance).toMatchObject({ mode: "incremental newest-first", pagesFetched: 6, listTemplate: "retained", newListingIds: [] });
+    expect(saved.provenance).toMatchObject({ mode: "incremental newest-first", pagesFetched: 8, listTemplate: "retained", newListingIds: [] });
     const bytes = await readFile(store.sourcePath("athome"), "utf8"), backups = await readdir(store.backupDir);
     expect(await runAthomeScrape(["--max-pages", "5"], dependencies)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: saved.revision });
     // The replay reports the journaled original effect for the refresh ledger.
     expect(dependencies.log).toHaveBeenLastCalledWith("Next: npm run data:build && npm run enrich && npm run find:new");
-    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 6 overlaps; retired 0 superseded source ad(s); fetched 6 pages. (already committed; no source change)");
+    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 8 overlaps; retired 0 superseded source ad(s); fetched 8 pages. (already committed; no source change)");
     expect(await readFile(store.sourcePath("athome"), "utf8")).toBe(bytes); expect(await readdir(store.backupDir)).toEqual(backups);
   });
 
@@ -102,15 +102,15 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     dependencies.page = vi.fn(async (meta) => meta.page === 1
       ? capture(cityIndex(meta.city), 1, room(idFor(cityIndex(meta.city), 1), { layout: "1LDK" })) : capture(cityIndex(meta.city), meta.page));
     await runAthomeScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(9);
+    expect(dependencies.page).toHaveBeenCalledTimes(12);
     expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("page 1:"));
-    expect(dependencies.sleep).toHaveBeenCalledTimes(3);
-    expect((await store.readSource("athome"))!.provenance).toMatchObject({ pagesFetched: 9 });
+    expect(dependencies.sleep).toHaveBeenCalledTimes(4);
+    expect((await store.readSource("athome"))!.provenance).toMatchObject({ pagesFetched: 12 });
 
     await rm(join(root, "sources"), { recursive: true }); await seed([]);
     vi.mocked(dependencies.page).mockClear(); vi.mocked(dependencies.sleep).mockClear();
     await runAthomeScrape(["--deep", "--max-pages", "3"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(9); expect(dependencies.sleep).toHaveBeenCalledTimes(6);
+    expect(dependencies.page).toHaveBeenCalledTimes(12); expect(dependencies.sleep).toHaveBeenCalledTimes(8);
     expect((await store.readSource("athome"))!.provenance).toMatchObject({ mode: "deep newest-first" });
   });
 
@@ -167,7 +167,7 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     const bytes = await readFile(store.sourcePath("athome"), "utf8");
     await expect(runAthomeScrape(["--max-pages", "1"], dependencies)).rejects.toBeInstanceOf(ShrinkGuardError);
     expect(await readFile(store.sourcePath("athome"), "utf8")).toBe(bytes);
-    expect(await runAthomeScrape(["--max-pages", "1", "--force"], dependencies)).toMatchObject({ retired: 12, currentCount: 3, replayed: false });
+    expect(await runAthomeScrape(["--max-pages", "1", "--force"], dependencies)).toMatchObject({ retired: 12, currentCount: 4, replayed: false });
     const saved = (await store.readSource("athome"))!;
     expect(saved.archivedListings!.map((entry) => entry.listing)).toEqual(aliases);
     expect(saved.archivedListings!.every((entry) => entry.reason.includes("not evidence of delisting"))).toBe(true);

@@ -1,5 +1,5 @@
 /**
- * AtHome (athome.co.jp) collector for Soka, Koshigaya + Kawaguchi family rentals.
+ * AtHome (athome.co.jp) collector for every target city's family rentals (see targetCities.ts).
  *
  * Default: incremental newest-first discovery (`?sort=33`), stopping after
  * two all-known pages per city. Existing unseen inventory is preserved.
@@ -19,20 +19,14 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { cachedPage } from "../src/collectors/shared/captureStore";
 import { AthomeBrowser } from "../src/collectors/athome/athomeBrowser";
+import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
 import { runPortalScrape, type PortalCollectorConfig, type PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
-
-const cityUrl = (slug: string) => `https://www.athome.co.jp/chintai/saitama/${slug}/list/`;
 
 export const ATHOME_COLLECTOR: PortalCollectorConfig = {
   source: "athome",
   label: "AtHome",
-  cities: [
-    { city: "Soka", url: cityUrl("soka-city"), heading: "Soka (soka-city)" },
-    { city: "Koshigaya", url: cityUrl("koshigaya-city"), heading: "Koshigaya (koshigaya-city)" },
-    // Kawaguchi borders western Soka; its eastern/northern neighbourhoods are
-    // especially relevant to Al Sanad School and are ranked by actual distance.
-    { city: "Kawaguchi", url: cityUrl("kawaguchi-city"), heading: "Kawaguchi (kawaguchi-city)" },
-  ],
+  cities: TARGET_CITIES.map((city) => ({ city: city.label,
+    url: `https://www.athome.co.jp/chintai/${city.prefectureSlug}/${city.athome}/list/`, heading: `${city.label} (${city.athome})` })),
   delayMs: 1800,
   roomNoun: "rooms",
   stopMessage: "  stopped: 2 consecutive pages were entirely known",

@@ -1,5 +1,5 @@
 /**
- * Incremental newest-first RoomSpot collector for Soka, Koshigaya and Kawaguchi 2K+.
+ * Incremental newest-first RoomSpot collector for every target city's 2K+ rooms (see targetCities.ts).
  * Browser navigation and the capture cache stay here; the application layer
  * stages parsed observations and commits once after every city finishes.
  */
@@ -9,20 +9,18 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { cachedPage } from "../src/collectors/shared/captureStore";
 import { RoomspotBrowser } from "../src/collectors/roomspot/roomspotBrowser";
+import { TARGET_CITIES, type TargetCity } from "../src/collectors/shared/targetCities";
 import { runPortalScrape, type PortalCollectorConfig, type PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
 
-const urlFor = (code: string, address: string) =>
-  `https://www.roomspot.net/rent/search/area/pref_11/city_${code}/?address[]=${encodeURIComponent(address)}` +
+const urlFor = (city: TargetCity) =>
+  `https://www.roomspot.net/rent/search/area/pref_${city.code.slice(0, 2)}/city_${city.code.slice(2)}/` +
+  `?address[]=${encodeURIComponent(city.prefecture + city.municipality)}` +
   `&ftlsflg=1&sort=new_arrival&item_per_page=30`;
 
 export const ROOMSPOT_COLLECTOR: PortalCollectorConfig = {
   source: "roomspot",
   label: "RoomSpot",
-  cities: [
-    { city: "Soka", url: urlFor("221", "埼玉県草加市"), heading: "Soka" },
-    { city: "Koshigaya", url: urlFor("222", "埼玉県越谷市"), heading: "Koshigaya" },
-    { city: "Kawaguchi", url: urlFor("203", "埼玉県川口市"), heading: "Kawaguchi" },
-  ],
+  cities: TARGET_CITIES.map((city) => ({ city: city.label, url: urlFor(city), heading: city.label })),
   delayMs: 1000,
   roomNoun: "family rooms",
   stopMessage: "  stopped: two all-known pages",

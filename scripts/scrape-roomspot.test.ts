@@ -56,6 +56,8 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
 
   it("keeps the legacy URLs, page sequence, and delay", () => {
     expect(portalPageUrl("roomspot", cities[0].url, 2)).toBe("https://www.roomspot.net/rent/search/area/pref_11/city_221/?address[]=%E5%9F%BC%E7%8E%89%E7%9C%8C%E8%8D%89%E5%8A%A0%E5%B8%82&ftlsflg=1&sort=new_arrival&item_per_page=30&page_num=2");
+    // Tokyo ward: prefecture 13, ward 122, searched by its full 東京都葛飾区 address.
+    expect(cities.at(-1)).toMatchObject({ city: "Katsushika", url: "https://www.roomspot.net/rent/search/area/pref_13/city_122/?address[]=%E6%9D%B1%E4%BA%AC%E9%83%BD%E8%91%9B%E9%A3%BE%E5%8C%BA&ftlsflg=1&sort=new_arrival&item_per_page=30" });
     expect(ROOMSPOT_COLLECTOR.delayMs).toBe(1000);
   });
 
@@ -63,14 +65,14 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     const write = vi.spyOn(repository, "reconcileSource");
     const result = await runRoomspotScrape(["--max-pages", "2"], dependencies);
     expect(dependencies.log).toHaveBeenCalledWith("RoomSpot deep newest-first bootstrap");
-    expect(dependencies.page).toHaveBeenCalledTimes(6); expect(write).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ added: 6, updated: 0, retired: 0, previousCount: 0, currentCount: 6 });
+    expect(dependencies.page).toHaveBeenCalledTimes(8); expect(write).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ added: 8, updated: 0, retired: 0, previousCount: 0, currentCount: 8 });
     const saved = (await store.readSource("roomspot"))!;
     expect(saved.listings).toEqual(rows());
-    expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 6, newListings: 6, cities: ["Soka", "Koshigaya", "Kawaguchi"],
+    expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 8, newListings: 8, cities: ["Soka", "Koshigaya", "Kawaguchi", "Katsushika"],
       capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome" });
     expect(saved.provenance).not.toHaveProperty("newListingIds");
-    expect(dependencies.log).toHaveBeenCalledWith("\nWrote 6 RoomSpot listings (was 0)");
+    expect(dependencies.log).toHaveBeenCalledWith("\nWrote 8 RoomSpot listings (was 0)");
     expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("Next:"));
   });
 
@@ -78,17 +80,17 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     await seed();
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "reconcileSource");
     const result = await runRoomspotScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(6);
+    expect(dependencies.page).toHaveBeenCalledTimes(8);
     expect(read).toHaveBeenCalledTimes(1); expect(write).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ added: 0, updated: 6, retired: 0, currentCount: 6 });
+    expect(result).toMatchObject({ added: 0, updated: 8, retired: 0, currentCount: 8 });
     expect(dependencies.log).toHaveBeenCalledWith("RoomSpot incremental newest-first discovery");
     expect(dependencies.log).toHaveBeenCalledWith("\n=== Soka ===");
     expect(dependencies.log).toHaveBeenCalledWith("  page 1: 1 family rooms (0 new, 1 known, 0 duplicate)");
     expect(dependencies.log).toHaveBeenCalledWith("  stopped: two all-known pages");
-    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 6 overlaps; retired 0 superseded source ad(s); fetched 6 pages.");
+    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 8 overlaps; retired 0 superseded source ad(s); fetched 8 pages.");
     const saved = (await store.readSource("roomspot"))!;
     // Other provenance is retained, but a direct crawl is not part of an earlier native capture run.
-    expect(saved.provenance).toMatchObject({ mode: "incremental newest-first", pagesFetched: 6, fixture: "retained" });
+    expect(saved.provenance).toMatchObject({ mode: "incremental newest-first", pagesFetched: 8, fixture: "retained" });
     expect(saved.provenance).not.toHaveProperty("captureRunId");
     const bytes = await readFile(store.sourcePath("roomspot"), "utf8"), backups = await readdir(store.backupDir);
     expect(await runRoomspotScrape(["--max-pages", "5"], dependencies)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: saved.revision });
@@ -124,7 +126,7 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     const aliases = Array.from({ length: 12 }, (_, index) => ({ ...initial[0], id: `roomspot-9${index}`, url: `https://www.roomspot.net/rent/9${index}` }));
     await seed([...aliases, ...initial.slice(1)]);
     await expect(runRoomspotScrape(["--max-pages", "1"], dependencies)).rejects.toBeInstanceOf(ShrinkGuardError);
-    expect(await runRoomspotScrape(["--max-pages", "1", "--force"], dependencies)).toMatchObject({ retired: 12, currentCount: 3 });
+    expect(await runRoomspotScrape(["--max-pages", "1", "--force"], dependencies)).toMatchObject({ retired: 12, currentCount: 4 });
     expect((await store.readSource("roomspot"))!.archivedListings!.map((entry) => entry.listing)).toEqual(aliases);
   });
 

@@ -4,6 +4,7 @@ import type { Element } from "domhandler";
 import type { ParkingInfo, RawListing } from "../../domain/types";
 import { isExplicitNone, parseYen as parseJapaneseYen } from "../shared/parseJa";
 import { collectPhotos, photoKind } from "../shared/photos";
+import { withPrefecture } from "../shared/targetCities";
 
 function parseMan(text: string): number | null {
   const m = text.replace(/\s/g, "").match(/([\d.]+)万円/);
@@ -94,7 +95,7 @@ export function parseAthomePage(html: string, city: string): RawListing[] {
       listings.push({
         id: `athome-${id}`,
         name: name.replace(/\s+\d+階建$/, ""),
-        address: address.startsWith("埼玉県") ? address : `埼玉県${address}`,
+        address: withPrefecture(address, city),
         city,
         rent: rentBase + adminFee,
         layout,

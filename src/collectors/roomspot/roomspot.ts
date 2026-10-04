@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import type { RawListing } from "../../domain/types";
 import { isExplicitNone, parseYen } from "../shared/parseJa";
 import { collectPhotos, photoKind } from "../shared/photos";
+import { withPrefecture } from "../shared/targetCities";
 
 export function isFamilyLayout(layout: string | null): boolean {
   const rooms = layout?.normalize("NFKC").match(/^(\d+)/)?.[1];
@@ -69,7 +70,7 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
       listings.push({
         id: `roomspot-${id}`,
         name: `${buildingName}${floor ? ` ${floor}` : ""}`,
-        address: address.startsWith("埼玉県") ? address : `埼玉県${address}`,
+        address: withPrefecture(address, city),
         city,
         rent: baseRent + adminFee,
         layout,

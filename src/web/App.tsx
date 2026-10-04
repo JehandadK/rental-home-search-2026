@@ -296,7 +296,7 @@ export function App({ data }: { data: WebData }) {
       <header className={styles.header}>
         <h1>Soka Rental Scorer</h1>
         <span className={styles.subtitle}>
-          草加市・越谷市・川口市 — weighted 0–100 scoring · Al Sanad School &amp; nearest mosque
+          草加市・越谷市・川口市・葛飾区 — weighted 0–100 scoring · Al Sanad School &amp; nearest mosque
         </span>
         <span className={styles.subtitle}>
           {filtered.length} / {listings.length} listings

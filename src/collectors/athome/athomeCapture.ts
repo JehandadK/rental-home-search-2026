@@ -1,12 +1,8 @@
 import * as cheerio from "cheerio";
 import { isFamilyLayout } from "./athome";
 import type { PageCapture } from "../shared/captureStore";
+import { TARGET_CITIES } from "../shared/targetCities";
 
-const CITIES = {
-  soka: { code: "11221", label: "Soka", address: "草加市" },
-  koshigaya: { code: "11222", label: "Koshigaya", address: "越谷市" },
-  kawaguchi: { code: "11203", label: "Kawaguchi", address: "川口市" },
-} as const;
 const esc = (s: string): string => s.replace(/[&<>"']/g, c => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[c]!);
@@ -15,11 +11,11 @@ const esc = (s: string): string => s.replace(/[&<>"']/g, c => ({
 export function athomeDownloadedCapture(html: string, url: string, capturedAt: string): PageCapture & { sortedNewest: true } {
   const u = new URL(url);
   // City-path results (`/soka-city/list/`) filter by city; the prefecture search now ignores `cities`/`cityCds`.
-  const path = u.pathname.match(/^\/chintai\/saitama\/(?:([a-z]+)-city\/)?list\/(?:page([1-9]\d*)\/)?$/);
-  const key = path?.[1] ?? u.searchParams.get("cities") ?? "";
-  const city = Object.hasOwn(CITIES, key) ? CITIES[key as keyof typeof CITIES] : undefined;
+  const path = u.pathname.match(/^\/chintai\/([a-z]+)\/(?:([a-z]+)-city\/)?list\/(?:page([1-9]\d*)\/)?$/);
+  const key = path?.[2] ?? u.searchParams.get("cities") ?? "";
+  const city = TARGET_CITIES.find((candidate) => candidate.athome === `${key}-city` && candidate.prefectureSlug === path?.[1]);
   if (u.origin !== "https://www.athome.co.jp" || !path || !city ||
-      (!path[1] && (u.searchParams.get("cityCds") !== city.code || u.searchParams.get("pref") !== "11")) ||
+      (!path[2] && (u.searchParams.get("cityCds") !== city.code || u.searchParams.get("pref") !== city.code.slice(0, 2))) ||
       u.searchParams.get("sort") !== "33" || !Number.isFinite(Date.parse(capturedAt))) {
     throw new Error("Invalid AtHome capture URL, city, sort, or observation time");
   }
@@ -36,7 +32,7 @@ export function athomeDownloadedCapture(html: string, url: string, capturedAt: s
     const p = $(card);
     const text = (selector: string) => p.find(selector).first().text().replace(/\s+/g, " ").trim();
     const name = text(".property-title"), address = text(".info-item--location");
-    if (!name || !address.replace(/^埼玉県/, "").startsWith(city.address)) throw new Error("AtHome card has missing title or wrong city");
+    if (!name || !(address.startsWith(city.prefecture) ? address.slice(city.prefecture.length) : address).startsWith(city.municipality)) throw new Error("AtHome card has missing title or wrong city");
     const rooms = p.find(".room-info-section").map((_, room) => {
       const r = $(room);
       const layout = r.find(".layout-size > span").eq(0).text().trim();
@@ -68,5 +64,5 @@ export function athomeDownloadedCapture(html: string, url: string, capturedAt: s
       `<div class="p-property__photos">${p.find(".image-item img").map((_, img) => photo(img, "")).get().join("")}</div>${rooms}</div>`;
   }).get().join("");
   return { schemaVersion: 1, source: "athome", city: city.label, url: u.href,
-    page: Number(path[2] ?? 1), capturedAt, httpStatus: 200, sortedNewest: true, html: projected };
+    page: Number(path[3] ?? 1), capturedAt, httpStatus: 200, sortedNewest: true, html: projected };
 }

@@ -1,15 +1,20 @@
 import type { RefreshStageRecord } from "./refreshLedger";
+import { TARGET_CITY_LABELS } from "../collectors/shared/targetCities";
+
+/** One Nifty list stage per target city: "nifty-soka", "nifty-katsushika", … */
+export const niftyStageId = (cityLabel: string): string => `nifty-${cityLabel.toLowerCase()}`;
+export const NIFTY_CITY_STAGES: readonly string[] = TARGET_CITY_LABELS.map(niftyStageId);
 
 /** Only dependencies, not stage order, invalidate successfully completed work. */
 export const DEPENDENCIES: Record<string, readonly string[]> = {
   "suumo-parking": ["suumo"],
-  "nifty-import": ["nifty-soka", "nifty-koshigaya", "nifty-kawaguchi"],
+  "nifty-import": NIFTY_CITY_STAGES,
   "detail-enrich": ["suumo", "athome", "roomspot", "nifty-import"],
   "data-build": ["suumo", "suumo-parking", "athome", "roomspot", "nifty-import", "detail-enrich"],
   enrich: ["data-build"],
   "web-data": ["enrich"],
 };
-export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", "nifty-soka", "nifty-koshigaya", "nifty-kawaguchi", "detail-enrich"]);
+export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", ...NIFTY_CITY_STAGES, "detail-enrich"]);
 
 export function planRefresh(stages: readonly RefreshStageRecord[], resume: boolean): Set<string> {
   const planned = new Set<string>();
@@ -28,10 +33,10 @@ export function planRefresh(stages: readonly RefreshStageRecord[], resume: boole
  * downstream (Nifty import, details, merge, geocode, web payload) depends on
  * their output and stays sequential.
  */
-export const PARALLEL_COLLECTOR_STAGES = new Set(["suumo", "athome", "roomspot", "nifty-soka", "nifty-koshigaya", "nifty-kawaguchi"]);
+export const PARALLEL_COLLECTOR_STAGES = new Set(["suumo", "athome", "roomspot", ...NIFTY_CITY_STAGES]);
 
 /**
- * Stages that write the same source file (the three Nifty cities share nifty.json)
+ * Stages that write the same source file (the Nifty cities share nifty.json)
  * must not commit at the same time: the store's revision check rejects the loser.
  * They form one group that runs in order; different groups run concurrently.
  */

@@ -29,7 +29,8 @@ import {
   type RefreshStageRecord,
 } from "../src/refresh/refreshLedger";
 import type { EnrichedListing } from "../src/domain/types";
-import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, planRefresh, runLimited, stageEnv } from "../src/refresh/refreshPlan";
+import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, niftyStageId, planRefresh, runLimited, stageEnv } from "../src/refresh/refreshPlan";
+import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
 const ROOT = REPO_ROOT;
@@ -75,9 +76,8 @@ function definitions(deep: boolean, skipNifty: boolean, skipRoomspot = false): S
     { id: "suumo-parking", label: "Legacy parking pass", args: [], skipped: true },
     { id: "athome", label: "AtHome", args: ["run", "scrape:athome", "--", "--max-pages", String(pageBudget), ...(deep ? ["--deep"] : [])], recoverable: true },
     { id: "roomspot", label: "RoomSpot", args: ["run", "scrape:roomspot", "--", "--max-pages", String(pageBudget), ...(deep ? ["--deep"] : [])], recoverable: true, skipped: skipRoomspot },
-    { id: "nifty-soka", label: "Nifty Soka", args: crawlArgs(), recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } },
-    { id: "nifty-koshigaya", label: "Nifty Koshigaya", args: crawlArgs("koshigayashi_ct"), recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } },
-    { id: "nifty-kawaguchi", label: "Nifty Kawaguchi", args: crawlArgs("kawaguchishi_ct"), recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } },
+    ...TARGET_CITIES.map((city) => ({ id: niftyStageId(city.label), label: `Nifty ${city.label}`, args: crawlArgs(city.nifty),
+      recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } })),
     { id: "nifty-import", label: "Nifty import", args: ["run", "import:nifty"], recoverable: true, skipped: skipNifty },
     { id: "detail-enrich", label: "Optional details", args: ["run", "detail:enrich", "--", "--limit", String(detailBudget)], recoverable: true, skipped: detailBudget === 0 },
     { id: "data-build", label: "Merge/deduplicate", args: ["run", "data:build"] },

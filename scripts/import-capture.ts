@@ -14,8 +14,9 @@ import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { CaptureRunSummary, NativeCaptureIngestion } from "../src/data-layer/ingestion/contracts";
 import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
 import { acquireRefreshLock, latestResumableRun, readRefreshLedger, saveRefreshRun, type RefreshLedger, type RefreshRunRecord } from "../src/refresh/refreshLedger";
-import { DEPENDENCIES } from "../src/refresh/refreshPlan";
+import { DEPENDENCIES, niftyStageId } from "../src/refresh/refreshPlan";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
+import { TARGET_CITY_LABELS } from "../src/collectors/shared/targetCities";
 
 interface Progress { imported: string[]; cities: Record<string, { pages: number; knownPages: number; added: number; updatedAt: string; done: boolean }> }
 type NativeCapture = PageCapture & { sortedNewest?: boolean };
@@ -56,7 +57,7 @@ export async function runCaptureImport(args: readonly string[], dependencies: Ca
     catch (e) { if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e; }
     for (const c of envelope.captures) {
       if (!(SOURCES as readonly string[]).includes(c.source)) throw new Error("Unsupported list source");
-      if (!["Soka", "Koshigaya", "Kawaguchi"].includes(c.city)) throw new Error("Unknown city");
+      if (!TARGET_CITY_LABELS.includes(c.city)) throw new Error("Unknown city");
       await dependencies.saveCapture(c);
       const receipt = createHash("sha256").update(c.url + c.capturedAt + c.html).digest("hex");
       if (progress.imported.includes(receipt)) { dependencies.log(`${c.source}/${c.city} p${c.page}: already imported`); continue; }
@@ -83,7 +84,8 @@ export async function runCaptureImport(args: readonly string[], dependencies: Ca
       await dependencies.ingestion.annotateCaptureRun(summary);
     }
     if (run) {
-      const groups: Array<[string, string[]]> = [["suumo", ["suumo/Soka", "suumo/Koshigaya", "suumo/Kawaguchi"]], ["athome", ["athome/Soka", "athome/Koshigaya", "athome/Kawaguchi"]], ["roomspot", ["roomspot/Soka", "roomspot/Koshigaya", "roomspot/Kawaguchi"]], ...["Soka", "Koshigaya", "Kawaguchi"].map((c): [string, string[]] => [`nifty-${c.toLowerCase()}`, [`nifty/${c}`]])];
+      const groups: Array<[string, string[]]> = [...["suumo", "athome", "roomspot"].map((source): [string, string[]] => [source, TARGET_CITY_LABELS.map((c) => `${source}/${c}`)]),
+        ...TARGET_CITY_LABELS.map((c): [string, string[]] => [niftyStageId(c), [`nifty/${c}`]])];
       for (const [source, cityKeys] of groups) {
         const cities = cityKeys.map((key) => progress.cities[key]);
         if (!cities.every((city) => city?.done)) continue;

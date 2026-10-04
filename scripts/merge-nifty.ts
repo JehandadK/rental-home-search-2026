@@ -13,6 +13,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parsePortalListingDates } from "../src/domain/portalDates";
+import { cityForAddress } from "../src/collectors/shared/targetCities";
 import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
@@ -165,13 +166,7 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
     id: parseId(detail.url),
     name: parseName(detail.h1 ?? ""),
     address,
-    city: address.includes("越谷市")
-      ? "Koshigaya"
-      : address.includes("草加市")
-        ? "Soka"
-        : address.includes("川口市")
-          ? "Kawaguchi"
-          : undefined,
+    city: cityForAddress(address)?.label,
     rent: rent ?? 0,
     layout,
     sizeM2,

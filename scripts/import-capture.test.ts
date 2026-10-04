@@ -13,7 +13,8 @@ import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RefreshLedger, RefreshRunRecord } from "../src/refresh/refreshLedger";
 
 const at = "2026-09-25T00:00:00.000Z";
-const cityUrls: Record<string, string> = { Soka: "soka-city", Koshigaya: "koshigaya-city", Kawaguchi: "kawaguchi-city" };
+const cityUrls: Record<string, string> = { Soka: "saitama/soka-city", Koshigaya: "saitama/koshigaya-city", Kawaguchi: "saitama/kawaguchi-city",
+  Katsushika: "tokyo/katsushika-city" };
 function athomeRoom(id: number, rent = "6.9") {
   return `<div class="p-property"><h2 class="p-property__title--building">テストハイツ${id} 2階建</h2>
 <dl><dt><i title="所在地"></i></dt><dd><strong>草加市氷川町${id}</strong></dd></dl>
@@ -48,7 +49,7 @@ function suumoCard(bc: number) {
 }
 const athome = (city: string, page: number, html = athomeRoom(page * 10 + Object.keys(cityUrls).indexOf(city)), capturedAt = at): PageCapture & { sortedNewest?: boolean } => ({
   schemaVersion: 1, source: "athome", city, page, capturedAt, httpStatus: 200, sortedNewest: true,
-  url: portalPageUrl("athome", `https://www.athome.co.jp/chintai/saitama/${cityUrls[city]}/list/`, page), html });
+  url: portalPageUrl("athome", `https://www.athome.co.jp/chintai/${cityUrls[city]}/list/`, page), html });
 const roomspot = (page: number): PageCapture => ({ schemaVersion: 1, source: "roomspot", city: "Koshigaya", page, capturedAt: at, httpStatus: 200,
   url: `https://www.roomspot.net/rent/search/area/pref_11/city_222/?sort=new_arrival&page_num=${page}`, html: roomspotRoom(500 + page) });
 const suumo = (page: number): PageCapture => ({ schemaVersion: 1, source: "suumo", city: "Kawaguchi", page, capturedAt: at, httpStatus: 200,
@@ -161,13 +162,13 @@ describe("native capture import through the public ingestion boundary (offline)"
 
   it("completes finished ledger stages, invalidates downstream work, and reports export errors with exit code 2", async () => {
     ledger.runs = [run()];
-    const pages = ["Soka", "Koshigaya", "Kawaguchi"].map((city) => athome(city, 1));
+    const pages = ["Soka", "Koshigaya", "Kawaguchi", "Katsushika"].map((city) => athome(city, 1));
     expect(await runCaptureImport(["--file", await exportFile(pages, ["roomspot/Soka blocked"]), "--max-pages", "1"], dependencies)).toBe(2);
     expect(dependencies.error).toHaveBeenCalledWith("Capture failed: roomspot/Soka blocked");
     const [saved] = ledger.runs;
     const status = Object.fromEntries(saved.stages.map((stage) => [stage.id, stage.status]));
     expect(status).toEqual({ athome: "success", roomspot: "pending", "detail-enrich": "pending", "data-build": "pending", enrich: "pending", "find-new": "success" });
-    expect(saved.stages[0]).toMatchObject({ discovered: 3, exitCode: 0, detail: expect.stringContaining("no removal claims"), attempts: [expect.objectContaining({ status: "success", discovered: 3 })] });
-    expect((await store.readSource("athome"))!.provenance).toMatchObject({ cities: ["Soka", "Koshigaya", "Kawaguchi"], pagesFetched: 3, newListings: 3 });
+    expect(saved.stages[0]).toMatchObject({ discovered: 4, exitCode: 0, detail: expect.stringContaining("no removal claims"), attempts: [expect.objectContaining({ status: "success", discovered: 4 })] });
+    expect((await store.readSource("athome"))!.provenance).toMatchObject({ cities: ["Soka", "Koshigaya", "Kawaguchi", "Katsushika"], pagesFetched: 4, newListings: 4 });
   });
 });

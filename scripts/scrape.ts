@@ -1,5 +1,5 @@
 /**
- * Scrapes family-size rental listings from SUUMO for Soka, Koshigaya and Kawaguchi.
+ * Scrapes family-size rental listings from SUUMO for every target city (see targetCities.ts).
  *
  * Default mode is an optimized incremental discovery crawl:
  *   - asks SUUMO for newest-first results (`po1=09`),
@@ -15,8 +15,6 @@
  * `npm run backfill:parking && npm run data:build && npm run enrich`.
  */
 import { pathToFileURL } from "node:url";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
@@ -24,58 +22,28 @@ import type { ScrapeBatch, SuumoDiscoveryClient } from "../src/data-layer/ingest
 import { cachedPage, validateCapture, type PageCapture } from "../src/collectors/shared/captureStore";
 import { parsePage } from "../src/collectors/suumo/suumo";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "../src/collectors/shared/pageBudget";
+import { TARGET_CITIES, selectCities } from "../src/collectors/shared/targetCities";
+import { createBrowserFetch, type BrowserFetch } from "../src/collectors/shared/browserFetch";
 
 /** 2K / 2DK / 2LDK / 3K / 3DK / 3LDK / 4K / 4DK / 4LDK / 5K+ */
 const LAYOUT_CODES = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];
 const PAGE_DELAY_MS = 2_000;
 const MD_QUERY = LAYOUT_CODES.map((c) => `md=${c}`).join("&");
 const NEWEST_FIRST = "po1=09";
-const CITIES: { sc: string; label: string }[] = [
-  { sc: "sc_soka", label: "Soka" },
-  { sc: "sc_koshigaya", label: "Koshigaya" },
-  { sc: "sc_kawaguchi", label: "Kawaguchi" },
-];
+const CITIES = TARGET_CITIES.map((city) => ({ sc: city.suumo, label: city.label, prefecture: city.prefectureSlug }));
 
-const cityUrl = (sc: string, page: number, newestFirst: boolean) => {
+const cityUrl = (city: (typeof CITIES)[number], page: number, newestFirst: boolean) => {
   const params = `${MD_QUERY}${newestFirst ? `&${NEWEST_FIRST}` : ""}${page > 1 ? `&page=${page}` : ""}`;
-  return `https://suumo.jp/chintai/saitama/${sc}/?${params}`;
+  return `https://suumo.jp/chintai/${city.prefecture}/${city.sc}/?${params}`;
 };
 
-const USER_AGENT =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
-
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-const execFileAsync = promisify(execFile);
 
-async function fetchPage(url: string): Promise<string> {
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT, "Accept-Language": "ja-JP,ja;q=0.9" },
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!res.ok) throw new Error(`SUUMO ${url}: HTTP ${res.status}`);
-    return res.text();
-  } catch (error) {
-    // Node/undici occasionally sees transient macOS DNS ENOTFOUND while curl
-    // resolves the same host correctly. Fall back to curl rather than failing
-    // a daily refresh; curl still uses normal TLS and the same public URL.
-    let args = ["--fail", "--silent", "--show-error", "--location", "--max-time", "45", "-A", USER_AGENT, "-H", "Accept-Language: ja-JP,ja;q=0.9", url];
-    let result;
-    try {
-      result = await execFileAsync("curl", args, { maxBuffer: 8 * 1024 * 1024 });
-    } catch (curlError) {
-      // Last-resort DNS workaround for the currently published SUUMO origin.
-      // TLS still verifies suumo.jp; only name resolution is pinned.
-      const message = curlError instanceof Error ? curlError.message : String(curlError);
-      if (!message.includes("Could not resolve host")) throw curlError;
-      args = ["--resolve", "suumo.jp:443:160.17.3.13", ...args];
-      result = await execFileAsync("curl", args, { maxBuffer: 8 * 1024 * 1024 });
-    }
-    const { stdout } = result;
-    if (!stdout.includes("cassetteitem")) throw error;
-    return stdout;
-  }
+/** List pages load in the headed browser (BROWSER_DRIVER=playwright or the Chrome bridge), never a plain HTTP client. */
+async function fetchPage(browser: BrowserFetch, url: string): Promise<string> {
+  const res = await browser.fetch(url);
+  if (!res.ok) throw new Error(`SUUMO ${url}: HTTP ${res.status}`);
+  return res.text();
 }
 
 export { parsePage };
@@ -108,14 +76,15 @@ export async function runSuumoScrape(args: readonly string[], dependencies: Suum
   const deep = args.includes("--deep");
   const flag = args.indexOf("--max-pages");
   const maxPages = flag >= 0 ? Math.max(1, Math.floor(Number(args[flag + 1]) || 1)) : DEFAULT_INCREMENTAL_PAGE_CEILING;
+  const cities = selectCities(args, CITIES, (city) => city.label);
   const session = await dependencies.client.beginSuumoDiscovery({ deep, maxPages, layoutCodes: LAYOUT_CODES,
-    cities: CITIES.map((city) => ({ code: city.sc, label: city.label })) });
+    cities: cities.map((city) => ({ code: city.sc, label: city.label })) });
   let pagesFetched = 0;
   dependencies.log(deep ? "Deep newest-first discovery (no deletions)" : "Incremental newest-first discovery (no deletions)");
-  for (const city of CITIES) {
+  for (const city of cities) {
     dependencies.log(`\n=== ${city.label} (${city.sc}) ===`);
     for (let page = 1; page <= maxPages; page++) {
-      const meta = { source: "suumo" as const, city: city.label, url: cityUrl(city.sc, page, true), page };
+      const meta = { source: "suumo" as const, city: city.label, url: cityUrl(city, page, true), page };
       const capture = await dependencies.page(meta);
       if (capture.url !== meta.url || capture.city !== meta.city || capture.page !== page) throw new Error("SUUMO capture identity mismatch");
       const result = session.stagePage(await suumoCaptureBatch(capture));
@@ -140,10 +109,15 @@ export async function runSuumoScrape(args: readonly string[], dependencies: Suum
 }
 
 async function main(): Promise<void> {
-  await runSuumoScrape(process.argv.slice(2), {
-    client: new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR))),
-    page: (meta) => cachedPage(meta, () => fetchPage(meta.url)), sleep, log: console.log,
-  });
+  const browser = createBrowserFetch("suumo-list");
+  try {
+    await runSuumoScrape(process.argv.slice(2), {
+      client: new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR))),
+      page: (meta) => cachedPage(meta, () => fetchPage(browser, meta.url)), sleep, log: console.log,
+    });
+  } finally {
+    await browser.close();
+  }
 }
 
 // Native-browser imports reuse the parser without starting a network collector.

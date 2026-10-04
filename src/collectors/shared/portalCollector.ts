@@ -3,6 +3,7 @@ import { portalPageUrl, type PortalDiscoveryClient } from "../../data-layer/inge
 import type { PageCapture } from "./captureStore";
 import { listCaptureBatch } from "./listCaptureBatch";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./pageBudget";
+import { selectCities } from "./targetCities";
 
 export interface PortalCollectorConfig {
   source: "athome" | "roomspot";
@@ -35,14 +36,15 @@ export async function runPortalScrape(config: PortalCollectorConfig, args: reado
     throw new Error("--full requires verified per-city exhaustion. Use --deep; capped discovery never authorizes SOLD detection.");
   }
   const maxPages = portalPageBudget(args);
+  const cities = selectCities(args, config.cities, (city) => city.city);
   let pagesFetched = 0;
   let session;
   try {
     session = await dependencies.client.beginPortalDiscovery({ source: config.source, deep: args.includes("--deep"), maxPages,
-      cities: config.cities.map((city) => ({ label: city.city, url: city.url })) });
+      cities: cities.map((city) => ({ label: city.city, url: city.url })) });
     if (session.bootstrap) dependencies.log(`No ${config.label} snapshot yet; automatically bootstrapping a deep discovery crawl.`);
     dependencies.log(session.deep ? `${config.label} deep newest-first bootstrap` : `${config.label} incremental newest-first discovery`);
-    for (const city of config.cities) {
+    for (const city of cities) {
       dependencies.log(`\n=== ${city.heading} ===`);
       for (let page = 1; page <= maxPages; page++) {
         const meta = { source: config.source, city: city.city, url: portalPageUrl(config.source, city.url, page), page };

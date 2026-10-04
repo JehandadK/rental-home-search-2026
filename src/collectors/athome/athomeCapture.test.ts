@@ -34,6 +34,16 @@ describe("offline native-download AtHome capture", () => {
     expect(capture.html).not.toMatch(/script|tracking|img|unrelated|doNotRun/);
   });
 
+  it("accepts a Tokyo ward's city path and prefixes its addresses with 東京都, not 埼玉県", () => {
+    const ward = html.replace("草加市金明町", "葛飾区高砂7丁目");
+    const capture = athomeDownloadedCapture(ward, "https://www.athome.co.jp/chintai/tokyo/katsushika-city/list/page3/?sort=33", time);
+    expect(capture).toMatchObject({ city: "Katsushika", page: 3 });
+    expect(parseAthomePage(capture.html, capture.city)[0].address).toBe("東京都葛飾区高砂7丁目");
+    // A Soka card on the Katsushika page, or the ward under the wrong prefecture path, is rejected.
+    expect(() => athomeDownloadedCapture(html, "https://www.athome.co.jp/chintai/tokyo/katsushika-city/list/?sort=33", time)).toThrow("wrong city");
+    expect(() => athomeDownloadedCapture(ward, "https://www.athome.co.jp/chintai/saitama/katsushika-city/list/?sort=33", time)).toThrow("Invalid AtHome capture URL");
+  });
+
   it("keeps the building carousel and loaded floor plans as full-size photos", () => {
     const withPhotos = html
       .replace('<h2 class="property-title">', `<div class="image-item swiper-slide"><img class="swiper-lazy" alt="物件画像" data-src="https://www.athome.co.jp/image_files/path/AAA==" src="https://www.athome.co.jp/image_files/path/AAA==?width=340&height=195&margin=true"></div>

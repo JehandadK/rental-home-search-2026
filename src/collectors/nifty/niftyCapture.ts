@@ -1,7 +1,10 @@
+import { TARGET_PREFECTURES } from "../shared/targetCities";
+
 /** Public DOM projection, shared by the human CLI and native-browser workflow. */
 export function niftyCaptureExpression(url: string): string {
   return `(async()=>{
     const url=${JSON.stringify(url)};
+    const prefectures=${JSON.stringify(TARGET_PREFECTURES)};
     let doc=document;
     if(new URL(location.href).href!==url){
       const res=await fetch(url,{credentials:'include',signal:AbortSignal.timeout(20000)});
@@ -17,7 +20,7 @@ export function niftyCaptureExpression(url: string): string {
     if(!tables.length)throw Error('No Nifty property tables; not exhaustion');
     return tables.map(table=>{
       const header=table.parentElement.firstElementChild;
-      const address=[...header.querySelectorAll('p')].find(p=>p.textContent.trim().startsWith('埼玉県'));
+      const address=[...header.querySelectorAll('p')].find(p=>prefectures.some(pref=>p.textContent.trim().startsWith(pref)));
       const dl=[...header.querySelectorAll('dl')].map(d=>'<dl><dt>'+esc(d.querySelector('dt')?.textContent.trim())+'</dt><dd>'+esc(d.querySelector('dd')?.textContent.trim())+'</dd></dl>').join('');
       const station=header.querySelector('[data-transport-access]')?.textContent.trim();
       const rows=[...table.querySelectorAll('tbody.click-area')].map(body=>{

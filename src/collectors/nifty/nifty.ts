@@ -4,6 +4,7 @@ import type { RawListing } from "../../domain/types";
 import { parseYen } from "../shared/parseJa";
 import { parseStationDistance } from "./niftyStation";
 import { collectPhotos, photoKind } from "../shared/photos";
+import { TARGET_PREFECTURES } from "../shared/targetCities";
 export function parseNiftyPage(html: string, city: string, year = new Date().getFullYear()): RawListing[] {
   const $ = cheerio.load(html);
   const rows: RawListing[] = [];
@@ -11,7 +12,7 @@ export function parseNiftyPage(html: string, city: string, year = new Date().get
     const card = $(table).parent();
     const header = card.children().first();
     const name = header.find("h2").text().replace(/\s+/g, " ").trim().replace(/の賃貸物件$/, "");
-    const address = header.find("p").map((_, p) => $(p).text().trim()).get().find((s) => /^埼玉県/.test(s)) ?? "";
+    const address = header.find("p").map((_, p) => $(p).text().trim()).get().find((s) => TARGET_PREFECTURES.some((prefecture) => s.startsWith(prefecture))) ?? "";
     const kv = new Map(header.find("dl").map((_, dl) => ({ key: $(dl).find("dt").text().trim(), value: $(dl).find("dd").text().trim() })).get().map((p) => [p.key, p.value]));
     const age = kv.get("築年数") ?? "";
     const yearText = age.match(/((?:19|20)\d{2})年/);
