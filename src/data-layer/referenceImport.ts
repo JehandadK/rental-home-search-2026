@@ -167,7 +167,7 @@ export function planReferenceImport(current: CurrentReference, input: ReferenceI
   };
 }
 
-function pinnedAttributes(record: ReferencePlaceRecord | undefined): Record<string, string | number> {
+export function pinnedAttributes(record: ReferencePlaceRecord | undefined): Record<string, string | number> {
   const result: Record<string, string | number> = {};
   const id = record?.attributes?.appPlaceId;
   const order = record?.attributes?.appOrder;
@@ -177,7 +177,7 @@ function pinnedAttributes(record: ReferencePlaceRecord | undefined): Record<stri
 }
 
 /** Same record apart from its update time. */
-function sameContent<T extends { updatedAt: string }>(previous: T | undefined, next: T): boolean {
+export function sameContent<T extends { updatedAt: string }>(previous: T | undefined, next: T): boolean {
   if (!previous) return false;
   return stableJson({ ...previous, updatedAt: "" }) === stableJson({ ...next, updatedAt: "" });
 }

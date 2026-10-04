@@ -76,15 +76,12 @@ export function App({ data }: { data: WebData }) {
 
   /**
    * Places the map draws travel-time rings around: the school target and the
-   * mosques the poi2 score measures to (every mosque when none are chosen).
+   * mosques chosen for the poi2 score. With no mosques chosen the score uses
+   * all of them (hundreds across Japan), too many to ring, so none are.
    */
   const ringCenters = useMemo(() => {
-    const ids = selection.byParameter.poi2;
-    // An empty choice ("clear") is unrestricted too, exactly as the score treats it.
-    const mosques = ids == null || ids.length === 0
-      ? catalog.inCategory("mosque")
-      : ids.flatMap((id) => catalog.byId.get(id) ?? []);
-    return targetPoi ? [targetPoi, ...mosques] : [...mosques];
+    const mosques = (selection.byParameter.poi2 ?? []).flatMap((id) => catalog.byId.get(id) ?? []);
+    return targetPoi ? [targetPoi, ...mosques] : mosques;
   }, [catalog, selection, targetPoi]);
 
   /** Walking knobs for the map card's distance list. */

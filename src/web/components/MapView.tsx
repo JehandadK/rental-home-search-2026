@@ -714,17 +714,32 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // The other private schools as outlined stars; any of them can be the target.
+    const otherPois = reference.catalog.inCategory("poi").filter((poi) => poi.id !== targetPoi?.id);
+    for (const poi of otherPois) {
+      const { x, y } = toScreen(poi.lat, poi.lon);
+      starPath(ctx, x, y, 8);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = colors.target;
+      ctx.stroke();
+    }
+
     // The target POI (Al Sanad by default) as a red star.
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       drawStar(ctx, x, y, 10, colors.target);
     }
 
-    // Names, most important first. The target is always named; the mosques
-    // next, as far as they fit (they crowd together when zoomed out).
+    // Names, most important first. The target is always named; the other
+    // private schools and the mosques next, as far as they fit (they crowd
+    // together when zoomed out).
     if (targetPoi) {
       const { x, y } = toScreen(targetPoi.lat, targetPoi.lon);
       label(targetPoi.name, x + 12, y + 4, colors.targetLabel, { font: `600 11px ${FONT}`, force: true });
+    }
+    for (const poi of otherPois) {
+      const { x, y } = toScreen(poi.lat, poi.lon);
+      label(poi.name, x + 10, y + 4, colors.targetLabel);
     }
     if (layers.mosques) {
       for (const mosque of reference.catalog.inCategory("mosque")) {
@@ -986,6 +1001,9 @@ export const MapView = memo(function MapView({
           </div>
           <div className={styles.legendKeys}>
             <span><i className={styles.keyStar}>★</i>{targetPoi?.name ?? "Target"}</span>
+            {reference.catalog.inCategory("poi").length > (targetPoi ? 1 : 0) && (
+              <span><i className={styles.keyStar}>☆</i>Other private school</span>
+            )}
             <span><i className={styles.keyMosque} />Mosque</span>
             <span><i className={styles.keyStation} />Scored station</span>
             {layers.stations && <span><i className={styles.keyRailStation} />Other station</span>}

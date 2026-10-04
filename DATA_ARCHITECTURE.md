@@ -67,6 +67,11 @@ The map covers all of Kanto. `npm run data:reference:ksj` (`scripts/import-ksj-r
 - **Rail stations.** One `railStation` place per N02 station group, inside an imported municipality, with operators, lines, line count, and city. They are map context: the station score still uses the 20 curated `station` places, and the browser's distance index measures only the scored categories (`SCORED_CATEGORIES`). Scoring every listing against ~2,000 stations would take over a second at load and is deferred until listings cover Kanto.
 - **Re-running** with the same files is a no-op; a newer edition upserts changed records and retires stations it no longer has.
 
+## Private schools and Japan's masjids (2026-10-04)
+
+- **Private schools.** The `poi` category is the private-school list ("Private schools" in the UI): Al Sanad School Japan (the default `poi1` target) and Tokyo IQRA Int'l School (iqra.jp, geocoded by GSI). The Baitul Aman Masjid POI, which carried the legacy `poi2` role, is retired; Baitul Aman stays a mosque, and baked `poi2` is now the nearest mosque. The map draws the target as a filled star and the other private schools as outlined stars.
+- **Masjids.** A shared Google Maps list of masjids in Japan, captured in the headed browser, is saved as `ReferencePlaceRecord`s in `data/reference/imports/google-maps-masjids-japan.json` (Google place ids kept; the list owner's notes and account ids are not). `npm run data:reference:masjids` (`scripts/import-masjids.ts`, `src/data-layer/masjidImport.ts`) adds them to the scored `mosque` category: entries the capture matched to a catalog mosque within 1 km (`catalogMatchId`) are skipped, entries saved with `status: "retired"` (an unbuilt mosque, a duplicate pin) are retired with their reason and never re-imported, and re-running is a no-op. Travel rings are drawn only around mosques chosen in the Places panel.
+
 ## Target layers and dependency rules
 
 Established by M4. Locations are directories inside this one package; converting them to workspace packages is the optional M8.
