@@ -240,7 +240,7 @@ export const SCORE_PARAMETERS: readonly ParameterMeta<ScoreParameterKey>[] = [
   },
   { key: "size", label: "Size", unit: "㎡", description: "Larger is better" },
   { key: "yearBuilt", label: "Age", unit: "yrs", description: "Newer is better" },
-  { key: "poi1", label: "Private school", unit: "min", description: "Walk time to the selected private school (Al Sanad by default)" },
+  { key: "poi1", label: "Nearest private school", unit: "min", description: "Travel time to the nearest selected private school" },
   { key: "poi2", label: "Nearest mosque", unit: "min", description: "Travel time to the nearest selected mosque, masjid or musalla" },
   { key: "station", label: "Station", unit: "min", description: "Nearest station walk time" },
   { key: "busStop", label: "Bus stop", unit: "min", description: "Nearest bus stop walk time" },

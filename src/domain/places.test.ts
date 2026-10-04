@@ -67,8 +67,8 @@ describe("buildPlaceCatalog", () => {
   it("handles an empty catalog", () => {
     const catalog = buildPlaceCatalog([]);
     expect(catalog.places).toEqual([]);
-    expect(defaultSelection(catalog).byParameter.poi1).toBeNull();
-    expect(describeSelection({ byParameter: { ...defaultSelection(catalog).byParameter, station: ["gone"] } }, "station", catalog))
+    expect(defaultSelection().byParameter.poi1).toBeNull();
+    expect(describeSelection({ byParameter: { ...defaultSelection().byParameter, station: ["gone"] } }, "station", catalog))
       .toBe("only 1 place");
     const index = new ProximityIndex([{ ...listing, geocoded: true, lat: 35.8, lon: 139.8 }], catalog);
     expect(index.nearestIn(0, "station", null)).toBeNull();

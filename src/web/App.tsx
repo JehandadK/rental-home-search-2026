@@ -60,7 +60,7 @@ export function App({ data }: { data: WebData }) {
   const { availabilityMarks, markAd } = useAvailabilityMarks();
   const { notes, setNote } = useNotes();
   const { compare, toggleCompare, clearCompare, retainCompare } = useCompare();
-  const { selection, setPlaces, togglePlace, setTarget, reset: resetPlaces } = usePlaceSelection(catalog);
+  const { selection, setPlaces, togglePlace, reset: resetPlaces } = usePlaceSelection(catalog);
 
   /**
    * Full listing × place distance matrix, built once per listing set. Every
@@ -69,21 +69,25 @@ export function App({ data }: { data: WebData }) {
    */
   const index = useMemo(() => new ProximityIndex(listings, catalog, SCORED_CATEGORIES), [listings, catalog]);
 
-  /** The place the poi1 score measures to, marked on the map. */
-  const targetPoi = useMemo(() => {
-    const id = selection.byParameter.poi1?.[0];
-    return id ? catalog.byId.get(id) ?? null : null;
+  /**
+   * The private schools the poi1 score takes the nearest of, marked on the
+   * map. With none chosen the score uses every private school.
+   */
+  const scoredPois = useMemo(() => {
+    const ids = selection.byParameter.poi1;
+    return ids == null ? catalog.inCategory("poi") : ids.flatMap((id) => catalog.byId.get(id) ?? []);
   }, [catalog, selection]);
 
   /**
-   * Places the map draws travel-time rings around: the school target and the
-   * mosques chosen for the poi2 score. With no mosques chosen the score uses
-   * all of them (hundreds across Japan), too many to ring, so none are.
+   * Places the map draws travel-time rings around: the scored private schools
+   * and the mosques chosen for the poi2 score. With no mosques chosen the
+   * score uses all of them (hundreds across Japan), too many to ring, so none
+   * are; the private schools are few enough to ring all of them.
    */
   const ringCenters = useMemo(() => {
     const mosques = (selection.byParameter.poi2 ?? []).flatMap((id) => catalog.byId.get(id) ?? []);
-    return targetPoi ? [targetPoi, ...mosques] : mosques;
-  }, [catalog, selection, targetPoi]);
+    return [...scoredPois, ...mosques];
+  }, [catalog, selection, scoredPois]);
 
   /** Walking knobs for the map card's distance list. */
   const walking = useMemo(
@@ -297,7 +301,7 @@ export function App({ data }: { data: WebData }) {
       <header className={styles.header}>
         <h1>Soka Rental Scorer</h1>
         <span className={styles.subtitle}>
-          草加市・越谷市・川口市・葛飾区 — weighted 0–100 scoring · Al Sanad School &amp; nearest mosque
+          草加市・越谷市・川口市・葛飾区 — weighted 0–100 scoring · nearest private school &amp; nearest mosque
         </span>
         <span className={styles.subtitle}>
           {filtered.length} / {listings.length} listings
@@ -343,7 +347,6 @@ export function App({ data }: { data: WebData }) {
             catalog={catalog}
             selection={selection}
             onToggle={togglePlace}
-            onSetTarget={setTarget}
             onSetPlaces={setPlaces}
             onReset={resetPlaces}
           />
@@ -353,7 +356,7 @@ export function App({ data }: { data: WebData }) {
           <MapView
             items={filtered}
             reference={reference}
-            targetPoi={targetPoi}
+            scoredPois={scoredPois}
             hovered={hovered}
             onHover={setHovered}
             selected={selected}

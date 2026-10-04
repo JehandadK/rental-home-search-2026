@@ -133,10 +133,6 @@ export function decodeCustomListings(raw: unknown): EnrichedListing[] {
  * Ids of places no longer in the catalog (retired since they were saved) are
  * dropped; a choice left with none of its places reverts to the default,
  * while a deliberately empty choice (`[]`, "clear") stays empty.
- *
- * Migration (still v1): v1 once stored Baitul Aman as the single mosque
- * target. Mosque scoring now defaults to the nearest of all mosques, so that
- * legacy default becomes `null`, while curated multi-mosque choices are kept.
  */
 export function decodePlaceSelection(
   raw: unknown,
@@ -153,9 +149,27 @@ export function decodePlaceSelection(
       if (ids.length === 0 || kept.length > 0) merged[key as DistanceParameterKey] = kept;
     }
   }
-  const oldBaitulOnly = merged.poi2?.length === 1 && merged.poi2[0].includes("Baitul Aman");
-  if (oldBaitulOnly) merged.poi2 = null;
   return { byParameter: merged };
+}
+
+/**
+ * Migration from the v1 key, where the private school (and, earlier, the
+ * mosque) was a single target rather than the nearest of a set. Both now
+ * default to the nearest of every place, so v1's saved defaults (Al Sanad,
+ * `legacySchoolId`, and Baitul Aman) become `null`. Any other single school
+ * or mosque the user picked is kept, now meaning "only that one".
+ */
+export function decodeLegacyPlaceSelection(
+  raw: unknown,
+  defaults: PlaceSelection,
+  knownIds?: { has(id: string): boolean },
+  legacySchoolId?: string,
+): PlaceSelection {
+  const { byParameter } = decodePlaceSelection(raw, defaults, knownIds);
+  const only = (ids: string[] | null) => (ids?.length === 1 ? ids[0] : undefined);
+  const poi1 = legacySchoolId != null && only(byParameter.poi1) === legacySchoolId ? null : byParameter.poi1;
+  const poi2 = only(byParameter.poi2)?.includes("Baitul Aman") ? null : byParameter.poi2;
+  return { byParameter: { ...byParameter, poi1, poi2 } };
 }
 
 export function decodeHiddenColumns<K extends string>(raw: unknown, known: ReadonlySet<K>): Set<K> {

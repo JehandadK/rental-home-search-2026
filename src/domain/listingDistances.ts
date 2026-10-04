@@ -1,6 +1,6 @@
 /**
  * How far a listing is from the places that matter, for the map's selection
- * card: every point of interest (the scored target first), then the nearest
+ * card: every point of interest (the one scored first), then the nearest
  * mosque, station, school, childcare and bus stop as the scoring measures them.
  *
  * Distances are straight-line kilometres; walking minutes always use the walk
@@ -24,7 +24,7 @@ export interface ListingDistance {
 }
 
 export interface DistanceOptions {
-  /** Points of interest to measure to directly; the target is listed first. */
+  /** Points of interest to measure to directly; the scored one is listed first. */
   pois: readonly CatalogPlace[];
   targetPoiId?: string | null;
   walkSpeedMPerMin: number;

@@ -6,7 +6,7 @@ import type { EnrichedListing } from "../domain/types";
 import { App } from "./App";
 import { createStaticWebDataClient } from "./data/staticClient";
 import { WebDataBoundary } from "./data/WebDataBoundary";
-import { createMemoryUserStateStore, USER_STATE_KEYS, type UserStateStore } from "./userState/store";
+import { createMemoryUserStateStore, LEGACY_USER_STATE_KEYS, USER_STATE_KEYS, type UserStateStore } from "./userState/store";
 import { UserStateProvider } from "./userState/UserStateContext";
 import {
   city,
@@ -40,7 +40,7 @@ async function renderApp(
 }
 
 const placesPanel = () => screen.getByRole("heading", { name: /Places/ }).closest("section") as HTMLElement;
-const placeNames = () => within(placesPanel()).queryAllByRole("radio").concat(within(placesPanel()).queryAllByRole("checkbox"))
+const placeNames = () => within(placesPanel()).queryAllByRole("checkbox")
   .map((input) => input.closest("label")?.textContent);
 
 describe("App over a fake data client", () => {
@@ -50,8 +50,8 @@ describe("App over a fake data client", () => {
     expect(screen.getByRole("button", { name: "Soka · 草加" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Koshigaya · 越谷" })).toBeTruthy();
     expect(placeNames()).toEqual(expect.arrayContaining(["Test School", "Test Masjid", "草加", "草加小学校"]));
-    // The default target is the first POI.
-    expect((within(placesPanel()).getByRole("radio", { name: "Test School" }) as HTMLInputElement).checked).toBe(true);
+    // By default every private school counts, like every mosque.
+    expect((within(placesPanel()).getByRole("checkbox", { name: "Test School" }) as HTMLInputElement).checked).toBe(true);
   });
 
   it("picks up added and removed cities and POIs without code changes", async () => {
@@ -74,16 +74,15 @@ describe("App over a fake data client", () => {
     expect(names).toEqual(expect.arrayContaining(["Test School", "New Library"]));
     expect(names).not.toContain("Test Masjid");
 
-    // A new POI can become the target.
-    fireEvent.click(within(placesPanel()).getByRole("radio", { name: "New Library" }));
-    expect((within(placesPanel()).getByRole("radio", { name: "New Library" }) as HTMLInputElement).checked).toBe(true);
+    // A new POI counts towards the nearest private school without code changes.
+    expect((within(placesPanel()).getByRole("checkbox", { name: "New Library" }) as HTMLInputElement).checked).toBe(true);
   });
 
   it("stays usable with no listings and an empty reference catalog", async () => {
     await renderApp(snapshot({}), []);
     expect(screen.getByText(/0 \/ 0 listings/)).toBeTruthy();
     expect(screen.getByText(/No listings have been published yet/)).toBeTruthy();
-    expect(within(placesPanel()).queryAllByRole("radio")).toEqual([]);
+    expect(within(placesPanel()).queryAllByRole("checkbox")).toEqual([]);
   });
 });
 
@@ -97,12 +96,12 @@ describe("user state across reloads", () => {
     await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
     fireEvent.click(screen.getByRole("button", { name: "Koshigaya · 越谷" }));
     expect(screen.getByText(/1 \/ 2 listings/)).toBeTruthy();
-    fireEvent.click(within(placesPanel()).getByRole("radio", { name: "Test School" }));
+    fireEvent.click(within(placesPanel()).getByRole("checkbox", { name: "Test School" }));
     const stationBox = within(placesPanel()).getByRole("checkbox", { name: "草加" });
     fireEvent.click(stationBox);
 
     expect(store.read(USER_STATE_KEYS.filters)).toMatchObject({ cities: ["Koshigaya"] });
-    // Toggling one station while "all" count narrows the choice to that station.
+    // Toggling one place while "all" count narrows the choice to that place.
     expect(store.read(USER_STATE_KEYS.placeSelection)).toMatchObject({ byParameter: { poi1: ["poi:Test School"], station: ["station:草加"] } });
 
     // A reload: a fresh app over the same store.
@@ -110,7 +109,17 @@ describe("user state across reloads", () => {
     await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
     expect(screen.getByText(/1 \/ 2 listings/)).toBeTruthy();
     expect(within(placesPanel()).getByText("only 草加")).toBeTruthy();
+    expect(within(placesPanel()).getByText("only Test School")).toBeTruthy();
     expect(screen.getByText(/★1 shortlisted/)).toBeTruthy();
+  });
+
+  it("migrates a v1 private-school target to the nearest of all private schools", async () => {
+    const store = createMemoryUserStateStore({
+      [LEGACY_USER_STATE_KEYS.placeSelection]: { byParameter: { poi1: ["poi:Test School"], station: ["station:草加"] } },
+    });
+    await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
+    expect(store.read(USER_STATE_KEYS.placeSelection)).toMatchObject({ byParameter: { poi1: null, station: ["station:草加"] } });
+    expect(within(placesPanel()).getByText("only 草加")).toBeTruthy();
   });
 
   it("keeps the comparison and notes, and compares homes the filters hide", async () => {
@@ -168,7 +177,7 @@ describe("user state across reloads", () => {
     });
     await renderApp(FIXTURE_REFERENCE, FIXTURE_LISTINGS, store);
     expect(screen.getByText(/2 \/ 2 listings/)).toBeTruthy();
-    expect((within(placesPanel()).getByRole("radio", { name: "Test School" }) as HTMLInputElement).checked).toBe(true);
+    expect((within(placesPanel()).getByRole("checkbox", { name: "Test School" }) as HTMLInputElement).checked).toBe(true);
   });
 });
 

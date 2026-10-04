@@ -83,7 +83,7 @@ root.
 | Move-in cost (初期費用) | 4 | **sunk** cost in months of rent: ≤2 → 100; ≥6 → 0 |
 | Size | 5 | 70 ㎡+ → 100; 18 ㎡ or less → 0 |
 | Year built | 3 | new → 100; 45 years old → 0 |
-| POI 1 — Al Sanad School Japan (原町2-3-1) | 8 | doorstep → 100; 12 min walk → 0 |
+| Nearest private school | 8 | Nearest of Al Sanad School Japan (原町2-3-1) and Tokyo IQRA Int'l School (お花茶屋); doorstep → 100; 12 min → 0 |
 | Nearest mosque / masjid / musalla | 8 | Nearest of Baitul Aman, Baitul Aqsa, Mizumoto Musalla, Yashio Masjid, Yashio Gujarati Masjid, etc.; doorstep → 100; 12 min → 0 |
 | Nearest station | 9 | doorstep → 100; 20 min walk → 0 |
 | Nearest bus stop | 4 | doorstep → 100; 10 min walk → 0 |
@@ -176,7 +176,7 @@ build the index, then **2–3 ms** to re-score everything when a choice changes.
 
 That means the **Places** panel is pure selection, never a pipeline re-run:
 
-- **Al Sanad POI** — fixed/curated school target.
+- **Nearest private school** — automatically uses the nearest private school from the catalog (Al Sanad, Tokyo IQRA); optionally restrict it to a subset.
 - **Nearest mosque** — automatically uses the nearest mosque, masjid or musalla from the catalog; optionally restrict it to a trusted subset.
 - **Station** — "nearest of all", or restrict it to the stations you would
   really commute from (e.g. only 獨協大学前〈草加松原〉).

@@ -13,20 +13,19 @@ import type { ProximityIndex } from "./proximityIndex";
 export interface PlaceSelection {
   /**
    * Per parameter: the chosen place ids, or null for "any place in the
-   * category". For target parameters (poi1/poi2) the first id wins.
+   * category". The score measures the nearest of the chosen places.
    */
   byParameter: Record<DistanceParameterKey, string[] | null>;
 }
 
 /**
- * Default selection: the first POI (Al Sanad) as the target; everything else,
- * including the mosque, is the nearest of every place in its category.
+ * Default selection: every parameter, including the private school and the
+ * mosque, is the nearest of every place in its category.
  */
-export function defaultSelection(catalog: PlaceCatalog): PlaceSelection {
-  const firstPoi = catalog.inCategory(PARAMETER_SOURCES.poi1.category)[0];
+export function defaultSelection(): PlaceSelection {
   return {
     byParameter: {
-      poi1: firstPoi ? [firstPoi.id] : null,
+      poi1: null,
       poi2: null,
       station: null,
       busStop: null,
@@ -36,11 +35,10 @@ export function defaultSelection(catalog: PlaceCatalog): PlaceSelection {
   };
 }
 
-/** Ids selected for a parameter, as a lookup set (null = unrestricted). */
+/** Ids selected for a parameter, as a lookup set (null = unrestricted, empty = cleared). */
 function allowedSet(selection: PlaceSelection, key: DistanceParameterKey): Set<string> | null {
   const ids = selection.byParameter[key];
-  if (ids == null || ids.length === 0) return null;
-  return new Set(ids);
+  return ids == null ? null : new Set(ids);
 }
 
 /** Build selection lookup sets once per complete listing pass, not once per row. */
@@ -67,17 +65,7 @@ export function applySelection(
   const next: EnrichedListing = { ...listing };
 
   for (const key of Object.keys(PARAMETER_SOURCES) as DistanceParameterKey[]) {
-    const source = PARAMETER_SOURCES[key];
-    const allowed = allowedSets[key];
-
-    if (source.mode === "target") {
-      const targetId = selection.byParameter[key]?.[0];
-      const proximity = targetId ? index.proximityToPlace(listingIndex, targetId) : null;
-      assign(next, key, proximity);
-      continue;
-    }
-
-    assign(next, key, index.nearestIn(listingIndex, source.category, allowed));
+    assign(next, key, index.nearestIn(listingIndex, PARAMETER_SOURCES[key].category, allowedSets[key]));
   }
 
   // Childcare has a second view: "any facility including 保育園". When the
@@ -125,13 +113,7 @@ export function describeSelection(
   catalog: PlaceCatalog,
 ): string {
   const ids = selection.byParameter[key];
-  const source = PARAMETER_SOURCES[key];
-  if (ids == null || ids.length === 0) {
-    return source.mode === "target" ? "none chosen" : "nearest of all";
-  }
-  if (source.mode === "target") {
-    return catalog.byId.get(ids[0])?.name ?? "unknown";
-  }
+  if (ids == null || ids.length === 0) return "nearest of all";
   if (ids.length === 1) return `only ${catalog.byId.get(ids[0])?.name ?? "1 place"}`;
   return `nearest of ${ids.length} chosen`;
 }
