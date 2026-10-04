@@ -742,6 +742,20 @@
           "nifty|detail_47dc838878703481870d85534d0d8bc5"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000110056154|bc_100528721495|2026-10-04T09:04:21.270Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-04T09:04:21.270Z",
+      "recordedAt": "2026-10-04T09:23:06.644Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110056154|bc_100528721495",
+      "url": "https://suumo.jp/chintai/jnc_000110056154/?bc=100528721495",
+      "data": {
+        "state": "gone",
+        "evidence": "detail page redirected off the ad page (detail:enrich)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -752,11 +766,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_47dc838878703481870d85534d0d8bc5/",
     "lastSeenAt": "2026-09-30T10:08:53.342Z",
     "lastListedAt": "2026-09-30T10:08:53.342Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-09-30T10:08:53.342Z",
+      "before": "2026-10-04T09:04:21.270Z"
+    },
+    "daysOnMarket": {
+      "min": 1.5,
+      "max": 5.5
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-28T23:28:33.254Z",
@@ -781,7 +801,7 @@
         "firstSeenAt": "2026-09-28T22:36:42.678Z",
         "lastSeenAt": "2026-09-28T22:36:42.678Z",
         "lastListedAt": "2026-09-28T22:36:42.678Z",
-        "goneSince": null,
+        "goneSince": "2026-10-04T09:04:21.270Z",
         "relistCount": 0
       }
     },
