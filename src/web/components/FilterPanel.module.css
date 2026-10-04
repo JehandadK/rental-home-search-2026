@@ -27,20 +27,7 @@
   border-top: 1px dashed var(--rs-line);
 }
 
-.locationGroup {
-  margin: 4px -4px 2px;
-  padding: 10px;
-  border: 1px solid var(--rs-slate-300);
-  border-radius: 8px;
-  background: var(--rs-slate-50);
-}
 
-.locationTitle {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--rs-heading-strong);
-  margin-bottom: 2px;
-}
 
 .help {
   margin: 5px 0 6px;
@@ -49,9 +36,72 @@
   line-height: 1.35;
 }
 
-.areaDivider {
-  border-top: 1px dashed var(--rs-slate-300);
-  margin: 10px 0 5px;
+
+/* Collapsible filter groups (neighbourhood, status, decisions, …). */
+.section {
+  border-top: 1px dashed var(--rs-line);
+  padding: 2px 0;
+}
+
+.section > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  padding: 6px 0;
+}
+
+.section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.section > summary::before {
+  content: "▸";
+  color: var(--rs-muted);
+  font-size: 10px;
+  margin-right: -2px;
+}
+
+.section[open] > summary::before {
+  content: "▾";
+}
+
+/* The neighbourhood picker sits inside the City group, so it drops the rule. */
+.nested {
+  border-top: none;
+  margin-top: 6px;
+  padding: 0;
+}
+
+.sectionName {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-slate-600);
+}
+
+.sectionValue {
+  font-size: 11px;
+  color: var(--rs-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.sectionActive {
+  color: var(--rs-accent);
+  font-weight: 600;
+}
+
+.sectionBody {
+  padding: 2px 0 8px;
+}
+
+.chipRow {
+  margin-top: 5px;
 }
 
 .groupLabel {
