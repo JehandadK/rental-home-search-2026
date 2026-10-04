@@ -40,18 +40,20 @@ import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold } from "../../domain/lifecycle";
 import { isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
-import type { ReferenceBoundary, ReferenceModel } from "../../domain/referenceData";
+import type { ReferenceBoundary, ReferenceCity, ReferenceModel } from "../../domain/referenceData";
 import type { CatalogPlace } from "../../domain/places";
 import {
   areaCentroid,
+  borderSegments,
   boundaryExtent,
   circleOffCanvas,
   extentOf,
-  groupBorders,
+  joinSegments,
   KM_PER_DEGREE,
   labelPosition,
   longitudeScale,
   padExtent,
+  pointInGeometry,
   polygonsOf,
   ringRadiusPx,
   scaleBarLength,
@@ -63,7 +65,9 @@ import { formatKm, listingDistances, type ListingDistance } from "../../domain/l
 import { describeNote, type ListingNote, type NoteMap } from "../../domain/notes";
 import { MAX_COMPARE } from "../../domain/compare";
 import type { ScoredRow } from "../../domain/scoring";
+import { cityName, type NameLanguage } from "../../domain/mapAreas";
 import { ListingThumb, PhotoGallery } from "./ListingPhoto";
+import { AreaPicker, type AreaCity } from "./AreaPicker";
 import styles from "./MapView.module.css";
 import appStyles from "../App.module.css";
 
@@ -93,6 +97,13 @@ interface Props {
   travelMode?: "walk" | "bicycle";
   /** Walking knobs for the selection card's distance list (always on foot, whatever the travel mode). */
   walking?: { speedMPerMin: number; detourFactor: number; includeHoikuen: boolean };
+  /** City ids the map draws (the area picker changes them). */
+  areas: ReadonlySet<string>;
+  onSetAreas: (areas: ReadonlySet<string>) => void;
+  onResetAreas: () => void;
+  /** Language for city, prefecture and station names. */
+  language: NameLanguage;
+  onSetLanguage: (language: NameLanguage) => void;
 }
 
 const NO_NOTES: NoteMap = {};
@@ -240,7 +251,7 @@ const DEFAULT_EXTENT: Extent = { minLon: 139.68, maxLon: 139.86, minLat: 35.74, 
 
 interface CityLayer {
   id: string;
-  label: string;
+  city: ReferenceCity;
   prefecture: string;
   boundaries: ReferenceBoundary[];
   focus: boolean;
@@ -252,6 +263,7 @@ interface CityLayer {
 
 interface PrefectureLayer {
   name: string;
+  nameEn?: string;
   labelAt: Position | null;
 }
 
@@ -274,12 +286,18 @@ export const MapView = memo(function MapView({
   ringMetresPerMinute,
   travelMode = "walk",
   walking = DEFAULT_WALKING,
+  areas,
+  onSetAreas,
+  onResetAreas,
+  language,
+  onSetLanguage,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
   const [view, setView] = useState<View>(IDENTITY);
   const [dragging, setDragging] = useState(false);
   const [layers, setLayers] = useState(ALL_LAYERS);
+  const [pickingAreas, setPickingAreas] = useState(false);
   // The legend starts collapsed on narrow screens, where it would cover the map.
   const [legendInitiallyOpen] = useState(() => window.matchMedia?.(`(min-width: ${NARROW_MAX + 1}px)`).matches ?? true);
   /** True while the pointer is over a listing dot, for the pointer cursor. */
@@ -291,23 +309,24 @@ export const MapView = memo(function MapView({
   /** Measured label widths by font and text; measuring hundreds of names per frame adds up. */
   const labelWidths = useRef(new Map<string, number>());
   /** Boundary outlines as canvas paths, rebuilt when the reference changes. */
-  const outlinesRef = useRef<{ source: unknown; neighbours: Path2D; focus: Path2D; borders: Path2D } | null>(null);
+  const outlinesRef = useRef<{ source: unknown; project: unknown; neighbours: Path2D; focus: Path2D; borders: Path2D } | null>(null);
 
   /** Cities with at least one boundary; the focus city is drawn last, on top. */
-  const cityLayers = useMemo((): CityLayer[] => {
+  // Every city with an outline; the map draws the chosen areas, the area picker all of them.
+  const allCities = useMemo((): CityLayer[] => {
     const byCity = new Map<string, ReferenceBoundary[]>();
     for (const boundary of reference.boundaries) {
       const list = byCity.get(boundary.cityId);
       if (list) list.push(boundary);
       else byCity.set(boundary.cityId, [boundary]);
     }
-    const layers = reference.cities.flatMap((city): CityLayer[] => {
+    return reference.cities.flatMap((city): CityLayer[] => {
       const boundaries = byCity.get(city.id) ?? [];
       const extent = boundaryExtent(boundaries);
       if (!extent) return [];
       return [{
         id: city.id,
-        label: city.nameLocal ?? city.name,
+        city,
         prefecture: city.prefecture ?? "",
         boundaries,
         focus: city.id === FOCUS_CITY_ID,
@@ -315,41 +334,71 @@ export const MapView = memo(function MapView({
         labelAt: labelPosition(boundaries),
       }];
     });
-    return [...layers.filter((layer) => !layer.focus), ...layers.filter((layer) => layer.focus)];
   }, [reference]);
 
-  // Prefecture borders and names, traced from the cities' outlines.
+  /** The chosen cities; the focus city is drawn last, on top. */
+  const cityLayers = useMemo((): CityLayer[] => {
+    const shown = allCities.filter((layer) => areas.has(layer.id));
+    return [...shown.filter((layer) => !layer.focus), ...shown.filter((layer) => layer.focus)];
+  }, [allCities, areas]);
+
+  // Prefecture border edges, traced once from every city's outline.
+  const borderEdges = useMemo(() => borderSegments(allCities
+    .filter((layer) => layer.prefecture)
+    .flatMap((layer) => layer.boundaries.map((boundary) => ({ geometry: boundary.geometry, group: layer.prefecture, owner: layer.id })))),
+  [allCities]);
+
+  // The borders and names of the prefectures the chosen cities touch.
   const prefectures = useMemo(() => {
-    const byPrefecture = new Map<string, ReferenceBoundary[]>();
+    const byPrefecture = new Map<string, { boundaries: ReferenceBoundary[]; nameEn?: string }>();
     for (const layer of cityLayers) {
       if (!layer.prefecture) continue;
-      const list = byPrefecture.get(layer.prefecture);
-      if (list) list.push(...layer.boundaries);
-      else byPrefecture.set(layer.prefecture, [...layer.boundaries]);
+      const entry = byPrefecture.get(layer.prefecture) ?? { boundaries: [], nameEn: layer.city.prefectureEn };
+      entry.boundaries.push(...layer.boundaries);
+      byPrefecture.set(layer.prefecture, entry);
     }
-    const layers: PrefectureLayer[] = [...byPrefecture].map(([name, boundaries]) => ({ name, labelAt: areaCentroid(boundaries) }));
-    // Only worth drawing when the map spans more than one prefecture.
-    const borders = byPrefecture.size < 2 ? [] : groupBorders(cityLayers
-      .filter((layer) => layer.prefecture)
-      .flatMap((layer) => layer.boundaries.map((boundary) => ({ geometry: boundary.geometry, group: layer.prefecture }))));
+    const layers: PrefectureLayer[] = [...byPrefecture].map(([name, { boundaries, nameEn }]) =>
+      ({ name, nameEn, labelAt: areaCentroid(boundaries) }));
+    const borders = joinSegments(borderEdges.filter((edge) => edge.owners.some((owner) => areas.has(owner))));
+    // Names only help when the chosen areas span more than one prefecture.
     return { layers: byPrefecture.size < 2 ? [] : layers, borders };
-  }, [cityLayers]);
+  }, [cityLayers, borderEdges, areas]);
 
-  // Region-wide stations, minus those already drawn as a scored station.
+  // Stations in the chosen areas, minus those already drawn as a scored station.
   const railStations = useMemo(() => {
     const scored = reference.catalog.inCategory("station");
     return reference.catalog.inCategory(RAIL_STATION_CATEGORY)
+      .filter((station) => areas.has(String(station.attributes?.cityId ?? "")))
       .filter((station) => !scored.some((other) =>
         other.name.replace(/〈.*〉$/u, "") === station.name.replace(/〈.*〉$/u, "") &&
         Math.hypot((other.lon - station.lon) * Math.cos((station.lat * Math.PI) / 180), other.lat - station.lat) * KM_PER_DEGREE < SAME_STATION_KM))
       // Busiest first, so their names win the space when labels compete.
       .sort((a, b) => lineCount(b) - lineCount(a));
-  }, [reference]);
+  }, [reference, areas]);
 
-  // Base projection: fit the combined extent of every city boundary.
+  // Mosques and private schools inside the chosen areas (plus any with a travel ring),
+  // so hidden areas stay empty: the mosque list covers all of Japan.
+  const areaPlaces = useMemo(() => {
+    const inAreas = (place: CatalogPlace) => cityLayers.some((layer) =>
+      place.lon >= layer.extent.minLon && place.lon <= layer.extent.maxLon &&
+      place.lat >= layer.extent.minLat && place.lat <= layer.extent.maxLat &&
+      layer.boundaries.some((boundary) => pointInGeometry([place.lon, place.lat], boundary.geometry)));
+    const ringed = new Set(ringCenters.map((place) => place.id));
+    const keep = (place: CatalogPlace) => ringed.has(place.id) || inAreas(place);
+    return {
+      mosques: reference.catalog.inCategory("mosque").filter(keep),
+      pois: reference.catalog.inCategory("poi").filter(keep),
+    };
+  }, [reference, cityLayers, ringCenters]);
+
+  const areaCities = useMemo((): AreaCity[] =>
+    allCities.map(({ city, boundaries, extent }) => ({ city, boundaries, extent })), [allCities]);
+
+  // Base projection: fit the chosen areas (every boundary when none are chosen).
   const { project, basePxPerKm } = useMemo(() => {
     const extent = padExtent(
-      boundaryExtent(reference.boundaries) ?? extentOf(reference.catalog.places) ?? DEFAULT_EXTENT,
+      boundaryExtent(cityLayers.flatMap((layer) => layer.boundaries)) ??
+        boundaryExtent(reference.boundaries) ?? extentOf(reference.catalog.places) ?? DEFAULT_EXTENT,
     );
     const { minLon, maxLon, minLat, maxLat } = extent;
     const kx = longitudeScale(extent);
@@ -366,11 +415,19 @@ export const MapView = memo(function MapView({
       }),
       basePxPerKm: scale / KM_PER_DEGREE,
     };
-  }, [reference]);
+  }, [cityLayers, reference]);
   const maxScale = Math.max(MIN_SCALE, MAX_PX_PER_KM / basePxPerKm);
   const locateScale = clamp(LOCATE_PX_PER_KM / basePxPerKm, MIN_SCALE, maxScale);
   const maxScaleRef = useRef(maxScale);
   maxScaleRef.current = maxScale;
+  // Changing the areas refits the map to them: the old view belongs to the old projection.
+  // A layout effect, so the new projection is never painted with the old view.
+  const shownProjection = useRef(project);
+  useLayoutEffect(() => {
+    if (shownProjection.current === project) return;
+    shownProjection.current = project;
+    setView(IDENTITY);
+  }, [project]);
 
   // Compose base projection with the current view transform.
   const toScreen = useCallback(
@@ -417,8 +474,12 @@ export const MapView = memo(function MapView({
 
   // Table-row locate buttons issue an explicit center request. Use the current
   // zoom when it is already useful; otherwise zoom in enough to identify the home.
+  // Each request is handled once: the target stays set afterwards, and changing
+  // the areas (a new projection) must not jump back to it.
+  const handledCenterRequest = useRef<number | null>(null);
   useEffect(() => {
-    if (!centerTarget) return;
+    if (!centerTarget || handledCenterRequest.current === centerTarget.request) return;
+    handledCenterRequest.current = centerTarget.request;
     setView((current) => {
       const scale = Math.max(current.scale, locateScale);
       const point = project(centerTarget.lat, centerTarget.lon);
@@ -477,7 +538,7 @@ export const MapView = memo(function MapView({
     // re-trace the region's ~100k boundary vertices. Line widths and dashes
     // are divided by the zoom to stay constant on screen.
     let outlines = outlinesRef.current;
-    if (outlines?.source !== prefectures) {
+    if (outlines?.source !== prefectures || outlines.project !== project) {
       const tracePath = (path: Path2D, rings: Iterable<readonly Position[]>, close: boolean) => {
         for (const ring of rings) {
           ring.forEach(([lon, lat], i) => {
@@ -500,6 +561,7 @@ export const MapView = memo(function MapView({
       tracePath(borders, prefectures.borders, false);
       outlines = {
         source: prefectures,
+        project,
         neighbours: cityPath(cityLayers.filter((layer) => !layer.focus)),
         focus: cityPath(cityLayers.filter((layer) => layer.focus)),
         borders,
@@ -677,7 +739,11 @@ export const MapView = memo(function MapView({
         ctx.fillRect(x - size, y - size, size * 2, size * 2);
         ctx.strokeRect(x - size, y - size, size * 2, size * 2);
       }
-      const stationName = (station: CatalogPlace) => station.name.replace(/〈.*〉$/u, "");
+      // Scored stations have English names; the region's stations only Japanese ones.
+      const stationName = (station: CatalogPlace) => {
+        const english = station.attributes?.nameEn;
+        return language === "en" && typeof english === "string" ? english : station.name.replace(/〈.*〉$/u, "");
+      };
       hubLabels = () => {
         for (const station of scored.filter((candidate) => LABELLED_STATIONS.has(candidate.name))) {
           const { x, y } = toScreen(station.lat, station.lon);
@@ -701,7 +767,7 @@ export const MapView = memo(function MapView({
 
     // Mosque candidates as purple diamonds; scoring uses the nearest selected one.
     if (layers.mosques) {
-      for (const mosque of reference.catalog.inCategory("mosque")) {
+      for (const mosque of areaPlaces.mosques) {
         const { x, y } = toScreen(mosque.lat, mosque.lon);
         ctx.save();
         ctx.translate(x, y);
@@ -715,7 +781,7 @@ export const MapView = memo(function MapView({
     }
 
     // The other private schools as outlined stars; any of them can be the target.
-    const otherPois = reference.catalog.inCategory("poi").filter((poi) => poi.id !== targetPoi?.id);
+    const otherPois = areaPlaces.pois.filter((poi) => poi.id !== targetPoi?.id);
     for (const poi of otherPois) {
       const { x, y } = toScreen(poi.lat, poi.lon);
       starPath(ctx, x, y, 8);
@@ -742,34 +808,35 @@ export const MapView = memo(function MapView({
       label(poi.name, x + 10, y + 4, colors.targetLabel);
     }
     if (layers.mosques) {
-      for (const mosque of reference.catalog.inCategory("mosque")) {
+      for (const mosque of areaPlaces.mosques) {
         const { x, y } = toScreen(mosque.lat, mosque.lon);
         label(mosque.name, x + 9, y + 4, colors.mosqueLabel);
       }
     }
-    const cityName = (layer: CityLayer, color: string, font: string, force = false) => {
+    const labelCity = (layer: CityLayer, color: string, font: string, force = false) => {
       if (!layer.labelAt || !onScreen(layer.extent)) return;
       const topLeft = toScreen(layer.extent.maxLat, layer.extent.minLon);
       const bottomRight = toScreen(layer.extent.minLat, layer.extent.maxLon);
       if (!layer.focus && (bottomRight.x - topLeft.x < CITY_LABEL_MIN_PX.width || bottomRight.y - topLeft.y < CITY_LABEL_MIN_PX.height)) return;
       const { x, y } = toScreen(layer.labelAt[1], layer.labelAt[0]);
-      label(layer.label, x, y, color, { font, size: 13, align: "center", force });
+      label(cityName(layer.city, language), x, y, color, { font, size: 13, align: "center", force });
     };
-    for (const layer of focus) cityName(layer, colors.focusLabel, `600 13px ${FONT}`, true);
+    for (const layer of focus) labelCity(layer, colors.focusLabel, `600 13px ${FONT}`, true);
     hubLabels();
     if (pxPerKm <= PREFECTURE_LABEL_MAX_PX_PER_KM) {
       for (const prefecture of prefectures.layers) {
         if (!prefecture.labelAt) continue;
         const { x, y } = toScreen(prefecture.labelAt[1], prefecture.labelAt[0]);
-        label(prefecture.name, x, y, colors.prefectureLabel, { font: `700 15px ${FONT}`, size: 15, align: "center" });
+        const name = language === "en" && prefecture.nameEn ? prefecture.nameEn : prefecture.name;
+        label(name, x, y, colors.prefectureLabel, { font: `700 15px ${FONT}`, size: 15, align: "center" });
       }
     }
-    for (const layer of neighbours) cityName(layer, colors.cityLabel, `600 12px ${FONT}`);
+    for (const layer of neighbours) labelCity(layer, colors.cityLabel, `600 12px ${FONT}`);
     stationLabels();
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, targetPoi, cityLayers, prefectures, railStations, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute]);
+  }, [drawOrder, reference, targetPoi, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -901,7 +968,7 @@ export const MapView = memo(function MapView({
 
   return (
     <section className={appStyles.card}>
-      <h2 className={appStyles.cardTitle}>Map — Kanto · 関東</h2>
+      <h2 className={appStyles.cardTitle}>Map</h2>
       <div className={styles.wrap}>
         <canvas
           ref={canvasRef}
@@ -916,6 +983,27 @@ export const MapView = memo(function MapView({
             setOverDot(false);
           }}
         />
+        <button
+          type="button"
+          className={`${styles.areasButton} ${pickingAreas ? styles.layerOn : ""}`}
+          aria-expanded={pickingAreas}
+          title="Choose which areas the map shows, and the language of place names"
+          onClick={() => setPickingAreas((open) => !open)}
+        >
+          ⚙ Areas · {areas.size}
+        </button>
+        {pickingAreas && (
+          <AreaPicker
+            cities={areaCities}
+            borders={borderEdges}
+            selected={areas}
+            onChange={onSetAreas}
+            onReset={onResetAreas}
+            language={language}
+            onLanguage={onSetLanguage}
+            onClose={() => setPickingAreas(false)}
+          />
+        )}
         <div className={styles.layers} role="group" aria-label="Map layers">
           {layerChips.map((layer) => (
             <button
@@ -984,8 +1072,8 @@ export const MapView = memo(function MapView({
           <button
             type="button"
             className={styles.reset}
-            title="Show all of Kanto"
-            aria-label="Show all of Kanto"
+            title="Show all the chosen areas"
+            aria-label="Show all the chosen areas"
             onClick={() => setView(IDENTITY)}
           >
             ⤢

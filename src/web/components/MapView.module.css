@@ -637,3 +637,20 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Opens the area picker; bottom-left, clear of the layer chips and the legend. */
+.areasButton {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 4px 10px;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 999px;
+  background: rgb(var(--rs-glass) / 0.92);
+  color: var(--rs-slate-700);
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.08);
+  cursor: pointer;
+}

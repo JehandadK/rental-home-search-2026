@@ -22,6 +22,7 @@ import { useMarks } from "./hooks/useMarks";
 import { useAvailabilityMarks } from "./hooks/useAvailabilityMarks";
 import { useNotes } from "./hooks/useNotes";
 import { useCompare } from "./hooks/useCompare";
+import { useMapAreas } from "./hooks/useMapAreas";
 import { useWeightPresets } from "./hooks/useWeightPresets";
 import { useRankMovement } from "./hooks/useRankMovement";
 import { toCsv, toMarkdown } from "./lib/export";
@@ -67,6 +68,7 @@ export function App({ data }: { data: WebData }) {
    * in-memory reduction rather than a pipeline re-run.
    */
   const index = useMemo(() => new ProximityIndex(listings, catalog, SCORED_CATEGORIES), [listings, catalog]);
+  const mapAreas = useMapAreas(reference.cities);
 
   /** The place the poi1 score measures to, marked on the map. */
   const targetPoi = useMemo(() => {
@@ -365,6 +367,11 @@ export function App({ data }: { data: WebData }) {
             ringMetresPerMinute={travelSpeed(config) / config.detourFactor}
             travelMode={config.travelMode}
             walking={walking}
+            areas={mapAreas.areas}
+            onSetAreas={mapAreas.setAreas}
+            onResetAreas={mapAreas.resetAreas}
+            language={mapAreas.language}
+            onSetLanguage={mapAreas.setLanguage}
           />
           <ListingTable
             items={filtered}

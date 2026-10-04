@@ -23,6 +23,10 @@ export interface ReferenceCity {
   nameLocal?: string;
   /** 埼玉県, 東京都…; the map draws borders between prefectures. */
   prefecture?: string;
+  /** English prefecture name (Saitama). */
+  prefectureEn?: string;
+  /** 5-digit municipality code, for ordering. */
+  code?: string;
   status?: "active" | "retired";
 }
 

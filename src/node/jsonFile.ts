@@ -76,8 +76,8 @@ export async function withFileLock<T>(
 }
 
 /** Write to a unique same-directory temp file and atomically rename it in. */
-export async function writeJsonAtomically(path: string, value: unknown): Promise<void> {
-  await withFileLock(path, () => writeJsonAtomicallyUnlocked(path, value));
+export async function writeJsonAtomically(path: string, value: unknown, options: JsonWriteOptions = {}): Promise<void> {
+  await withFileLock(path, () => writeJsonAtomicallyUnlocked(path, value, options));
 }
 
 /** Perform a serialized read/modify/write transaction on one JSON file. */
@@ -101,13 +101,18 @@ export async function updateJsonFile<T>(
 }
 
 /** Caller must hold `withFileLock(path, ...)` for read/compare/write updates. */
-export async function writeJsonAtomicallyUnlocked(path: string, value: unknown): Promise<void> {
+export interface JsonWriteOptions {
+  /** One line, no indentation: for large published files nobody reads by hand. */
+  compact?: boolean;
+}
+
+export async function writeJsonAtomicallyUnlocked(path: string, value: unknown, options: JsonWriteOptions = {}): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   const tmp = `${path}.${process.pid}.${randomUUID()}.tmp`;
   let handle;
   try {
     handle = await open(tmp, "wx", 0o666);
-    await handle.writeFile(`${JSON.stringify(value, null, 2)}\n`, "utf8");
+    await handle.writeFile(`${options.compact ? JSON.stringify(value) : JSON.stringify(value, null, 2)}\n`, "utf8");
     await handle.sync();
     await handle.close();
     handle = undefined;

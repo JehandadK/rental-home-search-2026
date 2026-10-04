@@ -47,9 +47,14 @@ export interface DatasetWriteOptions {
 /** A city is a managed catalog record; additions/renames are normal data changes. */
 export interface CityRecord {
   id: RecordId;
+  /** English name (Soka, Saitama Minami-ku); the local name when no English is known. */
   name: string;
   nameLocal?: string;
   prefecture?: string;
+  /** English prefecture name (Saitama). */
+  prefectureEn?: string;
+  /** 5-digit 全国地方公共団体コード, when known. */
+  code?: string;
   status: "active" | "retired";
   updatedAt: string;
   retiredAt?: string;
