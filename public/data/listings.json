@@ -12085,7 +12085,13 @@
         {
           "source": "suumo",
           "id": "suumo-越谷市大泊戸建（０００６０７０）-3LDK-100000",
-          "url": "https://suumo.jp/chintai/jnc_000109117036/?bc=100514477529"
+          "url": "https://suumo.jp/chintai/jnc_000109117036/?bc=100514477529",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:21.800Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -15489,7 +15495,13 @@
         {
           "source": "suumo",
           "id": "suumo-フィオーレ花田-3LDK-93000",
-          "url": "https://suumo.jp/chintai/jnc_000109493800/?bc=100225865092"
+          "url": "https://suumo.jp/chintai/jnc_000109493800/?bc=100225865092",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:52.373Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -26085,6 +26097,7 @@
       "source": "athome",
       "costs": {
         "adminFeeYen": 3000,
+        "guarantorRequired": true,
         "parking": {
           "available": true,
           "distanceM": null,
@@ -26092,13 +26105,18 @@
           "monthlyYen": 11000,
           "raw": "敷地内11000円"
         },
+        "parkingYen": 11000,
         "depositYen": 0,
-        "keyMoneyYen": 77000,
-        "guarantorRequired": true,
-        "parkingYen": 11000
+        "keyMoneyYen": 77000
       },
       "building": {
         "floor": "1階",
+        "conditions": [
+          "駐車場（近隣含む）",
+          "バス・トイレ別",
+          "即入居可",
+          "子供可"
+        ],
         "features": [
           "バストイレ別、バルコニー、エアコン、ガスコンロ対応、クロゼット、フローリング、シャワー付洗面台、TVインターホン、室内洗濯置、シューズボックス、システムキッチン、南向き、追焚機能浴室、洗面所独立、駐輪場、即入居可、敷金不要、対面式キッチン、保証人不要、単身者相談、駐車2台可、バイク置場、玄関ホール、仲手0.55ヶ月、床下収納、保証金不要、敷地内ごみ置き場、和室、全居室6畳以上、プロパンガス、シャッター、礼金1ヶ月",
           "-",
@@ -26106,14 +26124,8 @@
           "保証会社利用必 実費",
           "追焚給湯。保証会社加入要(初回、月額総支払額の50％)。 清掃代(初期)66000円。 鍵交換代(初期)27500円。 入居者サポート費用(初期)16500円。"
         ],
-        "conditions": [
-          "駐車場（近隣含む）",
-          "バス・トイレ別",
-          "即入居可",
-          "子供可"
-        ],
-        "totalFloors": 2,
-        "structure": "木造"
+        "structure": "木造",
+        "totalFloors": 2
       },
       "city": "Kawaguchi",
       "parking": {
@@ -26122,6 +26134,12 @@
         "location": "onsite",
         "monthlyYen": 11000,
         "raw": "敷地内11000円"
+      },
+      "tenancy": {
+        "availableFrom": "即",
+        "immediateMoveIn": true,
+        "leaseMonths": 24,
+        "leaseType": "regular"
       },
       "sourceListings": [
         {
@@ -26132,19 +26150,13 @@
         {
           "source": "suumo",
           "id": "suumo-ネクサス東領家-2LDK-77000",
-          "url": "https://suumo.jp/chintai/jnc_000108984628/?bc=100521817988"
+          "url": "https://suumo.jp/chintai/jnc_000108984628/?bc=100521767590"
         }
       ],
       "status": "active",
       "firstSeenAt": "2026-09-03T23:13:36.008Z",
       "lastSeenAt": "2026-09-23T05:40:27.747Z",
       "soldAt": null,
-      "tenancy": {
-        "availableFrom": "即",
-        "immediateMoveIn": true,
-        "leaseMonths": 24,
-        "leaseType": "regular"
-      },
       "geocoded": true,
       "lat": 35.789108,
       "lon": 139.753372,
@@ -29562,8 +29574,7 @@
       "source": "athome",
       "costs": {
         "adminFeeYen": 2000,
-        "depositYen": 75000,
-        "keyMoneyYen": 75000,
+        "guarantorRequired": true,
         "parking": {
           "available": true,
           "distanceM": 324,
@@ -29571,12 +29582,12 @@
           "monthlyYen": 15400,
           "raw": "近隣324m15400円"
         },
-        "guarantorRequired": true,
-        "parkingYen": 15400
+        "parkingYen": 15400,
+        "depositYen": 75000,
+        "keyMoneyYen": 75000
       },
       "building": {
         "floor": "3階",
-        "totalFloors": 4,
         "conditions": [
           "バス・トイレ別",
           "2階以上",
@@ -29591,7 +29602,8 @@
           "保証会社利用必 賃料等５０％",
           "元郷まりーな保育園まで238m/元郷医院まで257m/保険等加入 加入要 ／ 借家人賠償保険 ２年間 ２００００円／鍵交換代借主負担／室内清掃費用借主負担"
         ],
-        "structure": "鉄骨"
+        "structure": "鉄骨",
+        "totalFloors": 4
       },
       "city": "Kawaguchi",
       "parking": {
@@ -29601,16 +29613,17 @@
         "monthlyYen": 15400,
         "raw": "近隣324m15400円"
       },
+      "tenancy": {
+        "availableFrom": "即",
+        "immediateMoveIn": true,
+        "leaseMonths": 24,
+        "leaseType": "regular"
+      },
       "sourceListings": [
         {
           "source": "athome",
           "id": "athome-6974958288",
           "url": "https://www.athome.co.jp/chintai/6974958288/"
-        },
-        {
-          "source": "athome",
-          "id": "athome-1147501028",
-          "url": "https://www.athome.co.jp/chintai/1147501028/?DOWN=1&BKLISTID=001LPC&sref=list_simple&bi=tatemono"
         },
         {
           "source": "suumo",
@@ -29622,12 +29635,6 @@
       "firstSeenAt": "2026-09-06T01:12:42.178Z",
       "lastSeenAt": "2026-10-02T10:38:54.945Z",
       "soldAt": null,
-      "tenancy": {
-        "availableFrom": "即",
-        "immediateMoveIn": true,
-        "leaseMonths": 24,
-        "leaseType": "regular"
-      },
       "geocoded": true,
       "lat": 35.797615,
       "lon": 139.746933,
@@ -40991,7 +40998,13 @@
         {
           "source": "suumo",
           "id": "suumo-ドエル・ナイン-2LDK-70000",
-          "url": "https://suumo.jp/chintai/jnc_000058350187/?bc=100198979478"
+          "url": "https://suumo.jp/chintai/jnc_000058350187/?bc=100198979478",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:22.666Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -55865,7 +55878,13 @@
         {
           "source": "suumo",
           "id": "suumo-プチメゾン-2DK-53000",
-          "url": "https://suumo.jp/chintai/jnc_000102847379/?bc=100520887406"
+          "url": "https://suumo.jp/chintai/jnc_000102847379/?bc=100520887406",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:48.116Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -59805,7 +59824,13 @@
         {
           "source": "suumo",
           "id": "suumo-セントラルヴィレッヂＡ-3K-70000",
-          "url": "https://suumo.jp/chintai/jnc_000108888691/?bc=100519809351"
+          "url": "https://suumo.jp/chintai/jnc_000108888691/?bc=100519809351",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:36.608Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -63543,7 +63568,13 @@
         {
           "source": "suumo",
           "id": "suumo-越谷市袋山戸建-5DK-100000",
-          "url": "https://suumo.jp/chintai/jnc_000108482597/?bc=100516576108"
+          "url": "https://suumo.jp/chintai/jnc_000108482597/?bc=100516576108",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:53.523Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -64925,7 +64956,13 @@
         {
           "source": "suumo",
           "id": "suumo-ガーデンピアA-3DK-53000",
-          "url": "https://suumo.jp/chintai/jnc_000108739453/?bc=100518547098"
+          "url": "https://suumo.jp/chintai/jnc_000108739453/?bc=100518547098",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:05.813Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -66520,7 +66557,13 @@
         {
           "source": "suumo",
           "id": "suumo-メゾン秋山II-2LDK-58000",
-          "url": "https://suumo.jp/chintai/jnc_000091656613/?bc=100519181424"
+          "url": "https://suumo.jp/chintai/jnc_000091656613/?bc=100519181424",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:09.676Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -67108,7 +67151,13 @@
         {
           "source": "suumo",
           "id": "suumo-ガーデンピアB-3DK-53000",
-          "url": "https://suumo.jp/chintai/jnc_000108746089/?bc=100518597551"
+          "url": "https://suumo.jp/chintai/jnc_000108746089/?bc=100518597551",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:08.988Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -67795,7 +67844,13 @@
         {
           "source": "suumo",
           "id": "suumo-エリトリアｈｏｕｓｅ-2DK-60000",
-          "url": "https://suumo.jp/chintai/jnc_000108901519/?bc=100519908848"
+          "url": "https://suumo.jp/chintai/jnc_000108901519/?bc=100519908848",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:14.949Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -69045,7 +69100,13 @@
         {
           "source": "suumo",
           "id": "suumo-パナウィンディアB-3DK-65000",
-          "url": "https://suumo.jp/chintai/jnc_000081125705/?bc=100520523728"
+          "url": "https://suumo.jp/chintai/jnc_000081125705/?bc=100520523728",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:46.771Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -69587,7 +69648,13 @@
         {
           "source": "suumo",
           "id": "suumo-レスポワ－ル２００４C棟-3K-75000",
-          "url": "https://suumo.jp/chintai/jnc_000109184955/?bc=100522006645"
+          "url": "https://suumo.jp/chintai/jnc_000109184955/?bc=100522006645",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:25.108Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -73806,7 +73873,13 @@
         {
           "source": "suumo",
           "id": "suumo-ファミールロジュマン南越谷-3LDK-90000",
-          "url": "https://suumo.jp/chintai/jnc_000072950126/?bc=100523123665"
+          "url": "https://suumo.jp/chintai/jnc_000072950126/?bc=100523123665",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:09.662Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -77030,7 +77103,13 @@
         {
           "source": "suumo",
           "id": "suumo-ファーストロベリア-3LDK-75000",
-          "url": "https://suumo.jp/chintai/jnc_000108746088/?bc=100510179815"
+          "url": "https://suumo.jp/chintai/jnc_000108746088/?bc=100510179815",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:58:22.610Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -83313,7 +83392,13 @@
         {
           "source": "suumo",
           "id": "suumo-ドゥエリング北越谷-2DK-54000",
-          "url": "https://suumo.jp/chintai/jnc_000105806350/?bc=100518880797"
+          "url": "https://suumo.jp/chintai/jnc_000105806350/?bc=100518880797",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:10.335Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -86299,7 +86384,13 @@
         {
           "source": "suumo",
           "id": "suumo-ニュープリンスマンション-3DK-62000",
-          "url": "https://suumo.jp/chintai/jnc_000108423150/?bc=100516510404"
+          "url": "https://suumo.jp/chintai/jnc_000108423150/?bc=100516510404",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:17.675Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -87419,7 +87510,13 @@
         {
           "source": "suumo",
           "id": "suumo-アプリコットＣ棟-3DK-60000",
-          "url": "https://suumo.jp/chintai/jnc_000105160019/?bc=100472278587"
+          "url": "https://suumo.jp/chintai/jnc_000105160019/?bc=100472278587",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:14.992Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -90618,7 +90715,13 @@
         {
           "source": "suumo",
           "id": "suumo-ベルシェ弐番館-3DK-67000",
-          "url": "https://suumo.jp/chintai/jnc_000033004540/?bc=100512324183"
+          "url": "https://suumo.jp/chintai/jnc_000033004540/?bc=100512324183",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:55.459Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -94397,7 +94500,13 @@
         {
           "source": "suumo",
           "id": "suumo-ProspereB-2LDK-88000",
-          "url": "https://suumo.jp/chintai/jnc_000109236227/?bc=100523689858"
+          "url": "https://suumo.jp/chintai/jnc_000109236227/?bc=100523689858",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:04.304Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -97305,7 +97414,13 @@
         {
           "source": "suumo",
           "id": "suumo-マイ・メリーチ吉岡-2LDK-71000",
-          "url": "https://suumo.jp/chintai/jnc_000109376117/?bc=100524285230"
+          "url": "https://suumo.jp/chintai/jnc_000109376117/?bc=100524285230",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:01.136Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -98187,7 +98302,13 @@
         {
           "source": "suumo",
           "id": "suumo-コーポビューティースカイ-2DK-58000",
-          "url": "https://suumo.jp/chintai/jnc_000108221431/?bc=100517274434"
+          "url": "https://suumo.jp/chintai/jnc_000108221431/?bc=100517274434",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:41.163Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -99466,7 +99587,13 @@
         {
           "source": "suumo",
           "id": "suumo-グリーンパークIII-2DK-75000",
-          "url": "https://suumo.jp/chintai/jnc_000109304568/?bc=100522992404"
+          "url": "https://suumo.jp/chintai/jnc_000109304568/?bc=100522992404",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:42.317Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -99930,7 +100057,13 @@
         {
           "source": "suumo",
           "id": "suumo-プライムピュアＤ-3K-59000",
-          "url": "https://suumo.jp/chintai/jnc_000109406183/?bc=100523842996"
+          "url": "https://suumo.jp/chintai/jnc_000109406183/?bc=100523842996",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:16.419Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -100761,7 +100894,13 @@
         {
           "source": "suumo",
           "id": "suumo-アニバーサリー２１-2DK-58000",
-          "url": "https://suumo.jp/chintai/jnc_000109073059/?bc=100521091684"
+          "url": "https://suumo.jp/chintai/jnc_000109073059/?bc=100521091684",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:23.996Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -101564,7 +101703,13 @@
         {
           "source": "suumo",
           "id": "suumo-Ｓハイツ-3DK-68000",
-          "url": "https://suumo.jp/chintai/jnc_000109288452/?bc=100523170897"
+          "url": "https://suumo.jp/chintai/jnc_000109288452/?bc=100523170897",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:11.372Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -101640,7 +101785,13 @@
         {
           "source": "suumo",
           "id": "suumo-ブルーウッド草加-2LDK-48000",
-          "url": "https://suumo.jp/chintai/jnc_000017627685/?bc=100524642638"
+          "url": "https://suumo.jp/chintai/jnc_000017627685/?bc=100524642638",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:58:50.543Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -102275,12 +102426,24 @@
         {
           "source": "suumo",
           "id": "suumo-・浅井コーポＢ棟-3K-59000",
-          "url": "https://suumo.jp/chintai/jnc_000109160000/?bc=100524641759"
+          "url": "https://suumo.jp/chintai/jnc_000109160000/?bc=100524641759",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:19.447Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "suumo",
           "id": "suumo-浅井コーポB棟-2LDK-59000",
-          "url": "https://suumo.jp/chintai/jnc_000109160000/?bc=100523580556"
+          "url": "https://suumo.jp/chintai/jnc_000109160000/?bc=100523580556",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:19.447Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -102348,7 +102511,13 @@
         {
           "source": "suumo",
           "id": "suumo-ライフピア草加１-2DK-53000",
-          "url": "https://suumo.jp/chintai/jnc_000109599472/?bc=100525245374"
+          "url": "https://suumo.jp/chintai/jnc_000109599472/?bc=100525245374",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:58:56.406Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -104656,7 +104825,13 @@
         {
           "source": "suumo",
           "id": "suumo-マルクエクセラン-3LDK-99000",
-          "url": "https://suumo.jp/chintai/jnc_000062939364/?bc=100525438748"
+          "url": "https://suumo.jp/chintai/jnc_000062939364/?bc=100525438748",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:09.227Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -109080,7 +109255,13 @@
         {
           "source": "suumo",
           "id": "suumo-蒲生4丁目貸家-4K-65000",
-          "url": "https://suumo.jp/chintai/jnc_000109081520/?bc=100521151521"
+          "url": "https://suumo.jp/chintai/jnc_000109081520/?bc=100521151521",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:56:41.399Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -110448,7 +110629,13 @@
         {
           "source": "suumo",
           "id": "suumo-ドミールシミズII-2DK-55000",
-          "url": "https://suumo.jp/chintai/jnc_000108530066/?bc=100517197039"
+          "url": "https://suumo.jp/chintai/jnc_000108530066/?bc=100517197039",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:51.603Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -112297,7 +112484,13 @@
         {
           "source": "suumo",
           "id": "suumo-ニューマリッチ谷塚-2LDK-75000",
-          "url": "https://suumo.jp/chintai/jnc_000104275828/?bc=100518711610"
+          "url": "https://suumo.jp/chintai/jnc_000104275828/?bc=100518711610",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:11.516Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -112367,7 +112560,13 @@
         {
           "source": "suumo",
           "id": "suumo-ＢＬＥＳＳ草加松原Ｃ棟-2LDK-108000",
-          "url": "https://suumo.jp/chintai/jnc_000108100821/?bc=100521183201"
+          "url": "https://suumo.jp/chintai/jnc_000108100821/?bc=100521183201",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:40.115Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -112576,7 +112775,13 @@
         {
           "source": "suumo",
           "id": "suumo-ハイツ宮Ｂ-3DK-59000",
-          "url": "https://suumo.jp/chintai/jnc_000109433133/?bc=100524020849"
+          "url": "https://suumo.jp/chintai/jnc_000109433133/?bc=100524020849",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:58:55.480Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -112967,7 +113172,13 @@
         {
           "source": "suumo",
           "id": "suumo-ＪＲ武蔵野線越谷レイクタウン駅2階建築15年-2LDK-98000",
-          "url": "https://suumo.jp/chintai/jnc_000107832351/?bc=100524031490"
+          "url": "https://suumo.jp/chintai/jnc_000107832351/?bc=100524031490",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:25.504Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -113366,8 +113577,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108180247/?bc=100472643870",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:29:21.137Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1001739915/",
+            "checkedAt": "2026-10-04T06:58:13.166Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -124140,7 +124351,13 @@
         {
           "source": "suumo",
           "id": "suumo-グレースセレノ小山-2LDK-76000",
-          "url": "https://suumo.jp/chintai/jnc_000109349573/?bc=100524643566"
+          "url": "https://suumo.jp/chintai/jnc_000109349573/?bc=100524643566",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:33.193Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -128411,7 +128628,13 @@
         {
           "source": "suumo",
           "id": "suumo-コーポ清水I-2DK-65000",
-          "url": "https://suumo.jp/chintai/jnc_000109251580/?bc=100522536844"
+          "url": "https://suumo.jp/chintai/jnc_000109251580/?bc=100522536844",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:38.869Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -133172,7 +133395,13 @@
         {
           "source": "suumo",
           "id": "suumo-ドミール蒲生Ａ棟-3DK-80000",
-          "url": "https://suumo.jp/chintai/jnc_000108810704/?bc=100520097902"
+          "url": "https://suumo.jp/chintai/jnc_000108810704/?bc=100520097902",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:36.305Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -155268,7 +155497,13 @@
         {
           "source": "suumo",
           "id": "suumo-サンハイツ北條-2K-70000",
-          "url": "https://suumo.jp/chintai/jnc_000108647839/?bc=100517773154"
+          "url": "https://suumo.jp/chintai/jnc_000108647839/?bc=100517773154",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:59.467Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -187434,7 +187669,13 @@
         {
           "source": "suumo",
           "id": "suumo-サン・コーポラス越谷3号棟-3DK-47000",
-          "url": "https://suumo.jp/chintai/jnc_000109349577/?bc=100523347485"
+          "url": "https://suumo.jp/chintai/jnc_000109349577/?bc=100523347485",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:30:48.968Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -202249,7 +202490,13 @@
         {
           "source": "suumo",
           "id": "suumo-日商岩井草加マンション-3LDK-85000",
-          "url": "https://suumo.jp/chintai/jnc_000089263666/?bc=100514049528"
+          "url": "https://suumo.jp/chintai/jnc_000089263666/?bc=100514049528",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:07.664Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -205741,7 +205988,13 @@
         {
           "source": "suumo",
           "id": "suumo-フレンドマハロ-3DK-75000",
-          "url": "https://suumo.jp/chintai/jnc_000100576915/?bc=100522415650"
+          "url": "https://suumo.jp/chintai/jnc_000100576915/?bc=100522415650",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:45.969Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -208669,7 +208922,13 @@
         {
           "source": "suumo",
           "id": "suumo-イーストウィン-3DK-62000",
-          "url": "https://suumo.jp/chintai/jnc_000054495663/?bc=100515395376"
+          "url": "https://suumo.jp/chintai/jnc_000054495663/?bc=100515395376",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:04.566Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -209413,7 +209672,13 @@
         {
           "source": "suumo",
           "id": "suumo-ドムールセゾン越谷-3DK-72000",
-          "url": "https://suumo.jp/chintai/jnc_000109110206/?bc=100521325049"
+          "url": "https://suumo.jp/chintai/jnc_000109110206/?bc=100521325049",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:50.354Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -211655,7 +211920,13 @@
         {
           "source": "suumo",
           "id": "suumo-野口テラスハウス-2LDK-55000",
-          "url": "https://suumo.jp/chintai/jnc_000092563710/?bc=100496168567"
+          "url": "https://suumo.jp/chintai/jnc_000092563710/?bc=100496168567",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:09.787Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -211781,7 +212052,13 @@
         {
           "source": "suumo",
           "id": "suumo-コスモハウス登戸町-3SLDK-125000",
-          "url": "https://suumo.jp/chintai/jnc_000105942296/?bc=100475438176"
+          "url": "https://suumo.jp/chintai/jnc_000105942296/?bc=100475438176",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:37.639Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -211899,7 +212176,13 @@
         {
           "source": "suumo",
           "id": "suumo-ＵＲせんげん台パークタウン三番街-3LDK-89400",
-          "url": "https://suumo.jp/chintai/jnc_000109406175/?bc=100523805255"
+          "url": "https://suumo.jp/chintai/jnc_000109406175/?bc=100523805255",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:58:43.215Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -213140,7 +213423,13 @@
         {
           "source": "suumo",
           "id": "suumo-瓦曽根２丁目貸家-3DK-60000",
-          "url": "https://suumo.jp/chintai/jnc_000107837442/?bc=100511732799"
+          "url": "https://suumo.jp/chintai/jnc_000107837442/?bc=100511732799",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:03.816Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -229703,7 +229992,13 @@
         {
           "source": "suumo",
           "id": "suumo-カーラ-3LDK-101000",
-          "url": "https://suumo.jp/chintai/jnc_000109236223/?bc=100522378525"
+          "url": "https://suumo.jp/chintai/jnc_000109236223/?bc=100522378525",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:43.215Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "nifty",
@@ -237685,7 +237980,13 @@
         {
           "source": "suumo",
           "id": "suumo-リバーサイドテラス１番館-2DK-52000",
-          "url": "https://suumo.jp/chintai/jnc_000107607925/?bc=100510068353"
+          "url": "https://suumo.jp/chintai/jnc_000107607925/?bc=100510068353",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:46.592Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -238102,7 +238403,13 @@
         {
           "source": "suumo",
           "id": "suumo-ツインハイツ-3DK-74000",
-          "url": "https://suumo.jp/chintai/jnc_000108407773/?bc=100516036336"
+          "url": "https://suumo.jp/chintai/jnc_000108407773/?bc=100516036336",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:25.389Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -238412,7 +238719,13 @@
         {
           "source": "suumo",
           "id": "suumo-カーサＳI-3DK-67000",
-          "url": "https://suumo.jp/chintai/jnc_000105936718/?bc=100497384969"
+          "url": "https://suumo.jp/chintai/jnc_000105936718/?bc=100497384969",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:34.203Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -238467,7 +238780,13 @@
         {
           "source": "suumo",
           "id": "suumo-ビラ・ディンカーベルII-2DK-66000",
-          "url": "https://suumo.jp/chintai/jnc_000109447193/?bc=100524078161"
+          "url": "https://suumo.jp/chintai/jnc_000109447193/?bc=100524078161",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:07.772Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -238969,7 +239288,13 @@
         {
           "source": "suumo",
           "id": "suumo-上間久里河野邸-3K-68000",
-          "url": "https://suumo.jp/chintai/jnc_000065514643/?bc=100510399693"
+          "url": "https://suumo.jp/chintai/jnc_000065514643/?bc=100510399693",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:52.491Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -239191,7 +239516,13 @@
         {
           "source": "suumo",
           "id": "suumo-ハイム・ベルツリーII-2DK-53000",
-          "url": "https://suumo.jp/chintai/jnc_000039119328/?bc=100519692430"
+          "url": "https://suumo.jp/chintai/jnc_000039119328/?bc=100519692430",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:25.980Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -239545,7 +239876,13 @@
         {
           "source": "suumo",
           "id": "suumo-小倉ハイツ-3DK-65000",
-          "url": "https://suumo.jp/chintai/jnc_000108860124/?bc=100519771243"
+          "url": "https://suumo.jp/chintai/jnc_000108860124/?bc=100519771243",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:12.971Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -239868,7 +240205,13 @@
         {
           "source": "suumo",
           "id": "suumo-ファミリアＡ-2LDK-88000",
-          "url": "https://suumo.jp/chintai/jnc_000108757930/?bc=100518690834"
+          "url": "https://suumo.jp/chintai/jnc_000108757930/?bc=100518690834",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:42.952Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         },
         {
           "source": "roomspot",
@@ -245374,6 +245717,19 @@
       "geocoded": true,
       "lat": 35.863422,
       "lon": 139.769638,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-新栄町住宅３街区１３号棟Ｂ-3DK-55000",
+          "url": "https://suumo.jp/chintai/jnc_000104248492/?bc=100520439049",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:03.564Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -246757,6 +247113,19 @@
       "geocoded": true,
       "lat": 35.886765,
       "lon": 139.803757,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-グリーンハイツ-4DK-63000",
+          "url": "https://suumo.jp/chintai/jnc_000079962123/?bc=100521529009",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:30:55.750Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         143
       ]
@@ -248829,6 +249198,19 @@
       "geocoded": true,
       "lat": 35.897266,
       "lon": 139.782852,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-清水邸-3DK-72000",
+          "url": "https://suumo.jp/chintai/jnc_000100303303/?bc=100525103572",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:56:55.070Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         29
       ]
@@ -250014,6 +250396,19 @@
       "geocoded": true,
       "lat": 35.833206,
       "lon": 139.703339,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-芝貸家SA-2LDK-111000",
+          "url": "https://suumo.jp/chintai/jnc_000109651541/?bc=100525550755",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:36.180Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -251305,6 +251700,19 @@
       "geocoded": true,
       "lat": 35.858067,
       "lon": 139.736984,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-メゾン仲道O-2LDK-63000",
+          "url": "https://suumo.jp/chintai/jnc_000109440928/?bc=100523786936",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:49.642Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         336
       ]
@@ -251374,6 +251782,19 @@
       "geocoded": true,
       "lat": 35.880569,
       "lon": 139.742645,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ＪＲ武蔵野線東川口駅3階建築43年-3DK-70000",
+          "url": "https://suumo.jp/chintai/jnc_000109469501/?bc=100524312758",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:04.427Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -252079,6 +252500,19 @@
       "geocoded": true,
       "lat": 35.802029,
       "lon": 139.740601,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-メゾン南平台-2DK-70000",
+          "url": "https://suumo.jp/chintai/jnc_000109588233/?bc=100525155986",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:31.926Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         192
       ]
@@ -254042,6 +254476,19 @@
       "geocoded": true,
       "lat": 35.833668,
       "lon": 139.679535,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-第２芝富士ハイツ-2LDK-85000",
+          "url": "https://suumo.jp/chintai/jnc_000109400283/?bc=100523716364",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:05.848Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -255146,6 +255593,19 @@
       "geocoded": true,
       "lat": 35.839191,
       "lon": 139.683578,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ＪＲ京浜東北線蕨駅4階建築32年-3LDK-96000",
+          "url": "https://suumo.jp/chintai/jnc_000109616645/?bc=100525352061",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:57.334Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         163
       ]
@@ -258554,6 +259014,19 @@
       "geocoded": true,
       "lat": 35.844784,
       "lon": 139.784515,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ブルーウッド草加-2LDK-50000",
+          "url": "https://suumo.jp/chintai/jnc_000017627685/?bc=100524195907",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:58:50.543Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": []
     },
     {
@@ -258926,6 +259399,19 @@
       "geocoded": true,
       "lat": 35.829945,
       "lon": 139.712173,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-メゾンジュネス-2LDK-69000",
+          "url": "https://suumo.jp/chintai/jnc_000085425893/?bc=100520835580",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:37.606Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         0
       ]
@@ -259004,6 +259490,19 @@
       "geocoded": true,
       "lat": 35.789108,
       "lon": 139.753372,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ジーライズ川口東領家-2DK-62000",
+          "url": "https://suumo.jp/chintai/jnc_000109307934/?bc=100524938395",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:57.683Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         234
       ]
@@ -259090,7 +259589,13 @@
         {
           "source": "suumo",
           "id": "suumo-木村様貸家９１５-4LDK-120000",
-          "url": "https://suumo.jp/chintai/jnc_000109633579/?bc=100525428423"
+          "url": "https://suumo.jp/chintai/jnc_000109633579/?bc=100525428423",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:46.134Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "geocoded": true,
@@ -259135,6 +259640,19 @@
       "geocoded": true,
       "lat": 35.807705,
       "lon": 139.797791,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-メゾンアザレ-2DK-60000",
+          "url": "https://suumo.jp/chintai/jnc_000109482888/?bc=100524401999",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:16.146Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -259174,6 +259692,19 @@
       "geocoded": true,
       "lat": 35.835995,
       "lon": 139.82016,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-エステートピアゆうI-2LDK-67000",
+          "url": "https://suumo.jp/chintai/jnc_000051808387/?bc=100524642338",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:30:53.439Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -259291,6 +259822,19 @@
       "geocoded": true,
       "lat": 35.882286,
       "lon": 139.780441,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-アーバンハウス１０号館-2LDK-73000",
+          "url": "https://suumo.jp/chintai/jnc_000109556985/?bc=100525013946",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:05:08.201Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -259411,6 +259955,19 @@
       "geocoded": true,
       "lat": 35.884609,
       "lon": 139.786316,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ウィンディア柴田-2LDK-75000",
+          "url": "https://suumo.jp/chintai/jnc_000109184953/?bc=100524705727",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:42.498Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": []
     },
     {
@@ -259447,7 +260004,13 @@
         {
           "source": "suumo",
           "id": "suumo-パークヴィラ越谷-3LDK-74800",
-          "url": "https://suumo.jp/chintai/jnc_000061574249/?bc=100521823296"
+          "url": "https://suumo.jp/chintai/jnc_000061574249/?bc=100521823296",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:57:15.075Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "status": "active",
@@ -259568,6 +260131,19 @@
       "geocoded": true,
       "lat": 35.866741,
       "lon": 139.788803,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ニックハイム南越谷-3SLDK-90000",
+          "url": "https://suumo.jp/chintai/jnc_000109556990/?bc=100525040377",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:32.974Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -259685,6 +260261,19 @@
       "geocoded": true,
       "lat": 35.863461,
       "lon": 139.760406,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-埼玉高速鉄道戸塚安行駅3階建築38年-3LDK-91000",
+          "url": "https://suumo.jp/chintai/jnc_000109640321/?bc=100525182921",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:26.876Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         234
       ]
@@ -259763,6 +260352,19 @@
       "geocoded": true,
       "lat": 35.843731,
       "lon": 139.718094,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-安行領根岸貸家-3LDK-85000",
+          "url": "https://suumo.jp/chintai/jnc_000055184472/?bc=100525413121",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:19.621Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -259997,6 +260599,19 @@
       "geocoded": true,
       "lat": 35.841118,
       "lon": 139.741226,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-桜町3丁目貸家-3LDK-80000",
+          "url": "https://suumo.jp/chintai/jnc_000108806224/?bc=100524671170",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:55.940Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -260036,6 +260651,19 @@
       "geocoded": true,
       "lat": 35.825546,
       "lon": 139.753662,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-埼玉高速鉄道鳩ヶ谷駅3階建築38年-2LDK-85000",
+          "url": "https://suumo.jp/chintai/jnc_000108198569/?bc=100514795854",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:11.244Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         234
       ]
@@ -260146,6 +260774,19 @@
       "geocoded": true,
       "lat": 35.834511,
       "lon": 139.824036,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-浅井コーポ-2DK-59000",
+          "url": "https://suumo.jp/chintai/jnc_000109160000/?bc=100521830417",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:19.447Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": []
     },
     {
@@ -260191,7 +260832,13 @@
         {
           "source": "suumo",
           "id": "suumo-東武伊勢崎線獨協大学前駅2階建築39年-3DK-65000",
-          "url": "https://suumo.jp/chintai/jnc_000109441014/?bc=100524031475"
+          "url": "https://suumo.jp/chintai/jnc_000109441014/?bc=100524031475",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T06:59:23.351Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "geocoded": true,
@@ -260617,6 +261264,19 @@
       "geocoded": true,
       "lat": 35.894302,
       "lon": 139.797501,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-東武伊勢崎線越谷駅2階建築10年-2LDK-100000",
+          "url": "https://suumo.jp/chintai/jnc_000109355154/?bc=100523397300",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:02:52.676Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         1033
       ]
@@ -260695,6 +261355,19 @@
       "geocoded": true,
       "lat": 35.82225,
       "lon": 139.813583,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-東武伊勢崎線草加駅5階建築34年-2LDK-79000",
+          "url": "https://suumo.jp/chintai/jnc_000109441019/?bc=100182819274",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:37.786Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         735
       ]
@@ -260848,6 +261521,19 @@
       "geocoded": true,
       "lat": 35.872749,
       "lon": 139.797821,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-シャトレーハヤマ-2LDK-78000",
+          "url": "https://suumo.jp/chintai/jnc_000108901527/?bc=100523683648",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:08.637Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": []
     },
     {
@@ -260878,6 +261564,19 @@
       "geocoded": true,
       "lat": 35.891815,
       "lon": 139.819427,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-ポラリス弐番館-2LDK-87000",
+          "url": "https://suumo.jp/chintai/jnc_000103836729/?bc=100513309823",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:04:34.897Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": []
     },
     {
@@ -260954,6 +261653,19 @@
       "geocoded": true,
       "lat": 35.841564,
       "lon": 139.803223,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-エクセレンス松原２-2LDK-86000",
+          "url": "https://suumo.jp/chintai/jnc_000109376110/?bc=100523526675",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:06:06.850Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         0
       ]
@@ -261330,8 +262042,8 @@
           "url": "https://suumo.jp/chintai/jnc_000107209147/?bc=100505801105",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:21:50.723Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1000206046/",
+            "checkedAt": "2026-10-04T07:00:05.571Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261484,8 +262196,8 @@
           "url": "https://suumo.jp/chintai/jnc_000107789625/?bc=100511356669",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:00.594Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1000193819/",
+            "checkedAt": "2026-10-04T06:58:49.348Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261579,8 +262291,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108659314/?bc=100517912844",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:06.786Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001941217/",
+            "checkedAt": "2026-10-04T07:00:26.915Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261631,8 +262343,8 @@
           "url": "https://suumo.jp/chintai/jnc_000041743585/?bc=100505703526",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:09.719Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001929548/",
+            "checkedAt": "2026-10-04T07:04:15.709Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261683,8 +262395,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108773817/?bc=100521405191",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:12.612Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1000723491/",
+            "checkedAt": "2026-10-04T07:04:33.640Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261735,8 +262447,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108437217/?bc=100516224969",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:25.559Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001496463/",
+            "checkedAt": "2026-10-04T07:04:32.608Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261780,8 +262492,8 @@
           "url": "https://suumo.jp/chintai/jnc_000109244371/?bc=100522536834",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:28.436Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001719289/",
+            "checkedAt": "2026-10-04T06:58:27.952Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -261817,6 +262529,9 @@
       },
       "building": {
         "floor": "1階",
+        "conditions": [
+          "ペット相談"
+        ],
         "features": [
           "バストイレ別、バルコニー、エアコン、ガスコンロ対応、クロゼット、フローリング、TVインターホン、室内洗濯置、シューズボックス、南向き、角住戸、温水洗浄便座、洗面所独立、洗面化粧台、2口コンロ、CATV、即入居可、礼金不要、敷金不要、ペット相談、二人入居相談、テラス、内装リフォーム済、2駅利用可、リノベーション、敷金・礼金不要",
           "-",
@@ -261824,9 +262539,6 @@
           "1ヶ月",
           "保証会社利用必 初回：30％~(最低20 000円)、月額：1.5％または年払い：15 000円",
           "合計9.89万円（内訳：室内クリーリング費5.39万円 鍵交換代4.5万円）"
-        ],
-        "conditions": [
-          "ペット相談"
         ],
         "structure": "軽量鉄骨"
       },
@@ -261838,34 +262550,16 @@
         "monthlyYen": 8000,
         "raw": "敷地内8000円"
       },
-      "status": "active",
-      "firstSeenAt": "2026-09-05T03:10:25.351Z",
-      "lastSeenAt": null,
-      "soldAt": null,
-      "sourceListings": [
-        {
-          "source": "suumo",
-          "id": "suumo-コーポIA弐番館-3DK-65000",
-          "url": "https://suumo.jp/chintai/jnc_000099986648/?bc=100460982635"
-        },
-        {
-          "source": "suumo",
-          "id": "suumo-コーポIA壱番館-3DK-65000",
-          "url": "https://suumo.jp/chintai/jnc_000097650046/?bc=100485506857",
-          "availability": {
-            "state": "listed",
-            "checkedAt": "2026-10-02T14:22:32.039Z",
-            "evidence": "HTTP 200 · ad page still shown",
-            "method": "probe"
-          }
-        }
-      ],
       "tenancy": {
         "availableFrom": "即",
         "immediateMoveIn": true,
         "leaseMonths": 24,
         "leaseType": "regular"
       },
+      "status": "active",
+      "firstSeenAt": "2026-09-05T03:10:25.351Z",
+      "lastSeenAt": null,
+      "soldAt": null,
       "geocoded": true,
       "lat": 35.836708,
       "lon": 139.810501,
@@ -261933,8 +262627,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108144130/?bc=100514310336",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:41.972Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1000839600/",
+            "checkedAt": "2026-10-04T07:01:46.357Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262031,8 +262725,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108437215/?bc=100477499363",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:51.708Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001610689/",
+            "checkedAt": "2026-10-04T07:06:36.908Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262133,8 +262827,8 @@
           "url": "https://suumo.jp/chintai/jnc_000107393483/?bc=100508328342",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:22:56.503Z",
-            "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+            "checkedAt": "2026-10-04T07:03:26.602Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262192,7 +262886,13 @@
         {
           "source": "suumo",
           "id": "suumo-シャイン関根-3DK-73000",
-          "url": "https://suumo.jp/chintai/jnc_000107697441/?bc=100512317446"
+          "url": "https://suumo.jp/chintai/jnc_000107697441/?bc=100512317446",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:03:10.966Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
         }
       ],
       "geocoded": true,
@@ -262237,8 +262937,8 @@
           "url": "https://suumo.jp/chintai/jnc_000107067789/?bc=100506065526",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:02.594Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001010398/",
+            "checkedAt": "2026-10-04T07:03:57.975Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262382,8 +263082,8 @@
           "url": "https://suumo.jp/chintai/jnc_000100875495/?bc=100279267743",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:11.955Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1002123495/",
+            "checkedAt": "2026-10-04T07:00:24.973Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262427,8 +263127,8 @@
           "url": "https://suumo.jp/chintai/jnc_000094171243/?bc=100513325750",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:14.942Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1002066992/",
+            "checkedAt": "2026-10-04T07:05:44.409Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262529,8 +263229,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108397400/?bc=100516021418",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:30.877Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1000093529/",
+            "checkedAt": "2026-10-04T06:57:10.742Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262574,8 +263274,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108865346/?bc=100519645772",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:39.281Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001073388/",
+            "checkedAt": "2026-10-04T07:05:49.277Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262624,8 +263324,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108916399/?bc=100520933477",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:42.209Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1000513407/",
+            "checkedAt": "2026-10-04T07:05:58.633Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -262669,8 +263369,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108992903/?bc=100520610141",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:23:44.920Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1001474900/",
+            "checkedAt": "2026-10-04T07:00:48.911Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263165,8 +263865,8 @@
           "url": "https://suumo.jp/chintai/jnc_000073918473/?bc=100185576747",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:24:22.006Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1000212722/",
+            "checkedAt": "2026-10-04T06:56:53.771Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263313,8 +264013,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108715537/?bc=100518698929",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:24:33.972Z",
-            "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+            "checkedAt": "2026-10-04T06:59:31.584Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263389,8 +264089,8 @@
           "url": "https://suumo.jp/chintai/jnc_000085901694/?bc=100514255854",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:24:37.841Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1001208563/",
+            "checkedAt": "2026-10-04T07:02:21.425Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263524,8 +264224,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108791223/?bc=100519043012",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:24:57.283Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1000719371/",
+            "checkedAt": "2026-10-04T06:56:52.709Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263574,8 +264274,8 @@
           "url": "https://suumo.jp/chintai/jnc_000095129336/?bc=100519918351",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:25:00.202Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1001098239/",
+            "checkedAt": "2026-10-04T06:59:15.677Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263619,8 +264319,8 @@
           "url": "https://suumo.jp/chintai/jnc_000109057285/?bc=100521003715",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:25:03.140Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1000600899/",
+            "checkedAt": "2026-10-04T07:05:37.650Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -263808,8 +264508,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108941776/?bc=100519075551",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:25:07.367Z",
-            "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+            "checkedAt": "2026-10-04T07:04:14.605Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -264016,8 +264716,8 @@
           "url": "https://suumo.jp/chintai/jnc_000079132790/?bc=100514173276",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:25:23.293Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11221/to_1002565196/",
+            "checkedAt": "2026-10-04T07:06:20.618Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -264643,8 +265343,8 @@
           "url": "https://suumo.jp/chintai/jnc_000106807126/?bc=100504127163",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:26:08.625Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1001594596/",
+            "checkedAt": "2026-10-04T07:04:57.219Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -264695,8 +265395,8 @@
           "url": "https://suumo.jp/chintai/jnc_000109047834/?bc=100513262973",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:26:11.294Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1000585590/",
+            "checkedAt": "2026-10-04T06:57:43.624Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -265088,8 +265788,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108053787/?bc=100513525120",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:26:23.827Z",
-            "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+            "checkedAt": "2026-10-04T07:05:44.551Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -265346,6 +266046,19 @@
       "geocoded": true,
       "lat": 35.879154,
       "lon": 139.78302,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-赤山町４丁目貸家II-3LDK-140000",
+          "url": "https://suumo.jp/chintai/jnc_000108948078/?bc=100502585122",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:00:55.842Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         13
       ]
@@ -265392,8 +266105,8 @@
           "url": "https://suumo.jp/chintai/jnc_000108589495/?bc=100517388969",
           "availability": {
             "state": "gone",
-            "checkedAt": "2026-10-02T14:26:35.808Z",
-            "evidence": "redirected off the ad page to /library/tf_11/sc_11222/to_1001977471/",
+            "checkedAt": "2026-10-04T06:58:21.481Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
             "method": "probe"
           }
         }
@@ -265437,6 +266150,19 @@
       "geocoded": true,
       "lat": 35.86628,
       "lon": 139.802902,
+      "sourceListings": [
+        {
+          "source": "suumo",
+          "id": "suumo-東武伊勢崎線蒲生駅3階建築34年-3DK-66000",
+          "url": "https://suumo.jp/chintai/jnc_000108666356/?bc=100517972886",
+          "availability": {
+            "state": "gone",
+            "checkedAt": "2026-10-04T07:01:41.594Z",
+            "evidence": "detail page redirected off the ad page (detail:enrich)",
+            "method": "probe"
+          }
+        }
+      ],
       "attributeIds": [
         1149
       ]
