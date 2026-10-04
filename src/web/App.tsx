@@ -86,6 +86,12 @@ export function App({ data }: { data: WebData }) {
     return targetPoi ? [targetPoi, ...mosques] : [...mosques];
   }, [catalog, selection, targetPoi]);
 
+  /** Walking knobs for the map card's distance list. */
+  const walking = useMemo(
+    () => ({ speedMPerMin: config.walkSpeedMPerMin, detourFactor: config.detourFactor, includeHoikuen: config.includeHoikuen }),
+    [config.walkSpeedMPerMin, config.detourFactor, config.includeHoikuen],
+  );
+
   /** Listings with proximities resolved against the current place selection. */
   const resolved = useMemo(() => {
     const allowedSets = selectionAllowedSets(selection);
@@ -360,6 +366,7 @@ export function App({ data }: { data: WebData }) {
             ringCenters={ringCenters}
             ringMetresPerMinute={travelSpeed(config) / config.detourFactor}
             travelMode={config.travelMode}
+            walking={walking}
           />
           <ListingTable
             items={filtered}

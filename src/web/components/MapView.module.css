@@ -63,7 +63,8 @@
   margin: -4px -4px 9px;
 }
 
-.popupGallery > div {
+/* The photo stage only; the tab row below it keeps its own height. */
+.popupGallery > div:first-child {
   aspect-ratio: auto;
   height: 140px;
 }
@@ -131,13 +132,70 @@
   font-weight: 400;
 }
 
+/* Distance from the selected home to the POIs and nearest places. */
+.popupDistances {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 3px 10px;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--rs-slate-200);
+  list-style: none;
+}
+
+.popupDistances li {
+  display: contents;
+  color: var(--rs-slate-700);
+  font-size: 11px;
+}
+
+.distanceLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distanceLabel small {
+  margin-left: 5px;
+  color: var(--rs-muted);
+  font-size: 9.5px;
+}
+
+.distanceKm,
+.distanceWalk {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.distanceWalk small {
+  color: var(--rs-muted);
+  font-size: 9px;
+}
+
+.distanceTarget > span {
+  color: var(--rs-ink-strong);
+  font-weight: 700;
+}
+
+/* The score breakdown, collapsed under the distances. */
+.popupScores {
+  padding: 4px 0;
+  border-top: 1px solid var(--rs-slate-200);
+  border-bottom: 1px solid var(--rs-slate-200);
+}
+
+.popupScores summary {
+  color: var(--rs-muted);
+  cursor: pointer;
+  font-size: 10px;
+}
+
 .popupBreakdown {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2px 12px;
-  padding: 5px 0;
-  border-top: 1px solid var(--rs-slate-200);
-  border-bottom: 1px solid var(--rs-slate-200);
+  padding: 5px 0 2px;
 }
 
 .popupBreakdown > div {
@@ -278,7 +336,7 @@
   }
 
   .popupBreakdown {
-    display: none;
+    grid-template-columns: 1fr;
   }
 }
 

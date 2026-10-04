@@ -51,6 +51,7 @@ import {
   type Extent,
 } from "../../domain/mapGeometry";
 import { listingPhotos } from "../../domain/listingPhotos";
+import { formatKm, listingDistances, type ListingDistance } from "../../domain/listingDistances";
 import { describeNote, type ListingNote, type NoteMap } from "../../domain/notes";
 import { MAX_COMPARE } from "../../domain/compare";
 import type { ScoredRow } from "../../domain/scoring";
@@ -82,11 +83,14 @@ interface Props {
   ringMetresPerMinute?: number;
   /** Travel mode label for the legend/tooltip. */
   travelMode?: "walk" | "bicycle";
+  /** Walking knobs for the selection card's distance list (always on foot, whatever the travel mode). */
+  walking?: { speedMPerMin: number; detourFactor: number; includeHoikuen: boolean };
 }
 
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
 const NO_RING_CENTERS: readonly CatalogPlace[] = [];
+const DEFAULT_WALKING = { speedMPerMin: 80, detourFactor: 1.3, includeHoikuen: false };
 /** Travel-time rings, in minutes; the last is drawn solid, the others dashed. */
 const RING_MINUTES = [5, 10, 15] as const;
 /** Rings smaller than this on screen get no minute label. */
@@ -219,6 +223,7 @@ export const MapView = memo(function MapView({
   ringCenters = NO_RING_CENTERS,
   ringMetresPerMinute,
   travelMode = "walk",
+  walking = DEFAULT_WALKING,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
@@ -299,6 +304,18 @@ export const MapView = memo(function MapView({
   const hoveredRow = hovered ? rowsByKey.get(hovered) ?? null : null;
   const selectedRow = selected ? rowsByKey.get(selected) ?? null : null;
   const selectedClusterIndex = selected == null ? -1 : selectionCluster.indexOf(selected);
+  const selectedDistances = useMemo(
+    () => selectedRow
+      ? listingDistances(selectedRow.listing, {
+          pois: reference.catalog.inCategory("poi"),
+          targetPoiId: targetPoi?.id,
+          walkSpeedMPerMin: walking.speedMPerMin,
+          detourFactor: walking.detourFactor,
+          includeHoikuen: walking.includeHoikuen,
+        })
+      : [],
+    [selectedRow, reference, targetPoi, walking.speedMPerMin, walking.detourFactor, walking.includeHoikuen],
+  );
 
   // Table-row locate buttons issue an explicit center request. Use the current
   // zoom when it is already useful; otherwise zoom in enough to identify the home.
@@ -709,6 +726,8 @@ export const MapView = memo(function MapView({
         {selectedRow && (
           <MapListingCard
             row={selectedRow}
+            distances={selectedDistances}
+            targetPoiId={targetPoi?.id}
             mark={marks[listingKey(selectedRow.listing)]}
             onSetMark={onSetMark}
             note={notes[listingKey(selectedRow.listing)]}
@@ -822,6 +841,8 @@ function MapHoverCard({ row, note, style }: { row: ScoredRow; note: ListingNote 
 
 function MapListingCard({
   row,
+  distances,
+  targetPoiId,
   mark,
   onSetMark,
   note,
@@ -835,6 +856,8 @@ function MapListingCard({
   onClose,
 }: {
   row: ScoredRow;
+  distances: readonly ListingDistance[];
+  targetPoiId: string | undefined;
   mark: ListingMark | undefined;
   onSetMark: (key: string, mark: ListingMark | null) => void;
   note: ListingNote | undefined;
@@ -851,8 +874,7 @@ function MapListingCard({
   const rentPerM2 = score.parts.find((part) => part.key === "rentPerM2")?.value;
   const rankedParts = score.parts
     .filter((part) => part.weight > 0 && part.score != null)
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 5);
+    .sort((a, b) => b.weight - a.weight);
   const label = (key: string) =>
     [...SCORE_PARAMETERS, ...FEATURE_PARAMETERS].find((meta) => meta.key === key)?.label ?? key;
 
@@ -883,14 +905,38 @@ function MapListingCard({
         <strong>{listing.layout ?? "—"}<small>layout</small></strong>
         <strong>{rentPerM2 != null ? `¥${Math.round(rentPerM2).toLocaleString()}` : "—"}<small>/㎡/month</small></strong>
       </div>
-      <div className={styles.popupBreakdown}>
-        {rankedParts.map((part) => (
-          <div key={part.key} title={part.detail}>
-            <span>{label(part.key)}</span>
-            <span>{part.score!.toFixed(0)} <small>×w{part.weight}</small></span>
+      {distances.length > 0 && (
+        <ul className={styles.popupDistances} aria-label="Distances">
+          {distances.map((distance) => (
+            <li key={distance.key} className={distance.key === targetPoiId ? styles.distanceTarget : undefined}>
+              <span className={styles.distanceLabel}>
+                {distance.label}
+                {distance.place && <small>{distance.place}</small>}
+              </span>
+              <span className={styles.distanceKm}>{formatKm(distance.distM)}</span>
+              <span
+                className={styles.distanceWalk}
+                title={distance.advertised ? "Walk time as advertised (徒歩分)" : "Estimated walk: straight line × detour factor at walking speed"}
+              >
+                🚶 {Math.round(distance.walkMin)} min{distance.advertised && <small> listed</small>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {rankedParts.length > 0 && (
+        <details className={styles.popupScores}>
+          <summary>Score breakdown</summary>
+          <div className={styles.popupBreakdown}>
+            {rankedParts.map((part) => (
+              <div key={part.key} title={part.detail}>
+                <span>{label(part.key)}</span>
+                <span>{part.score!.toFixed(0)} <small>×w{part.weight}</small></span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </details>
+      )}
       <p className={styles.popupAddress}>{listing.address}</p>
       {note && <p className={styles.popupNote}>📝 {describeNote(note)}</p>}
       {clusterSize > 1 && (
