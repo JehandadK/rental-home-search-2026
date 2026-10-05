@@ -435,6 +435,22 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
   Katsushika median rent ¥130,000; 155 at ≤¥150,000 and ≥50㎡; 143 ≥70㎡.
 - **766 tests, typecheck and production build pass.**
 
+## 2026-10-05 city-by-city, source-by-source refresh (Playwright)
+
+- Ran each collector on its own with `--city <label>` (SUUMO → AtHome →
+  RoomSpot → Nifty), rebuilding after each city. No `npm run refresh` ledger
+  entry. Every source/city stopped on two all-known pages or its last page.
+  Zero detail requests. AtHome showed its verification page once (Soka);
+  it was passed by hand.
+- Source additions (SUUMO / AtHome / RoomSpot / Nifty): Soka 5/21/53/3,
+  Koshigaya 8/10/136/6, Kawaguchi 56/8/57/21, Katsushika 21/18/0/13.
+- RoomSpot ran off the last page in Soka (7), Koshigaya (11) and Kawaguchi (6)
+  and threw, so nothing committed; re-run with `--max-pages <last page>`.
+  Kawaguchi page 7 failed the same way on a second try before the cap was used.
+- Dashboard **4894 → 4975** (+81 newly tracked: Soka 6, Koshigaya 15,
+  Kawaguchi 48, Katsushika 12). All geocoded (72 queries, 0 unresolved); none SOLD.
+- **770 tests, typecheck and production build pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
