@@ -161,12 +161,42 @@ dedup works. The list page also says so per ad: 「※他2店舗で取扱い」.
   distance), その他初期費用 (cleaning, key change… each with yen), 更新料,
   家賃保証会社等, 保険, 条件, お得条件, 備考, 入居時期 (`空予定 (2026年11月中旬)`),
   契約期間, 取引形態 (媒介/一般媒介…), 物件管理コード, **情報更新日**, **広告更新予定日**.
-- Every agent advertising the unit (取扱い店舗) with `/shop/{shop}/` links.
+- Every agent advertising the unit (取扱い店舗) with `/shop/{shop}/` links,
+  licence number and お問合せ番号 (see below).
 - `/{pref}/bld-{id}/` building link, town and station links.
 - Photos on `img.chintai.net` (30 on the sampled ad) with alt text naming the room
   (外観写真, 間取り図, 居室…).
 - Nearby alternatives (家賃がより安い, 駅からより近い) with keys: a free
   discovery feed.
+
+### Where an ad comes from (checked on 12 ads from 12 agents, 2026-10-04)
+CHINTAI does **not** say where a listing came from. No ad shows a source, 元付
+(originating agent), 管理会社, landlord, REINS or another portal. Agents post
+directly; an ad shows only who advertises it:
+
+- 取扱い店舗: the advertising agent with its licence number (国土交通大臣(7)第5338号
+  for every Able store; e.g. 国土交通大臣免許（1）第9925号 タウンハウジング埼玉).
+  Several `C` agents are Able franchises (エイブルネットワーク加須店, 足利店).
+- 取引形態: `媒介` on all five Able-store ads, `一般媒介` on all seven other-agent
+  ads. Either way the advertiser is a broker, so an upstream owner or manager
+  exists but is not named.
+- **お問合せ番号** (enquiry number, in the 取扱い店舗 block) is the agent's own
+  reference for the unit:
+  - Able stores: store (last 3 digits of the shop code) + property (last 6
+    digits of the property code) + room number, e.g. `050562987203` is store
+    050, property 562987, room 203. On all five samples the room number's
+    first digit matched the ad's floor, so this likely exposes the 部屋番号,
+    which the page shows nowhere else.
+  - Other agents: usually the tail of their own property code (`215216` in
+    `C01009455`-`087254000215216`, `691970` in `…094443000691970`), or their
+    own stock code (タウンハウジング埼玉: `R01130-115437`).
+  It is not an upstream source either, but if an agent reuses the same stock
+  code on other portals it could serve as a cross-portal matching key
+  (unverified).
+
+Cross-portal matching therefore still rests on address, coordinates, layout,
+area and rent. Nifty's saved detail pages (551 in `data/nifty_detail_raw.json`)
+are the same: they name only the handling agent, with no originating portal.
 
 ### Ended or unknown ad
 HTTP **404** with title 「該当する物件情報の掲載は、終了しました」 on the same URL
