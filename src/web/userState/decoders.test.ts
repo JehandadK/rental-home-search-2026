@@ -77,6 +77,15 @@ describe("user-state decoders", () => {
     expect(decodePlaceSelection(legacy, DEFAULT_SELECTION).byParameter).toMatchObject(legacy.byParameter);
   });
 
+  it("keep the saved new-listing window within 1–14 days", () => {
+    expect(decodeFilters({ newOnly: true, newWithinDays: 5 })).toMatchObject({ newOnly: true, newWithinDays: 5 });
+    expect(decodeFilters({ newWithinDays: 0 }).newWithinDays).toBe(1);
+    expect(decodeFilters({ newWithinDays: 99 }).newWithinDays).toBe(14);
+    expect(decodeFilters({ newWithinDays: "x" }).newWithinDays).toBe(EMPTY_FILTERS.newWithinDays);
+    // Filters saved before the window existed get the 14-day default.
+    expect(decodeFilters({ newOnly: true }).newWithinDays).toBe(14);
+  });
+
   it("fall back to defaults for missing or corrupt values", () => {
     for (const raw of CORRUPT) {
       // Config and filters keep unknown extra keys, as the pre-M6 spread did; only the shape is checked.

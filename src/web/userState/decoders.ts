@@ -5,6 +5,7 @@
  * where that is safe.
  */
 import { EMPTY_FILTERS, type ListingFilters } from "../../domain/filters";
+import { clampNewWindowDays } from "../../domain/lifecycle";
 import { LISTING_MARKS, type MarkMap } from "../../domain/marks";
 import { isViewingTime, type ListingNote, type NoteMap } from "../../domain/notes";
 import { MAX_COMPARE } from "../../domain/compare";
@@ -43,7 +44,9 @@ export function decodeScoringConfig(raw: unknown): ScoringConfig {
 }
 
 export function decodeFilters(raw: unknown): ListingFilters {
-  return isPlainObject(raw) ? { ...EMPTY_FILTERS, ...raw } : EMPTY_FILTERS;
+  if (!isPlainObject(raw)) return EMPTY_FILTERS;
+  const filters = { ...EMPTY_FILTERS, ...raw } as ListingFilters;
+  return { ...filters, newWithinDays: clampNewWindowDays(filters.newWithinDays) };
 }
 
 const MARK_KEYS = new Set<string>(LISTING_MARKS.map((mark) => mark.key));

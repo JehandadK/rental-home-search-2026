@@ -13,6 +13,7 @@ import {
   layoutOptions,
   type ListingFilters,
 } from "../../domain/filters";
+import { MAX_NEW_WINDOW_DAYS, MIN_NEW_WINDOW_DAYS, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../../domain/marks";
 import { listingKey } from "../../domain/listingKey";
 import type { EnrichedListing } from "../../domain/types";
@@ -45,7 +46,8 @@ function statusSummary(filters: ListingFilters): string {
   const parts: string[] = [];
   if (filters.status !== "all") parts.push(filters.status === "active" ? "active only" : "sold only");
   if (filters.rentedOut !== "hide") parts.push(filters.rentedOut === "show" ? "+ rented out" : "rented out only");
-  if (filters.newOnly) parts.push("new only");
+  if (filters.newOnly) parts.push(`new only (${filters.newWithinDays}d)`);
+  else if (filters.newWithinDays !== NEW_LISTING_WINDOW_DAYS) parts.push(`new = ${filters.newWithinDays}d`);
   return parts.length ? parts.join(" · ") : "default";
 }
 
@@ -97,7 +99,12 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
   const [areaQuery, setAreaQuery] = useState("");
 
   const activeCount = activeFilterCount(filters);
-  const statusActive = filters.status !== "all" || filters.rentedOut !== "hide" || filters.newOnly;
+  const statusActive =
+    filters.status !== "all" ||
+    filters.rentedOut !== "hide" ||
+    filters.newOnly ||
+    filters.newWithinDays !== NEW_LISTING_WINDOW_DAYS;
+  const dayWord = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
   const markFilterLabel = MARK_FILTERS.find(({ key }) => key === filters.markFilter)?.label ?? "all";
 
   /** Decision-mark headline numbers over the current listing set. */
@@ -390,11 +397,26 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
           <button
             className={`${styles.chip} ${styles.chipNew} ${filters.newOnly ? styles.on : ""}`}
             onClick={() => onUpdate({ newOnly: !filters.newOnly })}
-            title="Only listings first seen in the last 14 days"
+            title={`Only listings first seen in the last ${dayWord(filters.newWithinDays)}`}
           >
             ✦ new only
           </button>
         </div>
+        <label className={`${styles.groupLabel} ${styles.newWindow}`}>
+          New = first seen within
+          <span className={styles.scoreVal}>{dayWord(filters.newWithinDays)}</span>
+        </label>
+        <input
+          className={styles.slider}
+          type="range"
+          min={MIN_NEW_WINDOW_DAYS}
+          max={MAX_NEW_WINDOW_DAYS}
+          step={1}
+          value={filters.newWithinDays}
+          onChange={(e) => onUpdate({ newWithinDays: Number(e.target.value) })}
+          aria-label="Days a listing counts as new"
+          title="How long after it is first seen a listing counts as new — for the new-only filter, NEW badges, map rings and the header count"
+        />
       </Section>
 
       {/* Decision marks: the user's own rulings (shortlist, taken, …) */}

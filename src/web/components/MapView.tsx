@@ -37,7 +37,7 @@ import { scoreColor } from "../../domain/scoring";
 import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
-import { isNewListing, isSold } from "../../domain/lifecycle";
+import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceCity, ReferenceModel } from "../../domain/referenceData";
@@ -89,6 +89,8 @@ interface Props {
   /** Listing keys pinned for comparison; the selection card can pin or unpin. */
   compare?: readonly string[];
   onToggleCompare?: (key: string) => void;
+  /** Days a listing counts as new after it is first seen (the green ring). */
+  newWithinDays?: number;
   /** Places to draw 5/10/15-minute travel rings around (the poi1 school target and the selected mosques). */
   ringCenters?: readonly CatalogPlace[];
   /** Straight-line metres covered per travel minute (travel speed ÷ detour factor), so a ring matches the scoring's travel-time estimate. */
@@ -205,7 +207,7 @@ const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations across Kanto; the scored stations are larger, and names appear as you zoom in" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
-  { key: "newRings", label: "New rings", title: "Green ring around listings first seen in the last 14 days" },
+  { key: "newRings", label: "New rings", title: "Green ring around new listings (see Listing status in the filters)" },
   { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
 const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true, rings: true };
@@ -285,6 +287,7 @@ export const MapView = memo(function MapView({
   notes = NO_NOTES,
   compare = NO_COMPARE,
   onToggleCompare,
+  newWithinDays = NEW_LISTING_WINDOW_DAYS,
   ringCenters = NO_RING_CENTERS,
   ringMetresPerMinute,
   travelMode = "walk",
@@ -642,6 +645,7 @@ export const MapView = memo(function MapView({
     dotsRef.current = [];
     let hoveredDot: Projected | null = null;
     let selectedDot: Projected | null = null;
+    const now = new Date();
     for (const row of drawOrder) {
       const { listing, score } = row;
       if (listing.lat == null || listing.lon == null) continue;
@@ -658,7 +662,7 @@ export const MapView = memo(function MapView({
       const candidate = mark != null && !ruledOut;
       // Sold listings recede to grey; ruled-out homes become a faded cross.
       const dimmed = sold || isRentedOut(listing);
-      const fresh = layers.newRings && isNewListing(listing);
+      const fresh = layers.newRings && isNewListing(listing, now, newWithinDays);
       if (ruledOut) {
         drawCross(ctx, x, y, radius * 0.8, hovered || selected ? 0.2 : 0.4, colors.ruledOut);
       } else if (candidate) {
@@ -846,7 +850,7 @@ export const MapView = memo(function MapView({
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, scoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, scoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, newWithinDays, ringCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).

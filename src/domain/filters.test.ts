@@ -123,6 +123,14 @@ describe("lifecycle filters", () => {
     expect(matchesListing(old, f)).toBe(false);
     expect(matchesListing(legacy, f)).toBe(false);
   });
+
+  it("'newOnly' follows the chosen window", () => {
+    const fiveDaysOld = make({ firstSeenAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() });
+    expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newOnly: true, newWithinDays: 7 })).toBe(true);
+    expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newOnly: true, newWithinDays: 3 })).toBe(false);
+    // The window alone narrows nothing until "new only" is on.
+    expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newWithinDays: 3 })).toBe(true);
+  });
 });
 
 describe("parking filters", () => {

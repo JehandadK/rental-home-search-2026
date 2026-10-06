@@ -226,7 +226,10 @@ export function App({ data }: { data: WebData }) {
   }, [compare, filtered]);
 
   /** Lifecycle headline numbers: fresh discoveries and sold stock. */
-  const { newCount, soldCount, rentedOutCount } = useMemo(() => lifecycleCounts(available), [available]);
+  const { newCount, soldCount, rentedOutCount } = useMemo(
+    () => lifecycleCounts(available, filters.newWithinDays),
+    [available, filters.newWithinDays],
+  );
 
   /** Decision-mark headline numbers: candidates shortlisted and homes ruled out. */
   const markSummary = useMemo(
@@ -367,6 +370,7 @@ export function App({ data }: { data: WebData }) {
             notes={notes}
             compare={compare}
             onToggleCompare={toggleCompare}
+            newWithinDays={filters.newWithinDays}
             ringCenters={ringCenters}
             ringMetresPerMinute={travelSpeed(config) / config.detourFactor}
             travelMode={config.travelMode}
@@ -395,6 +399,7 @@ export function App({ data }: { data: WebData }) {
             compare={compare}
             onToggleCompare={toggleCompare}
             rankMoves={rankMoves}
+            newWithinDays={filters.newWithinDays}
             emptyState={noMatches}
           />
           {compare.length > 0 && (
