@@ -5,7 +5,7 @@
  * neighbourhoods.
  */
 import type { EnrichedListing } from "./types";
-import { isNewListing, isSold } from "./lifecycle";
+import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
 import type { MarkFilter } from "./marks";
 import { isRentedOut } from "./availability";
 
@@ -61,8 +61,13 @@ export interface ListingFilters {
   status: StatusFilter;
   /** Visibility of properties rented out on every portal. */
   rentedOut: RentedOutFilter;
-  /** Keep only listings first seen within the NEW window (14 days). */
+  /** Keep only listings first seen within the NEW window. */
   newOnly: boolean;
+  /**
+   * How many days a listing counts as new after it is first seen (1–14).
+   * Drives the "new only" filter and the NEW badges, rings and count alike.
+   */
+  newWithinDays: number;
   /**
    * How the user's decision marks narrow the set. The marks themselves are
    * user state and live in their own store, so this filter is applied by the
@@ -86,6 +91,7 @@ export const EMPTY_FILTERS: ListingFilters = {
   status: "all",
   rentedOut: "hide",
   newOnly: false,
+  newWithinDays: NEW_LISTING_WINDOW_DAYS,
   markFilter: "all",
 };
 
@@ -174,7 +180,7 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
 
   if (filters.status === "active" && isSold(listing)) return false;
   if (filters.status === "sold" && !isSold(listing)) return false;
-  if (filters.newOnly && !isNewListing(listing)) return false;
+  if (filters.newOnly && !isNewListing(listing, new Date(), filters.newWithinDays)) return false;
 
   if (filters.rentedOut !== "show") {
     const rentedOut = isRentedOut(listing);

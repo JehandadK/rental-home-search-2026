@@ -18,7 +18,7 @@ import { DEFAULT_CONFIG, FEATURE_PARAMETERS, type ScoringConfig } from "../../do
 import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
-import { isNewListing, isSold } from "../../domain/lifecycle";
+import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { describeAvailability, isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
 import { listingPhotos } from "../../domain/listingPhotos";
@@ -57,6 +57,8 @@ interface Props {
   onToggleCompare?: (key: string) => void;
   /** Places each listing just moved in the score ranking (+ = up), shown briefly after a weight change. */
   rankMoves?: ReadonlyMap<string, number>;
+  /** Days a listing counts as new after it is first seen (the NEW badge). */
+  newWithinDays?: number;
   /** Shown in place of the rows when nothing matches, e.g. which filter to relax. */
   emptyState?: ReactNode;
 }
@@ -208,6 +210,7 @@ export const ListingTable = memo(function ListingTable({
   compare = NO_COMPARE,
   onToggleCompare,
   rankMoves = NO_MOVES,
+  newWithinDays = NEW_LISTING_WINDOW_DAYS,
   emptyState,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("score");
@@ -283,6 +286,7 @@ export const ListingTable = memo(function ListingTable({
   // Hovering a map marker updates this component frequently. Cache the slice
   // so those transient renders reuse the same row array.
   const visible = useMemo(() => sorted.slice(0, visibleCount), [sorted, visibleCount]);
+  const now = new Date();
   // React keys that follow a row when the order changes, so an open row (and
   // its note editor) is not remounted by a re-sort. Exact duplicate listings
   // share a listingKey; they get a numbered suffix instead.
@@ -418,7 +422,7 @@ export const ListingTable = memo(function ListingTable({
               const isSelected = key === selected;
               const sold = isSold(listing);
               const rentedOut = isRentedOut(listing);
-              const fresh = isNewListing(listing);
+              const fresh = isNewListing(listing, now, newWithinDays);
               const mark = marks[key];
               const ruledOut = isRuledOut(mark);
               const portals = referencesFor(listing);
@@ -468,7 +472,7 @@ export const ListingTable = memo(function ListingTable({
                   <td className={`${styles.left} ${styles.name}`} title={listing.address}>
                     {listing.name}
                     {fresh && (
-                      <span className={styles.badgeNew} title="First seen in the last 14 days">
+                      <span className={styles.badgeNew} title={`First seen in the last ${newWithinDays} day${newWithinDays === 1 ? "" : "s"}`}>
                         NEW
                       </span>
                     )}

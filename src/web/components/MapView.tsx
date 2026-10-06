@@ -37,7 +37,7 @@ import { scoreColor } from "../../domain/scoring";
 import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
-import { isNewListing, isSold } from "../../domain/lifecycle";
+import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { isRentedOut } from "../../domain/availability";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceCity, ReferenceModel } from "../../domain/referenceData";
@@ -89,6 +89,8 @@ interface Props {
   /** Listing keys pinned for comparison; the selection card can pin or unpin. */
   compare?: readonly string[];
   onToggleCompare?: (key: string) => void;
+  /** Days a listing counts as new after it is first seen (the green ring). */
+  newWithinDays?: number;
   /** Places to draw 5/10/15-minute travel rings around (the poi1 school target and the selected mosques). */
   ringCenters?: readonly CatalogPlace[];
   /** Straight-line metres covered per travel minute (travel speed ÷ detour factor), so a ring matches the scoring's travel-time estimate. */
@@ -132,6 +134,12 @@ interface View {
   ty: number;
 }
 
+/**
+ * The frame the projection fits the chosen areas into, in canvas units. The
+ * canvas is always HEIGHT units tall but as wide as its box allows (never
+ * narrower than WIDTH); the frame sits centred in it, so a wider screen shows
+ * more map to either side rather than a letterboxed one.
+ */
 const WIDTH = 1100;
 // Taller than wide screens need: the three cities stack north–south.
 const HEIGHT = 680;
@@ -205,7 +213,7 @@ const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations across Kanto; the scored stations are larger, and names appear as you zoom in" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
-  { key: "newRings", label: "New rings", title: "Green ring around listings first seen in the last 14 days" },
+  { key: "newRings", label: "New rings", title: "Green ring around new listings (see Listing status in the filters)" },
   { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
 const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true, rings: true };
@@ -285,6 +293,7 @@ export const MapView = memo(function MapView({
   notes = NO_NOTES,
   compare = NO_COMPARE,
   onToggleCompare,
+  newWithinDays = NEW_LISTING_WINDOW_DAYS,
   ringCenters = NO_RING_CENTERS,
   ringMetresPerMinute,
   travelMode = "walk",
@@ -299,6 +308,12 @@ export const MapView = memo(function MapView({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
   const [view, setView] = useState<View>(IDENTITY);
+  /** The canvas width in canvas units: HEIGHT × its rendered aspect ratio. */
+  const [canvasWidth, setCanvasWidth] = useState(WIDTH);
+  /** How far right of the canvas's left edge the projection frame starts. */
+  const frameShift = (canvasWidth - WIDTH) / 2;
+  const frameShiftRef = useRef(frameShift);
+  frameShiftRef.current = frameShift;
   const [dragging, setDragging] = useState(false);
   const [layers, setLayers] = useState(ALL_LAYERS);
   const [pickingAreas, setPickingAreas] = useState(false);
@@ -433,13 +448,28 @@ export const MapView = memo(function MapView({
     setView(IDENTITY);
   }, [project]);
 
-  // Compose base projection with the current view transform.
+  // Follow the canvas's rendered shape; measured before paint so the first frame is right.
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const measure = () => {
+      const { width, height } = canvas.getBoundingClientRect();
+      if (width > 0 && height > 0) setCanvasWidth(Math.max(WIDTH, Math.round((HEIGHT * width) / height)));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
+  // Compose base projection with the current view transform, then centre the frame.
   const toScreen = useCallback(
     (lat: number, lon: number) => {
       const b = project(lat, lon);
-      return { x: b.x * view.scale + view.tx, y: b.y * view.scale + view.ty };
+      return { x: b.x * view.scale + view.tx + frameShift, y: b.y * view.scale + view.ty };
     },
-    [project, view],
+    [project, view, frameShift],
   );
 
   // Open on the listings rather than the whole reference extent, once data
@@ -516,10 +546,10 @@ export const MapView = memo(function MapView({
 
     const dpr = window.devicePixelRatio || 1;
     // Resizing reallocates the backing store; only do it when the size changes.
-    if (canvas.width !== WIDTH * dpr) canvas.width = WIDTH * dpr;
+    if (canvas.width !== Math.round(canvasWidth * dpr)) canvas.width = Math.round(canvasWidth * dpr);
     if (canvas.height !== HEIGHT * dpr) canvas.height = HEIGHT * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, WIDTH, HEIGHT);
+    ctx.clearRect(0, 0, canvasWidth, HEIGHT);
     const colors = readMapColors(canvas);
 
     // Map text gets a white halo so it stays legible over dots and outlines.
@@ -540,7 +570,7 @@ export const MapView = memo(function MapView({
     const onScreen = (extent: Extent) => {
       const topLeft = toScreen(extent.maxLat, extent.minLon);
       const bottomRight = toScreen(extent.minLat, extent.maxLon);
-      return bottomRight.x >= 0 && topLeft.x <= WIDTH && bottomRight.y >= 0 && topLeft.y <= HEIGHT;
+      return bottomRight.x >= 0 && topLeft.x <= canvasWidth && bottomRight.y >= 0 && topLeft.y <= HEIGHT;
     };
     // Outlines are built once per reference as paths in base-projection pixels
     // and drawn through the view transform, so panning and zooming never
@@ -578,7 +608,7 @@ export const MapView = memo(function MapView({
       outlinesRef.current = outlines;
     }
     ctx.save();
-    ctx.setTransform(dpr * view.scale, 0, 0, dpr * view.scale, dpr * view.tx, dpr * view.ty);
+    ctx.setTransform(dpr * view.scale, 0, 0, dpr * view.scale, dpr * (view.tx + frameShift), dpr * view.ty);
     const px = 1 / view.scale;
     // Municipalities around the search area: faint fill, dashed outline.
     ctx.fillStyle = colors.neighbourFill;
@@ -621,7 +651,7 @@ export const MapView = memo(function MapView({
         const poi = center.category === "poi";
         for (const minutes of RING_MINUTES) {
           const r = ringRadiusPx(minutes, ringMetresPerMinute, basePxPerKm * view.scale);
-          if (circleOffCanvas(x, y, r, WIDTH, HEIGHT)) continue;
+          if (circleOffCanvas(x, y, r, canvasWidth, HEIGHT)) continue;
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.setLineDash(minutes === RING_MINUTES[RING_MINUTES.length - 1] ? [] : [4, 3]);
@@ -629,7 +659,7 @@ export const MapView = memo(function MapView({
           ctx.stroke();
           ctx.setLineDash([]);
           const labelY = y - r - 3;
-          if (r > RING_LABEL_MIN_RADIUS && x >= 0 && x <= WIDTH && labelY >= 8 && labelY <= HEIGHT) {
+          if (r > RING_LABEL_MIN_RADIUS && x >= 0 && x <= canvasWidth && labelY >= 8 && labelY <= HEIGHT) {
             haloText(`${minutes}′`, x, labelY, poi ? colors.ringLabel : colors.mosqueRingLabel, `10px ${FONT}`, "center");
           }
         }
@@ -642,6 +672,7 @@ export const MapView = memo(function MapView({
     dotsRef.current = [];
     let hoveredDot: Projected | null = null;
     let selectedDot: Projected | null = null;
+    const now = new Date();
     for (const row of drawOrder) {
       const { listing, score } = row;
       if (listing.lat == null || listing.lon == null) continue;
@@ -651,14 +682,14 @@ export const MapView = memo(function MapView({
       if (key === hovered) hoveredDot = { x, y, key, row };
       if (key === selected) selectedDot = { x, y, key, row };
       if (key === hovered || key === selected) continue;
-      if (x < -radius || y < -radius || x > WIDTH + radius || y > HEIGHT + radius) continue;
+      if (x < -radius || y < -radius || x > canvasWidth + radius || y > HEIGHT + radius) continue;
       const sold = isSold(listing);
       const mark = marks[key];
       const ruledOut = isRuledOut(mark);
       const candidate = mark != null && !ruledOut;
       // Sold listings recede to grey; ruled-out homes become a faded cross.
       const dimmed = sold || isRentedOut(listing);
-      const fresh = layers.newRings && isNewListing(listing);
+      const fresh = layers.newRings && isNewListing(listing, now, newWithinDays);
       if (ruledOut) {
         drawCross(ctx, x, y, radius * 0.8, hovered || selected ? 0.2 : 0.4, colors.ruledOut);
       } else if (candidate) {
@@ -712,7 +743,7 @@ export const MapView = memo(function MapView({
       }
       const left = align === "center" ? x - width / 2 : x;
       const box = { left: left - 2, top: y - size - 1, right: left + width + 2, bottom: y + 3 };
-      if (box.right < 0 || box.left > WIDTH || box.bottom < 0 || box.top > HEIGHT) return;
+      if (box.right < 0 || box.left > canvasWidth || box.bottom < 0 || box.top > HEIGHT) return;
       if (!force && placed.some((other) =>
         box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top)) return;
       placed.push(box);
@@ -732,7 +763,7 @@ export const MapView = memo(function MapView({
       const railLabels: CatalogPlace[] = [];
       for (const station of railStations) {
         const { x, y } = toScreen(station.lat, station.lon);
-        if (x < -4 || y < -4 || x > WIDTH + 4 || y > HEIGHT + 4) continue;
+        if (x < -4 || y < -4 || x > canvasWidth + 4 || y > HEIGHT + 4) continue;
         ctx.fillRect(x - half, y - half, half * 2, half * 2);
         if (half > 1.5) ctx.strokeRect(x - half, y - half, half * 2, half * 2);
         railLabels.push(station);
@@ -846,7 +877,7 @@ export const MapView = memo(function MapView({
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, scoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, hovered, selected, marks, layers, ringCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, scoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, ringCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -856,7 +887,9 @@ export const MapView = memo(function MapView({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       autoFitted.current = true;
-      const { mx, my } = canvasCoords(canvas, e.clientX, e.clientY);
+      const { mx: screenX, my } = canvasCoords(canvas, e.clientX, e.clientY);
+      // The view transform lives in frame coordinates.
+      const mx = screenX - frameShiftRef.current;
       setView((v) => {
         const factor = Math.exp(-e.deltaY * 0.0015);
         const scale = clamp(v.scale * factor, MIN_SCALE, maxScaleRef.current);
@@ -974,7 +1007,7 @@ export const MapView = memo(function MapView({
   const hoverPoint = hoveredRow && hovered !== selected && !dragging && hoveredRow.listing.lat != null && hoveredRow.listing.lon != null
     ? toScreen(hoveredRow.listing.lat, hoveredRow.listing.lon)
     : null;
-  const hoverVisible = hoverPoint && hoverPoint.x >= 0 && hoverPoint.x <= WIDTH && hoverPoint.y >= 0 && hoverPoint.y <= HEIGHT;
+  const hoverVisible = hoverPoint && hoverPoint.x >= 0 && hoverPoint.x <= canvasWidth && hoverPoint.y >= 0 && hoverPoint.y <= HEIGHT;
 
   return (
     <section className={appStyles.card}>
@@ -983,7 +1016,6 @@ export const MapView = memo(function MapView({
         <canvas
           ref={canvasRef}
           className={`${styles.canvas} ${dragging ? styles.dragging : overDot ? styles.overDot : ""}`}
-          style={{ aspectRatio: `${WIDTH} / ${HEIGHT}` }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
@@ -1036,7 +1068,7 @@ export const MapView = memo(function MapView({
             note={notes[listingKey(hoveredRow.listing)]}
             style={{
               // Centred on the dot, but clamped (in screen pixels) inside the map.
-              left: `clamp(4px, calc(${(hoverPoint.x / WIDTH) * 100}% - ${HOVER_CARD_WIDTH / 2}px), calc(100% - ${HOVER_CARD_WIDTH + 4}px))`,
+              left: `clamp(4px, calc(${(hoverPoint.x / canvasWidth) * 100}% - ${HOVER_CARD_WIDTH / 2}px), calc(100% - ${HOVER_CARD_WIDTH + 4}px))`,
               top: `${(hoverPoint.y / HEIGHT) * 100}%`,
               width: HOVER_CARD_WIDTH,
               transform: hoverPoint.y < HEIGHT * 0.25 ? "translateY(18px)" : "translateY(calc(-100% - 18px))",
@@ -1119,7 +1151,7 @@ export const MapView = memo(function MapView({
           </div>
           <div className={styles.scaleBar}>
             {/* The bar is drawn in canvas pixels; cqw converts them to the map's rendered width. */}
-            <span style={{ width: `calc(${(scaleBar.px / WIDTH) * 100} * 1cqw)` }} />
+            <span style={{ width: `calc(${(scaleBar.px / canvasWidth) * 100} * 1cqw)` }} />
             <small>{scaleBar.km < 1 ? `${scaleBar.km * 1000} m` : `${scaleBar.km} km`}</small>
           </div>
         </details>
@@ -1342,12 +1374,13 @@ function fitView(
   return { scale, tx: WIDTH / 2 - ((minX + maxX) / 2) * scale, ty: HEIGHT / 2 - ((minY + maxY) / 2) * scale };
 }
 
-/** Mouse client coords → canvas coordinate space (WIDTH×HEIGHT, pre-DPR). */
+/** Mouse client coords → canvas coordinate space (HEIGHT units tall, pre-DPR). */
 function canvasCoords(canvas: HTMLCanvasElement, clientX: number, clientY: number) {
   const rect = canvas.getBoundingClientRect();
+  const unitsPerPx = HEIGHT / rect.height;
   return {
-    mx: ((clientX - rect.left) / rect.width) * WIDTH,
-    my: ((clientY - rect.top) / rect.height) * HEIGHT,
+    mx: (clientX - rect.left) * unitsPerPx,
+    my: (clientY - rect.top) * unitsPerPx,
   };
 }
 

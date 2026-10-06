@@ -1,8 +1,5 @@
 .wrap {
   position: relative;
-  /* Never taller than the viewport: past that, wider just means scrolling. */
-  max-width: calc((100vh - 110px) * 1100 / 680);
-  margin-inline: auto;
   /* Lets overlays size things in units of the map's rendered width (cqw). */
   container-type: inline-size;
 }
@@ -10,6 +7,11 @@
 .canvas {
   display: block;
   width: 100%;
+  /*
+   * The 1100×680 frame's shape, but never taller than the viewport: past
+   * that, a wider box shows more map to the sides (MapView measures the shape).
+   */
+  height: min(calc(100cqw * 680 / 1100), calc(100vh - 110px));
   border-radius: 8px;
   background: var(--rs-map-bg);
   cursor: grab;
