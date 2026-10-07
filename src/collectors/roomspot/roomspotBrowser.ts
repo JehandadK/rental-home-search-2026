@@ -8,10 +8,13 @@ export class RoomspotBrowser {
   private tab?: BrowserTab;
   private readonly sessionId = `roomspot-scraper-${process.pid}`;
 
+  // Navigate without waiting for the load event: RoomSpot's third-party trackers
+  // (im-apps.net, clarity.ms) can hang it past the timeout although the results
+  // page itself arrives. fetchPage already polls for window.localize.
   async connect(url: string): Promise<void> {
     await this.bridge.connect();
     const result = await this.bridge.request<{ tab: BrowserTab }>("new_tab", {
-      url, active: false, wait: true, timeoutMs: 30_000, allowRedirects: true,
+      url, active: false, wait: false, timeoutMs: 30_000, allowRedirects: true,
       sessionId: this.sessionId, turn: 1,
     });
     this.tab = result.tab;
@@ -21,7 +24,7 @@ export class RoomspotBrowser {
     if (!this.tab) return this.connect(url);
     const result = await this.bridge.request<{ tab: BrowserTab }>("navigate", {
       tabId: this.tab.id, tabFence: this.tab.tabFence, incarnation: this.tab.incarnation,
-      url, wait: true, timeoutMs: 30_000, allowRedirects: true, sessionId: this.sessionId,
+      url, wait: false, timeoutMs: 30_000, allowRedirects: true, sessionId: this.sessionId,
     });
     this.tab = result.tab;
   }
