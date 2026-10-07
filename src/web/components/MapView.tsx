@@ -278,7 +278,7 @@ interface PrefectureLayer {
 
 
 export const MapView = memo(function MapView({
-  items,
+  items: allItems,
   reference,
   scoredPois,
   hovered,
@@ -324,6 +324,16 @@ export const MapView = memo(function MapView({
   const drag = useRef<{ startX: number; startY: number; view: View; moved: boolean } | null>(null);
   /** Measured label widths by font and text; measuring hundreds of names per frame adds up. */
   const labelWidths = useRef(new Map<string, number>());
+  // Listings in hidden cities are not drawn, which keeps the map light; the table still lists them.
+  // A listing whose city the reference does not know is kept: there is no area to hide it with.
+  const items = useMemo(() => {
+    const idByName = new Map(reference.cities.map((city) => [city.name, city.id]));
+    return allItems.filter(({ listing }) => {
+      const id = listing.city ? idByName.get(listing.city) : undefined;
+      return id == null || areas.has(id);
+    });
+  }, [allItems, reference, areas]);
+
   /** Boundary outlines as canvas paths, rebuilt when the reference changes. */
   const outlinesRef = useRef<{ source: unknown; project: unknown; neighbours: Path2D; focus: Path2D; borders: Path2D } | null>(null);
 
