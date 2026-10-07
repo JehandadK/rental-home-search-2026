@@ -656,3 +656,31 @@
   box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.08);
   cursor: pointer;
 }
+
+/* Shown when a locate request targets a listing in a hidden area. */
+.hiddenHint {
+  position: absolute;
+  left: 8px;
+  bottom: 40px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 999px;
+  background: rgb(var(--rs-glass) / 0.95);
+  color: var(--rs-slate-700);
+  font-size: 11px;
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.08);
+}
+
+.hiddenHint button {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
