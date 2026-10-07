@@ -314,6 +314,8 @@ export const MapView = memo(function MapView({
   const [dragging, setDragging] = useState(false);
   const [layers, setLayers] = useState(ALL_LAYERS);
   const [pickingAreas, setPickingAreas] = useState(false);
+  /** Set when a locate request targets a listing in a hidden area: the city to offer to show. */
+  const [hiddenTarget, setHiddenTarget] = useState<{ id: string; name: string } | null>(null);
   // The legend starts collapsed on narrow screens, where it would cover the map.
   const [legendInitiallyOpen] = useState(() => window.matchMedia?.(`(min-width: ${NARROW_MAX + 1}px)`).matches ?? true);
   /** True while the pointer is over a listing dot, for the pointer cursor. */
@@ -402,20 +404,20 @@ export const MapView = memo(function MapView({
       .sort((a, b) => lineCount(b) - lineCount(a));
   }, [reference, areas]);
 
-  // Mosques and private schools inside the chosen areas (plus any with a travel ring),
-  // so hidden areas stay empty: the mosque list covers all of Japan.
-  const areaPlaces = useMemo(() => {
-    const inAreas = (place: CatalogPlace) => cityLayers.some((layer) =>
-      place.lon >= layer.extent.minLon && place.lon <= layer.extent.maxLon &&
-      place.lat >= layer.extent.minLat && place.lat <= layer.extent.maxLat &&
-      layer.boundaries.some((boundary) => pointInGeometry([place.lon, place.lat], boundary.geometry)));
-    const ringed = new Set(ringCenters.map((place) => place.id));
-    const keep = (place: CatalogPlace) => ringed.has(place.id) || inAreas(place);
-    return {
-      mosques: reference.catalog.inCategory("mosque").filter(keep),
-      pois: reference.catalog.inCategory("poi").filter(keep),
-    };
-  }, [reference, cityLayers, ringCenters]);
+  // Whether a place lies inside a chosen area. Anything outside is not drawn, so hidden areas stay empty.
+  const inAreas = useCallback((place: CatalogPlace) => cityLayers.some((layer) =>
+    place.lon >= layer.extent.minLon && place.lon <= layer.extent.maxLon &&
+    place.lat >= layer.extent.minLat && place.lat <= layer.extent.maxLat &&
+    layer.boundaries.some((boundary) => pointInGeometry([place.lon, place.lat], boundary.geometry))), [cityLayers]);
+
+  // Mosques and private schools inside the chosen areas: the mosque list covers all of Japan.
+  const areaPlaces = useMemo(() => ({
+    mosques: reference.catalog.inCategory("mosque").filter(inAreas),
+    pois: reference.catalog.inCategory("poi").filter(inAreas),
+  }), [reference, inAreas]);
+  // The scored schools and the travel rings drawn around places are limited to the chosen areas too.
+  const shownScoredPois = useMemo(() => scoredPois.filter(inAreas), [scoredPois, inAreas]);
+  const shownRingCenters = useMemo(() => ringCenters.filter(inAreas), [ringCenters, inAreas]);
 
   const areaCities = useMemo((): AreaCity[] =>
     allCities.map(({ city, boundaries, extent }) => ({ city, boundaries, extent })), [allCities]);
@@ -526,6 +528,14 @@ export const MapView = memo(function MapView({
   useEffect(() => {
     if (!centerTarget || handledCenterRequest.current === centerTarget.request) return;
     handledCenterRequest.current = centerTarget.request;
+    if (!rowsByKey.has(centerTarget.key)) {
+      // The listing sits in a hidden area, so there is nothing to pan to: say so instead.
+      const cityName = allItems.find(({ listing }) => listingKey(listing) === centerTarget.key)?.listing.city;
+      const city = reference.cities.find((candidate) => candidate.name === cityName);
+      if (city) setHiddenTarget({ id: city.id, name: cityName ?? city.name });
+      return;
+    }
+    setHiddenTarget(null);
     setView((current) => {
       const scale = Math.max(current.scale, locateScale);
       const point = project(centerTarget.lat, centerTarget.lon);
@@ -537,7 +547,7 @@ export const MapView = memo(function MapView({
     });
     setSelectionCluster([]);
     canvasRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [centerTarget, project, locateScale]);
+  }, [centerTarget, project, locateScale, rowsByKey, allItems, reference]);
 
   const cycleCluster = (direction: 1 | -1) => {
     if (selectionCluster.length < 2) return;
@@ -653,7 +663,7 @@ export const MapView = memo(function MapView({
 
     // Travel-time rings under the listings: dashed at 5 and 10 minutes, solid at 15.
     if (layers.rings && ringsDrawable(ringMetresPerMinute)) {
-      for (const center of ringCenters) {
+      for (const center of shownRingCenters) {
         const { x, y } = toScreen(center.lat, center.lon);
         const poi = center.category === "poi";
         for (const minutes of RING_MINUTES) {
@@ -839,7 +849,7 @@ export const MapView = memo(function MapView({
     }
 
     // The scored private schools (every one by default) as red stars.
-    for (const poi of scoredPois) {
+    for (const poi of shownScoredPois) {
       const { x, y } = toScreen(poi.lat, poi.lon);
       drawStar(ctx, x, y, 10, colors.target);
     }
@@ -847,7 +857,7 @@ export const MapView = memo(function MapView({
     // Names, most important first. The scored schools are always named; the
     // other private schools and the mosques next, as far as they fit (they
     // crowd together when zoomed out).
-    for (const poi of scoredPois) {
+    for (const poi of shownScoredPois) {
       const { x, y } = toScreen(poi.lat, poi.lon);
       label(poi.name, x + 12, y + 4, colors.targetLabel, { font: `600 11px ${FONT}`, force: true });
     }
@@ -884,7 +894,7 @@ export const MapView = memo(function MapView({
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, scoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, ringCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, scoredPois, shownScoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, shownRingCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -1041,6 +1051,13 @@ export const MapView = memo(function MapView({
         >
           ⚙ Areas · {areas.size}
         </button>
+        {hiddenTarget && (
+          <div className={styles.hiddenHint} role="status">
+            <span>{hiddenTarget.name} is hidden on the map.</span>
+            <button type="button" onClick={() => { onSetAreas(new Set([...areas, hiddenTarget.id])); setHiddenTarget(null); }}>Show it</button>
+            <button type="button" aria-label="Dismiss" onClick={() => setHiddenTarget(null)}>×</button>
+          </div>
+        )}
         {pickingAreas && (
           <AreaPicker
             cities={areaCities}
@@ -1137,7 +1154,7 @@ export const MapView = memo(function MapView({
             <small>100</small>
           </div>
           <div className={styles.legendKeys}>
-            {scoredPois.length > 0 && <span><i className={styles.keyStar}>★</i>Scored private school</span>}
+            {shownScoredPois.length > 0 && <span><i className={styles.keyStar}>★</i>Scored private school</span>}
             {reference.catalog.inCategory("poi").length > scoredPois.length && (
               <span><i className={styles.keyStar}>☆</i>Other private school</span>
             )}
@@ -1151,7 +1168,7 @@ export const MapView = memo(function MapView({
             <span><i className={styles.keyUndecided} />Undecided</span>
             <span><i className={styles.keyRuledOut}>✕</i>Ruled out</span>
             <span><i className={styles.keyDimmed} />Sold</span>
-            {layers.rings && ringsDrawable(ringMetresPerMinute) && ringCenters.length > 0 && (
+            {layers.rings && ringsDrawable(ringMetresPerMinute) && shownRingCenters.length > 0 && (
               <span className={styles.legendNote}><i className={styles.keyRing} />Dashed rings: 5/10/15 min by {travelMode} (solid = 15) at the scoring's speed and detour</span>
             )}
           </div>
