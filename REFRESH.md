@@ -457,6 +457,33 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
   Kawaguchi 48, Katsushika 12). All geocoded (72 queries, 0 unresolved); none SOLD.
 - **770 tests, typecheck and production build pass.**
 
+## 2026-10-07 parallel per-source load (Playwright, one worktree per source)
+
+- One agent per collector, each in its own git worktree off `main` (node_modules
+  symlinked; AtHome got a copy of the warmed profile), all four cities each,
+  committing only its `data/sources/<source>.json`. Each finished branch was
+  merged into main on its own and the derived data rebuilt (`data:build`,
+  `enrich`, `data:web`) before the next, so rebuilds never conflicted.
+  Every source/city stopped on two all-known pages; zero detail requests.
+- Source additions (Soka / Koshigaya / Kawaguchi / Katsushika): Nifty 20/29/58/28
+  (29 pages), RoomSpot 15/17/0/0 (11 pages), SUUMO 9/17/3/26 (28 pages),
+  AtHome 48/121/19/101 (44 pages). AtHome showed its verification page once
+  (Soka); it was passed by hand.
+- Gotcha: RoomSpot and AtHome both timed out on their first navigation waiting
+  for the load event. The pages arrived (AtHome's homepage in 374 ms, no
+  verification page), but trackers (`b6.im-apps.net/topics`, `clarity.ms`) never
+  finish, so `load` never fires. RoomSpot now navigates with `wait: false`
+  (`fetchPage` polls for `window.localize`); AtHome waits for
+  `domcontentloaded`, which the Playwright bridge now accepts as `wait`.
+- Gotcha: the Bash sandbox blocks Chromium launch, ssh commit signing and the
+  GSI geocoder (`enrich` reports every new address as a transient failure);
+  run those outside it.
+- Archival rows **4978 → 5110** (126 newly tracked across the four merges; older
+  duplicates consolidated after the AtHome merge). Dashboard **4972 → 5108**;
+  120 rows first seen today (Soka 23, Koshigaya 22, Kawaguchi 40, Katsushika 35),
+  12 of them ≥70㎡, 59 at ≤¥150,000 and ≥50㎡. All geocoded; none SOLD.
+- **774 tests, typecheck and production build pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
