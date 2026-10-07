@@ -44,6 +44,7 @@ describe("classifyAdVisit (pages observed in the headed browser)", () => {
       finalUrl: "https://myhome.nifty.com/mansion-info/saitama/sokashi_ct/mansion_18468e53b6b63b6fbe13652b14932369/",
       title: "マイコープの詳細情報／埼玉県草加市の建物情報【ニフティ不動産】" }));
     expect(gone.state).toBe("gone");
+    expect(gone.evidence).toContain("building page /mansion-info/");
     const ad = "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_63aeb294ac273e7a9de8fb8879eba592/";
     expect(classifyAdVisit("nifty", visit({ requestedUrl: ad, finalUrl: ad, title: "ＧＲＡＮＶＥＲＩＥ 00105", text: "ほかの部屋は見つかりませんでした" })).state).toBe("listed");
   });

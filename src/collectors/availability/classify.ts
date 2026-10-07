@@ -41,6 +41,13 @@ const BLOCKED_TITLE = /認証|アクセス(が集中|制限)|Access Denied/i;
 const BUSY_TEXT = /ただいま込み合っております/;
 const GONE_TITLE = /お探しのページが見つかりません|ページが見つかりません|^エラー[｜|]/;
 
+/** Building-level pages a portal sends a taken-down ad to. They are not rental ads: a live ad URL
+ *  never points at one, so landing on one means the ad was removed (the building page stays up). */
+const BUILDING_PAGE: Record<string, RegExp> = {
+  nifty: /^\/mansion-info\//,
+  suumo: /^\/library\//,
+};
+
 const pathOf = (url: string): { host: string; path: string } | undefined => {
   try {
     const { hostname, pathname } = new URL(url);
@@ -67,8 +74,9 @@ export function classifyAdVisit(source: string, visit: AdVisit): AdVerdict {
   const requested = pathOf(visit.requestedUrl);
   const final = pathOf(visit.finalUrl);
   if (expected && requested && final && expected.test(requested.path) && !expected.test(final.path)) {
+    const building = BUILDING_PAGE[source]?.test(final.path);
     return final.host === requested.host
-      ? { state: "gone", evidence: `redirected off the ad page to ${final.path}` }
+      ? { state: "gone", evidence: `redirected off the ad page to ${building ? "the building page " : ""}${final.path}` }
       : { state: "unknown", evidence: `redirected to another site: ${final.host}` };
   }
 
