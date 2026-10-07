@@ -88,6 +88,12 @@ only inferred from absence in crawls.
   HTTP 404 「お探しのページが見つかりません」; SUUMO HTTP 404 「エラー｜SUUMO」 or a
   redirect to the building's `/library/` page; RoomSpot HTTP 404 with 掲載終了;
   Nifty a redirect from `detail_…` to the building's `/mansion-info/` page.
+  A `/mansion-info/…/mansion_<id>/` (Nifty) or `/library/…` (SUUMO) URL is a
+  **building page, not a rental ad**: portals send taken-down ads there, and the
+  live ad's breadcrumb also links to it. Stored ad URLs are always
+  `/rent/<pref>/<city>/detail_<id>/` and `/chintai/jnc_<id>/`; if you click one
+  and land on a building page, the ad is gone (run `check:availability --url
+  <ad>`), not mis-collected. Seen 2026-10-07 for 日商岩井草加マンション.
   Verification/busy pages, errors and anything unrecognised are `unknown` and
   never recorded as gone. Use `ATHOME_VERIFY_WAIT_SECONDS` to pass a check by hand.
 - Results live in `data/availability.json` (newest check wins per ad), separate
