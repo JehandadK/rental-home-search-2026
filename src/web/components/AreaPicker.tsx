@@ -43,8 +43,6 @@ interface Props {
   /** Border edges between prefectures, for the overview's outlines. */
   borders: readonly BorderSegment[];
   selected: ReadonlySet<string>;
-  /** Cities with listings on show: always drawn, so their boxes stay ticked. */
-  locked?: ReadonlySet<string>;
   onChange: (next: ReadonlySet<string>) => void;
   onReset: () => void;
   language: NameLanguage;
@@ -52,7 +50,6 @@ interface Props {
   onClose: () => void;
 }
 
-const NO_LOCKED: ReadonlySet<string> = new Set();
 const WIDTH = 300;
 const HEIGHT = 250;
 const PADDING = 6;
@@ -66,7 +63,7 @@ const COLOR_PROPERTIES = {
   hovered: "--rs-map-area-hovered",
 } as const;
 
-export function AreaPicker({ cities, borders, selected, locked = NO_LOCKED, onChange, onReset, language, onLanguage, onClose }: Props) {
+export function AreaPicker({ cities, borders, selected, onChange, onReset, language, onLanguage, onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -221,7 +218,6 @@ export function AreaPicker({ cities, borders, selected, locked = NO_LOCKED, onCh
             expanded={q !== "" || open.has(group.name)}
             onExpand={() => setOpen((current) => toggleCity(current, group.name))}
             selected={selected}
-            locked={locked}
             onChange={onChange}
             language={language}
             onHover={setHovered}
@@ -238,7 +234,6 @@ function PrefectureRow({
   expanded,
   onExpand,
   selected,
-  locked,
   onChange,
   language,
   onHover,
@@ -248,7 +243,6 @@ function PrefectureRow({
   expanded: boolean;
   onExpand: () => void;
   selected: ReadonlySet<string>;
-  locked: ReadonlySet<string>;
   onChange: (next: ReadonlySet<string>) => void;
   language: NameLanguage;
   onHover: (id: string | null) => void;
@@ -280,9 +274,8 @@ function PrefectureRow({
       {expanded && (
         <div className={styles.cities}>
           {cities.map((city) => (
-            <label key={city.id} onPointerEnter={() => onHover(city.id)} onPointerLeave={() => onHover(null)}
-              title={locked.has(city.id) ? "Has listings on show: change the Location filter to hide it" : undefined}>
-              <input type="checkbox" checked={selected.has(city.id)} disabled={locked.has(city.id)}
+            <label key={city.id} onPointerEnter={() => onHover(city.id)} onPointerLeave={() => onHover(null)}>
+              <input type="checkbox" checked={selected.has(city.id)}
                 onChange={() => onChange(toggleCity(selected, city.id))} />
               <span>{cityName(city, language)}</span>
             </label>

@@ -74,18 +74,17 @@ export function defaultAreas(cities: readonly ReferenceCity[], withListings: Rea
 
 /**
  * The cities the map draws: the saved choice (the default area when nothing
- * is saved), minus cities the reference no longer has, plus every city whose
- * listings are on show, so a city new to the data is never left off the map.
+ * is saved), minus cities the reference no longer has. A saved choice is
+ * honoured exactly, so a city with listings can be hidden to lighten the map
+ * on slower devices; its listings are still drawn as markers.
  */
 export function shownAreas(
   cities: readonly ReferenceCity[],
   saved: readonly string[] | null,
   withListings: ReadonlySet<string>,
-  onShow: ReadonlySet<string>,
 ): Set<string> {
   const known = new Set(cities.map((city) => city.id));
-  const chosen = saved == null ? defaultAreas(cities, withListings) : saved.filter((id) => known.has(id));
-  return new Set([...chosen, ...onShow]);
+  return new Set(saved == null ? defaultAreas(cities, withListings) : saved.filter((id) => known.has(id)));
 }
 
 /** How much of a prefecture is selected, for a tri-state checkbox. */
