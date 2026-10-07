@@ -31,12 +31,12 @@ describe("AtHome homepage-first collection", () => {
     expect(bridge.request.mock.calls.map(([method]) => method)).toEqual(["new_tab", "navigate"]);
     const [open, navigate] = bridge.request.mock.calls;
     expect(open).toEqual(["new_tab", expect.objectContaining({
-      url: HOME, active: false, wait: true, allowRedirects: false, timeoutMs: 30_000,
+      url: HOME, active: false, wait: "domcontentloaded", allowRedirects: false, timeoutMs: 30_000,
     }), 35_000]);
     expect(navigate).toEqual(["navigate", expect.objectContaining({
       url: SEARCH, tabId: homeTab.id, tabFence: homeTab.tabFence,
       incarnation: homeTab.incarnation, sessionId: open[1].sessionId,
-      wait: true, timeoutMs: 30_000,
+      wait: "domcontentloaded", timeoutMs: 30_000,
     }), 35_000]);
   });
 
@@ -67,7 +67,7 @@ describe("AtHome homepage-first collection", () => {
     expect(bridge.request.mock.calls.map(([method]) => method)).toEqual([
       "new_tab", "navigate", "navigate", "evaluate",
     ]);
-    expect(bridge.request.mock.calls[2][1]).toMatchObject({ tabId: 17, incarnation: SEARCH, url: NEXT_CITY, wait: true });
+    expect(bridge.request.mock.calls[2][1]).toMatchObject({ tabId: 17, incarnation: SEARCH, url: NEXT_CITY, wait: "domcontentloaded" });
     expect(bridge.request.mock.calls[3]).toEqual(["evaluate", expect.objectContaining({
       tabId: 17, incarnation: NEXT_CITY, awaitPromise: true,
       expression: expect.stringContaining("AbortSignal.timeout(20000)"),

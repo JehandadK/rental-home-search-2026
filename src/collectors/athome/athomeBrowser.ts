@@ -35,11 +35,13 @@ export class AthomeBrowser {
     this.searchReady = false;
     await this.bridge.connect();
     // Do not open a results URL directly in a fresh tab. Await the homepage
-    // load before navigating, and never replay a timed-out navigation.
+    // document before navigating, and never replay a timed-out navigation.
+    // Not the load event: AtHome's trackers (im-apps.net, clarity.ms) can hold
+    // it open indefinitely although the page itself has arrived (2026-10-07).
     const created = await this.bridge.request<{ tab: BrowserTab }>("new_tab", {
       url: HOMEPAGE_URL,
       active: false,
-      wait: true,
+      wait: "domcontentloaded",
       timeoutMs: NAVIGATION_TIMEOUT_MS,
       allowRedirects: false,
       sessionId: this.sessionId,
@@ -61,7 +63,7 @@ export class AthomeBrowser {
       tabFence: this.tab.tabFence,
       incarnation: this.tab.incarnation,
       url,
-      wait: true,
+      wait: "domcontentloaded",
       timeoutMs: NAVIGATION_TIMEOUT_MS,
       allowRedirects: true,
       sessionId: this.sessionId,

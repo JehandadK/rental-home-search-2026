@@ -17,7 +17,7 @@ import { createRequire } from "node:module";
 
 // playwright-core is resolved at runtime (not a project dependency), so type only what is used.
 interface Page {
-  goto(url: string, options: { waitUntil: "load" | "commit"; timeout: number }): Promise<{ status(): number } | null>;
+  goto(url: string, options: { waitUntil: "load" | "domcontentloaded" | "commit"; timeout: number }): Promise<{ status(): number } | null>;
   evaluate(expression: string): Promise<unknown>;
   url(): string;
   close(): Promise<void>;
@@ -98,7 +98,9 @@ export class PlaywrightBridge {
   async request<T>(method: string, params: Record<string, unknown>, timeoutMs = 120_000): Promise<T> {
     if (!this.context) throw new Error("Bridge is disconnected");
     const timeout = Number(params.timeoutMs ?? timeoutMs);
-    const waitUntil = params.wait ? "load" as const : "commit" as const;
+    // `wait: "domcontentloaded"` stops once the document is parsed, for pages whose
+    // third-party trackers keep the load event from ever firing.
+    const waitUntil = params.wait === "domcontentloaded" ? "domcontentloaded" as const : params.wait ? "load" as const : "commit" as const;
     switch (method) {
       case "new_tab": {
         const page = await this.context.newPage();
