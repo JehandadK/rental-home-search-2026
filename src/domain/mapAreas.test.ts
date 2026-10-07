@@ -34,16 +34,15 @@ describe("map areas", () => {
     expect([...defaultAreas([cities[2]])]).toEqual(["city:jp-11108"]);
   });
 
-  it("always draws the cities of the listings on show, on top of the default or a saved choice", () => {
+  it("honours a saved choice exactly, so a city with listings can be hidden", () => {
     const katsushika = city("city:jp-13122", "Katsushika", "葛飾区", "東京都", "Tokyo", "13122");
     const all = [...cities, katsushika];
     const withListings = new Set(["city:soka", "city:jp-13122"]);
-    // Nothing saved: the default already covers every city with listings.
-    expect([...shownAreas(all, null, withListings, new Set(["city:jp-13122"]))].sort()).toEqual(["city:adachi", "city:jp-13122", "city:soka"]);
-    // A choice saved before Katsushika existed still draws it while its listings show, and drops unknown ids.
-    expect([...shownAreas(all, ["city:soka", "city:gone"], withListings, new Set(["city:soka", "city:jp-13122"]))].sort()).toEqual(["city:jp-13122", "city:soka"]);
-    // Filtering Katsushika out lets a saved choice hide it again.
-    expect([...shownAreas(all, ["city:soka"], withListings, new Set(["city:soka"]))]).toEqual(["city:soka"]);
+    // Nothing saved: the default covers every city with listings.
+    expect([...shownAreas(all, null, withListings)].sort()).toEqual(["city:adachi", "city:jp-13122", "city:soka"]);
+    // A saved choice drops unknown ids and does not re-add cities that have listings.
+    expect([...shownAreas(all, ["city:soka", "city:gone"], withListings)]).toEqual(["city:soka"]);
+    expect([...shownAreas(all, [], withListings)]).toEqual([]);
   });
 
   it("finds a listing's city by its English name, skipping unnamed or unknown ones", () => {

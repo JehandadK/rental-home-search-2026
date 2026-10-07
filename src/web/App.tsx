@@ -129,8 +129,8 @@ export function App({ data }: { data: WebData }) {
     // this split, changing one row's mark rescored the entire visible market.
     [available, filters, filters.markFilter === "all" ? null : marks],
   );
-  // The map draws every city the filtered listings are in, plus the chosen areas.
-  const mapAreas = useMapAreas(reference.cities, listings, candidates);
+  // The map draws the chosen areas (by default every city the listings are in).
+  const mapAreas = useMapAreas(reference.cities, listings);
 
   const scored: ScoredRow[] = useMemo(
     () => candidates.map((listing) => ({ listing, score: scoreListing(listing, config) })),
@@ -376,7 +376,6 @@ export function App({ data }: { data: WebData }) {
             travelMode={config.travelMode}
             walking={walking}
             areas={mapAreas.areas}
-            requiredAreas={mapAreas.required}
             onSetAreas={mapAreas.setAreas}
             onResetAreas={mapAreas.resetAreas}
             language={mapAreas.language}

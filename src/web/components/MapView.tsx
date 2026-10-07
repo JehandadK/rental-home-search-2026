@@ -102,7 +102,6 @@ interface Props {
   /** City ids the map draws (the area picker changes them). */
   areas: ReadonlySet<string>;
   /** Cities whose listings are shown; always drawn, so locked in the area picker. */
-  requiredAreas?: ReadonlySet<string>;
   onSetAreas: (areas: ReadonlySet<string>) => void;
   onResetAreas: () => void;
   /** Language for city, prefecture and station names. */
@@ -113,7 +112,6 @@ interface Props {
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
 const NO_RING_CENTERS: readonly CatalogPlace[] = [];
-const NO_AREAS: ReadonlySet<string> = new Set();
 const DEFAULT_WALKING = { speedMPerMin: 80, detourFactor: 1.3, includeHoikuen: false };
 /** Travel-time rings, in minutes; the last is drawn solid, the others dashed. */
 const RING_MINUTES = [5, 10, 15] as const;
@@ -299,7 +297,6 @@ export const MapView = memo(function MapView({
   travelMode = "walk",
   walking = DEFAULT_WALKING,
   areas,
-  requiredAreas = NO_AREAS,
   onSetAreas,
   onResetAreas,
   language,
@@ -1039,7 +1036,6 @@ export const MapView = memo(function MapView({
             cities={areaCities}
             borders={borderEdges}
             selected={areas}
-            locked={requiredAreas}
             onChange={onSetAreas}
             onReset={onResetAreas}
             language={language}
