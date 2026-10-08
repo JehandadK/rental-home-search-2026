@@ -14,6 +14,8 @@ const html = '<html><body><div class="p-property"></div></body></html>';
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // An operator's shell (e.g. a refresh loop) must not change what these tests see.
+  vi.stubEnv("ATHOME_VERIFY_WAIT_SECONDS", "0");
   bridge.connect.mockResolvedValue(undefined);
   bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
     if (method === "new_tab") return { tab: homeTab };
