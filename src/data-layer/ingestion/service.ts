@@ -2,8 +2,9 @@ import type { ListingRepository, ListingSourceSnapshot } from "../contracts";
 import { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 export { canonicalJson, contentFingerprint as scrapeFingerprint } from "../contentIdentity";
 import { MANAGED_INGESTION_PROVENANCE_KEYS } from "../sourceProvenance";
-import type { DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt, SuumoDiscoveryClient, SuumoDiscoveryOptions, SuumoDiscoverySession, PortalDiscoveryClient, PortalDiscoveryOptions, PortalDiscoverySession, NativeCaptureIngestion, CaptureRunSummary } from "./contracts";
+import type { AgencyDetailOptions, AgencyDetailPlanner, DetailEnrichmentOptions, DetailEnrichmentPlanner, IngestionJournal, ScrapeSubmission, ScrapeIngestion, ScrapeIngestionReceipt, SuumoDiscoveryClient, SuumoDiscoveryOptions, SuumoDiscoverySession, PortalDiscoveryClient, PortalDiscoveryOptions, PortalDiscoverySession, NativeCaptureIngestion, CaptureRunSummary } from "./contracts";
 import { selectDetailUrls } from "./suumoDetailPolicy";
+import { selectAgencyDetailUrls } from "./portalDetailPolicy";
 import { StagedSuumoDiscovery, validateSuumoDiscoveryOptions } from "./suumoDiscovery";
 import { StagedPortalDiscovery, validatePortalOptions } from "./portalDiscovery";
 import type { SourcePolicyRegistry } from "./sourcePolicy";
@@ -15,7 +16,7 @@ export { InvalidScrapeBatchError, ScrapeReplayConflictError } from "./errors";
  * Versioned application boundary. Scrapers never choose the merge policy or read
  * source revisions; each source's rules come from its registered SourcePolicy.
  */
-export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner, SuumoDiscoveryClient, PortalDiscoveryClient, NativeCaptureIngestion {
+export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmentPlanner, AgencyDetailPlanner, SuumoDiscoveryClient, PortalDiscoveryClient, NativeCaptureIngestion {
   private readonly validate = (batch: ScrapeSubmission) => validateScrapeBatch(batch, this.policies);
 
   constructor(
@@ -25,6 +26,12 @@ export class ListingIngestionService implements ScrapeIngestion, DetailEnrichmen
 
   async planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]> {
     return selectDetailUrls(await this.repository.listSources(), options);
+  }
+
+  async planAgencyDetails(options: AgencyDetailOptions): Promise<readonly string[]> {
+    const policy = this.policies.get(options?.source);
+    if (!policy?.detailPatches) invalid("Unsupported agency detail source");
+    return selectAgencyDetailUrls(await this.repository.readSource(policy.source), options, policy.host);
   }
 
   async beginSuumoDiscovery(input: SuumoDiscoveryOptions): Promise<SuumoDiscoverySession> {

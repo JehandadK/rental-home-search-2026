@@ -20,13 +20,27 @@
   operator/diagnostic hard cap, not the normal stopping policy.
 - Capture list fields once, including fees, amenities and parking flags when
   present. Nifty now parses list cards instead of fetching each detail page.
-- Cross-source deduplication precedes optional detail selection. Default refresh
-  performs **zero detail requests**. `npm run detail:enrich -- --limit 10` opts
-  into up to 10 SUUMO detail requests, with default rent <=150000 and size >=40.
+- Refresh always tries detail pages, bounded by `--detail-limit` (default 10 per
+  portal; `0` turns them off): SUUMO's `detail:enrich` stage (rent <=150000, size
+  >=40), and AtHome/RoomSpot detail pages loaded by `scrape:athome` /
+  `scrape:roomspot` right after their list data is committed. A failed, blocked or
+  paused detail load is logged and never fails the list stage or changes the list
+  data already stored.
 - A detail fetch parses parking, lease, availability, fees, structure and amenities
   together. Valid HTML is cached; `--replay` re-parses it with zero requests.
   `--force` explicitly rechecks within the budget. Deferred URLs live in
   `data/detail-queue.json`, independent of scrape `newListingIds`.
+- AtHome and RoomSpot list pages do not name the agency. `npm run detail:athome`
+  and `npm run detail:roomspot` (default `--limit 10`) read current ads' detail
+  pages in the headed browser (`BROWSER_DRIVER=playwright` without the Chrome
+  bridge, e.g. `BROWSER_DRIVER=playwright npm run detail:roomspot -- --limit 10`)
+  for the store block only (掲載不動産会社 / 広告主情報):
+  `agency` and `agencyInfo`, added together and never overwritten or cleared.
+  Queues live in `data/<source>-detail-queue.json`; captures in
+  `data/.captures/details/`, replayed with `--replay` and zero requests. A
+  verification, block (403/429) or unrecognised page stops all requests and pauses
+  the source for an hour, doubling on repeats; `ATHOME_VERIFY_WAIT_SECONDS` lets
+  a person complete AtHome's check in the window first. Refresh never runs them.
 - Shared-address geocodes persist in `data/geocodes.json`. New results are
   checkpointed immediately, reused within the same run, and written atomically.
   No-match results expire after 7 days; transient HTTP failures are not cached.
