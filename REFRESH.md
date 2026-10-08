@@ -29,7 +29,9 @@
   `data/detail-queue.json`, independent of scrape `newListingIds`.
 - AtHome and RoomSpot list pages do not name the agency. `npm run detail:athome`
   and `npm run detail:roomspot` (default `--limit 10`) read current ads' detail
-  pages in the headed browser for the store block only (掲載不動産会社 / 広告主情報):
+  pages in the headed browser (`BROWSER_DRIVER=playwright` without the Chrome
+  bridge, e.g. `BROWSER_DRIVER=playwright npm run detail:roomspot -- --limit 10`)
+  for the store block only (掲載不動産会社 / 広告主情報):
   `agency` and `agencyInfo`, added together and never overwritten or cleared.
   Queues live in `data/<source>-detail-queue.json`; captures in
   `data/.captures/details/`, replayed with `--replay` and zero requests. A
