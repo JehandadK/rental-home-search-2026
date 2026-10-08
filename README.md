@@ -448,6 +448,12 @@ amenities together. `--replay` uses cached HTML with no requests; `--force`
 rechecks within the budget. A persistent detail queue survives later scrapes.
 The old `--all-missing` sweep is no longer supported.
 
+`detail:athome` / `detail:roomspot` do the same for the agency store, which those
+portals print only on detail pages: up to `--limit` (default 10) headed-browser page
+loads, a persistent queue, per-ad backoff, a source circuit breaker on verification
+or blocked pages, and `--replay` over cached captures. Only `agency` and
+`agencyInfo` are accepted from these pages, and a stored store is never replaced.
+
 The cities scraped and their page counts are configured at the top of
 `scripts/scrape.ts` (`CITIES`).
 

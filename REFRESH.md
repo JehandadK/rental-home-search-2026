@@ -27,6 +27,15 @@
   together. Valid HTML is cached; `--replay` re-parses it with zero requests.
   `--force` explicitly rechecks within the budget. Deferred URLs live in
   `data/detail-queue.json`, independent of scrape `newListingIds`.
+- AtHome and RoomSpot list pages do not name the agency. `npm run detail:athome`
+  and `npm run detail:roomspot` (default `--limit 10`) read current ads' detail
+  pages in the headed browser for the store block only (掲載不動産会社 / 広告主情報):
+  `agency` and `agencyInfo`, added together and never overwritten or cleared.
+  Queues live in `data/<source>-detail-queue.json`; captures in
+  `data/.captures/details/`, replayed with `--replay` and zero requests. A
+  verification, block (403/429) or unrecognised page stops all requests and pauses
+  the source for an hour, doubling on repeats; `ATHOME_VERIFY_WAIT_SECONDS` lets
+  a person complete AtHome's check in the window first. Refresh never runs them.
 - Shared-address geocodes persist in `data/geocodes.json`. New results are
   checkpointed immediately, reused within the same run, and written atomically.
   No-match results expire after 7 days; transient HTTP failures are not cached.
