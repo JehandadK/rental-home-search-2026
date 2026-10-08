@@ -6047,6 +6047,289 @@
           "roomspot": 2
         }
       }
+    },
+    {
+      "schemaVersion": 1,
+      "id": "2026-10-08T12-13-31-549Z-9fca9207",
+      "startedAt": "2026-10-08T12:13:31.549Z",
+      "updatedAt": "2026-10-08T12:17:05.700Z",
+      "status": "partial",
+      "mode": "incremental",
+      "skipNifty": false,
+      "skipRoomspot": false,
+      "limits": {
+        "pagesPerCity": 100,
+        "detailRequests": 10
+      },
+      "invocations": [
+        {
+          "startedAt": "2026-10-08T12:13:31.549Z",
+          "resume": false
+        }
+      ],
+      "beforeTotal": 5143,
+      "stages": [
+        {
+          "id": "suumo",
+          "label": "SUUMO",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:13:31.568Z",
+              "completedAt": "2026-10-08T12:14:48.913Z",
+              "durationMs": 77345,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 20
+            }
+          ],
+          "startedAt": "2026-10-08T12:13:31.568Z",
+          "completedAt": "2026-10-08T12:14:48.913Z",
+          "durationMs": 77345,
+          "exitCode": 0,
+          "discovered": 20
+        },
+        {
+          "id": "suumo-parking",
+          "label": "Legacy parking pass",
+          "status": "skipped",
+          "detail": "Disabled by refresh policy/options",
+          "attempts": []
+        },
+        {
+          "id": "athome",
+          "label": "AtHome",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:13:31.568Z",
+              "completedAt": "2026-10-08T12:15:41.442Z",
+              "durationMs": 129874,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 42
+            }
+          ],
+          "startedAt": "2026-10-08T12:13:31.568Z",
+          "completedAt": "2026-10-08T12:15:41.442Z",
+          "durationMs": 129874,
+          "exitCode": 0,
+          "discovered": 42
+        },
+        {
+          "id": "roomspot",
+          "label": "RoomSpot",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:13:31.568Z",
+              "completedAt": "2026-10-08T12:14:57.216Z",
+              "durationMs": 85648,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 11
+            }
+          ],
+          "startedAt": "2026-10-08T12:13:31.568Z",
+          "completedAt": "2026-10-08T12:14:57.216Z",
+          "durationMs": 85648,
+          "exitCode": 0,
+          "discovered": 11
+        },
+        {
+          "id": "nifty-soka",
+          "label": "Nifty Soka",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:13:31.568Z",
+              "completedAt": "2026-10-08T12:13:42.502Z",
+              "durationMs": 10934,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 1
+            }
+          ],
+          "startedAt": "2026-10-08T12:13:31.568Z",
+          "completedAt": "2026-10-08T12:13:42.502Z",
+          "durationMs": 10934,
+          "exitCode": 0,
+          "discovered": 1
+        },
+        {
+          "id": "nifty-koshigaya",
+          "label": "Nifty Koshigaya",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:13:42.523Z",
+              "completedAt": "2026-10-08T12:13:55.989Z",
+              "durationMs": 13467,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 1
+            }
+          ],
+          "startedAt": "2026-10-08T12:13:42.523Z",
+          "completedAt": "2026-10-08T12:13:55.989Z",
+          "durationMs": 13467,
+          "exitCode": 0,
+          "discovered": 1
+        },
+        {
+          "id": "nifty-kawaguchi",
+          "label": "Nifty Kawaguchi",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:13:56.009Z",
+              "completedAt": "2026-10-08T12:14:06.969Z",
+              "durationMs": 10960,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 15
+            }
+          ],
+          "startedAt": "2026-10-08T12:13:56.009Z",
+          "completedAt": "2026-10-08T12:14:06.969Z",
+          "durationMs": 10960,
+          "exitCode": 0,
+          "discovered": 15
+        },
+        {
+          "id": "nifty-katsushika",
+          "label": "Nifty Katsushika",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:14:06.988Z",
+              "completedAt": "2026-10-08T12:14:17.971Z",
+              "durationMs": 10983,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 3
+            }
+          ],
+          "startedAt": "2026-10-08T12:14:06.988Z",
+          "completedAt": "2026-10-08T12:14:17.971Z",
+          "durationMs": 10983,
+          "exitCode": 0,
+          "discovered": 3
+        },
+        {
+          "id": "nifty-import",
+          "label": "Nifty import",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:15:41.462Z",
+              "completedAt": "2026-10-08T12:15:42.071Z",
+              "durationMs": 609,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-10-08T12:15:41.462Z",
+          "completedAt": "2026-10-08T12:15:42.071Z",
+          "durationMs": 609,
+          "exitCode": 0
+        },
+        {
+          "id": "detail-enrich",
+          "label": "SUUMO details",
+          "status": "failed",
+          "detail": "> rental-home-search-2026@0.1.0 detail:enrich > tsx scripts/enrich-details.ts --limit 10 Details: 10/10 requests; 0 cache replays; 9 applied; 1 failures (1 ended ads); queue retained (2655 URLs).",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:15:42.089Z",
+              "completedAt": "2026-10-08T12:16:42.863Z",
+              "durationMs": 60775,
+              "exitCode": 2,
+              "status": "failed",
+              "detail": "> rental-home-search-2026@0.1.0 detail:enrich > tsx scripts/enrich-details.ts --limit 10 Details: 10/10 requests; 0 cache replays; 9 applied; 1 failures (1 ended ads); queue retained (2655 URLs)."
+            }
+          ],
+          "startedAt": "2026-10-08T12:15:42.089Z",
+          "completedAt": "2026-10-08T12:16:42.863Z",
+          "durationMs": 60775,
+          "exitCode": 2
+        },
+        {
+          "id": "data-build",
+          "label": "Merge/deduplicate",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:16:42.880Z",
+              "completedAt": "2026-10-08T12:16:59.534Z",
+              "durationMs": 16654,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 22
+            }
+          ],
+          "startedAt": "2026-10-08T12:16:42.880Z",
+          "completedAt": "2026-10-08T12:16:59.534Z",
+          "durationMs": 16654,
+          "exitCode": 0,
+          "discovered": 22
+        },
+        {
+          "id": "enrich",
+          "label": "Geocode/enrich",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:16:59.551Z",
+              "completedAt": "2026-10-08T12:17:04.612Z",
+              "durationMs": 5061,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-10-08T12:16:59.551Z",
+          "completedAt": "2026-10-08T12:17:04.612Z",
+          "durationMs": 5061,
+          "exitCode": 0
+        },
+        {
+          "id": "web-data",
+          "label": "Web payload",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-10-08T12:17:04.629Z",
+              "completedAt": "2026-10-08T12:17:05.618Z",
+              "durationMs": 989,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-10-08T12:17:04.629Z",
+          "completedAt": "2026-10-08T12:17:05.618Z",
+          "durationMs": 989,
+          "exitCode": 0
+        }
+      ],
+      "completedAt": "2026-10-08T12:17:05.700Z",
+      "afterTotal": 5167,
+      "netUniqueAdded": 22,
+      "duplicatesDropped": 4670,
+      "lifecycle": {
+        "continued": 5145,
+        "added": 22,
+        "sold": 0,
+        "reactivated": 0
+      },
+      "recent24h": {
+        "total": 178,
+        "bySource": {
+          "athome": 49,
+          "nifty": 51,
+          "suumo": 76,
+          "roomspot": 2
+        }
+      }
     }
   ]
 }
