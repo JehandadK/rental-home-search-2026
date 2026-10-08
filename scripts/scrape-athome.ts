@@ -14,9 +14,12 @@
  * so a failed crawl never overwrites the last good source snapshot.
  */
 import { pathToFileURL } from "node:url";
-import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
+import { recordEndedPortalAds } from "../src/storage/json/availabilityStore";
+import { loadDetailsAfterList } from "../src/collectors/enrichment/portalDetailRunner";
+import { portalDetailLoader } from "../src/collectors/enrichment/portalDetailBrowser";
 import { cachedPage } from "../src/collectors/shared/captureStore";
 import { AthomeBrowser } from "../src/collectors/athome/athomeBrowser";
 import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
@@ -41,8 +44,10 @@ export function runAthomeScrape(args: readonly string[], dependencies: PortalCol
 async function main(): Promise<void> {
   const browser = new AthomeBrowser();
   let activeCity = "";
-  await runAthomeScrape(process.argv.slice(2), {
-    client: new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR))),
+  const args = process.argv.slice(2);
+  const client = new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR)));
+  await runAthomeScrape(args, {
+    client,
     page: (meta) => cachedPage(meta, async () => {
       if (activeCity !== meta.city) {
         const url = ATHOME_COLLECTOR.cities.find((city) => city.city === meta.city)!.url;
@@ -56,6 +61,8 @@ async function main(): Promise<void> {
     log: console.log,
     close: () => browser.close(),
   });
+  // The list data is committed above; detail pages can only add to it.
+  await loadDetailsAfterList(args, { source: "athome", dataDir: DATA_DIR, client, loader: portalDetailLoader("athome"), onEnded: recordEndedPortalAds });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch((error) => {

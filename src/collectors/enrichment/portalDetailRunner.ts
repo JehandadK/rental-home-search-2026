@@ -195,3 +195,31 @@ export async function portalDetailsCli(
   if (result.blocked) console.log(`  paused until ${result.blocked.until}: ${result.blocked.reason}`);
   if (result.failed) process.exitCode = 2;
 }
+
+/**
+ * After a list crawl has committed: try the detail pages too (`--detail-limit N`,
+ * default 10; 0 skips). Never throws. A detail failure leaves the list data, already
+ * stored, exactly as the list pages gave it, and does not fail the list run.
+ */
+export async function loadDetailsAfterList(
+  args: readonly string[],
+  dependencies: Pick<PortalDetailDependencies, "source" | "dataDir" | "client" | "loader" | "onEnded">,
+  log: (message: string) => void = console.log,
+): Promise<PortalDetailResult | null> {
+  try {
+    const flag = args.indexOf("--detail-limit");
+    const limit = positiveInteger(flag >= 0 ? args[flag + 1] : undefined, 10, 0);
+    if (limit === 0) return null;
+    log(`\nLoading up to ${limit} ${dependencies.source} detail pages for the agency store…`);
+    const result = await runPortalDetails(["--limit", String(limit)], {
+      ...dependencies, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    }).finally(() => dependencies.loader.close());
+    log(`${result.source} details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} stores added; `
+      + `${result.failed} failures; ${result.ended.length} ended ads.`);
+    if (result.blocked) log(`  details paused until ${result.blocked.until}: ${result.blocked.reason}`);
+    return result;
+  } catch (error) {
+    log(`  details skipped (list data kept): ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
+}

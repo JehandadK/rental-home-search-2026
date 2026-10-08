@@ -8,7 +8,7 @@ import { JsonListingRepository } from "../../storage/json/jsonListingRepository"
 import { JsonSourceStore } from "../../storage/json/dataStore";
 import { trackingKey } from "../../domain/listingIdentity";
 import { BrowserUnavailableError } from "../shared/browserErrors";
-import { portalDetailCapturePath, portalDetailQueuePath, runPortalDetails, type PortalDetailDependencies } from "./portalDetailRunner";
+import { loadDetailsAfterList, portalDetailCapturePath, portalDetailQueuePath, runPortalDetails, type PortalDetailDependencies } from "./portalDetailRunner";
 import { classifyPortalDetailPage, portalDetailBatch, type PortalDetailCapture, type PortalDetailPage } from "./portalDetailIngestion";
 
 const now = "2026-10-08T00:00:00.000Z", listedAt = "2026-10-01T00:00:00.000Z";
@@ -189,6 +189,22 @@ describe("AtHome / RoomSpot detail loading (offline)", () => {
     const saved = await queue();
     expect(saved.blockedUntil).toBeUndefined();
     expect(saved.items.every((item: object) => !("error" in item) && !("retryAfter" in item))).toBe(true);
+  });
+
+  it("after a list crawl, tries the details but never fails the run or touches the list data", async () => {
+    await seed();
+    const bytes = await readFile(sources.sourcePath("roomspot"), "utf8");
+    const log = vi.fn();
+    load.mockRejectedValue(new BrowserUnavailableError("Playwright Chromium could not be started"));
+    expect(await loadDetailsAfterList(["--max-pages", "5"], dependencies, log)).toBeNull();
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("details skipped (list data kept)"));
+    expect(dependencies.loader.close).toHaveBeenCalled();
+    load.mockResolvedValue(page(urlOf("1"), "<p>?</p>", { title: "認証" }));
+    expect(await loadDetailsAfterList([], dependencies, log)).toMatchObject({ requests: 1, failed: 1, blocked: {} });
+    expect(await readFile(sources.sourcePath("roomspot"), "utf8")).toBe(bytes);
+    load.mockClear();
+    expect(await loadDetailsAfterList(["--detail-limit", "0"], dependencies, log)).toBeNull();
+    expect(load).not.toHaveBeenCalled();
   });
 
   it("re-reads nothing outside the portal it was asked for", async () => {

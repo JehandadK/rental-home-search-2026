@@ -20,9 +20,12 @@
   operator/diagnostic hard cap, not the normal stopping policy.
 - Capture list fields once, including fees, amenities and parking flags when
   present. Nifty now parses list cards instead of fetching each detail page.
-- Cross-source deduplication precedes optional detail selection. Default refresh
-  performs **zero detail requests**. `npm run detail:enrich -- --limit 10` opts
-  into up to 10 SUUMO detail requests, with default rent <=150000 and size >=40.
+- Refresh always tries detail pages, bounded by `--detail-limit` (default 10 per
+  portal; `0` turns them off): SUUMO's `detail:enrich` stage (rent <=150000, size
+  >=40), and AtHome/RoomSpot detail pages loaded by `scrape:athome` /
+  `scrape:roomspot` right after their list data is committed. A failed, blocked or
+  paused detail load is logged and never fails the list stage or changes the list
+  data already stored.
 - A detail fetch parses parking, lease, availability, fees, structure and amenities
   together. Valid HTML is cached; `--replay` re-parses it with zero requests.
   `--force` explicitly rechecks within the budget. Deferred URLs live in

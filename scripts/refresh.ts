@@ -46,7 +46,9 @@ const localOnly = argv.includes("--local-only");
 const flag = (name: string) => argv.includes(name) ? argv[argv.indexOf(name) + 1] : undefined;
 const onlyStage = flag("--only");
 let pageBudget = positiveInteger(flag("--max-pages"), requestedDeep ? 100 : DEFAULT_INCREMENTAL_PAGE_CEILING);
-let detailBudget = positiveInteger(flag("--detail-limit"), 0, 0);
+// Detail pages are always tried (bounded); `--detail-limit 0` turns them off. A
+// detail failure never touches the list data its collector already committed.
+let detailBudget = positiveInteger(flag("--detail-limit"), 10, 0);
 // Collectors run concurrently by default; `--concurrency 1` restores one-at-a-time order.
 const concurrency = positiveInteger(flag("--concurrency"), 4);
 
@@ -74,12 +76,12 @@ function definitions(deep: boolean, skipNifty: boolean, skipRoomspot = false): S
     // Retained only for compatibility with old checkpoints. Detail enrichment
     // now runs after all list collectors and selects cross-source unique units.
     { id: "suumo-parking", label: "Legacy parking pass", args: [], skipped: true },
-    { id: "athome", label: "AtHome", args: ["run", "scrape:athome", "--", "--max-pages", String(pageBudget), ...(deep ? ["--deep"] : [])], recoverable: true },
-    { id: "roomspot", label: "RoomSpot", args: ["run", "scrape:roomspot", "--", "--max-pages", String(pageBudget), ...(deep ? ["--deep"] : [])], recoverable: true, skipped: skipRoomspot },
+    { id: "athome", label: "AtHome", args: ["run", "scrape:athome", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...(deep ? ["--deep"] : [])], recoverable: true },
+    { id: "roomspot", label: "RoomSpot", args: ["run", "scrape:roomspot", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...(deep ? ["--deep"] : [])], recoverable: true, skipped: skipRoomspot },
     ...TARGET_CITIES.map((city) => ({ id: niftyStageId(city.label), label: `Nifty ${city.label}`, args: crawlArgs(city.nifty),
       recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } })),
     { id: "nifty-import", label: "Nifty import", args: ["run", "import:nifty"], recoverable: true, skipped: skipNifty },
-    { id: "detail-enrich", label: "Optional details", args: ["run", "detail:enrich", "--", "--limit", String(detailBudget)], recoverable: true, skipped: detailBudget === 0 },
+    { id: "detail-enrich", label: "SUUMO details", args: ["run", "detail:enrich", "--", "--limit", String(detailBudget)], recoverable: true, skipped: detailBudget === 0 },
     { id: "data-build", label: "Merge/deduplicate", args: ["run", "data:build"] },
     { id: "enrich", label: "Geocode/enrich", args: ["run", "enrich"] },
     { id: "web-data", label: "Web payload", args: ["run", "data:web"] },
@@ -243,7 +245,7 @@ if (planOnly) {
     id: d.id, label: d.label, status: d.skipped ? "skipped" as const : "pending" as const, attempts: [],
   });
   const planned = planRefresh(stages, resume);
-  console.log(`Offline plan · newest-first until 2 all-known pages (emergency ceiling ${pageBudget}/city/source) · <=${detailBudget} optional SUUMO details`);
+  console.log(`Offline plan · newest-first until 2 all-known pages (emergency ceiling ${pageBudget}/city/source) · <=${detailBudget} detail pages per portal`);
   for (const stage of stages) console.log(`${stage.id.padEnd(20)} ${planned.has(stage.id) ? localOnly && NETWORK_STAGES.has(stage.id) ? "WAIT (native browser / network collector)" : "RUN" : "REUSE / DISABLED"}`);
   process.exit(0);
 }

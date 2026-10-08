@@ -18,25 +18,14 @@ import { BACKUP_DIR, DATA_DIR, JsonSourceStore, SOURCES_DIR } from "../src/stora
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { recordEndedPortalAds } from "../src/storage/json/availabilityStore";
-import { portalDetailsCli, type PortalDetailLoader } from "../src/collectors/enrichment/portalDetailRunner";
-import { AthomeBrowser } from "../src/collectors/athome/athomeBrowser";
-import { RoomspotBrowser } from "../src/collectors/roomspot/roomspotBrowser";
-
-function loaderFor(source: "athome" | "roomspot"): PortalDetailLoader {
-  const browser = source === "athome" ? new AthomeBrowser() : new RoomspotBrowser();
-  let opened = false;
-  return {
-    load: (url) => { opened = true; return browser.readDetail(url); },
-    // Nothing to close when every page came from the capture cache.
-    close: async () => { if (opened) await browser.close(); },
-  };
-}
+import { portalDetailsCli } from "../src/collectors/enrichment/portalDetailRunner";
+import { portalDetailLoader } from "../src/collectors/enrichment/portalDetailBrowser";
 
 async function main(args: readonly string[]): Promise<void> {
   const source = args[args.indexOf("--source") + 1];
   if (!args.includes("--source") || (source !== "athome" && source !== "roomspot")) throw new Error("Usage: enrich-portal-details.ts --source athome|roomspot [--limit N] [--force] [--replay]");
   await portalDetailsCli(args, {
-    source, dataDir: DATA_DIR, loader: loaderFor(source), onEnded: recordEndedPortalAds,
+    source, dataDir: DATA_DIR, loader: portalDetailLoader(source), onEnded: recordEndedPortalAds,
     client: new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR))),
   });
 }
