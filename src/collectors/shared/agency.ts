@@ -67,7 +67,9 @@ export function splitAgencyName(printed: string): Pick<ListingAgency, "brand" | 
   const legal = name.match(LEGAL_FORM);
   if (legal?.index != null) {
     const form = SPELLED_OUT[legal[0]] ?? legal[0];
-    const before = name.slice(0, legal.index).match(/(\S+)$/)?.[1] ?? "";
+    // "Apaman Leasing 株式会社": a Latin name may be written apart from its legal form.
+    const before = name.slice(0, legal.index).match(/(\S+)$/)?.[1]
+      ?? name.slice(0, legal.index).match(/([A-Za-z][A-Za-z0-9'&.]*(?: [A-Za-z0-9'&.]+)*) $/)?.[1] ?? "";
     const rest = name.slice(legal.index + legal[0].length);
     const adjacentAfter = rest.match(/^([^\s(]+)/)?.[1] ?? "";
     const after = adjacentAfter || (rest.match(/^\s+([^\s(]+)/)?.[1] ?? "");

@@ -30,6 +30,7 @@ import type { ScoredRow } from "../domain/scoring";
 import { AddListingForm } from "./components/AddListingForm";
 import { ComparePanel } from "./components/ComparePanel";
 import { FilterPanel } from "./components/FilterPanel";
+import { buildAgencyGazetteer } from "../domain/agencyNames";
 import { ListingTable } from "./components/ListingTable";
 import { MapView } from "./components/MapView";
 import { NoMatches } from "./components/NoMatches";
@@ -131,6 +132,10 @@ export function App({ data }: { data: WebData }) {
   );
   // The map draws the chosen areas (by default every city the listings are in).
   const mapAreas = useMapAreas(reference.cities, listings);
+  // Where each agency store is: rail stations and city names, from the reference catalog.
+  const agencyGazetteer = useMemo(() => buildAgencyGazetteer(reference.cities, reference.catalog.inCategory("railStation")
+    .map((station) => ({ name: station.name, cityId: typeof station.attributes?.cityId === "string" ? station.attributes.cityId : undefined }))),
+  [reference]);
 
   const scored: ScoredRow[] = useMemo(
     () => candidates.map((listing) => ({ listing, score: scoreListing(listing, config) })),
@@ -326,6 +331,7 @@ export function App({ data }: { data: WebData }) {
             marks={marks}
             onClearMarks={clearMarks}
             matchCount={filtered.length}
+            agencyGazetteer={agencyGazetteer}
           />
           <WeightPanel
             config={config}

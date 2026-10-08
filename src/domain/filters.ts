@@ -4,7 +4,9 @@
  * an include/exclude mode, so you can focus on — or rule out — specific
  * neighbourhoods.
  */
-import type { EnrichedListing } from "./types";
+import type { EnrichedListing, ListingAgency } from "./types";
+import { agencyIdentity, agencyOf, type AgencyGazetteer } from "./agencyNames";
+import type { ReferenceCity } from "./referenceData";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
 import type { MarkFilter } from "./marks";
 import { isRentedOut } from "./availability";
@@ -39,8 +41,9 @@ export interface ListingFilters {
    */
   areaMode: AreaMode;
   /**
-   * Agencies named in the agency filter, as `agencyKey` values: a whole brand
-   * ("brand:シャーメゾンショップ") or one store ("store:ハウスコム埼玉(株)草加店").
+   * Agencies named in the agency filter, as `agencyKey` values: a whole chain
+   * ("brand:シャーメゾンショップ"), one company with all its stores
+   * ("agency:ベストハウジング") or one store ("store:ハウスコム埼玉(株)草加店").
    */
   agencies: string[];
   /**
@@ -143,59 +146,83 @@ export function areaOptions(
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([area]) => area);
 }
 
-/** Filter key for a whole brand or one store. */
-export const agencyKey = (kind: "brand" | "store", name: string): string => `${kind}:${name}`;
+/** Filter key for a whole brand, one agency (company) or one store. */
+export const agencyKey = (kind: "brand" | "agency" | "store", name: string): string => `${kind}:${name}`;
 
-/** The agency keys a listing matches: its store, and its brand when known. */
+function storeFields(listing: EnrichedListing): Pick<ListingAgency, "name" | "brand" | "company" | "branch" | "address"> | null {
+  const name = listing.agencyInfo?.name ?? listing.agency;
+  if (!name) return null;
+  const info = listing.agencyInfo;
+  return { name, brand: info?.brand ?? null, company: info?.company ?? null, branch: info?.branch ?? null, address: info?.address ?? null };
+}
+
+/** The agency keys a listing matches: its store, its company and its brand, when known. */
 export function listingAgencyKeys(listing: EnrichedListing): string[] {
-  const store = listing.agencyInfo?.name ?? listing.agency;
+  const store = storeFields(listing);
   if (!store) return [];
-  const brand = listing.agencyInfo?.brand;
-  return [agencyKey("store", store), ...(brand ? [agencyKey("brand", brand)] : [])];
+  const { agency, groupKey } = agencyOf(store);
+  return [agencyKey("store", store.name), agencyKey("agency", groupKey),
+    ...(store.brand && store.brand !== agency ? [agencyKey("brand", store.brand)] : [])];
 }
 
 export interface AgencyStoreOption {
   key: string;
   name: string;
-  /** "株式会社ベストハウジング 草加店": who the store is within its brand, else the printed name. */
-  label: string;
   branch: string | null;
-  /** Where the store's office is, e.g. "越谷市". */
-  city: string | null;
+  /** The place the branch is named after ("北越谷"), and the city the store is in. */
+  place: string | null;
+  city: ReferenceCity | null;
   count: number;
 }
 
-export interface AgencyBrandOption {
-  /** Null for stores whose brand could not be read. */
-  key: string | null;
-  brand: string;
+export interface AgencyOption {
+  key: string;
+  /** "ベストハウジング", and its English name when every part has one. */
+  agency: string;
+  agencyEn: string | null;
   count: number;
   stores: AgencyStoreOption[];
 }
 
-/** Every agency in a listing set, by brand, most listings first. */
-export function agencyOptions(listings: readonly EnrichedListing[]): AgencyBrandOption[] {
+export interface AgencyBrandOption {
+  /** Null for the agencies that belong to no chain. */
+  key: string | null;
+  brand: string | null;
+  brandEn: string | null;
+  count: number;
+  agencies: AgencyOption[];
+}
+
+/**
+ * Every agency in a listing set: chains with their member agencies, then
+ * independent agencies; each agency with its stores and where they are.
+ * Most listings first throughout.
+ */
+export function agencyOptions(listings: readonly EnrichedListing[], gazetteer: AgencyGazetteer): AgencyBrandOption[] {
   const brands = new Map<string, AgencyBrandOption>();
   for (const listing of listings) {
-    const name = listing.agencyInfo?.name ?? listing.agency;
-    if (!name) continue;
-    const brandName = listing.agencyInfo?.brand ?? null;
-    const groupId = brandName ?? "";
-    const group = brands.get(groupId) ?? { key: brandName ? agencyKey("brand", brandName) : null,
-      brand: brandName ?? "Other", count: 0, stores: [] };
-    brands.set(groupId, group);
-    group.count++;
-    let store = group.stores.find((option) => option.name === name);
-    if (!store) {
-      const label = [listing.agencyInfo?.company, listing.agencyInfo?.branch].filter(Boolean).join(" ") || name;
-      store = { key: agencyKey("store", name), name, label, branch: listing.agencyInfo?.branch ?? null,
-        city: listing.agencyInfo?.city ?? null, count: 0 };
-      group.stores.push(store);
-    }
-    store.count++;
+    const store = storeFields(listing);
+    if (!store) continue;
+    const identity = agencyIdentity(store, gazetteer);
+    const brandId = identity.brand ?? "";
+    const brand = brands.get(brandId) ?? { key: identity.brand ? agencyKey("brand", identity.brand) : null,
+      brand: identity.brand, brandEn: identity.brandEn, count: 0, agencies: [] };
+    brands.set(brandId, brand);
+    brand.count++;
+    const key = agencyKey("agency", identity.groupKey);
+    let agency = brand.agencies.find((option) => option.key === key);
+    if (!agency) brand.agencies.push(agency = { key, agency: identity.agency, agencyEn: identity.agencyEn, count: 0, stores: [] });
+    agency.count++;
+    let option = agency.stores.find((candidate) => candidate.name === store.name);
+    if (!option) agency.stores.push(option = { key: agencyKey("store", store.name), name: store.name, branch: identity.branch,
+      place: identity.place?.name ?? null, city: identity.city, count: 0 });
+    option.count++;
   }
   const byCount = <T extends { count: number }>(a: T, b: T) => b.count - a.count;
-  return [...brands.values()].map((group) => ({ ...group, stores: group.stores.sort(byCount) })).sort(byCount);
+  return [...brands.values()]
+    .map((brand) => ({ ...brand, agencies: brand.agencies.map((agency) => ({ ...agency, stores: agency.stores.sort(byCount) })).sort(byCount) }))
+    // Chains first, then the independent agencies.
+    .sort((a, b) => Number(a.key === null) - Number(b.key === null) || byCount(a, b));
 }
 
 /** All distinct cities present, in first-seen order. */

@@ -11,6 +11,7 @@ import {
   matchesListing,
   type ListingFilters,
 } from "./filters";
+import { buildAgencyGazetteer } from "./agencyNames";
 import type { EnrichedListing } from "./types";
 
 const make = (over: Partial<EnrichedListing>): EnrichedListing => ({
@@ -167,33 +168,55 @@ describe("parking filters", () => {
 });
 
 describe("agency filter", () => {
-  const store = (name: string, brand: string | null, branch: string | null, city: string | null) =>
-    ({ name, brand, company: null, branch, address: null, prefecture: null, city, phone: null, licence: null });
-  const soka = make({ id: "a", agency: "ハウスコム埼玉(株)草加店", agencyInfo: store("ハウスコム埼玉(株)草加店", "ハウスコム", "草加店", "草加市") });
-  const koshigaya = make({ id: "b", agencyInfo: store("ハウスコム(株)越谷店", "ハウスコム", "越谷店", "越谷市") });
-  const other = make({ id: "c", agency: "AnRe不動産" });
-  const unknown = make({ id: "d" });
-  const listings = [soka, koshigaya, other, unknown];
+  const info = (name: string, brand: string, company: string | null, branch: string | null, address: string | null) =>
+    ({ name, brand, company, branch, address, prefecture: null, city: null, phone: null, licence: null });
+  const sokaCity = { id: "city:soka", name: "Soka", nameLocal: "草加市", prefecture: "埼玉県" };
+  const koshigayaCity = { id: "city:koshigaya", name: "Koshigaya", nameLocal: "越谷市", prefecture: "埼玉県" };
+  const gazetteer = buildAgencyGazetteer([sokaCity, koshigayaCity], [{ name: "北越谷", cityId: "city:koshigaya" }]);
+  const branch = make({ id: "a", agencyInfo: info("シャーメゾンショップ　株式会社クイックホーム　北越谷店", "シャーメゾンショップ", "株式会社クイックホーム", "北越谷店", null) });
+  const head = make({ id: "b", agencyInfo: info("シャーメゾンショップ　株式会社クイックホーム", "シャーメゾンショップ", "株式会社クイックホーム", null, "埼玉県草加市1") });
+  const member = make({ id: "c", agencyInfo: info("シャーメゾンショップ　株式会社ベストハウジング", "シャーメゾンショップ", "株式会社ベストハウジング", null, null) });
+  const independent = make({ id: "d", agency: "AnRe不動産" });
+  const unknown = make({ id: "e" });
+  const listings = [branch, head, member, independent, unknown];
   const shown = (filters: Partial<ListingFilters>) =>
     listings.filter((listing) => matchesListing(listing, { ...EMPTY_FILTERS, ...filters })).map((listing) => listing.id);
 
-  it("includes a whole brand or single stores; unknown agencies are left out", () => {
-    expect(shown({ agencies: [agencyKey("brand", "ハウスコム")] })).toEqual(["a", "b"]);
-    expect(shown({ agencies: [agencyKey("store", "ハウスコム埼玉(株)草加店"), agencyKey("store", "AnRe不動産")] })).toEqual(["a", "c"]);
+  it("includes a chain, an agency with all its stores, or single stores; unknown agencies are left out", () => {
+    expect(shown({ agencies: [agencyKey("brand", "シャーメゾンショップ")] })).toEqual(["a", "b", "c"]);
+    expect(shown({ agencies: [agencyKey("agency", "クイックホーム")] })).toEqual(["a", "b"]);
+    // Every option the panel offers selects the listings it counts.
+    for (const brand of agencyOptions(listings, gazetteer)) for (const agency of brand.agencies) {
+      expect(shown({ agencies: [agency.key] })).toHaveLength(agency.count);
+      for (const store of agency.stores) expect(shown({ agencies: [store.key] })).toHaveLength(store.count);
+    }
+    expect(shown({ agencies: [agencyKey("store", "シャーメゾンショップ　株式会社クイックホーム　北越谷店"), agencyKey("store", "AnRe不動産")] })).toEqual(["a", "d"]);
   });
 
   it("excludes them while keeping listings with no known agency", () => {
-    expect(shown({ agencies: [agencyKey("brand", "ハウスコム")], agencyMode: "exclude" })).toEqual(["c", "d"]);
-    expect(shown({ agencyMode: "exclude" })).toEqual(["a", "b", "c", "d"]);
+    expect(shown({ agencies: [agencyKey("agency", "クイックホーム")], agencyMode: "exclude" })).toEqual(["c", "d", "e"]);
+    expect(shown({ agencyMode: "exclude" })).toEqual(["a", "b", "c", "d", "e"]);
   });
 
-  it("lists agencies by brand with their stores, most listings first", () => {
-    expect(agencyOptions([...listings, soka])).toEqual([
-      { key: "brand:ハウスコム", brand: "ハウスコム", count: 3, stores: [
-        { key: "store:ハウスコム埼玉(株)草加店", name: "ハウスコム埼玉(株)草加店", label: "草加店", branch: "草加店", city: "草加市", count: 2 },
-        { key: "store:ハウスコム(株)越谷店", name: "ハウスコム(株)越谷店", label: "越谷店", branch: "越谷店", city: "越谷市", count: 1 },
+  it("lists chains with their agencies and where each store is, then independent agencies", () => {
+    expect(agencyOptions([...listings, branch], gazetteer)).toEqual([
+      { key: "brand:シャーメゾンショップ", brand: "シャーメゾンショップ", brandEn: "Sha Maison Shop", count: 4, agencies: [
+        { key: "agency:クイックホーム", agency: "クイックホーム", agencyEn: "Quick Home Co., Ltd.", count: 3, stores: [
+          { key: "store:シャーメゾンショップ　株式会社クイックホーム　北越谷店", name: "シャーメゾンショップ　株式会社クイックホーム　北越谷店",
+            branch: "北越谷店", place: "北越谷", city: koshigayaCity, count: 2 },
+          { key: "store:シャーメゾンショップ　株式会社クイックホーム", name: "シャーメゾンショップ　株式会社クイックホーム",
+            branch: null, place: null, city: sokaCity, count: 1 },
+        ] },
+        { key: "agency:ベストハウジング", agency: "ベストハウジング", agencyEn: "Best Housing Co., Ltd.", count: 1, stores: [
+          { key: "store:シャーメゾンショップ　株式会社ベストハウジング", name: "シャーメゾンショップ　株式会社ベストハウジング",
+            branch: null, place: null, city: null, count: 1 },
+        ] },
       ] },
-      { key: null, brand: "Other", count: 1, stores: [{ key: "store:AnRe不動産", name: "AnRe不動産", label: "AnRe不動産", branch: null, city: null, count: 1 }] },
+      { key: null, brand: null, brandEn: null, count: 1, agencies: [
+        { key: "agency:AnRe不動産", agency: "AnRe不動産", agencyEn: "AnRe Real Estate", count: 1, stores: [
+          { key: "store:AnRe不動産", name: "AnRe不動産", branch: null, place: null, city: null, count: 1 },
+        ] },
+      ] },
     ]);
   });
 });

@@ -10,6 +10,7 @@ import {
   activeFilterCount,
   agencyOptions,
   areaOptions,
+  type AgencyStoreOption,
   cityOptions,
   layoutOptions,
   type ListingFilters,
@@ -19,6 +20,7 @@ import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../../domain/marks";
 import { listingKey } from "../../domain/listingKey";
 import type { EnrichedListing } from "../../domain/types";
 import { cityLabel, type ReferenceCity } from "../../domain/referenceData";
+import type { AgencyGazetteer } from "../../domain/agencyNames";
 import styles from "./FilterPanel.module.css";
 import appStyles from "../App.module.css";
 
@@ -34,7 +36,12 @@ interface Props {
   onClearMarks: () => void;
   /** How many listings survive the current filters (for the count line). */
   matchCount: number;
+  /** Stations and cities, for where each agency store is. */
+  agencyGazetteer: AgencyGazetteer;
 }
+
+/** "Best Housing Co., Ltd. · ベストハウジング"; the Japanese alone when part of the name has no English. */
+const bilingual = (en: string | null, ja: string) => (en && en !== ja ? `${en} · ${ja}` : ja);
 
 const numberOrNull = (raw: string): number | null => {
   if (raw.trim() === "") return null;
@@ -85,7 +92,7 @@ function Section({
   );
 }
 
-export function FilterPanel({ listings, cities: referenceCities, filters, onUpdate, onReset, marks, onClearMarks, matchCount }: Props) {
+export function FilterPanel({ listings, cities: referenceCities, filters, onUpdate, onReset, marks, onClearMarks, matchCount, agencyGazetteer }: Props) {
   const cities = useMemo(() => cityOptions(listings), [listings]);
   // Listings name their city in English ("Soka"); the reference catalog adds the local name.
   const cityLabels = useMemo(
@@ -98,7 +105,7 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
   // unrelated 100-area wall and making the city → neighbourhood hierarchy clear.
   const allAreas = useMemo(() => areaOptions(listings, filters.cities), [listings, filters.cities]);
   const [areaQuery, setAreaQuery] = useState("");
-  const agencies = useMemo(() => agencyOptions(listings), [listings]);
+  const agencies = useMemo(() => agencyOptions(listings, agencyGazetteer), [listings, agencyGazetteer]);
   const knownAgencyCount = useMemo(() => agencies.reduce((sum, group) => sum + group.count, 0), [agencies]);
   const [agencyQuery, setAgencyQuery] = useState("");
 
@@ -132,21 +139,36 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
     onUpdate({ areas: next });
   };
 
-  // A brand matches its stores' text too, so "草加" finds every brand with a Soka store.
+  /** "Koshigaya · 越谷 · 北越谷店": where a store is, then its branch. */
+  const storeLabel = (store: AgencyStoreOption) =>
+    [store.city ? cityLabel(store.city) : null, store.branch].filter(Boolean).join(" · ") || "main store";
+
+  // A chain or agency matches its stores' text too, so "草加" or "Soka" finds every agency with a Soka store.
   const shownAgencies = useMemo(() => {
-    const q = agencyQuery.trim();
+    const q = agencyQuery.trim().toLowerCase();
     if (!q) return agencies;
-    const hit = (...texts: (string | null)[]) => texts.some((text) => text?.includes(q));
-    return agencies.flatMap((group) => {
-      if (hit(group.brand)) return [group];
-      const stores = group.stores.filter((store) => hit(store.name, store.label, store.city));
-      return stores.length ? [{ ...group, stores }] : [];
+    const hit = (...texts: (string | null | undefined)[]) => texts.some((text) => text?.toLowerCase().includes(q));
+    const storeHit = (store: AgencyStoreOption) => hit(store.name, store.branch, store.place, store.city?.name, store.city?.nameLocal);
+    return agencies.flatMap((brand) => {
+      if (hit(brand.brand, brand.brandEn)) return [brand];
+      const kept = brand.agencies.flatMap((agency) => {
+        if (hit(agency.agency, agency.agencyEn)) return [agency];
+        const stores = agency.stores.filter(storeHit);
+        return stores.length ? [{ ...agency, stores }] : [];
+      });
+      return kept.length ? [{ ...brand, agencies: kept }] : [];
     });
   }, [agencies, agencyQuery]);
 
-  const agencyLabels = useMemo(() => new Map(agencies.flatMap((group) => [
-    ...(group.key ? [[group.key, `${group.brand} (all stores)`] as const] : []),
-    ...group.stores.map((store) => [store.key, store.name] as const),
+  // How many stores each agency has, before a search narrows its list.
+  const storeTotals = useMemo(() => new Map(agencies.flatMap((brand) => brand.agencies.map((agency) => [agency.key, agency.stores.length] as const))), [agencies]);
+
+  const agencyLabels = useMemo(() => new Map(agencies.flatMap((brand) => [
+    ...(brand.key && brand.brand ? [[brand.key, `${bilingual(brand.brandEn, brand.brand)} (all)`] as const] : []),
+    ...brand.agencies.flatMap((agency) => [
+      [agency.key, bilingual(agency.agencyEn, agency.agency)] as const,
+      ...agency.stores.map((store) => [store.key, `${agency.agencyEn ?? agency.agency} — ${storeLabel(store)}`] as const),
+    ]),
   ])), [agencies]);
 
   const toggleAgency = (key: string) => {
@@ -327,7 +349,7 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
             <div className={styles.selectedRow}>
               <span>
                 {filters.agencyMode === "include" ? "Only: " : "Not: "}
-                {filters.agencies.map((key) => agencyLabels.get(key) ?? key.replace(/^(brand|store):/, "")).join("、")}
+                {filters.agencies.map((key) => agencyLabels.get(key) ?? key.replace(/^(brand|agency|store):/, "")).join("、")}
               </span>
               <button className={styles.clearAreas} onClick={() => onUpdate({ agencies: [] })}>
                 ×
@@ -338,39 +360,54 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
           <input
             className={styles.search}
             type="search"
-            placeholder="Search agency, branch or city…"
+            placeholder="Search agency, branch or city (English or 日本語)…"
             value={agencyQuery}
             onChange={(e) => setAgencyQuery(e.target.value)}
           />
           <div className={styles.agencyList}>
-            {shownAgencies.map((group) => (
-              <div key={group.key ?? "other"} className={styles.agencyGroup}>
-                {group.key ? (
+            {shownAgencies.map((brand) => (
+              <div key={brand.key ?? "independent"} className={styles.agencyGroup}>
+                {brand.key && brand.brand && (
                   <label className={styles.areaItem}>
                     <input
                       type="checkbox"
-                      checked={filters.agencies.includes(group.key)}
-                      onChange={() => toggleAgency(group.key!)}
+                      checked={filters.agencies.includes(brand.key)}
+                      onChange={() => toggleAgency(brand.key!)}
                     />
-                    <strong>{group.brand}</strong>
-                    <span className={styles.agencyMeta}>{group.count}</span>
+                    <strong>{bilingual(brand.brandEn, brand.brand)}</strong>
+                    <span className={styles.agencyMeta}>{brand.count}</span>
                   </label>
-                ) : (
-                  <span className={styles.agencyMeta}>{group.brand}</span>
                 )}
-                {group.stores.map((store) => (
-                  <label key={store.key} className={`${styles.areaItem} ${styles.agencyStore}`} title={store.name}>
-                    <input
-                      type="checkbox"
-                      checked={filters.agencies.includes(store.key)}
-                      onChange={() => toggleAgency(store.key)}
-                    />
-                    {store.label}
-                    <span className={styles.agencyMeta}>
-                      {[store.city, store.count].filter((part) => part != null).join(" · ")}
-                    </span>
-                  </label>
-                ))}
+                {brand.agencies.map((agency) => {
+                  // One store: say where it is on the agency's own row.
+                  const single = storeTotals.get(agency.key) === 1 ? agency.stores[0] : null;
+                  return (
+                    <div key={agency.key} className={brand.key ? styles.agencyStore : undefined}>
+                      <label className={styles.areaItem} title={agency.stores.map((store) => store.name).join("\n")}>
+                        <input
+                          type="checkbox"
+                          checked={filters.agencies.includes(agency.key)}
+                          onChange={() => toggleAgency(agency.key)}
+                        />
+                        {brand.key ? bilingual(agency.agencyEn, agency.agency) : <strong>{bilingual(agency.agencyEn, agency.agency)}</strong>}
+                        <span className={styles.agencyMeta}>
+                          {[single?.city ? cityLabel(single.city) : null, agency.count].filter((part) => part != null).join(" · ")}
+                        </span>
+                      </label>
+                      {!single && agency.stores.map((store) => (
+                        <label key={store.key} className={`${styles.areaItem} ${styles.agencyStore}`} title={store.name}>
+                          <input
+                            type="checkbox"
+                            checked={filters.agencies.includes(store.key)}
+                            onChange={() => toggleAgency(store.key)}
+                          />
+                          {storeLabel(store)}
+                          <span className={styles.agencyMeta}>{store.count}</span>
+                        </label>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             ))}
             {shownAgencies.length === 0 && <span className={styles.empty}>no matches</span>}
