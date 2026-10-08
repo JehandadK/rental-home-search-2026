@@ -3,6 +3,7 @@ import { deduplicateListings } from "../../domain/listingDedup";
 import type { ListingObservationBatch, ListingSourceSnapshot } from "../contracts";
 import type { DetailEnrichmentOptions, DetailPatchBatch, ListingDetailPatch } from "./contracts";
 import { InvalidScrapeBatchError } from "./errors";
+import { isListingAgency } from "./agencyPatch";
 
 const defined = <T extends object>(value: T): Partial<T> => Object.fromEntries(Object.entries(value).filter(([, v]) => v != null && (!Array.isArray(v) || v.length > 0))) as Partial<T>;
 
@@ -96,10 +97,8 @@ export function validateDetailPatch(value: unknown): void {
     availableFrom: nullable(text), immediateMoveIn: nullable(boolean) });
   const building = fields({ floor: nullable(text), totalFloors: nullable(number), structure: nullable(text),
     features: nullable(texts), conditions: nullable(texts) });
-  const agencyInfo = fields({ name: text, ...Object.fromEntries(["brand", "company", "branch", "address", "prefecture", "city", "phone", "licence"]
-    .map((key) => [key, nullable(text)] as const)) });
   const check = fields({ parking: nullable(parking), costs, tenancy, building,
     sourceDetails: (v) => object(v) && Object.keys(v).length > 0 && Object.values(v).every(text),
-    agency: nullable(text), agencyInfo: nullable((v) => object(v) && typeof v.name === "string" && agencyInfo(v)) });
+    agency: nullable(text), agencyInfo: nullable(isListingAgency) });
   if (!check(value)) throw new InvalidScrapeBatchError("Invalid or forbidden detail patch fields");
 }

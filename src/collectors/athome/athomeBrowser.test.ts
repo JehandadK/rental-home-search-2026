@@ -228,3 +228,49 @@ describe("AtHome modern template", () => {
     }
   });
 });
+
+describe("AtHome detail pages", () => {
+  const DETAIL = "https://www.athome.co.jp/chintai/1126499429/";
+  const read = (url: string, title: string) => ({ result: { result: { value: JSON.stringify({ url, title, html: "<html></html>" }) } } });
+
+  it("warms a cold tab on the homepage, then reads each ad in the same tab with its HTTP status", async () => {
+    bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+      if (method === "new_tab") return { tab: homeTab };
+      if (method === "navigate") return { tab: { ...homeTab, url: params.url }, httpStatus: 404 };
+      if (method === "evaluate") return read(String(DETAIL), "お探しのページが見つかりません");
+      throw new Error(`Unexpected Bridge method: ${method}`);
+    });
+    const browser = new AthomeBrowser();
+    expect(await browser.readDetail(DETAIL)).toEqual({ status: 404, url: DETAIL, title: "お探しのページが見つかりません", html: "<html></html>" });
+    await browser.readDetail(DETAIL);
+    expect(bridge.request.mock.calls.map(([method, params]) => [method, params.url])).toEqual([
+      ["new_tab", HOME], ["navigate", DETAIL], ["evaluate", undefined], ["navigate", DETAIL], ["evaluate", undefined],
+    ]);
+    // Reading only: the in-page script never clicks, submits or reloads anything.
+    const expression = String(bridge.request.mock.calls[2][1].expression);
+    expect(expression).toContain(".company-info-area");
+    expect(expression).not.toMatch(/click|submit|reload|location\.(?:assign|replace|href\s*=)/);
+  });
+
+  it("waits passively while a person completes verification, then reads the page", async () => {
+    vi.stubEnv("ATHOME_VERIFY_WAIT_SECONDS", "30");
+    vi.useFakeTimers();
+    try {
+      const titles = ["認証", "認証", "物件詳細"];
+      bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+        if (method === "new_tab") return { tab: homeTab };
+        if (method === "navigate") return { tab: { ...homeTab, url: params.url } };
+        if (method === "evaluate" && params.expression === "document.title") return { result: { result: { value: titles.length > 1 ? titles.shift() : titles[0] } } };
+        if (method === "evaluate") return read(DETAIL, "物件詳細");
+        throw new Error(`Unexpected Bridge method: ${method}`);
+      });
+      const reading = new AthomeBrowser().readDetail(DETAIL);
+      await vi.runAllTimersAsync();
+      expect(await reading).toMatchObject({ title: "物件詳細" });
+      expect(bridge.request.mock.calls.filter(([method]) => method === "navigate")).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllEnvs();
+    }
+  });
+});

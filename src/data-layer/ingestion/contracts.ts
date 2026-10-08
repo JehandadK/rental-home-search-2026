@@ -43,7 +43,7 @@ export interface DetailPatchObservation {
 }
 
 export interface DetailPatchBatch extends Omit<ScrapeBatch, "observations" | "observationKind"> {
-  source: "suumo";
+  source: "suumo" | PortalDetailSource;
   mode: "detail-enrichment";
   observationKind: "detail-patch";
   observations: readonly DetailPatchObservation[];
@@ -60,6 +60,20 @@ export interface DetailEnrichmentOptions {
 /** Read-side application query: collectors get URLs, never mutable source snapshots. */
 export interface DetailEnrichmentPlanner {
   planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]>;
+}
+
+/** Portals whose list pages do not name the agency; their detail pages do. */
+export type PortalDetailSource = "athome" | "roomspot";
+
+export interface AgencyDetailOptions {
+  source: PortalDetailSource;
+  /** Also plan ads whose store is already known (re-reading their pages). */
+  force: boolean;
+}
+
+/** Exact source URLs of current ads whose detail page should be read for the store block. */
+export interface AgencyDetailPlanner {
+  planAgencyDetails(options: AgencyDetailOptions): Promise<readonly string[]>;
 }
 
 /** Bounded SUUMO discovery is staged in application memory; only commit writes source data. */

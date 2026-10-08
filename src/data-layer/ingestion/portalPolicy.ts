@@ -5,6 +5,7 @@ import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sou
 import { exactReconciliation } from "./reconciliation";
 import type { ScrapeBatch } from "./contracts";
 import type { SourcePolicy } from "./sourcePolicy";
+import { preparePortalDetailBatch, validateAgencyDetailPatch } from "./portalDetailPolicy";
 
 export type BrowserPortal = "athome" | "roomspot";
 const norm = (value: string | null | undefined) => (value ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
@@ -21,6 +22,18 @@ function keys(source: BrowserPortal, row: RawListing): string[] {
     `market:${norm(row.address)}|${row.rent}|${row.sizeM2 ?? ""}|${norm(row.layout)}`])];
 }
 export const portalDiscoveryKeys = (source: BrowserPortal, row: RawListing) => [...(row.url ? [`url:${row.url}`] : []), ...keys(source, row)];
+
+/**
+ * List pages never name the agency store, so the same ad keeps its stored store
+ * whole (name and details together). A different ad matched by a property or
+ * market alias (a relisting, perhaps by another agency) never inherits one.
+ */
+function withStore(merged: RawListing, prior: RawListing, row: RawListing): RawListing {
+  const { agency: _agency, agencyInfo: _agencyInfo, ...rest } = merged;
+  // The same ad keeps a store it already has; one it never had may come from the row.
+  const from = prior.id === row.id && (prior.agency != null || prior.agencyInfo != null || (row.agency == null && row.agencyInfo == null)) ? prior : row;
+  return { ...rest, ...(from.agency != null ? { agency: from.agency } : {}), ...(from.agencyInfo != null ? { agencyInfo: from.agencyInfo } : {}) };
+}
 
 function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: readonly RawListing[]) {
   const match = (row: RawListing) => portalDiscoveryKeys(source, row);
@@ -48,12 +61,12 @@ function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: re
     if (source === "athome") {
       const parking = row.parking == null ? prior.parking
         : row.parking.available !== false && row.parking.monthlyYen == null && prior.parking?.monthlyYen != null ? prior.parking : row.parking;
-      listings.push({ ...prior, ...row, ...locator, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } });
+      listings.push(withStore({ ...prior, ...row, ...locator, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } }, prior, row));
     } else {
-      listings.push({ ...prior, ...row, ...locator,
+      listings.push(withStore({ ...prior, ...row, ...locator,
         ...(prior.costs || row.costs ? { costs: { ...prior.costs, ...row.costs } } : {}),
         ...(prior.building || row.building ? { building: { ...prior.building, ...row.building } } : {}),
-        ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}) });
+        ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}) }, prior, row));
     }
   }
   for (const prior of existing) {
@@ -102,6 +115,8 @@ export const athomeSourcePolicy: SourcePolicy = {
   source: "athome",
   host: "www.athome.co.jp",
   listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
+  // Detail pages (掲載不動産会社) only add the agency store the list pages leave out.
+  detailPatches: { producer: "athome-detail", parserVersions: ["1"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
   portalDiscovery: {
     keys: (row) => portalDiscoveryKeys("athome", row),
     provenanceCity: (city) => new URL(city.url).pathname.split("/")[3],
@@ -113,6 +128,8 @@ export const roomspotSourcePolicy: SourcePolicy = {
   source: "roomspot",
   host: "www.roomspot.net",
   listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
+  // Detail pages (広告主情報) only add the agency store the list pages leave out.
+  detailPatches: { producer: "roomspot-detail", parserVersions: ["1"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
   portalDiscovery: {
     keys: (row) => portalDiscoveryKeys("roomspot", row),
     provenanceCity: (city) => city.label,

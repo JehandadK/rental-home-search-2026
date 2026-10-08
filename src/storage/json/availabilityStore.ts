@@ -82,3 +82,11 @@ export async function recordEndedDetailAds(ended: readonly { url: string; checke
     source: "suumo", url, state: "gone" as const, checkedAt, evidence: "detail page redirected off the ad page (detail:enrich)", method: "probe" as const,
   })), path);
 }
+
+/** Ads whose detail page `detail:athome` / `detail:roomspot` found gone, with the classifier's evidence. */
+export async function recordEndedPortalAds(source: string, ended: readonly { url: string; checkedAt: string; evidence: string }[], path = AVAILABILITY_PATH): Promise<void> {
+  if (!ended.length) return;
+  await recordAvailability(ended.map(({ url, checkedAt, evidence }) => ({
+    source, url, state: "gone" as const, checkedAt, evidence: `${evidence} (detail:${source})`, method: "probe" as const,
+  })), path);
+}

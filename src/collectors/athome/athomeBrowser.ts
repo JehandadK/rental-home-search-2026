@@ -6,6 +6,7 @@
  * Only public listing HTML leaves the page; cookies/storage remain in Chrome.
  */
 import { createBridge } from "../shared/chromeBridge";
+import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
 import { athomeDownloadedCapture } from "./athomeCapture";
 
 interface BrowserTab {
@@ -28,6 +29,8 @@ export class AthomeBrowser {
   private tab?: BrowserTab;
   private searchReady = false;
   private modernTemplate = false;
+  /** HTTP status of the last navigation, when the driver reports it. */
+  private lastStatus?: number;
   private readonly sessionId = `athome-scraper-${process.pid}`;
 
   async connect(initialUrl: string): Promise<void> {
@@ -58,7 +61,7 @@ export class AthomeBrowser {
     // Invalidate readiness before dispatch: failure must not leave the old
     // city's document eligible for a capture attributed to the new city.
     this.searchReady = false;
-    const result = await this.bridge.request<{ tab: BrowserTab }>("navigate", {
+    const result = await this.bridge.request<{ tab: BrowserTab; httpStatus?: number }>("navigate", {
       tabId: this.tab.id,
       tabFence: this.tab.tabFence,
       incarnation: this.tab.incarnation,
@@ -69,8 +72,24 @@ export class AthomeBrowser {
       sessionId: this.sessionId,
     }, REQUEST_TIMEOUT_MS);
     this.tab = result.tab;
+    this.lastStatus = result.httpStatus;
     await this.waitForHumanVerification();
     this.searchReady = true;
+  }
+
+  /**
+   * Loads one ad's detail page in the warm tab (homepage first on a cold tab) and
+   * reads it, for its 掲載不動産会社 block. A verification page still showing after
+   * the opt-in passive wait is returned as it is, for the caller to stop on.
+   */
+  async readDetail(url: string): Promise<{ status?: number; url: string; title: string; html: string }> {
+    if (this.tab) await this.navigate(url);
+    else await this.connect(url);
+    const response = await this.bridge.request<EvaluateResult>("evaluate", {
+      tabId: this.tab!.id, tabFence: this.tab!.tabFence, incarnation: this.tab!.incarnation, sessionId: this.sessionId,
+      expression: readDetailPageExpression(url, ".company-info-area"), awaitPromise: true,
+    }, REQUEST_TIMEOUT_MS);
+    return detailPageFrom(response, this.lastStatus);
   }
 
   /**

@@ -1,11 +1,14 @@
 /** Chrome-backed public RoomSpot search collector. */
 import { createBridge } from "../shared/chromeBridge";
+import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
 
 interface BrowserTab { id: number; tabFence?: string; incarnation?: string }
 
 export class RoomspotBrowser {
   private bridge = createBridge();
   private tab?: BrowserTab;
+  /** HTTP status of the last navigation, when the driver reports it. */
+  private lastStatus?: number;
   private readonly sessionId = `roomspot-scraper-${process.pid}`;
 
   // Navigate without waiting for the load event: RoomSpot's third-party trackers
@@ -13,20 +16,32 @@ export class RoomspotBrowser {
   // page itself arrives. fetchPage already polls for window.localize.
   async connect(url: string): Promise<void> {
     await this.bridge.connect();
-    const result = await this.bridge.request<{ tab: BrowserTab }>("new_tab", {
+    const result = await this.bridge.request<{ tab: BrowserTab; httpStatus?: number }>("new_tab", {
       url, active: false, wait: false, timeoutMs: 30_000, allowRedirects: true,
       sessionId: this.sessionId, turn: 1,
     });
     this.tab = result.tab;
+    this.lastStatus = result.httpStatus;
   }
 
   async navigate(url: string): Promise<void> {
     if (!this.tab) return this.connect(url);
-    const result = await this.bridge.request<{ tab: BrowserTab }>("navigate", {
+    const result = await this.bridge.request<{ tab: BrowserTab; httpStatus?: number }>("navigate", {
       tabId: this.tab.id, tabFence: this.tab.tabFence, incarnation: this.tab.incarnation,
       url, wait: false, timeoutMs: 30_000, allowRedirects: true, sessionId: this.sessionId,
     });
     this.tab = result.tab;
+    this.lastStatus = result.httpStatus;
+  }
+
+  /** Loads one ad's detail page in the same tab and reads it, for its 広告主情報 block. */
+  async readDetail(url: string): Promise<{ status?: number; url: string; title: string; html: string }> {
+    await this.navigate(url);
+    const response = await this.bridge.request<EvaluateResult>("evaluate", {
+      tabId: this.tab!.id, tabFence: this.tab!.tabFence, incarnation: this.tab!.incarnation,
+      sessionId: this.sessionId, expression: readDetailPageExpression(url, ".kokoku-detail-realtor"), awaitPromise: true,
+    }, 35_000);
+    return detailPageFrom(response, this.lastStatus);
   }
 
   /** Fetch one page via RoomSpot's own public WordPress REST endpoint. */
