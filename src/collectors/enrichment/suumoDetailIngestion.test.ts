@@ -148,6 +148,21 @@ describe("SUUMO detail data-layer policy", () => {
     expect((await store.readSource("suumo"))!.listings[0].agency).toBe("センチュリー21(株)丸吉住宅センター");
   });
 
+  const storeFields = (name: string) => ({ name, brand: null, company: null, branch: null, address: null, prefecture: null, city: null, phone: null, licence: null });
+  it.each([
+    ["unnamed", { agencyInfo: { city: "越谷市" } }], ["unknown fields", { agency: "店", agencyInfo: { ...storeFields("店"), owner: "x" } }],
+    ["mismatched", { agency: "A", agencyInfo: storeFields("B") }], ["details without the name", { agencyInfo: storeFields("A") }],
+  ])("ignores a malformed store (%s) but applies the rest of the page", async (_, malformed) => {
+    await seed();
+    const input = await batch();
+    input.observations[0].details = { ...input.observations[0].details, ...malformed } as typeof input.observations[0]["details"];
+    expect(await service.ingestScrape(input)).toMatchObject({ updated: 1 });
+    const saved = (await store.readSource("suumo"))!.listings[0];
+    expect(saved.parking?.monthlyYen).toBe(6600);
+    expect(saved).not.toHaveProperty("agency");
+    expect(saved).not.toHaveProperty("agencyInfo");
+  });
+
   it("keeps a stored agency when a later page omits the store block", async () => {
     await seed();
     await service.ingestScrape(await batch(row().url!, capturedAt, shopHtml));
@@ -177,9 +192,6 @@ describe("SUUMO detail data-layer policy", () => {
     ["user data", { favorite: true }], ["nested ownership", { costs: { favorite: true } }],
     ["malformed amounts", { costs: { cleaningFeeYen: "cheap" } }], ["invalid features", { building: { features: [123] } }],
     ["incomplete parking", { parking: {} }], ["invalid lease", { tenancy: { leaseType: "anything" } }],
-    ["unnamed agency", { agencyInfo: { city: "越谷市" } }], ["unknown agency fields", { agencyInfo: { name: "店", owner: "x" } }],
-    ["mismatched agency", { agency: "A", agencyInfo: { name: "B", brand: null, company: null, branch: null, address: null, prefecture: null, city: null, phone: null, licence: null } }],
-    ["agency details without the name", { agencyInfo: { name: "A", brand: null, company: null, branch: null, address: null, prefecture: null, city: null, phone: null, licence: null } }],
   ])("rejects %s in patches before accessing source storage", async (_, details) => {
     const input = await batch();
     const read = vi.spyOn(repository, "readSource");

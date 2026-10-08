@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  agencyKey,
+  agencyOptions,
   areaOptions,
   cityOptions,
   EMPTY_FILTERS,
@@ -161,5 +163,37 @@ describe("parking filters", () => {
     const unknown = make({});
     expect(matchesListing(unknown, { ...EMPTY_FILTERS, parking: "required" })).toBe(true);
     expect(matchesListing(unknown, { ...EMPTY_FILTERS, parkingMaxYen: 5000 })).toBe(true);
+  });
+});
+
+describe("agency filter", () => {
+  const store = (name: string, brand: string | null, branch: string | null, city: string | null) =>
+    ({ name, brand, company: null, branch, address: null, prefecture: null, city, phone: null, licence: null });
+  const soka = make({ id: "a", agency: "ハウスコム埼玉(株)草加店", agencyInfo: store("ハウスコム埼玉(株)草加店", "ハウスコム", "草加店", "草加市") });
+  const koshigaya = make({ id: "b", agencyInfo: store("ハウスコム(株)越谷店", "ハウスコム", "越谷店", "越谷市") });
+  const other = make({ id: "c", agency: "AnRe不動産" });
+  const unknown = make({ id: "d" });
+  const listings = [soka, koshigaya, other, unknown];
+  const shown = (filters: Partial<ListingFilters>) =>
+    listings.filter((listing) => matchesListing(listing, { ...EMPTY_FILTERS, ...filters })).map((listing) => listing.id);
+
+  it("includes a whole brand or single stores; unknown agencies are left out", () => {
+    expect(shown({ agencies: [agencyKey("brand", "ハウスコム")] })).toEqual(["a", "b"]);
+    expect(shown({ agencies: [agencyKey("store", "ハウスコム埼玉(株)草加店"), agencyKey("store", "AnRe不動産")] })).toEqual(["a", "c"]);
+  });
+
+  it("excludes them while keeping listings with no known agency", () => {
+    expect(shown({ agencies: [agencyKey("brand", "ハウスコム")], agencyMode: "exclude" })).toEqual(["c", "d"]);
+    expect(shown({ agencyMode: "exclude" })).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("lists agencies by brand with their stores, most listings first", () => {
+    expect(agencyOptions([...listings, soka])).toEqual([
+      { key: "brand:ハウスコム", brand: "ハウスコム", count: 3, stores: [
+        { key: "store:ハウスコム埼玉(株)草加店", name: "ハウスコム埼玉(株)草加店", label: "草加店", branch: "草加店", city: "草加市", count: 2 },
+        { key: "store:ハウスコム(株)越谷店", name: "ハウスコム(株)越谷店", label: "越谷店", branch: "越谷店", city: "越谷市", count: 1 },
+      ] },
+      { key: null, brand: "Other", count: 1, stores: [{ key: "store:AnRe不動産", name: "AnRe不動産", label: "AnRe不動産", branch: null, city: null, count: 1 }] },
+    ]);
   });
 });

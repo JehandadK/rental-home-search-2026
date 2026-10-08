@@ -23,6 +23,7 @@ import { deduplicateListings } from "../src/domain/listingDedup";
 import { packListings } from "../src/domain/webPayload";
 import { withAvailability } from "../src/domain/availability";
 import { readAvailability } from "../src/storage/json/availabilityStore";
+import { toListingAgency } from "../src/collectors/shared/agency";
 
 const INPUT = join(DATA_DIR, "listings.json");
 const OUTPUT = join(WEB_PUBLISH_DIR, "listings.json");
@@ -49,8 +50,10 @@ const compact = uniqueListings.map((listing) => {
     // source files, but are not rendered by the dashboard. Keep the compact
     // structured fields that scoring and expanded rows actually consume.
     notes: _notes,
-    agency: _agency,
-    agencyInfo: _agencyInfo,
+    // agencyInfo carries the name. Older rows name a store without its block:
+    // derive brand and branch from the name so the agency filter can group them.
+    agency,
+    agencyInfo,
     sourceDetails: _sourceDetails,
     ...webListing
   } = listing;
@@ -61,7 +64,8 @@ const compact = uniqueListings.map((listing) => {
     ...attribute,
     raw: attribute.raw === attribute.labelJa ? "" : attribute.raw,
   }));
-  return { ...webListing, attributes };
+  const store = agencyInfo ?? (agency ? toListingAgency({ name: agency }) : null);
+  return { ...webListing, ...(store ? { agencyInfo: store } : {}), attributes };
 });
 
 const payload = packListings(compact);

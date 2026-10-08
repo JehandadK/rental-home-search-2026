@@ -251,6 +251,31 @@
   flex-shrink: 0;
 }
 
+.agencyList {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px 4px;
+  border: 1px solid var(--rs-line);
+  border-radius: 6px;
+}
+
+.agencyGroup + .agencyGroup {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--rs-line);
+}
+
+.agencyStore {
+  padding-left: 16px;
+}
+
+.agencyMeta {
+  margin-left: auto;
+  padding-left: 6px;
+  color: var(--rs-muted);
+  font-size: 10.5px;
+}
+
 .empty {
   grid-column: 1 / -1;
   font-size: 12px;

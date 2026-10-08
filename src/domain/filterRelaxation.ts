@@ -27,6 +27,7 @@ const RELAXATIONS: readonly Relaxation[] = [
   { id: "cities", label: "city", fields: ["cities"] },
   // The include/exclude mode does nothing without areas, so it is not a filter of its own.
   { id: "areas", label: "area", fields: ["areas"] },
+  { id: "agencies", label: "agency", fields: ["agencies"] },
   { id: "rent", label: "rent range", fields: ["rentMin", "rentMax"] },
   { id: "size", label: "size range", fields: ["sizeMin", "sizeMax"] },
   { id: "layouts", label: "layout", fields: ["layouts"] },

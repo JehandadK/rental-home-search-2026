@@ -82,6 +82,8 @@ describe("user-state decoders", () => {
     expect(decodeFilters({ newWithinDays: 0 }).newWithinDays).toBe(1);
     expect(decodeFilters({ newWithinDays: 99 }).newWithinDays).toBe(14);
     expect(decodeFilters({ newWithinDays: "x" }).newWithinDays).toBe(EMPTY_FILTERS.newWithinDays);
+    expect(decodeFilters({ agencies: "brand:x", agencyMode: "sideways" })).toMatchObject({ agencies: [], agencyMode: "include" });
+    expect(decodeFilters({ agencies: ["brand:ハウスコム", 3], agencyMode: "exclude" })).toMatchObject({ agencies: ["brand:ハウスコム"], agencyMode: "exclude" });
     // Filters saved before the window existed get the 14-day default.
     expect(decodeFilters({ newOnly: true }).newWithinDays).toBe(14);
   });

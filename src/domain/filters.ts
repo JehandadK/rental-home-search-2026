@@ -38,6 +38,17 @@ export interface ListingFilters {
    *   exclude — drop listings in the named areas
    */
   areaMode: AreaMode;
+  /**
+   * Agencies named in the agency filter, as `agencyKey` values: a whole brand
+   * ("brand:シャーメゾンショップ") or one store ("store:ハウスコム埼玉(株)草加店").
+   */
+  agencies: string[];
+  /**
+   * How `agencies` is applied, like `areaMode`. Most ads do not name their
+   * agency yet: `include` keeps only listings known to match, `exclude` keeps
+   * every listing not known to match (unknown agencies stay).
+   */
+  agencyMode: AreaMode;
   /** Rent bounds in yen; null = unbounded. */
   rentMin: number | null;
   rentMax: number | null;
@@ -80,6 +91,8 @@ export const EMPTY_FILTERS: ListingFilters = {
   cities: [],
   areas: [],
   areaMode: "include",
+  agencies: [],
+  agencyMode: "include",
   rentMin: null,
   rentMax: null,
   sizeMin: null,
@@ -130,6 +143,61 @@ export function areaOptions(
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([area]) => area);
 }
 
+/** Filter key for a whole brand or one store. */
+export const agencyKey = (kind: "brand" | "store", name: string): string => `${kind}:${name}`;
+
+/** The agency keys a listing matches: its store, and its brand when known. */
+export function listingAgencyKeys(listing: EnrichedListing): string[] {
+  const store = listing.agencyInfo?.name ?? listing.agency;
+  if (!store) return [];
+  const brand = listing.agencyInfo?.brand;
+  return [agencyKey("store", store), ...(brand ? [agencyKey("brand", brand)] : [])];
+}
+
+export interface AgencyStoreOption {
+  key: string;
+  name: string;
+  /** "株式会社ベストハウジング 草加店": who the store is within its brand, else the printed name. */
+  label: string;
+  branch: string | null;
+  /** Where the store's office is, e.g. "越谷市". */
+  city: string | null;
+  count: number;
+}
+
+export interface AgencyBrandOption {
+  /** Null for stores whose brand could not be read. */
+  key: string | null;
+  brand: string;
+  count: number;
+  stores: AgencyStoreOption[];
+}
+
+/** Every agency in a listing set, by brand, most listings first. */
+export function agencyOptions(listings: readonly EnrichedListing[]): AgencyBrandOption[] {
+  const brands = new Map<string, AgencyBrandOption>();
+  for (const listing of listings) {
+    const name = listing.agencyInfo?.name ?? listing.agency;
+    if (!name) continue;
+    const brandName = listing.agencyInfo?.brand ?? null;
+    const groupId = brandName ?? "";
+    const group = brands.get(groupId) ?? { key: brandName ? agencyKey("brand", brandName) : null,
+      brand: brandName ?? "Other", count: 0, stores: [] };
+    brands.set(groupId, group);
+    group.count++;
+    let store = group.stores.find((option) => option.name === name);
+    if (!store) {
+      const label = [listing.agencyInfo?.company, listing.agencyInfo?.branch].filter(Boolean).join(" ") || name;
+      store = { key: agencyKey("store", name), name, label, branch: listing.agencyInfo?.branch ?? null,
+        city: listing.agencyInfo?.city ?? null, count: 0 };
+      group.stores.push(store);
+    }
+    store.count++;
+  }
+  const byCount = <T extends { count: number }>(a: T, b: T) => b.count - a.count;
+  return [...brands.values()].map((group) => ({ ...group, stores: group.stores.sort(byCount) })).sort(byCount);
+}
+
 /** All distinct cities present, in first-seen order. */
 export function cityOptions(listings: readonly EnrichedListing[]): string[] {
   const seen: string[] = [];
@@ -159,6 +227,13 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
     const inArea = filters.areas.includes(listingArea(listing));
     if (filters.areaMode === "include" && !inArea) return false;
     if (filters.areaMode === "exclude" && inArea) return false;
+  }
+
+  if (filters.agencies.length > 0) {
+    const keys = listingAgencyKeys(listing);
+    const byAgency = filters.agencies.some((key) => keys.includes(key));
+    if (filters.agencyMode === "include" && !byAgency) return false;
+    if (filters.agencyMode === "exclude" && byAgency) return false;
   }
 
   if (filters.rentMin != null && listing.rent < filters.rentMin) return false;
@@ -218,6 +293,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   let n = 0;
   if (filters.cities.length) n++;
   if (filters.areas.length) n++;
+  if (filters.agencies.length) n++;
   if (filters.rentMin != null || filters.rentMax != null) n++;
   if (filters.sizeMin != null || filters.sizeMax != null) n++;
   if (filters.layouts.length) n++;

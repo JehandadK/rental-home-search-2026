@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   activeFilterCount,
+  agencyOptions,
   areaOptions,
   cityOptions,
   layoutOptions,
@@ -97,6 +98,9 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
   // unrelated 100-area wall and making the city → neighbourhood hierarchy clear.
   const allAreas = useMemo(() => areaOptions(listings, filters.cities), [listings, filters.cities]);
   const [areaQuery, setAreaQuery] = useState("");
+  const agencies = useMemo(() => agencyOptions(listings), [listings]);
+  const knownAgencyCount = useMemo(() => agencies.reduce((sum, group) => sum + group.count, 0), [agencies]);
+  const [agencyQuery, setAgencyQuery] = useState("");
 
   const activeCount = activeFilterCount(filters);
   const statusActive =
@@ -126,6 +130,30 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
       ? filters.areas.filter((a) => a !== area)
       : [...filters.areas, area];
     onUpdate({ areas: next });
+  };
+
+  // A brand matches its stores' text too, so "草加" finds every brand with a Soka store.
+  const shownAgencies = useMemo(() => {
+    const q = agencyQuery.trim();
+    if (!q) return agencies;
+    const hit = (...texts: (string | null)[]) => texts.some((text) => text?.includes(q));
+    return agencies.flatMap((group) => {
+      if (hit(group.brand)) return [group];
+      const stores = group.stores.filter((store) => hit(store.name, store.label, store.city));
+      return stores.length ? [{ ...group, stores }] : [];
+    });
+  }, [agencies, agencyQuery]);
+
+  const agencyLabels = useMemo(() => new Map(agencies.flatMap((group) => [
+    ...(group.key ? [[group.key, `${group.brand} (all stores)`] as const] : []),
+    ...group.stores.map((store) => [store.key, store.name] as const),
+  ])), [agencies]);
+
+  const toggleAgency = (key: string) => {
+    const next = filters.agencies.includes(key)
+      ? filters.agencies.filter((k) => k !== key)
+      : [...filters.agencies, key];
+    onUpdate({ agencies: next });
   };
 
   const toggleCity = (city: string) => {
@@ -258,6 +286,94 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
               </label>
             ))}
             {shownAreas.length === 0 && <span className={styles.empty}>no matches</span>}
+          </div>
+        </Section>
+      </div>
+
+      {/* Agency: a whole brand or single stores, like the neighbourhood picker. */}
+      <div className={styles.group}>
+        <Section
+          title="Agency (仲介業者)"
+          summary={
+            filters.agencies.length
+              ? `${filters.agencyMode === "include" ? "only" : "not"} ${filters.agencies.length}`
+              : "any"
+          }
+          active={filters.agencies.length > 0}
+        >
+          <div className={styles.groupLabel}>
+            <span className={styles.help}>
+              known for {knownAgencyCount} of {listings.length} listings
+            </span>
+            <div className={styles.modeToggle}>
+              <button
+                className={filters.agencyMode === "include" ? styles.on : ""}
+                onClick={() => onUpdate({ agencyMode: "include" })}
+                title="Keep only listings known to be advertised by the selected agencies"
+              >
+                include
+              </button>
+              <button
+                className={filters.agencyMode === "exclude" ? styles.on : ""}
+                onClick={() => onUpdate({ agencyMode: "exclude" })}
+                title="Drop listings advertised by the selected agencies; listings with no known agency stay"
+              >
+                exclude
+              </button>
+            </div>
+          </div>
+
+          {filters.agencies.length > 0 && (
+            <div className={styles.selectedRow}>
+              <span>
+                {filters.agencyMode === "include" ? "Only: " : "Not: "}
+                {filters.agencies.map((key) => agencyLabels.get(key) ?? key.replace(/^(brand|store):/, "")).join("、")}
+              </span>
+              <button className={styles.clearAreas} onClick={() => onUpdate({ agencies: [] })}>
+                ×
+              </button>
+            </div>
+          )}
+
+          <input
+            className={styles.search}
+            type="search"
+            placeholder="Search agency, branch or city…"
+            value={agencyQuery}
+            onChange={(e) => setAgencyQuery(e.target.value)}
+          />
+          <div className={styles.agencyList}>
+            {shownAgencies.map((group) => (
+              <div key={group.key ?? "other"} className={styles.agencyGroup}>
+                {group.key ? (
+                  <label className={styles.areaItem}>
+                    <input
+                      type="checkbox"
+                      checked={filters.agencies.includes(group.key)}
+                      onChange={() => toggleAgency(group.key!)}
+                    />
+                    <strong>{group.brand}</strong>
+                    <span className={styles.agencyMeta}>{group.count}</span>
+                  </label>
+                ) : (
+                  <span className={styles.agencyMeta}>{group.brand}</span>
+                )}
+                {group.stores.map((store) => (
+                  <label key={store.key} className={`${styles.areaItem} ${styles.agencyStore}`} title={store.name}>
+                    <input
+                      type="checkbox"
+                      checked={filters.agencies.includes(store.key)}
+                      onChange={() => toggleAgency(store.key)}
+                    />
+                    {store.label}
+                    <span className={styles.agencyMeta}>
+                      {[store.city, store.count].filter((part) => part != null).join(" · ")}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ))}
+            {shownAgencies.length === 0 && <span className={styles.empty}>no matches</span>}
           </div>
         </Section>
       </div>

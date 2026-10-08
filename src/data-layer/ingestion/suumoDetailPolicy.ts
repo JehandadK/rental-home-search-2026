@@ -1,4 +1,4 @@
-import type { RawListing } from "../../domain/types";
+import type { ListingAgency, RawListing } from "../../domain/types";
 import { deduplicateListings } from "../../domain/listingDedup";
 import type { ListingObservationBatch, ListingSourceSnapshot } from "../contracts";
 import type { DetailEnrichmentOptions, DetailPatchBatch, ListingDetailPatch } from "./contracts";
@@ -6,9 +6,24 @@ import { InvalidScrapeBatchError } from "./errors";
 
 const defined = <T extends object>(value: T): Partial<T> => Object.fromEntries(Object.entries(value).filter(([, v]) => v != null && (!Array.isArray(v) || v.length > 0))) as Partial<T>;
 
-/** Existing detail overlay semantics: unknown values never clear known fields. */
+/** A complete store whose name matches the agency string. */
+export function validStore(detail: Pick<ListingDetailPatch, "agency" | "agencyInfo">): detail is { agency: string; agencyInfo: ListingAgency } {
+  const info = detail.agencyInfo as unknown;
+  const object = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v);
+  return typeof detail.agency === "string" && detail.agency.trim() !== "" && object(info) && info.name === detail.agency
+    && Object.keys(info).length === AGENCY_KEYS.length && AGENCY_KEYS.every((key) => key in info)
+    && AGENCY_KEYS.every((key) => key === "name" ? typeof info[key] === "string" : info[key] === null || typeof info[key] === "string");
+}
+const AGENCY_KEYS = ["name", "brand", "company", "branch", "address", "prefecture", "city", "phone", "licence"] as const;
+
+/**
+ * Existing detail overlay semantics: unknown values never clear known fields.
+ * A malformed store is dropped, not fatal: the rest of the page still applies.
+ */
 export function applyDetail(listing: RawListing, detail: ListingDetailPatch): RawListing {
-  return { ...listing, ...defined(detail),
+  const { agency, agencyInfo, ...rest } = detail;
+  const store = { agency, agencyInfo };
+  return { ...listing, ...defined(rest), ...(validStore(store) ? store : {}),
     costs: { ...listing.costs, ...defined(detail.costs ?? {}) },
     tenancy: { ...listing.tenancy, ...defined(detail.tenancy ?? {}) },
     building: { ...listing.building, ...defined(detail.building ?? {}) },
@@ -59,7 +74,7 @@ export function prepareSuumoDetailBatch(request: DetailPatchBatch, previous: Lis
       // Pages captured before parser 2 read the store block can still add it, and nothing else.
       const { agency, agencyInfo } = observation.details;
       const unnamed = matches.filter((listing) => listing.agency == null && listing.agencyInfo == null);
-      if (agencyInfo && unnamed.length) {
+      if (validStore({ agency, agencyInfo }) && unnamed.length) {
         for (const listing of unnamed) {
           observations.push({ source: "suumo", sourceListingId: listing.id ?? url, targetUrl: url,
             observedAt: observation.observedAt, listing: { ...listing, agency, agencyInfo } });
@@ -108,15 +123,10 @@ export function validateDetailPatch(value: unknown): void {
     availableFrom: nullable(text), immediateMoveIn: nullable(boolean) });
   const building = fields({ floor: nullable(text), totalFloors: nullable(number), structure: nullable(text),
     features: nullable(texts), conditions: nullable(texts) });
-  const agencyKeys = ["brand", "company", "branch", "address", "prefecture", "city", "phone", "licence"];
-  const agencyInfo: Check = (v) => object(v) && typeof v.name === "string" && v.name.trim() !== ""
-    && agencyKeys.every((key) => v[key] !== undefined) && fields({ name: text, ...Object.fromEntries(agencyKeys.map((key) => [key, nullable(text)] as const)) })(v);
+  // The store is optional: its keys are allowed, and applyDetail drops a malformed one instead of failing the batch.
+  const optional: Check = () => true;
   const check = fields({ parking: nullable(parking), costs, tenancy, building,
     sourceDetails: (v) => object(v) && Object.keys(v).length > 0 && Object.values(v).every(text),
-    agency: text, agencyInfo });
-  // The store name and its details travel together, or not at all.
-  const store = object(value) ? value as { agency?: unknown; agencyInfo?: { name?: unknown } } : {};
-  const paired = (store.agency === undefined) === (store.agencyInfo === undefined)
-    && (store.agencyInfo === undefined || store.agency === store.agencyInfo.name);
-  if (!check(value) || !paired) throw new InvalidScrapeBatchError("Invalid or forbidden detail patch fields");
+    agency: optional, agencyInfo: optional });
+  if (!check(value)) throw new InvalidScrapeBatchError("Invalid or forbidden detail patch fields");
 }
