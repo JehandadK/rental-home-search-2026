@@ -2741,6 +2741,20 @@
       "data": {
         "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109616774|bc_100505503546|2026-10-08T14:07:06.393Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-08T14:07:06.393Z",
+      "recordedAt": "2026-10-08T14:07:23.020Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109616774|bc_100505503546",
+      "url": "https://suumo.jp/chintai/jnc_000109616774/?bc=100505503546",
+      "data": {
+        "state": "gone",
+        "evidence": "detail page redirected off the ad page (detail:enrich)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2751,11 +2765,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_0cbb23360de53f2c9d88767b274b91a5/",
     "lastSeenAt": "2026-10-05T08:06:21.117Z",
     "lastListedAt": "2026-10-05T08:06:21.117Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-05T08:06:21.117Z",
+      "before": "2026-10-08T14:07:06.393Z"
+    },
+    "daysOnMarket": {
+      "min": 10.4,
+      "max": 13.6
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-04T06:14:57.497Z",
@@ -2789,7 +2809,7 @@
         "firstSeenAt": "2026-10-05T08:06:21.117Z",
         "lastSeenAt": "2026-10-05T08:06:21.117Z",
         "lastListedAt": "2026-10-05T08:06:21.117Z",
-        "goneSince": null,
+        "goneSince": "2026-10-08T14:07:06.393Z",
         "relistCount": 0
       },
       "suumo|jnc_000109616774|bc_100505542793": {
