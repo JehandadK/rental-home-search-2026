@@ -14,6 +14,12 @@ import { trackingKey } from "../../data-layer/lifecycle";
 
 const capturedAt = "2026-09-24T00:00:00.000Z", sourceAt = "2026-09-25T00:00:00.000Z";
 const html = '<table><tr><th>駐車場</th><td>敷地内6600円</td></tr><tr><th>契約期間</th><td>定期借家2年</td></tr><tr><th>保証会社</th><td>必加入</td></tr></table><ul class="inline_list"><li>都市ガス</li></ul>';
+// The store block as SUUMO printed it on 2026-10-08 (trimmed).
+const shopHtml = html + '<h2><span>この物件を取り扱う店舗</span></h2><div class="itemcassette l-space_medium">'
+  + '<div class="itemcassette-header"><span class="itemcassette-header-ttl">センチュリー21(株)丸吉住宅センター</span><span class="itemcassette-header-sub"> 取引態様：仲介</span></div>'
+  + '<div class="itemcassette-header"><span class="itemcassette-header-sub"> 免許番号： 埼玉県知事（１３）第７２７７号 / （公社）埼玉県宅地建物取引業協会会員</span></div>'
+  + '<div class="itemcassette_matrix"><div class="itemcassette_matrix-cell01"> 埼玉県越谷市千間台東1-1-12</div><div class="itemcassette_matrix-cell02"> ＡＭ９：００～ＰＭ5：３０</div>'
+  + '<div class="itemcassette_matrix-cell03"> 東武伊勢崎線/せんげん台駅 歩1分</div><div class="itemcassette_matrix-cell04"><span class="itemcassette_matrix-strong">0120-007632</span></div></div></div>';
 const options = { maxRent: 150000, minSize: 40 };
 const row = (id = "one", changes: Partial<RawListing> = {}): RawListing => ({ id, source: "suumo", name: id,
   address: `埼玉県草加市${id}`, rent: 80000, sizeM2: 50, layout: "2LDK", builtYear: 2010, stationWalkMin: 5,
@@ -48,7 +54,7 @@ describe("SUUMO detail data-layer policy", () => {
     const previous = (await store.readSource("suumo"))!;
     const request = await batch();
     expect(request.observations[0]).not.toHaveProperty("listing");
-    expect(request).toMatchObject({ observationKind: "detail-patch", mode: "detail-enrichment", scraper: { name: "suumo-detail", version: "1", parserVersion: "1" } });
+    expect(request).toMatchObject({ observationKind: "detail-patch", mode: "detail-enrichment", scraper: { name: "suumo-detail", version: "1", parserVersion: "2" } });
     const result = await service.ingestScrape(request);
     expect(result).toMatchObject({ added: 0, updated: 1, retired: 0, currentCount: 2 });
     const saved = (await store.readSource("suumo"))!;
@@ -114,6 +120,23 @@ describe("SUUMO detail data-layer policy", () => {
     expect(saved.provenance!.detailObservedAtByUrl).toEqual({ [row().url!]: capturedAt });
   });
 
+  it("stores the advertising store, its brand and the city it is in", async () => {
+    await seed();
+    await service.ingestScrape(await batch(row().url!, capturedAt, shopHtml));
+    expect((await store.readSource("suumo"))!.listings[0]).toMatchObject({
+      agency: "センチュリー21(株)丸吉住宅センター",
+      agencyInfo: { name: "センチュリー21(株)丸吉住宅センター", brand: "センチュリー21", company: "株式会社丸吉住宅センター", branch: null,
+        address: "埼玉県越谷市千間台東1-1-12", prefecture: "埼玉県", city: "越谷市", phone: "0120-007632", licence: "埼玉県知事(13)第7277号" },
+    });
+  });
+
+  it("keeps a stored agency when a later page omits the store block", async () => {
+    await seed();
+    await service.ingestScrape(await batch(row().url!, capturedAt, shopHtml));
+    await service.ingestScrape(await batch(row().url!, sourceAt, html));
+    expect((await store.readSource("suumo"))!.listings[0].agencyInfo?.city).toBe("越谷市");
+  });
+
   it("preserves known details for absent fields while allowing explicit false/zero", async () => {
     await seed([row("one", { costs: { guarantorRequired: true, cleaningFeeYen: 40000 }, tenancy: { leaseType: "regular" }, building: { features: ["都市ガス"] } })]);
     const input = await batch();
@@ -136,6 +159,7 @@ describe("SUUMO detail data-layer policy", () => {
     ["user data", { favorite: true }], ["nested ownership", { costs: { favorite: true } }],
     ["malformed amounts", { costs: { cleaningFeeYen: "cheap" } }], ["invalid features", { building: { features: [123] } }],
     ["incomplete parking", { parking: {} }], ["invalid lease", { tenancy: { leaseType: "anything" } }],
+    ["unnamed agency", { agencyInfo: { city: "越谷市" } }], ["unknown agency fields", { agencyInfo: { name: "店", owner: "x" } }],
   ])("rejects %s in patches before accessing source storage", async (_, details) => {
     const input = await batch();
     const read = vi.spyOn(repository, "readSource");
@@ -146,7 +170,7 @@ describe("SUUMO detail data-layer policy", () => {
 
   it.each([
     ["producer version", (input: DetailPatchBatch) => { input.scraper.version = "2"; }],
-    ["parser version", (input: DetailPatchBatch) => { input.scraper.parserVersion = "2"; }],
+    ["parser version", (input: DetailPatchBatch) => { input.scraper.parserVersion = "3"; }],
     ["timestamp", (input: DetailPatchBatch) => { input.observations[0].observedAt = "unknown"; }],
     ["evidence", (input: DetailPatchBatch) => { input.observations[0].evidence.captureId = ""; }],
     ["identity", (input: DetailPatchBatch) => { input.observations[0].sourceListingId = "other"; }],

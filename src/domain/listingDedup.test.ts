@@ -289,4 +289,16 @@ describe("cross-source listing deduplication", () => {
       expect.objectContaining({ source: "suumo", url: "https://suumo.example/1" }),
     ]));
   });
+  it("takes the agency name and its store details from the same ad", () => {
+    const store = { name: "ハウスコム埼玉(株)草加店", brand: "ハウスコム", company: "ハウスコム埼玉株式会社", branch: "草加店",
+      address: "埼玉県草加市氷川町2120-6", prefecture: "埼玉県", city: "草加市", phone: null, licence: null };
+    const suumo = make({ agency: store.name, agencyInfo: store });
+    const athome = make({ id: "athome-2", source: "athome", url: "https://athome.example/2", agency: "Other store" });
+    const merged = mergeDuplicateListings(suumo, athome);
+    expect(merged.source).toBe("athome");
+    expect(merged).toMatchObject({ agency: "Other store" });
+    expect(merged).not.toHaveProperty("agencyInfo");
+    expect(mergeDuplicateListings(suumo, { ...athome, agency: undefined })).toMatchObject({ agency: store.name, agencyInfo: store });
+    expect(mergeDuplicateListings(make(), { ...athome, agency: undefined })).not.toHaveProperty("agency");
+  });
 });

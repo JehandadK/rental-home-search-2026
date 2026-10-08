@@ -30,8 +30,9 @@ import {
   sumMonthlyExtras,
   sumOneOffFees,
 } from "../src/collectors/shared/parseJa";
-import type { RawListing } from "../src/domain/types";
+import type { ListingAgency, RawListing } from "../src/domain/types";
 import { parseParking } from "../src/collectors/shared/parking";
+import { toListingAgency } from "../src/collectors/shared/agency";
 import { normaliseStationName, parseStation, parseStationDistance } from "../src/collectors/nifty/niftyStation";
 
 export { normaliseStationName, parseStation, parseStationDistance };
@@ -44,10 +45,12 @@ const NIFTY_PATH = join(DATA_DIR, "nifty_detail_raw.json");
  *    conditional charges left out) instead of summing every amount.
  * 3: the portal's own dates (情報公開日 / 次回更新日), which Nifty prints as
  *    free text outside the detail table, are read from the page text.
+ * 4: the agency's store (取り扱い不動産会社): brand, branch, office address
+ *    and city, phone and licence, from the value under the store's label.
  * The version is part of the run ID, so re-importing a dump already imported
  * by an older parser is a new batch, not a replay conflict.
  */
-export const NIFTY_DETAIL_PARSER_VERSION = "3";
+export const NIFTY_DETAIL_PARSER_VERSION = "4";
 
 export interface NiftyDetail {
   capturedAt?: string;
@@ -120,6 +123,18 @@ function parseAgency(kv: Record<string, string>): string | null {
   return label ?? null;
 }
 
+/**
+ * The store's value runs its fields together:
+ * "埼玉県草加市氷川町　2120-6　中山ビル1階電話番号：0800-1700231営業時間：…免許番号：埼玉県知事（１）第２４８８８号加盟団体名：…"
+ */
+export function parseAgencyInfo(kv: Record<string, string>): ListingAgency | null {
+  const name = parseAgency(kv);
+  if (!name) return null;
+  const value = kv[name] ?? "";
+  return toListingAgency({ name, address: value.split(/電話番号|営業時間|免許番号/)[0],
+    phone: value.match(/電話番号[：:]([^営免加]*)/)?.[1], licence: value.match(/免許番号[：:]([^加所公]*)/)?.[1] });
+}
+
 /** 情報公開日 / 情報更新日 / 次回更新日 from free text, as detail rows (kv rows win). */
 function portalDateDetails(text: string | undefined): Record<string, string> {
   const dates = parsePortalListingDates(text ?? "");
@@ -177,6 +192,7 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
     source: "nifty",
     notes: noteParts.join("・"),
     agency: parseAgency(kv),
+    agencyInfo: parseAgencyInfo(kv),
     sourceDetails: { ...portalDateDetails(detail.text), ...kv },
     // Missing detail text is not a request to erase previously captured parking.
     ...(parking && !/^[－-]$/.test(parking) ? { parking: parseParking(parking) } : {}),

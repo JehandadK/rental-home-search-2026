@@ -32,22 +32,48 @@ export function mergeNiftyIncremental(existing: readonly RawListing[], fresh: re
   return { listings, added, updated, overlaps: updated };
 }
 
+/**
+ * Fields an older detail capture may still add to a row that has never had
+ * them. Later list crawls advance a row's observation time but never carry
+ * these, so newer-only merging would leave them unfillable from saved pages.
+ */
+const GAP_FILL_FIELDS = ["agency", "agencyInfo"] as const;
+
+function gapFill(prior: RawListing, detail: RawListing): Partial<RawListing> | null {
+  // A row that already names a different store keeps it: agency and agencyInfo describe one store.
+  if (prior.agency != null && prior.agency !== detail.agency) return null;
+  const fill = Object.fromEntries(GAP_FILL_FIELDS.filter((field) => prior[field] == null && detail[field] != null)
+    .map((field) => [field, detail[field]]));
+  return Object.keys(fill).length ? fill : null;
+}
+
 export function prepareNiftyBatch(request: ScrapeBatch, previous: ListingSourceSnapshot | null) {
   const aliases = new Map((previous?.listings ?? []).flatMap((l) => niftyMatchKeys(l).map((key) => [key, l] as const)));
   const priorTimes = (previous?.provenance?.observedAtByKey ?? {}) as Record<string, string>;
+  const fills = new Map<RawListing, Partial<RawListing>>();
+  // A later crawl retired these ads (usually superseded by a relisting); an old dump must not revive them.
+  const retiredAt = new Map((previous?.archivedListings ?? []).map((archived) => [niftyMatchKeys(archived.listing)[0], archived.retiredAt]));
   const eligible = request.observations.filter((observation) => {
     const prior = niftyMatchKeys(observation.listing).map((key) => aliases.get(key)).find(Boolean);
-    if (!prior) return true;
-    if (observation.observedAt === null) return false;
+    if (!prior) {
+      const retired = request.mode === "detail-enrichment" ? retiredAt.get(niftyMatchKeys(observation.listing)[0]) : undefined;
+      return !retired || (observation.observedAt !== null && Date.parse(observation.observedAt) > Date.parse(retired));
+    }
     const previousTime = priorTimes[trackingKey(prior)] ?? sourceObservationFallbackTime(previous);
     // Detail imports only replace strictly older evidence. Discovery may replay
     // an equal timestamp, but cannot overwrite a newer captured price either.
-    const delta = Date.parse(observation.observedAt) - (previousTime ? Date.parse(previousTime) : -Infinity);
-    return request.mode === "detail-enrichment" ? delta > 0 : delta >= 0;
+    const delta = observation.observedAt === null ? -Infinity
+      : Date.parse(observation.observedAt) - (previousTime ? Date.parse(previousTime) : -Infinity);
+    const newer = request.mode === "detail-enrichment" ? delta > 0 : delta >= 0;
+    // Undated or older captures cannot replace anything, only fill what is absent.
+    const fill = !newer && request.mode === "detail-enrichment" ? gapFill(prior, observation.listing) : null;
+    if (fill) fills.set(prior, { ...fill, ...fills.get(prior) });
+    return newer;
   });
   const novel = eligible.filter((observation) => !niftyMatchKeys(observation.listing).some((key) => aliases.has(key))).length;
   const fresh = eligible.map((observation) => observation.listing);
-  const merged = mergeNiftyIncremental(previous?.listings ?? [], fresh);
+  const existing = (previous?.listings ?? []).map((listing) => fills.has(listing) ? { ...listing, ...fills.get(listing) } : listing);
+  const merged = mergeNiftyIncremental(existing, fresh);
   const observedAtByKey = { ...priorTimes };
   for (const observation of eligible) {
     if (observation.observedAt !== null) observedAtByKey[trackingKey(observation.listing)] = observation.observedAt;
@@ -60,8 +86,8 @@ export function prepareNiftyBatch(request: ScrapeBatch, previous: ListingSourceS
     observedTrackingKeys: eligible.filter((observation) => observation.observedAt !== null).map((observation) => trackingKey(observation.listing)),
     observedAtByKey,
   });
-  return { reconciliation, added: merged.added, updated: merged.updated, novel, observedCount: eligible.length,
-    ignored: request.observations.length - merged.added - merged.updated,
+  return { reconciliation, added: merged.added, updated: merged.updated + fills.size, novel, observedCount: eligible.length,
+    ignored: request.observations.length - merged.added - merged.updated - fills.size,
     previousCount: previous?.listings.length ?? 0, currentCount: merged.listings.length };
 }
 
@@ -70,10 +96,11 @@ export const niftySourcePolicy: SourcePolicy = {
   host: "myhome.nifty.com",
   // Legacy detail-page dumps (`npm run import:nifty`) may add missing rows.
   // Parser 2 itemises fee notes (full-width thousands separators, no renewal fees).
+  // Parser 4 adds the agency store; older captures may fill it in (GAP_FILL_FIELDS).
   listings: {
     prepare: prepareNiftyBatch,
     exactUrlDiscovery: false,
     detailImportProducer: "nifty-detail",
-    detailImportParserVersions: ["1", "2", "3"],
+    detailImportParserVersions: ["1", "2", "3", "4"],
   },
 };

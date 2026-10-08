@@ -1,6 +1,7 @@
 /** Pure RoomSpot search-result parser and incremental merge helpers. */
 import * as cheerio from "cheerio";
-import type { RawListing } from "../../domain/types";
+import type { ListingAgency, RawListing } from "../../domain/types";
+import { toListingAgency } from "../shared/agency";
 import { isExplicitNone, parseYen } from "../shared/parseJa";
 import { collectPhotos, photoKind } from "../shared/photos";
 import { withPrefecture } from "../shared/targetCities";
@@ -96,4 +97,16 @@ export function parseRoomspotPage(html: string, city: string): RawListing[] {
     });
   });
   return listings;
+}
+
+/**
+ * The advertiser (広告主情報) on a RoomSpot detail page. RoomSpot is ポラス's
+ * own site, so this is the Room'Spot office handling the ad, which may not be
+ * the company managing the building (取引態様 仲介先物).
+ */
+export function parseRoomspotAgency(html: string): ListingAgency | null {
+  const $ = cheerio.load(html);
+  const block = $(".kokoku-detail-realtor").first();
+  const cell = (name: string) => block.find(`td.kokoku-detail-realtor__${name}`).first().text();
+  return toListingAgency({ name: cell("name"), address: cell("address"), phone: cell("tel"), licence: cell("license") });
 }

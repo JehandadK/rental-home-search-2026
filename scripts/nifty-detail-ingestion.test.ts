@@ -8,7 +8,7 @@ import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "..
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { mergeNiftyIncremental, niftyMatchKeys } from "../src/data-layer/ingestion/niftyPolicy";
 import { trackingKey } from "../src/data-layer/lifecycle";
-import { NIFTY_DETAIL_PARSER_VERSION, prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
+import { NIFTY_DETAIL_PARSER_VERSION, parseAgencyInfo, prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
 
 const before = "2026-09-24T00:00:00.000Z", now = "2026-09-25T00:00:00.000Z";
 function detail(id = "aabbcc", changes: Partial<NiftyDetail> = {}): NiftyDetail {
@@ -30,13 +30,25 @@ function legacyResult(input: NiftyDump, previous: SourceFile | null) {
   const aliases = new Map((previous?.listings ?? []).flatMap((row) => niftyMatchKeys(row).map((key) => [key, row] as const)));
   const priorTimes = (previous?.provenance?.observedAtByKey ?? {}) as Record<string, string>;
   const details = new Map(input.listings.map((entry) => [entry.url, entry]));
+  const retired = new Map((previous?.archivedListings ?? []).map((entry) => [entry.listing.id ?? entry.listing.url, entry.retiredAt]));
   const eligible = converted.filter((row) => {
     const prior = niftyMatchKeys(row).map((key) => aliases.get(key)).find(Boolean);
-    if (!prior) return true;
     const at = details.get(row.url!)?.capturedAt;
+    if (!prior) return !retired.has(row.id ?? row.url!) || (at != null && at > retired.get(row.id ?? row.url!)!);
     return at != null && at > (priorTimes[trackingKey(prior)] ?? previous?.scrapedAt ?? "");
   });
-  return { merged: mergeNiftyIncremental(previous?.listings ?? [], eligible),
+  // Captures that cannot replace a row may still add agency fields it never had; the first such capture wins.
+  const filled = new Map<RawListing, RawListing>();
+  for (const row of converted) {
+    const prior = niftyMatchKeys(row).map((key) => aliases.get(key)).find(Boolean);
+    if (!prior || eligible.includes(row) || (prior.agency != null && prior.agency !== row.agency)) continue;
+    const base = filled.get(prior) ?? prior;
+    const fill = { ...(prior.agency == null && base.agency == null && row.agency != null ? { agency: row.agency } : {}),
+      ...(prior.agencyInfo == null && base.agencyInfo == null && row.agencyInfo != null ? { agencyInfo: row.agencyInfo } : {}) };
+    if (Object.keys(fill).length) filled.set(prior, { ...base, ...fill });
+  }
+  const merged = mergeNiftyIncremental((previous?.listings ?? []).map((row) => filled.get(row) ?? row), eligible);
+  return { merged: { ...merged, updated: merged.updated + filled.size },
     scrapedAt: [previous?.scrapedAt ?? "", input.scrapedAt].sort().at(-1),
     provenance: { ...previous?.provenance, capturedBy: "logged-in browser session via Pi Control Chrome",
       detailPages: input.listings.length, familyListings: converted.length,
@@ -106,6 +118,42 @@ describe("Nifty detail import through the public data layer", () => {
     const bytes = await readFile(store.sourcePath("nifty"), "utf8");
     expect(await service.ingestScrape(batch)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: result.revision });
     expect(await readFile(store.sourcePath("nifty"), "utf8")).toBe(bytes);
+  });
+
+  it("reads the store's brand, branch and city from the value under its label", () => {
+    // As Nifty printed it on 2026-09-12: the label is the store, the value runs its fields together.
+    expect(parseAgencyInfo({ ...detail().kv, "ポラスの賃貸 Room'Spot春日部営業所(株)中央ビル管理":
+      "埼玉県春日部市中央1-2-5電話番号：0120-675488営業時間：9：30～18：00（定休日：火曜日　水曜日）免許番号：国土交通大臣（９）第３９１８号加盟団体名：（公社）埼玉県宅地建物取引業協会会員" }))
+      .toEqual({ name: "ポラスの賃貸 Room'Spot春日部営業所(株)中央ビル管理", brand: "Room'Spot", company: "株式会社中央ビル管理",
+        branch: "春日部営業所", address: "埼玉県春日部市中央1-2-5", prefecture: "埼玉県", city: "春日部市",
+        phone: "0120-675488", licence: "国土交通大臣(9)第3918号" });
+    expect(parseAgencyInfo(detail().kv!)).toBeNull();
+  });
+
+  it("lets an older capture add a store the row never had, without replacing anything else", async () => {
+    const store_ = "ハウスコム埼玉(株)草加店";
+    const withStore = (id: string, changes: Partial<NiftyDetail> = {}) => detail(id, { capturedAt: undefined,
+      kv: { ...detail().kv, [store_]: "埼玉県草加市氷川町　2120-6　中山ビル1階電話番号：0800-1700231" }, ...changes });
+    const current = { ...toRawListing(detail("aaaa"))!, rent: 99000 };
+    const named = { ...toRawListing(detail("bbbb"))!, agency: "Other store" };
+    await store.writeSource({ source: "nifty", scrapedAt: now, listings: [current, named],
+      provenance: { observedAtByKey: { [trackingKey(current)]: now, [trackingKey(named)]: now } } }, { expectedRevision: null });
+    const { batch } = await prepareNiftyDetailImport(dump([withStore("aaaa"), withStore("bbbb")]));
+    expect(await service.ingestScrape(batch)).toMatchObject({ added: 0, updated: 1 });
+    const saved = new Map((await store.readSource("nifty"))!.listings.map((row) => [row.id, row]));
+    expect(saved.get("nifty-aaaa")).toEqual({ ...current, agency: store_, agencyInfo: expect.objectContaining({ brand: "ハウスコム", city: "草加市" }) });
+    // A different store's capture never pairs its details with the store the row already names.
+    expect(saved.get("nifty-bbbb")).toEqual(named);
+  });
+
+  it("does not revive an ad a later crawl retired, unless the capture saw it after that", async () => {
+    const live = toRawListing(detail("aaaa"))!, gone = toRawListing(detail("bbbb", { kv: { ...detail().kv, "所在地": "埼玉県越谷市" } }))!;
+    await store.writeSource({ source: "nifty", scrapedAt: now, listings: [live],
+      archivedListings: [{ sourceListingId: gone.id!, listing: gone, retiredAt: before, reason: "Superseded" }] }, { expectedRevision: null });
+    const undated = await prepareNiftyDetailImport(dump([detail("bbbb", { capturedAt: undefined, kv: { ...detail().kv, "所在地": "埼玉県越谷市" } })]));
+    expect(await service.ingestScrape(undated.batch)).toMatchObject({ added: 0, currentCount: 1 });
+    const later = await prepareNiftyDetailImport(dump([detail("bbbb", { kv: { ...detail().kv, "所在地": "埼玉県越谷市" } })]));
+    expect(await service.ingestScrape(later.batch, { allowShrink: true })).toMatchObject({ added: 1 });
   });
 
   it("does not erase source rows when a dump has only failed captures", async () => {

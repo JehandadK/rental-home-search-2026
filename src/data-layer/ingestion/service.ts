@@ -136,8 +136,8 @@ function validateScrapeBatch(batch: ScrapeSubmission, policies: SourcePolicyRegi
   }
   const validUrl = (value: unknown) => sourceUrl(value, policy.host);
   const expectedProducer = detailPatch ? detailPolicy!.producer : nativeCapture ? "native-capture" : batch.mode === "discovery" ? `${batch.source}-list` : detailImportProducer;
-  const parserVersions = !detailPatch && !nativeCapture && batch.mode === "detail-enrichment"
-    ? policy.listings.detailImportParserVersions ?? ["1"]
+  const parserVersions = detailPatch ? detailPolicy!.parserVersions ?? ["1"]
+    : !nativeCapture && batch.mode === "detail-enrichment" ? policy.listings.detailImportParserVersions ?? ["1"]
     : ["1"];
   if (!object(batch.scraper) || batch.scraper.name !== expectedProducer || batch.scraper.version !== "1"
     || !parserVersions.includes(batch.scraper.parserVersion)) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isFamilyLayout, parseAthomePage } from "./athome";
+import { isFamilyLayout, parseAthomeAgency, parseAthomePage } from "./athome";
 import { athomeKey } from "../../data-layer/ingestion/portalPolicy";
 import { preparePortalRows } from "../../data-layer/ingestion/portalBatch.contract";
 import type { RawListing } from "../../domain/types";
@@ -102,5 +102,27 @@ describe("AtHome identity and live merge", () => {
     expect(merged).toMatchObject({ added: 1, updated: 1, retirements: [] });
     // The same ad seen twice (same ID) is still one row.
     expect(preparePortalRows("athome", [], [a, { ...a, rent: 73_000 }]).listings).toHaveLength(1);
+  });
+});
+
+describe("parseAthomeAgency", () => {
+  // 掲載不動産会社 as AtHome printed it on 2026-10-08 (trimmed).
+  const detail = `<div class="company-info-area" id="section5"><div class="company-info-area__inner">
+<h2 class="company-info-area__title">掲載不動産会社</h2><div class="post"><div class="company-info-area__head">
+<div class="head__name post-title__left"><a href="/ahto/a-nishikasai.html">アエラス西葛西店 (株)アエラス</a></div></div>
+<table class="company-info-area__inner-list info"><tbody>
+<tr><th>所在地</th><td colspan="3"> 〒134-0088 東京都江戸川区西葛西６丁目８－１０ 朝日生命西葛西ビル ７階 <a class="button map-icon-button"><img alt="地図アイコン"></a></td></tr>
+<tr><th>交通</th><td colspan="3"><span>東京メトロ東西線/西葛西駅 徒歩1分</span></td></tr>
+<tr class="item"><th>免許番号</th><td class="item">国土交通大臣免許（３）第８５２２号</td><th>TEL/FAX</th><td>03-6456-0315 ／<br>03-6456-0316</td></tr>
+</tbody></table></div></div></div>`;
+
+  it("reads the listing company, its branch and the city it is in", () => {
+    expect(parseAthomeAgency(detail)).toEqual({ name: "アエラス西葛西店 (株)アエラス", brand: "アエラス", company: "株式会社アエラス",
+      branch: "西葛西店", address: "東京都江戸川区西葛西6丁目8-10 朝日生命西葛西ビル 7階", prefecture: "東京都", city: "江戸川区",
+      phone: "03-6456-0315", licence: "国土交通大臣(3)第8522号" });
+  });
+
+  it("returns null for a page without the company block", () => {
+    expect(parseAthomeAgency("<div class=\"p-property\"></div>")).toBeNull();
   });
 });

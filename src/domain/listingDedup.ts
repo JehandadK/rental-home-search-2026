@@ -207,10 +207,13 @@ function filledCount(value: unknown): number {
   return 1;
 }
 
+/** Completeness of what the ad says about the room; the agency's store details are not room facts. */
+const roomFactCount = ({ agencyInfo: _agencyInfo, ...listing }: RawListing) => filledCount(listing);
+
 /** Preferred portal wins ties; completeness decides within one tier. */
 export function isBetterListing(candidate: RawListing, incumbent: RawListing): boolean {
   if (sourceRank(candidate) !== sourceRank(incumbent)) return sourceRank(candidate) < sourceRank(incumbent);
-  return filledCount(candidate) > filledCount(incumbent);
+  return roomFactCount(candidate) > roomFactCount(incumbent);
 }
 
 /**
@@ -268,7 +271,7 @@ function mergeCosts(primary?: ListingCosts, secondary?: ListingCosts): ListingCo
 /** Keep the preferred portal's presentation while filling its missing details. */
 export function mergeDuplicateListings(a: RawListing, b: RawListing): RawListing {
   const [primary, secondary] = isBetterListing(a, b) ? [a, b] : [b, a];
-  const merged = mergeObject(primary, secondary)!;
+  const { agency: _agency, agencyInfo: _agencyInfo, ...merged } = mergeObject(primary, secondary)!;
   const references = [...sourceListings(primary), ...sourceListings(secondary)];
   const uniqueReferences = new Map(references.map((reference) => [
     reference.id
@@ -284,6 +287,7 @@ export function mergeDuplicateListings(a: RawListing, b: RawListing): RawListing
     costs: mergeCosts(primary.costs, secondary.costs),
     tenancy: mergeObject(primary.tenancy, secondary.tenancy),
     building: mergeBuilding(primary.building, secondary.building),
+    ...chooseAgency(primary, secondary),
     attributes: [...new Map([...(primary.attributes ?? []), ...(secondary.attributes ?? [])].map((item) => [
       `${item.key}|${item.state ?? ""}|${item.raw}`,
       item,
@@ -291,6 +295,14 @@ export function mergeDuplicateListings(a: RawListing, b: RawListing): RawListing
     sourceListings: [...uniqueReferences.values()].sort((x, y) => referenceRank(x) - referenceRank(y)),
     ...mergePhotos(primary.photos, secondary.photos),
   };
+}
+
+/** One ad's store, never one portal's name with another portal's address. */
+function chooseAgency(primary: RawListing, secondary: RawListing): Pick<RawListing, "agency" | "agencyInfo"> {
+  const named = (listing: RawListing) => listing.agency != null || listing.agencyInfo != null;
+  const chosen = named(primary) ? primary : secondary;
+  return { ...(chosen.agency !== undefined ? { agency: chosen.agency } : {}),
+    ...(chosen.agencyInfo !== undefined ? { agencyInfo: chosen.agencyInfo } : {}) };
 }
 
 /** Every portal's pictures of the room, preferred portal first; omitted when neither has any. */
