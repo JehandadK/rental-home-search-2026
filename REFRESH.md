@@ -484,6 +484,26 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
   12 of them ≥70㎡, 59 at ≤¥150,000 and ≥50㎡. All geocoded; none SOLD.
 - **774 tests, typecheck and production build pass.**
 
+## 2026-10-08 repeat parallel per-source load (hours after the 2026-10-07 one)
+
+- Same layout: one agent and worktree per source, each merged and rebuilt on
+  its own. Every source/city stopped on two all-known pages or its last page;
+  zero detail requests. The `domcontentloaded` (AtHome) and `wait: false`
+  (RoomSpot) navigation fixes held: no load-event timeouts.
+- Source additions (Soka / Koshigaya / Kawaguchi / Katsushika): Nifty 0/2/5/2
+  (11 pages), RoomSpot 10/6/0/1 (11 pages; Katsushika ran off its last page
+  and was re-run with `--max-pages 2`), SUUMO 0/5/41/12 (39 pages; Kawaguchi
+  needed 23), AtHome 4/12/19/10 (11 pages). AtHome showed its verification
+  page once (Soka); it was passed by hand.
+- Gotcha: `git worktree remove --force` deletes the worktree's untracked
+  `.context/athome-profile` too. Move the profile out first, or AtHome is
+  back on an older profile and shows its verification page again.
+- An AtHome card can show fewer photos than before; the source row then keeps
+  only the current ones, but the property document keeps every photo URL seen.
+- Archival rows **5110 → 5143** (36 newly tracked: Nifty 6, RoomSpot 1,
+  SUUMO 28, AtHome 1). All geocoded; none SOLD.
+- **774 tests, typecheck and production build pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
