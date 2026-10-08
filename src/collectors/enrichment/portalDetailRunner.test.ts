@@ -7,6 +7,7 @@ import { ListingIngestionService } from "../../data-layer/ingestion/service";
 import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
 import { JsonSourceStore } from "../../storage/json/dataStore";
 import { trackingKey } from "../../domain/listingIdentity";
+import { BrowserUnavailableError } from "../shared/browserErrors";
 import { portalDetailCapturePath, portalDetailQueuePath, runPortalDetails, type PortalDetailDependencies } from "./portalDetailRunner";
 import { classifyPortalDetailPage, portalDetailBatch, type PortalDetailCapture, type PortalDetailPage } from "./portalDetailIngestion";
 
@@ -178,6 +179,16 @@ describe("AtHome / RoomSpot detail loading (offline)", () => {
     await writeFile(portalDetailCapturePath(root, "roomspot", urlOf("2")), JSON.stringify({ schemaVersion: 1, source: "roomspot", url: urlOf("2"), capturedAt: now, html: "x", sha256: "bad" }));
     await expect(runPortalDetails(["--limit", "10"], { ...dependencies, onEnded })).rejects.toThrow("checksum");
     expect(onEnded).toHaveBeenCalledWith("roomspot", [expect.objectContaining({ url: urlOf("1") })]);
+  });
+
+  it("stops at once, without backoff or a pause, when the local browser is unavailable", async () => {
+    await seed();
+    load.mockRejectedValue(new BrowserUnavailableError("Pi Control Chrome Bridge is unavailable"));
+    await expect(runPortalDetails(["--limit", "3"], dependencies)).rejects.toThrow("Chrome Bridge is unavailable");
+    expect(load).toHaveBeenCalledTimes(1);
+    const saved = await queue();
+    expect(saved.blockedUntil).toBeUndefined();
+    expect(saved.items.every((item: object) => !("error" in item) && !("retryAfter" in item))).toBe(true);
   });
 
   it("re-reads nothing outside the portal it was asked for", async () => {

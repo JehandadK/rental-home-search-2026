@@ -14,6 +14,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { createRequire } from "node:module";
+import { BrowserUnavailableError } from "./browserErrors";
 
 // playwright-core is resolved at runtime (not a project dependency), so type only what is used.
 interface Page {
@@ -73,6 +74,11 @@ export class PlaywrightBridge {
 
   async connect(): Promise<void> {
     if (this.context) return;
+    try { await this.launch(); }
+    catch (error) { throw new BrowserUnavailableError(`Playwright Chromium could not be started: ${(error as Error).message}`, { cause: error }); }
+  }
+
+  private async launch(): Promise<void> {
     const headless = process.env.PLAYWRIGHT_HEADLESS === "1";
     const { chromium } = loadPlaywright();
     const userDataDir = process.env.PLAYWRIGHT_USER_DATA_DIR;

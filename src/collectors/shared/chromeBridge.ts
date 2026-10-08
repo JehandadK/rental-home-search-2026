@@ -1,4 +1,5 @@
 import { PlaywrightBridge } from "./playwrightBridge";
+import { BrowserUnavailableError } from "./browserErrors";
 /** Minimal read-only client for the local Pi Control Chrome Bridge. */
 const HOST = process.env.PI_CONTROL_CHROME_BRIDGE_HOST ?? "127.0.0.1";
 const PORT = Number(process.env.PI_CONTROL_CHROME_BRIDGE_PORT ?? 17318);
@@ -18,8 +19,16 @@ export class ChromeBridge {
   private target?: BridgeTarget;
 
   async connect(): Promise<void> {
+    try { await this.open(); }
+    catch (error) {
+      if (error instanceof BrowserUnavailableError) throw error;
+      throw new BrowserUnavailableError(`Pi Control Chrome Bridge is unavailable at ${HTTP} (${(error as Error).message}). Run /chrome connect first, or set BROWSER_DRIVER=playwright.`, { cause: error });
+    }
+  }
+
+  private async open(): Promise<void> {
     const pair = (await (await fetch(`${HTTP}/pair`)).json()) as { token?: string };
-    if (!pair.token) throw new Error("Pi Control Chrome Bridge is unavailable. Run /chrome connect first.");
+    if (!pair.token) throw new BrowserUnavailableError("Pi Control Chrome Bridge is unavailable. Run /chrome connect first.");
     await new Promise<void>((resolve, reject) => {
       const socket = new WebSocket(`${WS}?role=pi&token=${encodeURIComponent(pair.token!)}`);
       this.socket = socket;
@@ -28,7 +37,7 @@ export class ChromeBridge {
       socket.addEventListener("message", (event) => this.onMessage(String(event.data)));
     });
     const status = (await this.raw("status", {}, undefined)) as { browserId?: string; connectionId?: string; connectionGeneration?: number };
-    if (!status.browserId) throw new Error("Chrome extension is not connected. Run /chrome connect first.");
+    if (!status.browserId) throw new BrowserUnavailableError("Chrome extension is not connected. Run /chrome connect first.");
     this.target = {
       browserId: status.browserId,
       connectionId: status.connectionId,

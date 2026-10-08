@@ -8,6 +8,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { AgencyDetailPlanner, PortalDetailSource, ScrapeIngestion } from "../../data-layer/ingestion/contracts";
 import { withFileLock, writeJsonAtomically } from "../../node/jsonFile";
+import { BrowserUnavailableError } from "../shared/browserErrors";
 import { captureKey } from "../shared/captureStore";
 import { positiveInteger } from "../shared/pageBudget";
 import {
@@ -129,6 +130,8 @@ async function runLocked(args: readonly string[], dependencies: PortalDetailDepe
           page = await loader.load(item.url);
           ({ kind, evidence } = classifyPortalDetailPage(source, page, item.url));
         } catch (e) {
+          // The local browser never started: no page was requested, so this is not the portal's doing.
+          if (e instanceof BrowserUnavailableError) throw e;
           kind = "error";
           evidence = (e as Error).message.slice(0, 300);
         }
