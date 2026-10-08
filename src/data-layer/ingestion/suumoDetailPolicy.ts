@@ -55,7 +55,19 @@ export function prepareSuumoDetailBatch(request: DetailPatchBatch, previous: Lis
     if (!matches) throw new InvalidScrapeBatchError(`Cannot enrich unknown source URL: ${url}`);
     if (seen.has(url)) continue;
     seen.add(url);
-    if (times[url] && Date.parse(observation.observedAt) <= Date.parse(times[url])) continue;
+    if (times[url] && Date.parse(observation.observedAt) <= Date.parse(times[url])) {
+      // Pages captured before parser 2 read the store block can still add it, and nothing else.
+      const { agency, agencyInfo } = observation.details;
+      const unnamed = matches.filter((listing) => listing.agency == null && listing.agencyInfo == null);
+      if (agencyInfo && unnamed.length) {
+        for (const listing of unnamed) {
+          observations.push({ source: "suumo", sourceListingId: listing.id ?? url, targetUrl: url,
+            observedAt: observation.observedAt, listing: { ...listing, agency, agencyInfo } });
+        }
+        updated++;
+      }
+      continue;
+    }
     for (const listing of matches) {
       observations.push({ source: "suumo", sourceListingId: listing.id ?? url, targetUrl: url,
         observedAt: observation.observedAt, listing: applyDetail(listing, observation.details) });
@@ -96,7 +108,15 @@ export function validateDetailPatch(value: unknown): void {
     availableFrom: nullable(text), immediateMoveIn: nullable(boolean) });
   const building = fields({ floor: nullable(text), totalFloors: nullable(number), structure: nullable(text),
     features: nullable(texts), conditions: nullable(texts) });
+  const agencyKeys = ["brand", "company", "branch", "address", "prefecture", "city", "phone", "licence"];
+  const agencyInfo: Check = (v) => object(v) && typeof v.name === "string" && v.name.trim() !== ""
+    && agencyKeys.every((key) => v[key] !== undefined) && fields({ name: text, ...Object.fromEntries(agencyKeys.map((key) => [key, nullable(text)] as const)) })(v);
   const check = fields({ parking: nullable(parking), costs, tenancy, building,
-    sourceDetails: (v) => object(v) && Object.keys(v).length > 0 && Object.values(v).every(text) });
-  if (!check(value)) throw new InvalidScrapeBatchError("Invalid or forbidden detail patch fields");
+    sourceDetails: (v) => object(v) && Object.keys(v).length > 0 && Object.values(v).every(text),
+    agency: text, agencyInfo });
+  // The store name and its details travel together, or not at all.
+  const store = object(value) ? value as { agency?: unknown; agencyInfo?: { name?: unknown } } : {};
+  const paired = (store.agency === undefined) === (store.agencyInfo === undefined)
+    && (store.agencyInfo === undefined || store.agency === store.agencyInfo.name);
+  if (!check(value) || !paired) throw new InvalidScrapeBatchError("Invalid or forbidden detail patch fields");
 }

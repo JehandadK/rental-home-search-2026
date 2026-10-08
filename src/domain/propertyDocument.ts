@@ -162,6 +162,12 @@ const NON_FACT_FIELDS = new Set([
   "attributes",
 ]);
 
+/** Objects kept as one value: their fields describe one thing and must not be chosen field by field. */
+const ATOMIC_FACT_FIELDS = new Set([
+  // One store's name, branch and city; flattening could pair one ad's name with another ad's city.
+  "agencyInfo",
+]);
+
 /**
  * Every field the portal reported, as dotted paths (`costs.depositYen`,
  * `sourceDetails.築年月`). Nested objects are flattened; arrays are one value.
@@ -174,7 +180,7 @@ export function listingFacts(listing: RawListing): Record<string, unknown> {
       if (!prefix && NON_FACT_FIELDS.has(key)) continue;
       if (item === null || item === undefined || item === "") continue;
       const path = `${prefix}${key}`;
-      if (typeof item === "object" && !Array.isArray(item)) walk(item as Record<string, unknown>, `${path}.`);
+      if (typeof item === "object" && !Array.isArray(item) && !(!prefix && ATOMIC_FACT_FIELDS.has(key))) walk(item as Record<string, unknown>, `${path}.`);
       else if (!Array.isArray(item) || item.length > 0) facts[path] = item;
     }
   };

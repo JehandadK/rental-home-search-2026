@@ -50,6 +50,7 @@ const compact = uniqueListings.map((listing) => {
     // structured fields that scoring and expanded rows actually consume.
     notes: _notes,
     agency: _agency,
+    agencyInfo: _agencyInfo,
     sourceDetails: _sourceDetails,
     ...webListing
   } = listing;

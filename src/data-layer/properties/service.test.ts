@@ -3,6 +3,7 @@ import type { PropertyDocument } from "../../domain/propertyDocument";
 import type { RawListing } from "../../domain/types";
 import type { PropertyDocumentStore, PropertyEvidence, PropertyStoreState } from "./contracts";
 import { syncPropertyDocuments } from "./service";
+import { listingFacts } from "../../domain/propertyDocument";
 
 class MemoryStore implements PropertyDocumentStore {
   documents = new Map<string, PropertyDocument>();
@@ -225,5 +226,15 @@ describe("syncPropertyDocuments", () => {
     expect(Object.keys(docs.find((doc) => doc.ads["suumo|jnc_000108148800|bc_100517801810"])!.ads)).toEqual([
       "suumo|jnc_000108148800|bc_100517536456", "suumo|jnc_000108148800|bc_100517801810",
     ]);
+  });
+});
+
+describe("listingFacts", () => {
+  it("keeps an agency's store as one value, so one ad's name never pairs with another ad's city", () => {
+    const agencyInfo = { name: "ハウスコム埼玉(株)草加店", brand: "ハウスコム", company: "ハウスコム埼玉株式会社", branch: "草加店",
+      address: "埼玉県草加市氷川町2120-6", prefecture: "埼玉県", city: "草加市", phone: null, licence: null };
+    const facts = listingFacts(listing({ agency: agencyInfo.name, agencyInfo, costs: { depositYen: 0 } }));
+    expect(facts).toMatchObject({ agency: agencyInfo.name, agencyInfo, "costs.depositYen": 0 });
+    expect(Object.keys(facts).filter((key) => key.startsWith("agencyInfo."))).toEqual([]);
   });
 });

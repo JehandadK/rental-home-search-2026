@@ -209,12 +209,38 @@ export interface RawListing {
   building?: ListingBuilding;
   /** The listing agency (仲介業者), when the source names one. */
   agency?: string | null;
+  /** The agency's store as printed on the detail page: brand, branch and where it is. */
+  agencyInfo?: ListingAgency | null;
   /**
    * Bilingual normalized attributes derived from every captured feature,
    * condition, lease, parking and availability field. Unknown raw features
    * remain in category `other`, so normalization never loses source data.
    */
   attributes?: ListingAttribute[];
+}
+
+/**
+ * The advertising agency's store (取扱店舗 / 広告主). Brand, company and branch
+ * are split from the printed name; `name` keeps it exactly, so a better split
+ * can be re-derived later. `null` means the page did not say.
+ */
+export interface ListingAgency {
+  /** Store name as printed, e.g. "シャーメゾンショップ　株式会社クイックホーム　北越谷店". */
+  name: string;
+  /** Chain or franchise brand when it has one ("シャーメゾンショップ"), else the company's own name ("クイックホーム"). */
+  brand: string | null;
+  /** The legal entity, legal form spelled out: "株式会社クイックホーム". */
+  company: string | null;
+  /** Branch or office: "北越谷店", "春日部営業所". */
+  branch: string | null;
+  /** The store's office address. */
+  address: string | null;
+  prefecture: string | null;
+  /** Municipality of the office: "越谷市", "足立区", "さいたま市" (wards are kept in `address`). */
+  city: string | null;
+  phone: string | null;
+  /** 宅建業 licence, e.g. "国土交通大臣(9)第3918号". */
+  licence: string | null;
 }
 
 /** Distance from a listing to one reference place. */

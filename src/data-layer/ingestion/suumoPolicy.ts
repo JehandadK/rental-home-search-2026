@@ -81,5 +81,6 @@ export const suumoSourcePolicy: SourcePolicy = {
   source: "suumo",
   host: "suumo.jp",
   listings: { prepare: prepareSuumoBatch, exactUrlDiscovery: true },
-  detailPatches: { producer: "suumo-detail", validate: validateDetailPatch, prepare: prepareSuumoDetailBatch },
+  // Parser 2 adds the agency store block (この物件を取り扱う店舗).
+  detailPatches: { producer: "suumo-detail", parserVersions: ["1", "2"], validate: validateDetailPatch, prepare: prepareSuumoDetailBatch },
 };

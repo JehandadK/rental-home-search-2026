@@ -1,7 +1,8 @@
 /** Pure parsers and incremental merge helpers for athome.co.jp list pages. */
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
-import type { ParkingInfo, RawListing } from "../../domain/types";
+import type { ListingAgency, ParkingInfo, RawListing } from "../../domain/types";
+import { toListingAgency } from "../shared/agency";
 import { isExplicitNone, parseYen as parseJapaneseYen } from "../shared/parseJa";
 import { collectPhotos, photoKind } from "../shared/photos";
 import { withPrefecture } from "../shared/targetCities";
@@ -124,4 +125,13 @@ export function parseAthomePage(html: string, city: string): RawListing[] {
   });
 
   return listings;
+}
+
+/** The listing company (掲載不動産会社) on an AtHome detail page. */
+export function parseAthomeAgency(html: string): ListingAgency | null {
+  const $ = cheerio.load(html);
+  const block = $(".company-info-area").first();
+  const row = (label: string) => block.find("th").filter((_, th) => $(th).text().trim() === label).first().next("td").text();
+  return toListingAgency({ name: block.find(".head__name").first().text(), address: row("所在地"),
+    phone: row("TEL/FAX"), licence: row("免許番号") });
 }

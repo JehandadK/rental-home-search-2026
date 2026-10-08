@@ -54,6 +54,8 @@ export interface SourcePolicy {
   /** Partial detail observations for existing exact source URLs. */
   readonly detailPatches?: {
     readonly producer: string;
+    /** Parser versions accepted from the detail producer (default ["1"]); see `detailImportParserVersions`. */
+    readonly parserVersions?: readonly string[];
     validate(details: unknown): void;
     prepare(batch: DetailPatchBatch, previous: ListingSourceSnapshot | null): PreparedIngestion;
   };

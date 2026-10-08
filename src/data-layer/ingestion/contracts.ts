@@ -32,7 +32,7 @@ export interface ScrapeObservation {
 }
 
 /** Detail pages may not assert identity, prices, lifecycle, or user-owned fields. */
-export type ListingDetailPatch = Pick<RawListing, "parking" | "costs" | "tenancy" | "building" | "sourceDetails">;
+export type ListingDetailPatch = Pick<RawListing, "parking" | "costs" | "tenancy" | "building" | "sourceDetails" | "agency" | "agencyInfo">;
 
 export interface DetailPatchObservation {
   /** Exact source URL is the stable ad identity for this patch; resolved by the data layer. */
