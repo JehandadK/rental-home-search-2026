@@ -360,4 +360,18 @@ describe("AtHome detail pages", () => {
       vi.unstubAllEnvs();
     }
   });
+
+  it("reads the page again, without navigating, when the new document replaced the one being read", async () => {
+    let reads = 0;
+    bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+      if (method === "new_tab") return { tab: homeTab };
+      if (method === "navigate") return { tab: { ...homeTab, url: params.url } };
+      if (method === "evaluate" && ++reads === 1) return { result: { exceptionDetails: { text: "page.evaluate: Execution context was destroyed, most likely because of a navigation" } } };
+      if (method === "evaluate") return read(DETAIL, "物件詳細");
+      throw new Error(`Unexpected Bridge method: ${method}`);
+    });
+    expect(await new AthomeBrowser().readDetail(DETAIL)).toMatchObject({ title: "物件詳細" });
+    expect(bridge.request.mock.calls.filter(([method]) => method === "navigate")).toHaveLength(1);
+    expect(reads).toBe(2);
+  });
 });

@@ -1,6 +1,6 @@
 /** Headed-browser public RoomSpot search collector. */
 import { createBridge } from "../shared/browserBridge";
-import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
+import { readDetailPageExpression, readLoadedDetailPage, type EvaluateResult } from "../shared/detailPage";
 import { EndOfResultsError, RESULT_PAGE_SIZE } from "../shared/resultPages";
 
 /** Returned in-page when RoomSpot answers a page past page 1 with no results. */
@@ -41,11 +41,10 @@ export class RoomspotBrowser {
   /** Loads one ad's detail page in the same tab and reads it, for its 広告主情報 block. */
   async readDetail(url: string): Promise<{ status?: number; url: string; title: string; html: string }> {
     await this.navigate(url);
-    const response = await this.bridge.request<EvaluateResult>("evaluate", {
+    return readLoadedDetailPage(() => this.bridge.request<EvaluateResult>("evaluate", {
       tabId: this.tab!.id, tabFence: this.tab!.tabFence, incarnation: this.tab!.incarnation,
       sessionId: this.sessionId, expression: readDetailPageExpression(url, ".kokoku-detail-realtor"), awaitPromise: true,
-    }, 35_000);
-    return detailPageFrom(response, this.lastStatus);
+    }, 35_000), this.lastStatus);
   }
 
   /** Fetch one page via RoomSpot's own public WordPress REST endpoint. */

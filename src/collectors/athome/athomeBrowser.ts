@@ -6,7 +6,7 @@
  * Only public listing HTML leaves the page; cookies/storage remain in the browser.
  */
 import { createBridge } from "../shared/browserBridge";
-import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
+import { readDetailPageExpression, readLoadedDetailPage, type EvaluateResult } from "../shared/detailPage";
 import { EndOfResultsError } from "../shared/resultPages";
 import { athomeDownloadedCapture } from "./athomeCapture";
 
@@ -88,11 +88,10 @@ export class AthomeBrowser {
   async readDetail(url: string): Promise<{ status?: number; url: string; title: string; html: string }> {
     if (this.tab) await this.navigate(url);
     else await this.connect(url);
-    const response = await this.bridge.request<EvaluateResult>("evaluate", {
+    return readLoadedDetailPage(() => this.bridge.request<EvaluateResult>("evaluate", {
       tabId: this.tab!.id, tabFence: this.tab!.tabFence, incarnation: this.tab!.incarnation, sessionId: this.sessionId,
       expression: readDetailPageExpression(url, ".company-info-area"), awaitPromise: true,
-    }, REQUEST_TIMEOUT_MS);
-    return detailPageFrom(response, this.lastStatus);
+    }, REQUEST_TIMEOUT_MS), this.lastStatus);
   }
 
   /**

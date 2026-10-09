@@ -34,3 +34,21 @@ export function detailPageFrom(response: EvaluateResult, status?: number): { sta
   const page = JSON.parse(value) as { url: string; title: string; html: string };
   return { ...(status !== undefined ? { status } : {}), url: page.url, title: page.title ?? "", html: page.html };
 }
+
+/** The tab's document was replaced while the read script ran: the navigation landed, nothing failed. */
+const CONTEXT_REPLACED = /Execution context was destroyed|Cannot find context with specified id|context.*(?:destroyed|navigat)/i;
+
+/**
+ * Reads the loaded page, reading it once more if the navigation's new document
+ * replaced the one the script started on. The second read evaluates the page the
+ * browser already loaded; it is not another request to the portal.
+ */
+export async function readLoadedDetailPage(evaluate: () => Promise<EvaluateResult>, status?: number, pauseMs = 1000) {
+  try {
+    return detailPageFrom(await evaluate(), status);
+  } catch (error) {
+    if (!CONTEXT_REPLACED.test((error as Error).message)) throw error;
+    await new Promise((resolve) => setTimeout(resolve, pauseMs));
+    return detailPageFrom(await evaluate(), status);
+  }
+}
