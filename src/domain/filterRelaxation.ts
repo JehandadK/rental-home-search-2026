@@ -37,6 +37,7 @@ const RELAXATIONS: readonly Relaxation[] = [
   { id: "status", label: "listing status", fields: ["status"] },
   { id: "newOnly", label: "new only", fields: ["newOnly"] },
   { id: "rentedOut", label: "rented-out filter", fields: ["rentedOut"] },
+  { id: "ur", label: "UR filter", fields: ["ur"] },
   { id: "markFilter", label: "decision filter", fields: ["markFilter"] },
 ];
 

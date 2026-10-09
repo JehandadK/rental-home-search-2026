@@ -6,13 +6,15 @@ import type {
   RawListing,
   SourceListingReference,
 } from "./types";
+import { UR_SOURCE } from "./ur";
 
 /**
  * Portal preference for the merged record's presentation and link ordering:
- * athome first, then suumo, then nifty. Every portal ad is still retained in
+ * UR's own ad first (the landlord's terms beat a portal's copy of them), then
+ * athome, suumo and nifty. Every portal ad is still retained in
  * `sourceListings` — this only decides which one leads.
  */
-const SOURCE_PRIORITY = ["athome", "suumo", "nifty", "roomspot"];
+const SOURCE_PRIORITY = [UR_SOURCE, "athome", "suumo", "nifty", "roomspot"];
 
 const norm = (value: string | null | undefined): string =>
   (value ?? "")
@@ -92,6 +94,16 @@ const close = (a: number | null | undefined, b: number | null | undefined, toler
   a != null && b != null && Math.abs(a - b) <= tolerance;
 
 /**
+ * Floor areas agree within 0.2 m². UR prints whole square metres, cut down
+ * (79.23 m² is "79㎡"), so its own ad may sit up to 1 m² below a portal's.
+ */
+function sameSize(a: RawListing, b: RawListing): boolean {
+  if (a.source !== UR_SOURCE && b.source !== UR_SOURCE) return close(a.sizeM2, b.sizeM2, 0.2);
+  const [ur, other] = a.source === UR_SOURCE ? [a, b] : [b, a];
+  return ur.sizeM2 != null && other.sizeM2 != null && other.sizeM2 - ur.sizeM2 > -0.2 && other.sizeM2 - ur.sizeM2 < 1;
+}
+
+/**
  * Portals print 階数 as "-" when it does not apply (terraced houses) or is
  * unstated; that is absence of information, not a floor to conflict with.
  */
@@ -130,7 +142,7 @@ export function isSameProperty(a: RawListing, b: RawListing): boolean {
  * additionally requires the agent walk time to agree when both sides state it.
  */
 export function isSameUnit(a: RawListing, b: RawListing): boolean {
-  if (!close(a.sizeM2, b.sizeM2, 0.2)) return false;
+  if (!sameSize(a, b)) return false;
   if (a.builtYear != null && b.builtYear != null && Math.abs(a.builtYear - b.builtYear) > 1) return false;
 
   if (hasFloorConflict(a, b)) return false;

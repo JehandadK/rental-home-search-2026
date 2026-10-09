@@ -20,6 +20,7 @@ import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { describeAvailability, isRentedOut } from "../../domain/availability";
+import { isUrListing, sourceLabel } from "../../domain/ur";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
 import { listingPhotos } from "../../domain/listingPhotos";
 import { describeNote, formatViewing, type NoteDraft, type NoteMap } from "../../domain/notes";
@@ -64,6 +65,8 @@ interface Props {
 }
 
 export type CostBasis = Pick<ScoringConfig, "moveIn" | "includeParking">;
+
+/** How an ad's source is named in the links: UR's own site is "UR". */
 
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
@@ -422,6 +425,7 @@ export const ListingTable = memo(function ListingTable({
               const isSelected = key === selected;
               const sold = isSold(listing);
               const rentedOut = isRentedOut(listing);
+              const ur = isUrListing(listing);
               const fresh = isNewListing(listing, now, newWithinDays);
               const mark = marks[key];
               const ruledOut = isRuledOut(mark);
@@ -492,6 +496,14 @@ export const ListingTable = memo(function ListingTable({
                         RENTED OUT
                       </span>
                     )}
+                    {ur && (
+                      <span
+                        className={styles.badgeUr}
+                        title="UR賃貸: leased by UR directly — no key money, agency fee, guarantor or renewal fee; deposit 2 months"
+                      >
+                        UR
+                      </span>
+                    )}
                     {note && (
                       <span className={styles.badgeNote} title={describeNote(note)}>
                         {note.viewingAt ? `📅 ${formatViewing(note.viewingAt)}` : "📝"}
@@ -522,7 +534,7 @@ export const ListingTable = memo(function ListingTable({
                     <td className={styles.city}>
                       {listing.city ?? "—"}
                       <small className={styles.source}>
-                        {portals.map(({ source }) => source).join(" + ")}
+                        {portals.map(({ source }) => sourceLabel(source)).join(" + ")}
                       </small>
                     </td>
                   )}
@@ -590,7 +602,7 @@ export const ListingTable = memo(function ListingTable({
                             title={`${linkIndex === 0 && portals.length > 1 ? "Preferred portal · " : ""}${reference.source}: ${status}`}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {reference.source}
+                            {sourceLabel(reference.source)}
                           </a>
                           {onMarkAd && (
                             <button
@@ -783,11 +795,13 @@ function AttributeSummary({ listing }: { listing: ScoredRow["listing"] }) {
 function MoveInBreakdown({ row, moveIn }: { row: ScoredRow; moveIn: CostBasis["moveIn"] }) {
   const costs = computeMoveInCosts(row.listing, moveIn);
   const money = (n: number) => `¥${yen.format(n)}`;
-  const items: { label: string; value: number; refundable?: boolean; estimated?: boolean }[] = [
+  // A charge the ad (or UR's terms) says is not made reads "none", not ¥0.
+  const none = costs.urTerms ? "none (UR)" : "none";
+  const items: { label: string; value: number; refundable?: boolean; estimated?: boolean; noneLabel?: string }[] = [
     { label: "敷金 deposit", value: costs.deposit, refundable: true, estimated: costs.estimated.deposit },
-    { label: "礼金 key money", value: costs.keyMoney, estimated: costs.estimated.keyMoney },
-    { label: "仲介手数料 agency", value: costs.agencyFee, estimated: true },
-    { label: "保証会社 guarantor", value: costs.guarantorFee, estimated: true },
+    { label: "礼金 key money", value: costs.keyMoney, estimated: costs.estimated.keyMoney, noneLabel: none },
+    { label: "仲介手数料 agency", value: costs.agencyFee, estimated: costs.estimated.agencyFee, noneLabel: none },
+    { label: "保証会社 guarantor", value: costs.guarantorFee, estimated: costs.estimated.guarantorFee, noneLabel: none },
     { label: "火災保険 insurance", value: costs.fireInsurance, estimated: true },
     { label: "清掃費 cleaning", value: costs.cleaningFee, estimated: costs.estimated.cleaningFee },
     ...costs.otherFeeItems.map(({ label, yen }) => ({ label: `${label} · other fee`, value: yen })),
@@ -813,7 +827,7 @@ function MoveInBreakdown({ row, moveIn }: { row: ScoredRow; moveIn: CostBasis["m
               {item.label}
               {item.estimated && <em className={styles.est}> est.</em>}
             </span>
-            <span>{money(item.value)}</span>
+            <span>{item.value === 0 && item.noneLabel ? item.noneLabel : money(item.value)}</span>
           </li>
         ))}
       </ul>

@@ -66,6 +66,21 @@ export const ATTRIBUTE_CATEGORY_LABELS: Record<ListingAttributeCategory, { en: s
   other: { en: "Other source details", ja: "その他" },
 };
 
+/**
+ * Lease terms the ad states as a cost of zero. Shown with the features, but
+ * not scoreable features: the move-in cost already counts them.
+ */
+const NO_CHARGE_TERMS: readonly {
+  key: string;
+  labelEn: string;
+  labelJa: string;
+  yen: (listing: RawListing) => number | null | undefined;
+}[] = [
+  { key: "noKeyMoney", labelEn: "No key money", labelJa: "礼金なし", yen: (listing) => listing.keyMoneyYen ?? listing.costs?.keyMoneyYen },
+  { key: "noAgencyFee", labelEn: "No agency fee", labelJa: "仲介手数料なし", yen: (listing) => listing.costs?.agencyFeeYen },
+  { key: "noRenewalFee", labelEn: "No renewal fee", labelJa: "更新料なし", yen: (listing) => listing.costs?.renewalFeeYen },
+];
+
 const clean = (value: string): string => value.replace(/\s*質問\s*この物件の詳しい情報を送ってもらう.*$/s, "").trim();
 
 /** Create bilingual attributes and retain unmapped source strings as Other. */
@@ -103,6 +118,10 @@ export function normalizeListingAttributes(listing: RawListing): ListingAttribut
       const key = `raw:${raw.normalize("NFKC").replace(/\s+/g, "").toLowerCase()}`;
       attributes.set(key, { key, category: "other", labelEn: "Source detail", labelJa: raw, state: null, raw });
     }
+  }
+  for (const term of NO_CHARGE_TERMS) {
+    if (term.yen(listing) !== 0) continue;
+    attributes.set(term.key, { key: term.key, category: "tenancy", labelEn: term.labelEn, labelJa: term.labelJa, state: true, raw: term.labelJa });
   }
   return [...attributes.values()];
 }

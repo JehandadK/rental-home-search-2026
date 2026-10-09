@@ -48,7 +48,9 @@ export function decodeFilters(raw: unknown): ListingFilters {
   const filters = { ...EMPTY_FILTERS, ...raw } as ListingFilters;
   const agencies = Array.isArray(filters.agencies) ? filters.agencies.filter((key): key is string => typeof key === "string") : [];
   const agencyMode = filters.agencyMode === "exclude" ? "exclude" : "include";
-  return { ...filters, agencies, agencyMode, newWithinDays: clampNewWindowDays(filters.newWithinDays) };
+  // Filters saved before the UR filter existed have none: they show UR rooms.
+  const ur = filters.ur === "hide" || filters.ur === "only" ? filters.ur : "show";
+  return { ...filters, agencies, agencyMode, ur, newWithinDays: clampNewWindowDays(filters.newWithinDays) };
 }
 
 const MARK_KEYS = new Set<string>(LISTING_MARKS.map((mark) => mark.key));

@@ -224,6 +224,35 @@ describe("weight presets and empty results", () => {
     expect(screen.queryByText("No listings match these filters.")).toBeNull();
   });
 
+  it("badges and filters UR rooms, while the UR estate layer ignores the filters", async () => {
+    const withEstate = snapshot({
+      cities: [...FIXTURE_REFERENCE.cities.records],
+      boundaries: [...FIXTURE_REFERENCE.boundaries.records],
+      places: [
+        ...FIXTURE_REFERENCE.places.records,
+        place("p:ur", "urDanchi", "コンフォール松原", 35.83, 139.8, { attributes: { urCode: "50_4090", cityId: "city:soka" } }),
+      ],
+    });
+    await renderApp(withEstate, [
+      ...FIXTURE_LISTINGS,
+      { ...FIXTURE_LISTINGS[0], name: "ＵＲコンフォール松原", source: "suumo" },
+      { ...FIXTURE_LISTINGS[0], id: "ur-50_4090-000010701", name: "コンフォール松原 1-101", source: "ur" },
+    ]);
+    const urBadges = () => screen.queryAllByTitle(/^UR賃貸: leased by UR directly/);
+    expect(screen.getByText(/4 \/ 4 listings.* · 2 UR/)).toBeTruthy();
+    expect(urBadges()).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "UR estates" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByText("UR estate · vacancy")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "UR only" }));
+    expect(screen.getByText(/2 \/ 4 listings/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "hide UR" }));
+    expect(screen.getByText(/2 \/ 4 listings.* · 2 UR \(hidden\)/)).toBeTruthy();
+    expect(urBadges()).toHaveLength(0);
+    // The estate is still on the map.
+    expect(screen.getByText("UR estate · vacancy")).toBeTruthy();
+  });
+
   it("does not blame the filters when there is simply no data", async () => {
     await renderApp(FIXTURE_REFERENCE, []);
     expect(screen.getByText("No listings to show yet.")).toBeTruthy();

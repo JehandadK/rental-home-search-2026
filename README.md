@@ -294,6 +294,7 @@ the two files the browser fetches into `public/data/` (below).
 | `sources/suumo.json` | SUUMO family rentals (2K+) | `npm run scrape` |
 | `sources/athome.json` | AtHome family rentals (2K+), including move-in money and amenity flags | `npm run scrape:athome` |
 | `sources/roomspot.json` | RoomSpot/POLUS family rentals (2K+), including exact addresses and move-in money | `npm run scrape:roomspot` |
+| `sources/ur.json` | UR賃貸住宅 vacant family rooms (2K+) from UR's own site, keyed on UR's estate and room codes | `npm run scrape:ur` |
 | `sources/nifty.json` | Nifty list-page rentals + cached historical detail enrichment | `npm run crawl:nifty` / `npm run import:nifty` |
 | `sources/yahoo.json` | User-selected Yahoo! Real Estate detail listings, retained across rebuilds | Native-browser detail extraction; no automatic market crawl |
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
@@ -389,6 +390,18 @@ newest-first page without early stopping; `--max-pages N` bounds a diagnostic
 run. `--full` is currently rejected until collectors can positively verify per-city
 exhaustion; page limits never authorize SOLD reconciliation. See REFRESH.md.
 
+`npm run scrape:ur` collects UR賃貸住宅 (UR都市機構). It loads one UR city page
+in the headed browser and calls UR's own API from inside it (`src/collectors/ur/`,
+mapped in `research/ur-sites/ur-net-official.md`): every estate (団地) of the
+target cities and every room UR advertises, about 20 calls in all. UR's city list
+is its whole estate set, so every estate, vacant or not, becomes a `urDanchi`
+reference place and is always drawn on the map; its 2-room-and-larger vacancies
+join the `ur` source with UR's terms (敷金 2 months, no 礼金, 仲介手数料, 更新料 or
+guarantor). A held room UR no longer lists is asked about once: UR answering
+"no such room" is recorded in `data/availability.json` as gone. Estate
+coordinates go into the geocode cache. `--dry-run` sweeps and prints only;
+`--city Soka` limits the sweep. The refresh runs it as the `ur` stage.
+
 AtHome's public pages use browser verification, so its collector reads the
 public search-result HTML in a headed Playwright browser and through the
 site's own list endpoint. It opens **the AtHome homepage first**, waits for it to
@@ -481,7 +494,7 @@ src/
     placeSelection.ts     · applies "which places count" to a listing
     diagnostics.ts        · finds criteria that decide nothing
     filters.ts            · area/city/rent/size/layout predicates
-  collectors/           ← fetch, parse and submit observations (suumo/, athome/, roomspot/, nifty/, enrichment/, shared/)
+  collectors/           ← fetch, parse and submit observations (suumo/, athome/, roomspot/, nifty/, ur/, enrichment/, shared/)
   data-layer/           ← contracts, ingestion/correction/bootstrap services, per-source policies, lifecycle
   storage/json/         ← JSON-file implementation of the data-layer repositories
   refresh/              ← refresh plan and run ledger
@@ -493,6 +506,7 @@ scripts/                ← CLI entry points only (npm run …)
   scrape.ts             ← incremental SUUMO collector
   scrape-athome.ts      ← headed-browser incremental AtHome collector
   scrape-roomspot.ts    ← headed-browser incremental RoomSpot/POLUS collector
+  scrape-ur.ts          ← UR賃貸住宅 estates and vacancies through UR's own API, in the headed browser
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
 tools/architecture/     ← test enforcing the layer rules in DATA_ARCHITECTURE.md

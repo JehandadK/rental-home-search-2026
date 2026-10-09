@@ -31,7 +31,8 @@ describe("computeMoveInCosts", () => {
     expect(c.deposit).toBe(200_000);
     expect(c.keyMoney).toBe(100_000);
     expect(c.cleaningFee).toBe(55_000);
-    expect(c.estimated).toEqual({ deposit: false, keyMoney: false, cleaningFee: false });
+    expect(c.estimated).toEqual({ deposit: false, keyMoney: false, agencyFee: true, guarantorFee: true, cleaningFee: false });
+    expect(c.urTerms).toBe(false);
   });
 
   it("falls back to assumptions and flags them as estimated", () => {
@@ -249,5 +250,52 @@ describe("fee-note charges", () => {
 
   it("counts monthly charges from the notes in the monthly outlay", () => {
     expect(monthlyOutlay(listing({ rent: 80_000, costs: { feeNotes: notes, monthlyExtrasYen: 99 } }), false)).toBe(82_200);
+  });
+});
+
+describe("stated fees and UR terms", () => {
+  const assumed = computeMoveInCosts(listing());
+
+  it("honours a stated agency fee", () => {
+    const c = computeMoveInCosts(listing({ costs: { agencyFeeYen: 0 } }));
+    expect(c.agencyFee).toBe(0);
+    expect(c.estimated).toMatchObject({ agencyFee: false, guarantorFee: true });
+    expect(c.sunkCost).toBe(assumed.sunkCost - 110_000);
+    expect(computeMoveInCosts(listing({ costs: { agencyFeeYen: 55_000 } })).agencyFee).toBe(55_000);
+  });
+
+  it("keeps the guarantor company for a portal ad that says 保証人不要 (no personal guarantor)", () => {
+    const c = computeMoveInCosts(listing({ costs: { guarantorRequired: false } }));
+    expect(c.guarantorFee).toBe(50_000);
+    expect(c.sunkCost).toBe(assumed.sunkCost);
+  });
+
+  it("uses what UR's own ad states", () => {
+    const c = computeMoveInCosts(listing({
+      source: "ur",
+      name: "コンフォール松原 3-201",
+      costs: { depositYen: 190_000, keyMoneyYen: 0, renewalFeeYen: 0, agencyFeeYen: 0, guarantorRequired: false, adminFeeYen: 5_000 },
+    }));
+    expect(c).toMatchObject({ deposit: 190_000, keyMoney: 0, agencyFee: 0, guarantorFee: 0, urTerms: true });
+    expect(c.estimated).toMatchObject({ deposit: false, keyMoney: false, agencyFee: false, guarantorFee: false });
+  });
+
+  it("applies UR terms to a portal ad of a UR room that leaves them out", () => {
+    const c = computeMoveInCosts(listing({ source: "suumo", name: "ＵＲコンフォール松原", costs: { adminFeeYen: 5_000 } }));
+    // Two months of rent before 共益費, no key money, agency fee or guarantor.
+    expect(c).toMatchObject({ deposit: 190_000, keyMoney: 0, agencyFee: 0, guarantorFee: 0, urTerms: true });
+    expect(c.estimated).toMatchObject({ deposit: false, keyMoney: false, agencyFee: false, guarantorFee: false });
+  });
+
+  it("keeps what a UR portal ad does state", () => {
+    const c = computeMoveInCosts(listing({ name: "ＵＲコンフォール松原", depositYen: 180_000, costs: { guarantorRequired: true } }));
+    expect(c.deposit).toBe(180_000);
+    expect(c.guarantorFee).toBe(50_000);
+  });
+
+  it("leaves other listings on the assumptions", () => {
+    const c = computeMoveInCosts(listing({ name: "URBAN HOUSE" }));
+    expect(c).toEqual(assumed);
+    expect(c).toMatchObject({ agencyFee: 110_000, guarantorFee: 50_000, urTerms: false });
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  activeFilterCount,
   agencyKey,
   agencyOptions,
   areaOptions,
@@ -133,6 +134,25 @@ describe("lifecycle filters", () => {
     expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newOnly: true, newWithinDays: 3 })).toBe(false);
     // The window alone narrows nothing until "new only" is on.
     expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newWithinDays: 3 })).toBe(true);
+  });
+});
+
+describe("UR filter", () => {
+  const official = make({ source: "ur", name: "コンフォール松原 3-201" });
+  const portal = make({ source: "suumo", name: "ＵＲコンフォール松原" });
+  const other = make({ source: "suumo", name: "URBAN HOUSE" });
+
+  it("shows UR rooms by default, and can hide them or show only them", () => {
+    const filter = (ur: ListingFilters["ur"]) =>
+      [official, portal, other].filter((listing) => matchesListing(listing, { ...EMPTY_FILTERS, ur }));
+    expect(filter("show")).toEqual([official, portal, other]);
+    expect(filter("hide")).toEqual([other]);
+    expect(filter("only")).toEqual([official, portal]);
+  });
+
+  it("counts as active only when it narrows the set", () => {
+    expect(activeFilterCount(EMPTY_FILTERS)).toBe(0);
+    expect(activeFilterCount({ ...EMPTY_FILTERS, ur: "only" })).toBe(1);
   });
 });
 

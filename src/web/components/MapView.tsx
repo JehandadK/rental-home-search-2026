@@ -14,7 +14,9 @@
  * Walk/ride rings (5, 10, 15 minutes) surround the school target and the
  * selected mosques, sized by the same speed and detour the scoring uses.
  * Listing markers read without colour: candidates are stars, ruled-out homes a
- * faded cross, everything else a score-coloured dot.
+ * faded cross, everything else a score-coloured dot; UR rooms get a UR-coloured
+ * edge. Every UR estate in the chosen areas is drawn whatever the filters
+ * leave, filled when UR advertises a room there and outlined when it does not.
  *
  * Interaction:
  *   - hover a dot            → highlights it + the matching table row (no scroll),
@@ -23,7 +25,8 @@
  *   - scroll wheel           → zoom toward the cursor
  *   - drag                   → pan
  *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / all of Kanto
- *   - layer chips            → show or hide stations, schools, mosques, new rings
+ *   - hover a UR estate      → the rooms UR advertises there and their rents
+ *   - layer chips            → show or hide stations, schools, mosques, UR estates, new rings
  *
  * The base projection is an equirectangular fit to the combined extent of all
  * boundaries (or of the places, when there are no boundaries), with longitude
@@ -39,6 +42,8 @@ import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { isRentedOut } from "../../domain/availability";
+import { isUrListing, sourceLabel, UR_PLACE_CATEGORY } from "../../domain/ur";
+import { isVacant, urEstate, urEstateDetails, urEstateLabel, urEstateName, type UrEstate, type UrVacancy } from "../../domain/urEstates";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceCity, ReferenceModel } from "../../domain/referenceData";
 import type { CatalogPlace } from "../../domain/places";
@@ -101,6 +106,8 @@ interface Props {
   walking?: { speedMPerMin: number; detourFactor: number; includeHoikuen: boolean };
   /** City ids the map draws (the area picker changes them). */
   areas: ReadonlySet<string>;
+  /** Rooms UR advertises, by estate code, counted over every listing (not just the filtered ones). */
+  urVacancies?: ReadonlyMap<string, UrVacancy>;
   /** Cities whose listings are shown; always drawn, so locked in the area picker. */
   onSetAreas: (areas: ReadonlySet<string>) => void;
   onResetAreas: () => void;
@@ -112,6 +119,7 @@ interface Props {
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
 const NO_RING_CENTERS: readonly CatalogPlace[] = [];
+const NO_VACANCIES: ReadonlyMap<string, UrVacancy> = new Map();
 const DEFAULT_WALKING = { speedMPerMin: 80, detourFactor: 1.3, includeHoikuen: false };
 /** Travel-time rings, in minutes; the last is drawn solid, the others dashed. */
 const RING_MINUTES = [5, 10, 15] as const;
@@ -123,6 +131,15 @@ interface Projected {
   y: number;
   key: string;
   row: ScoredRow;
+}
+
+/** A UR estate marker where it was last drawn (its tile's centre), for hovering and its label. */
+interface ProjectedEstate {
+  x: number;
+  y: number;
+  estate: UrEstate;
+  labelX: number;
+  labelY: number;
 }
 
 /** Pan/zoom view transform: screen = base * scale + (tx, ty). */
@@ -154,6 +171,7 @@ const IDENTITY: View = { scale: 1, tx: 0, ty: 0 };
 /** Margin kept around the listings when fitting the view to them. */
 const FIT_PADDING = 40;
 const HOVER_CARD_WIDTH = 300;
+const ESTATE_CARD_WIDTH = 220;
 /** Matches the narrow-screen breakpoint in MapView.module.css. */
 const NARROW_MAX = 650;
 /** Longest scale bar, in canvas pixels. */
@@ -190,6 +208,8 @@ const MAP_COLOR_PROPERTIES = {
   prefectureLabel: "--rs-map-prefecture-label",
   mosque: "--rs-map-mosque",
   mosqueLabel: "--rs-map-mosque-label",
+  ur: "--rs-map-ur",
+  urLabel: "--rs-map-ur-label",
   target: "--rs-map-target",
   targetLabel: "--rs-map-target-label",
   selected: "--rs-map-selected",
@@ -205,16 +225,17 @@ function readMapColors(element: Element): MapColors {
     .map(([key, property]) => [key, style.getPropertyValue(property).trim()])) as MapColors;
 }
 
-type LayerKey = "stations" | "schools" | "mosques" | "newRings" | "rings";
+type LayerKey = "stations" | "schools" | "mosques" | "urEstates" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations across Kanto; the scored stations are larger, and names appear as you zoom in" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
+  { key: "urEstates", label: "UR estates", title: "UR賃貸 estates (団地), whatever the filters: filled when UR advertises a family-size room, outlined otherwise. Hover one for its rents" },
   { key: "newRings", label: "New rings", title: "Green ring around new listings (see Listing status in the filters)" },
   { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
-const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, newRings: true, rings: true };
+const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, urEstates: true, newRings: true, rings: true };
 
 /** How many lines serve a station (from the station import), for label priority. */
 function lineCount(place: CatalogPlace): number {
@@ -245,6 +266,8 @@ const SAME_STATION_KM = 1.5;
 /** Zoom (screen pixels per km) at which each kind of name appears. */
 const PREFECTURE_LABEL_MAX_PX_PER_KM = 7;
 const RAIL_STATION_LABEL_MIN_PX_PER_KM = 14;
+/** UR estate tiles carry their "UR" glyph from this zoom on; below it they are plain squares. */
+const UR_TILE_MIN_PX_PER_KM = 12;
 /** A city is named once its outline is at least this large on screen. */
 const CITY_LABEL_MIN_PX = { width: 46, height: 16 };
 
@@ -297,6 +320,7 @@ export const MapView = memo(function MapView({
   travelMode = "walk",
   walking = DEFAULT_WALKING,
   areas,
+  urVacancies = NO_VACANCIES,
   onSetAreas,
   onResetAreas,
   language,
@@ -304,6 +328,9 @@ export const MapView = memo(function MapView({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
+  const estatesRef = useRef<ProjectedEstate[]>([]);
+  /** The UR estate under the pointer, when no listing is. */
+  const [hoveredEstate, setHoveredEstate] = useState<UrEstate | null>(null);
   const [view, setView] = useState<View>(IDENTITY);
   /** The canvas width in canvas units: HEIGHT × its rendered aspect ratio. */
   const [canvasWidth, setCanvasWidth] = useState(WIDTH);
@@ -415,6 +442,13 @@ export const MapView = memo(function MapView({
     mosques: reference.catalog.inCategory("mosque").filter(inAreas),
     pois: reference.catalog.inCategory("poi").filter(inAreas),
   }), [reference, inAreas]);
+  // Every UR estate in the chosen areas, by its city (like the rail stations) or, without one, by its position.
+  // Listing filters never touch them: an estate with no vacancy, or whose rooms the filters hide, is still worth seeing.
+  const urEstates = useMemo(() => reference.catalog.inCategory(UR_PLACE_CATEGORY)
+    .map((place) => urEstate(place, urVacancies))
+    .filter((estate) => (estate.cityId != null ? areas.has(estate.cityId) : inAreas(estate.place)))
+    // Vacant estates last, so they are drawn on top; most vacancies first for the labels.
+    .sort((a, b) => (a.vacancy?.count ?? 0) - (b.vacancy?.count ?? 0)), [reference, areas, inAreas, urVacancies]);
   // The scored schools and the travel rings drawn around places are limited to the chosen areas too.
   const shownScoredPois = useMemo(() => scoredPois.filter(inAreas), [scoredPois, inAreas]);
   const shownRingCenters = useMemo(() => ringCenters.filter(inAreas), [ringCenters, inAreas]);
@@ -494,6 +528,8 @@ export const MapView = memo(function MapView({
     () => new Map(items.map((row) => [listingKey(row.listing), row])),
     [items],
   );
+  // UR rooms, for their marker edge and the legend.
+  const urRows = useMemo(() => new Set(items.filter(({ listing }) => isUrListing(listing))), [items]);
   // Draw the best scores last so they sit on top where dots overlap.
   const drawOrder = useMemo(
     () => [...items].sort((a, b) => (a.score.total ?? -1) - (b.score.total ?? -1)),
@@ -683,6 +719,46 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // UR estates, under the listings: a "UR" tile pinned above the estate, so
+    // a dot for one of its rooms stays visible beneath it. Filled when UR
+    // advertises a family-size room, outlined otherwise; a plain square when zoomed out.
+    estatesRef.current = [];
+    if (layers.urEstates) {
+      const tile = pxPerKm >= UR_TILE_MIN_PX_PER_KM;
+      const w = tile ? 17 : 6;
+      const h = tile ? 11 : 6;
+      ctx.font = `700 8px ${FONT}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 1.25;
+      for (const estate of urEstates) {
+        const { x, y } = toScreen(estate.place.lat, estate.place.lon);
+        if (x < -w || y < -2 * h || x > canvasWidth + w || y > HEIGHT + h) continue;
+        const top = tile ? y - h - 4 : y - h / 2;
+        estatesRef.current.push({ x, y: top + h / 2, estate, labelX: x + w / 2 + 3, labelY: top + h - 1.5 });
+        const vacant = isVacant(estate);
+        ctx.beginPath();
+        ctx.roundRect(x - w / 2, top, w, h, tile ? 3 : 1.5);
+        if (tile) {
+          ctx.moveTo(x - 3, top + h);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x + 3, top + h);
+        }
+        ctx.fillStyle = vacant ? colors.ur : colors.halo;
+        ctx.fill();
+        ctx.strokeStyle = vacant ? colors.markerOutline : colors.ur;
+        ctx.stroke();
+        if (tile) {
+          ctx.fillStyle = vacant ? colors.markerOutline : colors.ur;
+          ctx.fillText("UR", x, top + h / 2 + 0.5);
+        }
+      }
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+      ctx.lineWidth = 1;
+    }
+
     // Listings, coloured by score; the best scores are drawn last, on top.
     // Dots grow a little when zoomed in. Hovered/selected dots come after all.
     const radius = 4.5 * Math.min(1.5, 1 + Math.max(0, pxPerKm / DOT_BASE_PX_PER_KM - 1) * 0.06);
@@ -707,6 +783,8 @@ export const MapView = memo(function MapView({
       // Sold listings recede to grey; ruled-out homes become a faded cross.
       const dimmed = sold || isRentedOut(listing);
       const fresh = layers.newRings && isNewListing(listing, now, newWithinDays);
+      // A UR room keeps its score colour inside a UR-coloured edge.
+      const ur = urRows.has(row);
       if (ruledOut) {
         drawCross(ctx, x, y, radius * 0.8, hovered || selected ? 0.2 : 0.4, colors.ruledOut);
       } else if (candidate) {
@@ -719,9 +797,10 @@ export const MapView = memo(function MapView({
         ctx.stroke();
         ctx.fillStyle = dimmed ? colors.dimmed : scoreColor(score.total);
         ctx.fill();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = colors.markerOutline;
+        ctx.lineWidth = ur ? 1.75 : 1;
+        ctx.strokeStyle = ur ? colors.ur : colors.markerOutline;
         ctx.stroke();
+        ctx.lineWidth = 1;
         ctx.globalAlpha = 1;
       } else {
         ctx.beginPath();
@@ -730,8 +809,10 @@ export const MapView = memo(function MapView({
         ctx.globalAlpha = dimmed ? 0.4 : hovered || selected ? 0.5 : 0.88;
         ctx.fill();
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = colors.markerOutline;
+        ctx.lineWidth = ur ? 2 : 1;
+        ctx.strokeStyle = ur ? colors.ur : colors.markerOutline;
         ctx.stroke();
+        ctx.lineWidth = 1;
       }
       // New discoveries get a thin green halo (a layer: about half of all homes are new).
       if (fresh) {
@@ -865,6 +946,15 @@ export const MapView = memo(function MapView({
       const { x, y } = toScreen(poi.lat, poi.lon);
       label(poi.name, x + 10, y + 4, colors.targetLabel);
     }
+    // UR estates with a vacancy, most rooms first, as far as they fit; the
+    // others only once zoomed in, after everything else.
+    const urLabels = (vacant: boolean) => {
+      for (const { estate, labelX, labelY } of [...estatesRef.current].reverse()) {
+        if (isVacant(estate) !== vacant) continue;
+        label(urEstateLabel(estate), labelX, labelY, colors.urLabel, { font: `${vacant ? "600 " : ""}10px ${FONT}`, size: 10 });
+      }
+    };
+    if (pxPerKm > PREFECTURE_LABEL_MAX_PX_PER_KM) urLabels(true);
     if (layers.mosques) {
       for (const mosque of areaPlaces.mosques) {
         const { x, y } = toScreen(mosque.lat, mosque.lon);
@@ -891,10 +981,11 @@ export const MapView = memo(function MapView({
     }
     for (const layer of neighbours) labelCity(layer, colors.cityLabel, `600 12px ${FONT}`);
     stationLabels();
+    if (pxPerKm >= RAIL_STATION_LABEL_MIN_PX_PER_KM) urLabels(false);
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, scoredPois, shownScoredPois, cityLayers, prefectures, railStations, areaPlaces, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, shownRingCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, scoredPois, shownScoredPois, cityLayers, prefectures, railStations, areaPlaces, urEstates, urRows, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, shownRingCenters, ringMetresPerMinute, language]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -949,6 +1040,19 @@ export const MapView = memo(function MapView({
     return best;
   };
 
+  const estateAt = (mx: number, my: number): UrEstate | null => {
+    let best: UrEstate | null = null;
+    let bestDistance = HIT_RADIUS;
+    for (const { x, y, estate } of estatesRef.current) {
+      const distance = Math.hypot(x - mx, y - my);
+      if (distance < bestDistance) {
+        best = estate;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const { mx, my } = canvasCoords(e.currentTarget, e.clientX, e.clientY);
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -967,6 +1071,7 @@ export const MapView = memo(function MapView({
       if (d.moved) {
         setView({ scale: d.view.scale, tx: d.view.tx + dx, ty: d.view.ty + dy });
         onHover(null);
+        setHoveredEstate(null);
       }
       return;
     }
@@ -974,6 +1079,9 @@ export const MapView = memo(function MapView({
     const nextHovered = hit?.key ?? null;
     if (nextHovered !== hovered) onHover(nextHovered);
     if (Boolean(hit) !== overDot) setOverDot(Boolean(hit));
+    // A listing wins over the estate it sits in.
+    const estate = hit ? null : estateAt(mx, my);
+    if (estate !== hoveredEstate) setHoveredEstate(estate);
   };
 
   const endDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -1025,6 +1133,10 @@ export const MapView = memo(function MapView({
     ? toScreen(hoveredRow.listing.lat, hoveredRow.listing.lon)
     : null;
   const hoverVisible = hoverPoint && hoverPoint.x >= 0 && hoverPoint.x <= canvasWidth && hoverPoint.y >= 0 && hoverPoint.y <= HEIGHT;
+  // The hovered UR estate's card sits above its tile; the layer chip can hide both.
+  const estatePoint = hoveredEstate && layers.urEstates && !dragging && !hoveredRow
+    ? toScreen(hoveredEstate.place.lat, hoveredEstate.place.lon)
+    : null;
 
   return (
     <section className={appStyles.card}>
@@ -1040,6 +1152,7 @@ export const MapView = memo(function MapView({
           onPointerLeave={() => {
             onHover(null);
             setOverDot(false);
+            setHoveredEstate(null);
           }}
         />
         <button
@@ -1097,6 +1210,21 @@ export const MapView = memo(function MapView({
               transform: hoverPoint.y < HEIGHT * 0.25 ? "translateY(18px)" : "translateY(calc(-100% - 18px))",
             }}
           />
+        )}
+        {estatePoint && hoveredEstate && (
+          <div
+            className={styles.estateCard}
+            aria-hidden="true"
+            style={{
+              left: `clamp(4px, calc(${(estatePoint.x / canvasWidth) * 100}% - ${ESTATE_CARD_WIDTH / 2}px), calc(100% - ${ESTATE_CARD_WIDTH + 4}px))`,
+              top: `${(estatePoint.y / HEIGHT) * 100}%`,
+              width: ESTATE_CARD_WIDTH,
+              transform: estatePoint.y < HEIGHT * 0.25 ? "translateY(14px)" : "translateY(calc(-100% - 22px))",
+            }}
+          >
+            <strong>{urEstateName(hoveredEstate)}</strong>
+            {urEstateDetails(hoveredEstate).map((line) => <small key={line}>{line}</small>)}
+          </div>
         )}
         {selectedRow && (
           <MapListingCard
@@ -1159,6 +1287,12 @@ export const MapView = memo(function MapView({
               <span><i className={styles.keyStar}>☆</i>Other private school</span>
             )}
             <span><i className={styles.keyMosque} />Mosque</span>
+            {layers.urEstates && urEstates.length > 0 && (
+              <>
+                <span><i className={styles.keyUrVacant}>UR</i>UR estate · vacancy</span>
+                <span><i className={styles.keyUrNone}>UR</i>UR estate · none advertised</span>
+              </>
+            )}
             <span><i className={styles.keyStation} />Scored station</span>
             {layers.stations && <span><i className={styles.keyRailStation} />Other station</span>}
             {prefectures.borders.length > 0 && <span><i className={styles.keyPrefecture} />Prefecture border</span>}
@@ -1168,6 +1302,7 @@ export const MapView = memo(function MapView({
             <span><i className={styles.keyUndecided} />Undecided</span>
             <span><i className={styles.keyRuledOut}>✕</i>Ruled out</span>
             <span><i className={styles.keyDimmed} />Sold</span>
+            {urRows.size > 0 && <span><i className={styles.keyUrRoom} />UR room</span>}
             {layers.rings && ringsDrawable(ringMetresPerMinute) && shownRingCenters.length > 0 && (
               <span className={styles.legendNote}><i className={styles.keyRing} />Dashed rings: 5/10/15 min by {travelMode} (solid = 15) at the scoring's speed and detour</span>
             )}
@@ -1180,7 +1315,9 @@ export const MapView = memo(function MapView({
         </details>
       </div>
       <div className={styles.info}>
-        {hoveredRow && !selectedRow
+        {hoveredEstate && !hoveredRow && !selectedRow && layers.urEstates
+          ? `${urEstateLabel(hoveredEstate)} — ${urEstateDetails(hoveredEstate).join(" · ")}`
+          : hoveredRow && !selectedRow
           ? `${hoveredRow.listing.name} — score ${
               hoveredRow.score.total?.toFixed(0) ?? "—"
             } · ¥${hoveredRow.listing.rent.toLocaleString()} · ${
@@ -1357,7 +1494,7 @@ function MapListingCard({
         )}
         {portalReferences(listing).filter(({ url }) => Boolean(url)).map(({ source, url }) => (
           <a key={`${source}-${url}`} href={url!} target="_blank" rel="noreferrer">
-            View on {source} ↗
+            View on {sourceLabel(source)} ↗
           </a>
         ))}
         {listing.lat != null && listing.lon != null && (
