@@ -394,6 +394,20 @@
         "status": "active",
         "via": "backfill:git:bf82b09"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000109482|2026-10-09T03:16:57.578Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-09T03:16:57.578Z",
+      "recordedAt": "2026-10-09T04:23:26.584Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000109482",
+      "url": "https://www.roomspot.net/rent/1139288674810000109482",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · 川口市小谷場戸建 1 (戸建｜居住用)の物件情報 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -404,11 +418,17 @@
     "firstSeenUrl": "https://www.roomspot.net/rent/1139288674810000109482",
     "lastSeenAt": "2026-09-16T02:47:28.074Z",
     "lastListedAt": "2026-09-16T02:47:28.074Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-09-16T02:47:28.074Z",
+      "before": "2026-10-09T03:16:57.578Z"
+    },
+    "daysOnMarket": {
+      "min": 12.9,
+      "max": 35.9
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-03T04:37:53.972Z",
@@ -424,7 +444,7 @@
         "firstSeenAt": "2026-09-16T02:47:28.074Z",
         "lastSeenAt": "2026-09-16T02:47:28.074Z",
         "lastListedAt": "2026-09-16T02:47:28.074Z",
-        "goneSince": null,
+        "goneSince": "2026-10-09T03:16:57.578Z",
         "relistCount": 0
       }
     },

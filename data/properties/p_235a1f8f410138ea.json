@@ -483,6 +483,20 @@
         "status": "active",
         "via": "backfill:git:ea4c8c9"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000335457|2026-10-09T03:05:54.563Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-09T03:05:54.563Z",
+      "recordedAt": "2026-10-09T04:23:26.584Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000335457",
+      "url": "https://www.roomspot.net/rent/1139288674810000335457",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · コート芝ファミールⅢ 101 (アパート｜居住用)の物件情報 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -493,11 +507,17 @@
     "firstSeenUrl": "https://www.roomspot.net/rent/1139288674810000335457",
     "lastSeenAt": "2026-10-04T05:55:13.506Z",
     "lastListedAt": "2026-10-04T05:55:13.506Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-04T05:55:13.506Z",
+      "before": "2026-10-09T03:05:54.563Z"
+    },
+    "daysOnMarket": {
+      "min": 5.3,
+      "max": 10.2
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-28T23:28:33.254Z",
@@ -513,7 +533,7 @@
         "firstSeenAt": "2026-09-28T22:31:24.938Z",
         "lastSeenAt": "2026-10-04T05:55:13.506Z",
         "lastListedAt": "2026-10-04T05:55:13.506Z",
-        "goneSince": null,
+        "goneSince": "2026-10-09T03:05:54.563Z",
         "relistCount": 0
       }
     },

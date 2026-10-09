@@ -2835,6 +2835,20 @@
       "data": {
         "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000335030|2026-10-09T03:09:19.936Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-09T03:09:19.936Z",
+      "recordedAt": "2026-10-09T04:23:26.584Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000335030",
+      "url": "https://www.roomspot.net/rent/1139288674810000335030",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · ボナール河村 103 (アパート｜居住用)の物件情報 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2845,11 +2859,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1033121680/",
     "lastSeenAt": "2026-10-08T07:26:35.079Z",
     "lastListedAt": "2026-10-08T07:26:35.079Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-08T07:26:35.079Z",
+      "before": "2026-10-09T03:09:19.936Z"
+    },
+    "daysOnMarket": {
+      "min": 15.1,
+      "max": 15.9
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-23T05:41:20.846Z",
@@ -2892,7 +2912,7 @@
         "firstSeenAt": "2026-09-28T22:31:24.938Z",
         "lastSeenAt": "2026-09-30T10:06:48.504Z",
         "lastListedAt": "2026-09-30T10:06:48.504Z",
-        "goneSince": null,
+        "goneSince": "2026-10-09T03:09:19.936Z",
         "relistCount": 0
       },
       "suumo|jnc_000110080850|bc_100528949923": {

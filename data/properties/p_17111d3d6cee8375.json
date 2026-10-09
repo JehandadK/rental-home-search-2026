@@ -3388,6 +3388,20 @@
       "data": {
         "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000332515|2026-10-09T03:13:24.470Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-09T03:13:24.470Z",
+      "recordedAt": "2026-10-09T04:23:26.584Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000332515",
+      "url": "https://www.roomspot.net/rent/1139288674810000332515",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · ニューオカダパールマンション 202 (マンション｜居住用)の物件情報 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -3398,11 +3412,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1121981024/",
     "lastSeenAt": "2026-10-09T01:40:33.223Z",
     "lastListedAt": "2026-10-09T01:40:33.223Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-09T01:40:33.223Z",
+      "before": "2026-10-09T03:13:24.470Z"
+    },
+    "daysOnMarket": {
+      "min": 26.5,
+      "max": 26.6
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-12T12:57:07.370Z",
@@ -3485,7 +3505,7 @@
         "firstSeenAt": "2026-09-23T05:25:58.842Z",
         "lastSeenAt": "2026-09-23T05:25:58.842Z",
         "lastListedAt": "2026-09-23T05:25:58.842Z",
-        "goneSince": null,
+        "goneSince": "2026-10-09T03:13:24.470Z",
         "relistCount": 0
       },
       "suumo|jnc_000107607899|bc_100510632604": {

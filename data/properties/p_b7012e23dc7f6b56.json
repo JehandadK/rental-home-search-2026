@@ -904,6 +904,20 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000334435|2026-10-09T03:12:38.800Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-09T03:12:38.800Z",
+      "recordedAt": "2026-10-09T04:23:26.584Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000334435",
+      "url": "https://www.roomspot.net/rent/1139288674810000334435",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · ヴィラ・ハイライズ 102 (アパート｜居住用)の物件情報 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -914,11 +928,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1156157033/",
     "lastSeenAt": "2026-10-04T06:06:38.723Z",
     "lastListedAt": "2026-10-04T06:06:38.723Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-04T06:06:38.723Z",
+      "before": "2026-10-09T03:12:38.800Z"
+    },
+    "daysOnMarket": {
+      "min": 29.1,
+      "max": 34
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-05T02:49:48.097Z",
@@ -943,7 +963,7 @@
         "firstSeenAt": "2026-09-24T21:05:26.422Z",
         "lastSeenAt": "2026-09-24T21:05:26.422Z",
         "lastListedAt": "2026-09-24T21:05:26.422Z",
-        "goneSince": null,
+        "goneSince": "2026-10-09T03:12:38.800Z",
         "relistCount": 0
       }
     },

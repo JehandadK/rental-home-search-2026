@@ -2888,6 +2888,20 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000333694|2026-10-09T03:13:40.645Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-09T03:13:40.645Z",
+      "recordedAt": "2026-10-09T04:23:26.584Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000333694",
+      "url": "https://www.roomspot.net/rent/1139288674810000333694",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · プランドールパピオン　Ｂ 202 (アパート｜居住用)の物件情報 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2898,11 +2912,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1159446034/",
     "lastSeenAt": "2026-10-09T01:40:45.284Z",
     "lastListedAt": "2026-10-09T01:40:45.284Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-09T01:40:45.284Z",
+      "before": "2026-10-09T03:13:40.645Z"
+    },
+    "daysOnMarket": {
+      "min": 22.9,
+      "max": 23
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": null,
     "relistCount": 0,
     "sources": [
@@ -2940,7 +2960,7 @@
         "firstSeenAt": "2026-09-19T05:54:48.971Z",
         "lastSeenAt": "2026-09-19T05:54:48.971Z",
         "lastListedAt": "2026-09-19T05:54:48.971Z",
-        "goneSince": null,
+        "goneSince": "2026-10-09T03:13:40.645Z",
         "relistCount": 0
       },
       "suumo|jnc_000109826337|bc_100526913640": {
