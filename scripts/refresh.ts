@@ -78,6 +78,8 @@ function definitions(deep: boolean, skipNifty: boolean, skipRoomspot = false): S
     { id: "suumo-parking", label: "Legacy parking pass", args: [], skipped: true },
     { id: "athome", label: "AtHome", args: ["run", "scrape:athome", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...(deep ? ["--deep"] : [])], recoverable: true },
     { id: "roomspot", label: "RoomSpot", args: ["run", "scrape:roomspot", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...(deep ? ["--deep"] : [])], recoverable: true, skipped: skipRoomspot },
+    // UR estates and vacancies: one city page, then UR's own API (scrape:ur); also updates the urDanchi places.
+    { id: "ur", label: "UR", args: ["run", "scrape:ur"], recoverable: true },
     ...TARGET_CITIES.map((city) => ({ id: niftyStageId(city.label), label: `Nifty ${city.label}`, args: crawlArgs(city.nifty),
       recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } })),
     { id: "nifty-import", label: "Nifty import", args: ["run", "import:nifty"], recoverable: true, skipped: skipNifty },

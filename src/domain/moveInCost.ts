@@ -16,9 +16,14 @@
  *
  * Scoring therefore penalises **sunk cost**, not headline cash: a ¥200k
  * deposit that mostly comes back is far cheaper than ¥100k of key money.
+ *
+ * UR賃貸 leases directly: no key money, agency fee or guarantor company, and
+ * a two-month deposit. Its own ads state that; for a portal ad of a UR room
+ * those terms fill whatever the ad leaves out.
  */
 import type { EnrichedListing, MoveInCosts, ParkingInfo } from "./types";
 import { parseFeeNotes, sumFees, type FeeItem } from "./feeNotes";
+import { isUrListing, UR_DEPOSIT_MONTHS } from "./ur";
 
 export interface MoveInAssumptions {
   /** Deposit when the listing does not state one, in months of rent. */
@@ -88,19 +93,30 @@ export function computeMoveInCosts(
   const depositStated = statedDeposit != null;
   const keyMoneyStated = statedKeyMoney != null;
   const cleaningStated = statedCleaning != null;
+  // A stated 仲介手数料 (0 when the landlord leases directly) replaces the
+  // assumed fee. The guarantor company is waived only on UR's terms: portal
+  // ads' `guarantorRequired: false` often comes from 保証人不要 (no personal
+  // guarantor) next to 保証会社利用必, so it is not trusted to drop the fee.
+  const statedAgencyFee = listing.costs?.agencyFeeYen ?? null;
+  const agencyStated = statedAgencyFee != null;
+  const ur = isUrListing(listing);
+  const noGuarantorCompany = ur && listing.costs?.guarantorRequired !== true;
 
   const deposit = depositStated
     ? statedDeposit
-    : round(rent * assumptions.defaultDepositMonths);
+    : ur
+      // UR's deposit is months of rent before 共益費, which `rent` includes.
+      ? round((rent - (listing.costs?.adminFeeYen ?? 0)) * UR_DEPOSIT_MONTHS)
+      : round(rent * assumptions.defaultDepositMonths);
   const keyMoney = keyMoneyStated
     ? statedKeyMoney
-    : round(rent * assumptions.defaultKeyMoneyMonths);
+    : ur ? 0 : round(rent * assumptions.defaultKeyMoneyMonths);
   const cleaningFee = cleaningStated
     ? statedCleaning
     : estimateCleaningFee(listing.sizeM2, assumptions);
 
-  const agencyFee = round(rent * assumptions.agencyFeeMonths);
-  const guarantorFee = round(rent * assumptions.guarantorFeeMonths);
+  const agencyFee = agencyStated ? statedAgencyFee : ur ? 0 : round(rent * assumptions.agencyFeeMonths);
+  const guarantorFee = noGuarantorCompany ? 0 : round(rent * assumptions.guarantorFeeMonths);
   const fireInsurance = assumptions.fireInsuranceYen;
   const firstMonthRent = assumptions.includeFirstMonthRent ? rent : 0;
 
@@ -131,10 +147,13 @@ export function computeMoveInCosts(
     sunkCost,
     refundable,
     estimated: {
-      deposit: !depositStated,
-      keyMoney: !keyMoneyStated,
+      deposit: !depositStated && !ur,
+      keyMoney: !keyMoneyStated && !ur,
+      agencyFee: !agencyStated && !ur,
+      guarantorFee: !noGuarantorCompany,
       cleaningFee: !cleaningStated,
     },
+    urTerms: ur,
   };
 }
 

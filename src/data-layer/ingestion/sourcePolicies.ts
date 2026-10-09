@@ -6,10 +6,12 @@ import { niftySourcePolicy } from "./niftyPolicy";
 import { athomeSourcePolicy, roomspotSourcePolicy } from "./portalPolicy";
 import { SourcePolicyRegistry } from "./sourcePolicy";
 import { suumoSourcePolicy } from "./suumoPolicy";
+import { urSourcePolicy } from "./urPolicy";
 
 export const SOURCE_POLICIES = new SourcePolicyRegistry([
   suumoSourcePolicy,
   niftySourcePolicy,
   athomeSourcePolicy,
   roomspotSourcePolicy,
+  urSourcePolicy,
 ]);

@@ -10,11 +10,11 @@ export const DEPENDENCIES: Record<string, readonly string[]> = {
   "suumo-parking": ["suumo"],
   "nifty-import": NIFTY_CITY_STAGES,
   "detail-enrich": ["suumo", "athome", "roomspot", "nifty-import"],
-  "data-build": ["suumo", "suumo-parking", "athome", "roomspot", "nifty-import", "detail-enrich"],
+  "data-build": ["suumo", "suumo-parking", "athome", "roomspot", "ur", "nifty-import", "detail-enrich"],
   enrich: ["data-build"],
   "web-data": ["enrich"],
 };
-export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", ...NIFTY_CITY_STAGES, "detail-enrich"]);
+export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", "ur", ...NIFTY_CITY_STAGES, "detail-enrich"]);
 
 export function planRefresh(stages: readonly RefreshStageRecord[], resume: boolean): Set<string> {
   const planned = new Set<string>();
@@ -33,7 +33,7 @@ export function planRefresh(stages: readonly RefreshStageRecord[], resume: boole
  * downstream (Nifty import, details, merge, geocode, web payload) depends on
  * their output and stays sequential.
  */
-export const PARALLEL_COLLECTOR_STAGES = new Set(["suumo", "athome", "roomspot", ...NIFTY_CITY_STAGES]);
+export const PARALLEL_COLLECTOR_STAGES = new Set(["suumo", "athome", "roomspot", "ur", ...NIFTY_CITY_STAGES]);
 
 /**
  * Stages that write the same source file (the Nifty cities share nifty.json)

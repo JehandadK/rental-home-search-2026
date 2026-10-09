@@ -5,6 +5,8 @@ import { diagnoseAll } from "../domain/diagnostics";
 import { activeFilterCount, matchesListing, type ListingFilters } from "../domain/filters";
 import { relaxationHints, type RelaxationHint } from "../domain/filterRelaxation";
 import { lifecycleCounts } from "../domain/lifecycle";
+import { isUrListing } from "../domain/ur";
+import { urVacancies as countUrVacancies } from "../domain/urEstates";
 import { withAvailability } from "../domain/availability";
 import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
@@ -236,6 +238,11 @@ export function App({ data }: { data: WebData }) {
     [available, filters.newWithinDays],
   );
 
+  /** UR rooms on offer, for the header (the UR filter may hide them). */
+  const urCount = useMemo(() => available.filter(isUrListing).length, [available]);
+  /** Each UR estate's advertised rooms, from every listing: the map's estates ignore the filters. */
+  const urVacancies = useMemo(() => countUrVacancies(available), [available]);
+
   /** Decision-mark headline numbers: candidates shortlisted and homes ruled out. */
   const markSummary = useMemo(
     () => summarizeMarks(listings.map((listing) => marks[listingKey(listing)])),
@@ -316,6 +323,7 @@ export function App({ data }: { data: WebData }) {
           {newCount > 0 && ` · ${newCount} new`}
           {soldCount > 0 && ` · ${soldCount} sold`}
           {rentedOutCount > 0 && ` · ${rentedOutCount} rented out${filters.rentedOut === "hide" ? " (hidden)" : ""}`}
+          {urCount > 0 && ` · ${urCount} UR${filters.ur === "hide" ? " (hidden)" : ""}`}
           {markSummary.candidates > 0 && ` · ★${markSummary.candidates} shortlisted`}
           {markSummary.ruledOut > 0 && ` · ✕${markSummary.ruledOut} ruled out`}
         </span>
@@ -382,6 +390,7 @@ export function App({ data }: { data: WebData }) {
             travelMode={config.travelMode}
             walking={walking}
             areas={mapAreas.areas}
+            urVacancies={urVacancies}
             onSetAreas={mapAreas.setAreas}
             onResetAreas={mapAreas.resetAreas}
             language={mapAreas.language}

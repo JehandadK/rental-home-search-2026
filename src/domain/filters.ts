@@ -10,6 +10,7 @@ import type { ReferenceCity } from "./referenceData";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
 import type { MarkFilter } from "./marks";
 import { isRentedOut } from "./availability";
+import { isUrListing } from "./ur";
 
 export type AreaMode = "include" | "exclude";
 
@@ -28,6 +29,14 @@ export type StatusFilter = "all" | "active" | "sold";
  *   only — only those (what did we lose?)
  */
 export type RentedOutFilter = "hide" | "show" | "only";
+
+/**
+ * UR賃貸 rooms (UR's own ads and portal ads for them):
+ *   show — keep them with the rest (default)
+ *   hide — leave them out
+ *   only — only those (no key money, agency fee, guarantor or renewal fee)
+ */
+export type UrFilter = "show" | "hide" | "only";
 
 export interface ListingFilters {
   /** Cities to keep (empty set = all cities). */
@@ -75,6 +84,8 @@ export interface ListingFilters {
   status: StatusFilter;
   /** Visibility of properties rented out on every portal. */
   rentedOut: RentedOutFilter;
+  /** Visibility of UR rooms. The map's UR estate layer is not a listing and ignores it. */
+  ur: UrFilter;
   /** Keep only listings first seen within the NEW window. */
   newOnly: boolean;
   /**
@@ -106,6 +117,7 @@ export const EMPTY_FILTERS: ListingFilters = {
   parkingMaxYen: null,
   status: "all",
   rentedOut: "hide",
+  ur: "show",
   newOnly: false,
   newWithinDays: NEW_LISTING_WINDOW_DAYS,
   markFilter: "all",
@@ -293,6 +305,12 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
     if (filters.rentedOut === "only" && !rentedOut) return false;
   }
 
+  if (filters.ur !== "show") {
+    const ur = isUrListing(listing);
+    if (filters.ur === "hide" && ur) return false;
+    if (filters.ur === "only" && !ur) return false;
+  }
+
   return true;
 }
 
@@ -333,6 +351,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   if (filters.status !== "all") n++;
   if (filters.newOnly) n++;
   if (filters.rentedOut !== "hide") n++;
+  if (filters.ur !== "show") n++;
   if (filters.markFilter !== "all") n++;
   return n;
 }

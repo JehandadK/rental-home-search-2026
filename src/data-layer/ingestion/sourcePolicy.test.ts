@@ -51,8 +51,8 @@ describe("source policy registry", () => {
   });
   afterEach(async () => { await rm(root, { recursive: true, force: true }); });
 
-  it("registers the four current sources", () => {
-    expect(SOURCE_POLICIES.sources).toEqual(["suumo", "nifty", "athome", "roomspot"]);
+  it("registers the current sources", () => {
+    expect(SOURCE_POLICIES.sources).toEqual(["suumo", "nifty", "athome", "roomspot", "ur"]);
   });
 
   it("ingests a newly registered source through the unchanged service", async () => {

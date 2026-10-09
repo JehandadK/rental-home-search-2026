@@ -38,6 +38,8 @@ export interface ListingCosts {
   parking?: ParkingInfo | null;
   /** 更新料 — renewal fee. */
   renewalFeeYen?: number | null;
+  /** 仲介手数料 — agency fee; `0` when the landlord leases directly (UR). */
+  agencyFeeYen?: number | null;
   /** One-off charges at signing (クリーニング費、鍵交換代 …). */
   oneOffFeesYen?: number | null;
   /** Recurring monthly extras that sit outside rent (サポート費 …). */
@@ -313,8 +315,10 @@ export interface MoveInCosts {
   sunkCost: number;
   /** The part expected back at move-out (deposit minus restoration). */
   refundable: number;
-  /** Whether each figure came from the listing or from an assumption. */
-  estimated: { deposit: boolean; keyMoney: boolean; cleaningFee: boolean };
+  /** Whether each figure came from the listing (or UR's fixed terms) or from an assumption. */
+  estimated: { deposit: boolean; keyMoney: boolean; agencyFee: boolean; guarantorFee: boolean; cleaningFee: boolean };
+  /** A UR room: what the ad leaves unstated follows UR's terms (see `isUrListing`). */
+  urTerms: boolean;
 }
 
 /** The scored parameters, keyed for config and display. */

@@ -289,6 +289,26 @@ describe("cross-source listing deduplication", () => {
       expect.objectContaining({ source: "suumo", url: "https://suumo.example/1" }),
     ]));
   });
+  it("matches UR's whole-square-metre area to a portal's exact one", () => {
+    // ＵＲアーバンハイツ南前川 3LDK: SUUMO 79.23 m², UR "79㎡" (cut down, never rounded up).
+    const suumo = make({ name: "ＵＲアーバンハイツ南前川", address: "埼玉県川口市南前川２", layout: "3LDK", sizeM2: 79.23, rent: 130_800, builtYear: null });
+    const ur = make({ id: "ur-50_2220-000000304", source: "ur", name: "URアーバンハイツ南前川", address: "埼玉県川口市南前川2-17-1",
+      layout: "3LDK", sizeM2: 79, rent: 130_800, builtYear: null, url: "https://www.ur-net.go.jp/chintai/kanto/saitama/50_2220_room.html?JKSS=000000304" });
+    expect(isSameProperty(suumo, ur)).toBe(true);
+    expect(isSameProperty(make({ ...suumo, sizeM2: 80.1 }), ur)).toBe(false);
+    expect(isSameProperty(make({ ...suumo, sizeM2: 78.7 }), ur)).toBe(false);
+    // Between two portals the tolerance stays 0.2 m².
+    expect(isSameProperty(suumo, make({ ...suumo, id: "athome-1", source: "athome", sizeM2: 79 }))).toBe(false);
+  });
+
+  it("leads with UR's own ad over a portal copy of it", () => {
+    const suumo = make({ name: "ＵＲコンフォール松原" });
+    const ur = make({ id: "ur-50_4090-3-201", source: "ur", name: "ＵＲコンフォール松原", url: "https://www.ur-net.go.jp/example" });
+    const merged = mergeDuplicateListings(suumo, ur);
+    expect(merged.source).toBe("ur");
+    expect(merged.sourceListings?.map(({ source }) => source)).toEqual(["ur", "suumo"]);
+  });
+
   it("takes the agency name and its store details from the same ad", () => {
     const store = { name: "ハウスコム埼玉(株)草加店", brand: "ハウスコム", company: "ハウスコム埼玉株式会社", branch: "草加店",
       address: "埼玉県草加市氷川町2120-6", prefecture: "埼玉県", city: "草加市", phone: null, licence: null };

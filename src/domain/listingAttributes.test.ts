@@ -34,4 +34,17 @@ describe("normalizeListingAttributes", () => {
     expect(featureState(unknown, "petAllowed")).toBeNull();
     expect(featureState(explicitNo, "petAllowed")).toBe(false);
   });
+
+  it("shows lease terms stated as no charge, without making them scored features", () => {
+    const ur = { ...listing([]), keyMoneyYen: 0, costs: { agencyFeeYen: 0, renewalFeeYen: 0, guarantorRequired: false } };
+    expect(normalizeListingAttributes(ur)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: "noKeyMoney", category: "tenancy", labelJa: "礼金なし", state: true }),
+      expect.objectContaining({ key: "noAgencyFee", labelJa: "仲介手数料なし", state: true }),
+      expect.objectContaining({ key: "noRenewalFee", labelJa: "更新料なし", state: true }),
+      expect.objectContaining({ key: "guarantorNotRequired", state: true }),
+    ]));
+    // Unstated or charged terms add nothing.
+    const charged = { ...listing([]), keyMoneyYen: 80_000, costs: { renewalFeeYen: null } };
+    expect(normalizeListingAttributes(charged)).toEqual([]);
+  });
 });

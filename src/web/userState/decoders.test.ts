@@ -86,6 +86,11 @@ describe("user-state decoders", () => {
     expect(decodeFilters({ agencies: ["brand:ハウスコム", 3], agencyMode: "exclude" })).toMatchObject({ agencies: ["brand:ハウスコム"], agencyMode: "exclude" });
     // Filters saved before the window existed get the 14-day default.
     expect(decodeFilters({ newOnly: true }).newWithinDays).toBe(14);
+    // Filters saved before the UR filter existed show UR rooms; a corrupt mode does too.
+    expect(decodeFilters({ rentedOut: "show" })).toMatchObject({ rentedOut: "show", ur: "show" });
+    expect(decodeFilters({ ur: "only" }).ur).toBe("only");
+    expect(decodeFilters({ ur: "hide" }).ur).toBe("hide");
+    expect(decodeFilters({ ur: "sideways" }).ur).toBe("show");
   });
 
   it("fall back to defaults for missing or corrupt values", () => {

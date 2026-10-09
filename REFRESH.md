@@ -54,7 +54,7 @@
 
 ## Parallel collection and the Playwright browser
 
-- Collectors for different sources (SUUMO, AtHome, RoomSpot, Nifty) run at the
+- Collectors for different sources (SUUMO, AtHome, RoomSpot, UR, Nifty) run at the
   same time; the Nifty cities share `nifty.json`, so they run in order
   inside one group. `--concurrency N` caps it (`1` = fully sequential).
 - Every portal page loads in a local Playwright Chromium (`src/collectors/shared/playwrightBridge.ts`),

@@ -572,6 +572,36 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
         />
       </Section>
 
+      {/* UR賃貸: public housing leased by UR itself, on its own terms */}
+      <Section
+        title="UR housing"
+        summary={filters.ur === "show" ? "shown" : filters.ur === "hide" ? "hidden" : "UR only"}
+        active={filters.ur !== "show"}
+      >
+        <div className={styles.chips}>
+          {(["show", "hide", "only"] as const).map((mode) => (
+            <button
+              key={`ur-${mode}`}
+              className={`${styles.chip} ${filters.ur === mode ? styles.on : ""}`}
+              onClick={() => onUpdate({ ur: mode })}
+              title={
+                mode === "show"
+                  ? "Show UR rooms with the rest"
+                  : mode === "hide"
+                    ? "Hide UR rooms (UR's own ads and portal ads for them)"
+                    : "Only UR rooms"
+              }
+            >
+              {mode === "show" ? "show UR" : mode === "hide" ? "hide UR" : "UR only"}
+            </button>
+          ))}
+        </div>
+        <p className={styles.help}>
+          UR賃貸 leases directly: no key money, agency fee, guarantor or renewal fee, and a two-month deposit. The map's
+          UR estates layer shows every estate, vacant or full, whatever this filter says.
+        </p>
+      </Section>
+
       {/* Decision marks: the user's own rulings (shortlist, taken, …) */}
       <Section
         title="My decisions"

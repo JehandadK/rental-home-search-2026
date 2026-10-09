@@ -1,6 +1,7 @@
 # UR rental data sites: map and source plan
 
-Research only, no collector code yet. Mapped on **2026-10-09** in a headed
+The collector built from this research is `npm run scrape:ur`
+(`src/collectors/ur/`, official site and API only; see the main README). Mapped on **2026-10-09** in a headed
 Playwright browser (one tab per site, 8–14 s between pages, about 290 page
 loads across 20-odd sites). Nothing was fetched with curl or fetch; the few
 JSON API reads were made from inside each site's own page. Discovery used web

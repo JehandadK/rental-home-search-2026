@@ -17,20 +17,25 @@ export type { AdAvailability } from "./types";
 /** Availability records keyed by {@link adKey}. */
 export type AvailabilityMap = Record<string, AdAvailability & { source: string; url: string }>;
 
-/** How the ad id is embedded in each portal's URL. Tracking query strings are ignored. */
+/**
+ * How the ad id is embedded in each portal's URL. Tracking query strings are
+ * ignored; several capture groups are joined with "-" (UR keeps the room in
+ * its query string: estate code + JKSS).
+ */
 const AD_ID_PATTERNS: Record<string, RegExp> = {
   suumo: /\/chintai\/(jnc_\d+)/,
   athome: /\/chintai\/(\d+)\//,
   nifty: /\/(detail_[0-9a-f]+)/,
   roomspot: /\/rent\/(\d+)/,
   yahoo: /\/rent\/detail\/[^/]+\/(\d+)/,
+  ur: /\/(\d{2}_\d{3}[0-9a-z])_room\.html\?(?:[^#]*&)?JKSS=(\d+)/,
 };
 
 /** Stable identity of one portal ad: `source|id`, else `source|url without query`. */
 export function adKey(source: string, url: string | null | undefined, id?: string | null): string {
   if (url) {
     const match = AD_ID_PATTERNS[source]?.exec(url);
-    if (match) return `${source}|${match[1]}`;
+    if (match) return `${source}|${match.slice(1).join("-")}`;
     return `${source}|${url.replace(/[?#].*$/, "")}`;
   }
   return `${source}|${id ?? ""}`;
@@ -46,6 +51,7 @@ const ROW_ID_PATTERNS: Record<string, { pattern: RegExp; adId: (match: RegExpExe
   nifty: { pattern: /^nifty-([0-9a-f]+)$/, adId: (m) => `detail_${m[1]}` },
   roomspot: { pattern: /^roomspot-(\d+)$/, adId: (m) => m[1] },
   yahoo: { pattern: /^yahoo-(\d+)$/, adId: (m) => m[1] },
+  ur: { pattern: /^ur-(\d{2}_\d{3}[0-9a-z]-\d+)$/, adId: (m) => m[1] },
 };
 
 /** The ad key a row id stands for, when the id embeds the portal's ad id. */
