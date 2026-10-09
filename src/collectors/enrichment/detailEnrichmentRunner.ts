@@ -72,7 +72,9 @@ async function enrichDetailsLocked(args: readonly string[], dependencies: Detail
         // An ended ad stays ended: wait a week rather than spend a request on it every hour.
         const isEnded = item.error === "HTTP 404";
         if (isEnded) ended.push({ url: item.url, checkedAt: dependencies.now().toISOString() });
-        item.retryAfter = new Date(dependencies.now().getTime() + (isEnded ? 7 * 86400000 : 3600000)).toISOString(); failed++;
+        item.retryAfter = new Date(dependencies.now().getTime() + (isEnded ? 7 * 86400000 : 3600000)).toISOString();
+        // An ended ad is a recorded observation (the ad is gone), not a failure.
+        if (!isEnded) failed++;
         await writeJsonAtomically(queuePath, queue);
         // One source circuit breaker: no repeated challenge/throttle requests.
         if (/403|405|429|Unrecognized/.test(item.error)) break;
@@ -109,6 +111,8 @@ export async function enrichDetailsCli(
     fetch: browser.fetch, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   }).finally(() => browser.close());
   await onEnded(result.ended);
-  console.log(`Details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} applied; ${result.failed} failures (${result.ended.length} ended ads); queue retained (${result.queued} URLs).`);
+  console.log(`Details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} applied; `
+    + `${result.failed} failures; ${result.ended.length} ended ads; queue retained (${result.queued} URLs).`);
+  // Only real errors, blocks and unrecognized pages fail the run; ended ads are recorded above.
   if (result.failed) process.exitCode = 2;
 }
