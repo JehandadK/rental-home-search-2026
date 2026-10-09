@@ -482,6 +482,24 @@ removed, and every collector now uses the headed Playwright browser.
   SUUMO 28, AtHome 1). All geocoded; none SOLD.
 - **774 tests, typecheck and production build pass.**
 
+## 2026-10-09 recent-listing refresh (Playwright)
+
+- Run `2026-10-09T06-18-02-330Z-4dc22904`: all four portals, every source/city
+  stopped on two all-known pages. AtHome reused the profile without a
+  verification page. Source additions: SUUMO **2**, AtHome **98**, Nifty **5**
+  (1/2/2/0), RoomSpot **13** (Soka 5, Koshigaya 8).
+- RoomSpot Katsushika is down to **1 page**: the run read page 1 (all known),
+  then page 2 returned no HTML and the whole stage committed nothing. Re-ran it
+  per city (`--city <label>`; the first three from the capture cache) with
+  `--city Katsushika --max-pages 1`, then `refresh -- --resume --local-only`.
+  The ledger still lists RoomSpot as pending; `--resume` would only repeat the
+  Katsushika error.
+- Every run since 11:16 had been PARTIAL on "SUUMO details" only because ended
+  ads count as failures (exit 2); this run's 10 SUUMO details all applied.
+- **13 newly tracked properties**, 5195 → **5208** archival rows; all geocoded
+  (2 queries, 0 unresolved); none SOLD. 10 agency stores added from RoomSpot.
+- **902 tests and typecheck pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
