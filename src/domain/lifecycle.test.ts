@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isNewListing, isSold, lifecycleCounts, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
-import type { EnrichedListing } from "../types";
+import {
+  clampNewWindowDays,
+  isNewListing,
+  isSold,
+  lifecycleCounts,
+  MAX_NEW_WINDOW_DAYS,
+  MIN_NEW_WINDOW_DAYS,
+  NEW_LISTING_WINDOW_DAYS,
+} from "./lifecycle";
+import type { EnrichedListing } from "./types";
 
 const NOW = new Date("2026-08-30T12:00:00.000Z");
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000).toISOString();
@@ -39,6 +47,13 @@ describe("isNewListing", () => {
     ).toBe(false);
   });
 
+  it("honours a shorter window", () => {
+    expect(isNewListing(make({ firstSeenAt: daysAgo(2) }), NOW, 3)).toBe(true);
+    expect(isNewListing(make({ firstSeenAt: daysAgo(4) }), NOW, 3)).toBe(false);
+    expect(isNewListing(make({ firstSeenAt: daysAgo(0.5) }), NOW, 1)).toBe(true);
+    expect(isNewListing(make({ firstSeenAt: daysAgo(1.5) }), NOW, 1)).toBe(false);
+  });
+
   it("never calls legacy (null firstSeenAt) or sold listings new", () => {
     expect(isNewListing(make({ firstSeenAt: null }), NOW)).toBe(false);
     expect(isNewListing(make({}), NOW)).toBe(false);
@@ -61,6 +76,20 @@ describe("lifecycleCounts", () => {
       make({ name: "legacy", firstSeenAt: null }),
       make({ name: "gone", status: "sold", firstSeenAt: daysAgo(1) }),
     ];
-    expect(lifecycleCounts(listings)).toEqual({ newCount: 2, soldCount: 1 });
+    expect(lifecycleCounts(listings)).toEqual({ newCount: 2, soldCount: 1, rentedOutCount: 0 });
+  });
+});
+
+describe("clampNewWindowDays", () => {
+  it("keeps whole days from 1 to 14, defaulting anything unusable", () => {
+    expect(MIN_NEW_WINDOW_DAYS).toBe(1);
+    expect(MAX_NEW_WINDOW_DAYS).toBe(14);
+    expect(clampNewWindowDays(7)).toBe(7);
+    expect(clampNewWindowDays(0)).toBe(1);
+    expect(clampNewWindowDays(30)).toBe(14);
+    expect(clampNewWindowDays(3.6)).toBe(4);
+    expect(clampNewWindowDays("7")).toBe(NEW_LISTING_WINDOW_DAYS);
+    expect(clampNewWindowDays(Number.NaN)).toBe(NEW_LISTING_WINDOW_DAYS);
+    expect(clampNewWindowDays(undefined)).toBe(NEW_LISTING_WINDOW_DAYS);
   });
 });

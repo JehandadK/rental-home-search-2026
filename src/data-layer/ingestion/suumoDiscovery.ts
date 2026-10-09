@@ -47,7 +47,7 @@ export class StagedSuumoDiscovery implements SuumoDiscoverySession {
       const number = page.scope.filters.page;
       const url = new URL(page.scope.urls[0]);
       if (!city || !state || state.done || number !== state.pages + 1 || Number(url.searchParams.get("page") ?? 1) !== number
-        || url.pathname !== `/chintai/saitama/${city.code}/` || url.searchParams.get("po1") !== "09"
+        || !new RegExp(`^/chintai/[a-z]+/${city.code}/$`).test(url.pathname) || url.searchParams.get("po1") !== "09"
         || url.searchParams.getAll("md").join(",") !== this.options.layoutCodes.join(",")
         || page.observations.some((observation) => observation.observedAt !== page.capturedAt)) throw new InvalidScrapeBatchError("Unexpected SUUMO page sequence/scope/time");
       let novel = 0, overlap = 0, duplicate = 0;

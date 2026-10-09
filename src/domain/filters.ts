@@ -4,10 +4,10 @@
  * an include/exclude mode, so you can focus on — or rule out — specific
  * neighbourhoods.
  */
-import type { EnrichedListing } from "../types";
-import type { ListingScore } from "./scoring";
-import { isNewListing, isSold } from "./lifecycle";
+import type { EnrichedListing } from "./types";
+import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
 import type { MarkFilter } from "./marks";
+import { isRentedOut } from "./availability";
 
 export type AreaMode = "include" | "exclude";
 
@@ -18,6 +18,14 @@ export type AreaMode = "include" | "exclude";
  *   sold   — only sold listings (what did we miss?)
  */
 export type StatusFilter = "all" | "active" | "sold";
+
+/**
+ * Properties whose every portal ad has been seen gone:
+ *   hide — leave them out (default)
+ *   show — keep them, marked
+ *   only — only those (what did we lose?)
+ */
+export type RentedOutFilter = "hide" | "show" | "only";
 
 export interface ListingFilters {
   /** Cities to keep (empty set = all cities). */
@@ -51,8 +59,15 @@ export interface ListingFilters {
   parkingMaxYen: number | null;
   /** Lifecycle visibility: show sold listings or not. */
   status: StatusFilter;
-  /** Keep only listings first seen within the NEW window (14 days). */
+  /** Visibility of properties rented out on every portal. */
+  rentedOut: RentedOutFilter;
+  /** Keep only listings first seen within the NEW window. */
   newOnly: boolean;
+  /**
+   * How many days a listing counts as new after it is first seen (1–14).
+   * Drives the "new only" filter and the NEW badges, rings and count alike.
+   */
+  newWithinDays: number;
   /**
    * How the user's decision marks narrow the set. The marks themselves are
    * user state and live in their own store, so this filter is applied by the
@@ -74,7 +89,9 @@ export const EMPTY_FILTERS: ListingFilters = {
   parking: "any",
   parkingMaxYen: null,
   status: "all",
+  rentedOut: "hide",
   newOnly: false,
+  newWithinDays: NEW_LISTING_WINDOW_DAYS,
   markFilter: "all",
 };
 
@@ -163,7 +180,13 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
 
   if (filters.status === "active" && isSold(listing)) return false;
   if (filters.status === "sold" && !isSold(listing)) return false;
-  if (filters.newOnly && !isNewListing(listing)) return false;
+  if (filters.newOnly && !isNewListing(listing, new Date(), filters.newWithinDays)) return false;
+
+  if (filters.rentedOut !== "show") {
+    const rentedOut = isRentedOut(listing);
+    if (filters.rentedOut === "hide" && rentedOut) return false;
+    if (filters.rentedOut === "only" && !rentedOut) return false;
+  }
 
   return true;
 }
@@ -190,17 +213,6 @@ function matchesParking(listing: EnrichedListing, filters: ListingFilters): bool
   return true;
 }
 
-/** True when a scored listing passes the score-dependent filters too. */
-export function matchesScored(
-  listing: EnrichedListing,
-  score: ListingScore,
-  filters: ListingFilters,
-): boolean {
-  if (!matchesListing(listing, filters)) return false;
-  if (filters.minScore > 0 && (score.total ?? -1) < filters.minScore) return false;
-  return true;
-}
-
 /** Count how many filters are currently active (for the panel's badge). */
 export function activeFilterCount(filters: ListingFilters): number {
   let n = 0;
@@ -214,6 +226,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   if (filters.parkingMaxYen != null) n++;
   if (filters.status !== "all") n++;
   if (filters.newOnly) n++;
+  if (filters.rentedOut !== "hide") n++;
   if (filters.markFilter !== "all") n++;
   return n;
 }

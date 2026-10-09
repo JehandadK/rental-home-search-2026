@@ -1,4 +1,4 @@
-import type { RawListing } from "../types";
+import type { RawListing } from "./types";
 
 const norm = (value: string | null | undefined): string =>
   (value ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();

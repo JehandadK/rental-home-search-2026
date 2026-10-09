@@ -2,11 +2,13 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { enrichListing } from "../src/domain/enrichListing";
-import { geocodeAddress } from "../src/lib/geocode";
-import { DATA_DIR, atomicWriteJson } from "./lib/dataStore";
-import { withFileLock } from "./lib/jsonFile";
-import { addressKey, cachedGeocode, seedGeocodes, type GeocodeCache } from "./lib/geocodeCache";
-import type { EnrichedListing, RawListing } from "../src/types";
+import { buildReferenceModel } from "../src/domain/referenceData";
+import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
+import { geocodeAddress } from "../src/integrations/geocode";
+import { DATA_DIR, REFERENCE_CATALOG_DIR, atomicWriteJson } from "../src/storage/json/dataStore";
+import { withFileLock } from "../src/node/jsonFile";
+import { addressKey, cachedGeocode, seedGeocodes, type GeocodeCache } from "../src/collectors/enrichment/geocodeCache";
+import type { EnrichedListing, RawListing } from "../src/domain/types";
 
 const OUT = join(DATA_DIR, "listings.json");
 const CACHE = join(DATA_DIR, "geocodes.json");
@@ -15,6 +17,8 @@ async function optional<T>(path: string, fallback: T): Promise<T> {
   catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return fallback; throw e; }
 }
 async function main(): Promise<void> {
+  // Proximities are measured against the managed reference catalog.
+  const { catalog } = buildReferenceModel(await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot());
   const raw = JSON.parse(await readFile(join(DATA_DIR, "listings_raw.json"), "utf8")) as RawListing[];
   const cache: GeocodeCache = process.argv.includes("--regeocode") ? {} : seedGeocodes(
     await optional<EnrichedListing[]>(OUT, []), await optional<GeocodeCache>(CACHE, {}),
@@ -38,7 +42,7 @@ async function main(): Promise<void> {
       }
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
-    enriched.push(entry?.value ? enrichListing(listing, entry.value, entry.value.matched) : { ...listing, geocoded: false });
+    enriched.push(entry?.value ? enrichListing(listing, entry.value, entry.value.matched, catalog) : { ...listing, geocoded: false });
   }
   await atomicWriteJson(CACHE, cache);
   await atomicWriteJson(OUT, enriched);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RawListing } from "../types";
+import type { RawListing } from "./types";
 import { deduplicateListings, isSameProperty, mergeDuplicateListings } from "./listingDedup";
 
 const make = (over: Partial<RawListing> = {}): RawListing => ({
@@ -178,6 +178,16 @@ describe("cross-source listing deduplication", () => {
     expect(all.sourceListings?.map(({ source }) => source)).toEqual(["athome", "suumo", "nifty"]);
   });
 
+  it("keeps every portal's photos when cross-listed ads merge", () => {
+    const photo = (url: string, source: string) => ({ url, kind: "photo" as const, source });
+    const nifty = make({ id: "nifty-1", source: "nifty", url: "https://nifty.example/1", photos: [photo("https://img.example/n", "nifty"), photo("https://img.example/shared", "nifty")] });
+    const athome = make({ id: "athome-2", source: "athome", url: "https://athome.example/2", photos: [photo("https://img.example/a", "athome"), photo("https://img.example/shared", "athome")] });
+    expect(mergeDuplicateListings(nifty, athome).photos?.map(({ url }) => url)).toEqual([
+      "https://img.example/a", "https://img.example/shared", "https://img.example/n",
+    ]);
+    expect(mergeDuplicateListings(make(), make({ id: "nifty-1", source: "nifty" }))).not.toHaveProperty("photos");
+  });
+
   it("collapses one portal's repeat ads for the same unit, keeping both links", () => {
     expect(isSameProperty(make(), make({ id: "suumo-2" }))).toBe(false);
     const twin = make({ id: "suumo-2", url: "https://suumo.example/2" });
@@ -279,13 +289,16 @@ describe("cross-source listing deduplication", () => {
       expect.objectContaining({ source: "suumo", url: "https://suumo.example/1" }),
     ]));
   });
-
-  it("collapses a group to one row", () => {
-    const result = deduplicateListings([
-      make(),
-      make({ id: "athome-2", source: "athome", url: "https://athome.example/2", builtYear: 2019 }),
-    ]);
-    expect(result).toHaveLength(1);
-    expect(result[0].sourceListings).toHaveLength(2);
+  it("takes the agency name and its store details from the same ad", () => {
+    const store = { name: "ハウスコム埼玉(株)草加店", brand: "ハウスコム", company: "ハウスコム埼玉株式会社", branch: "草加店",
+      address: "埼玉県草加市氷川町2120-6", prefecture: "埼玉県", city: "草加市", phone: null, licence: null };
+    const suumo = make({ agency: store.name, agencyInfo: store });
+    const athome = make({ id: "athome-2", source: "athome", url: "https://athome.example/2", agency: "Other store" });
+    const merged = mergeDuplicateListings(suumo, athome);
+    expect(merged.source).toBe("athome");
+    expect(merged).toMatchObject({ agency: "Other store" });
+    expect(merged).not.toHaveProperty("agencyInfo");
+    expect(mergeDuplicateListings(suumo, { ...athome, agency: undefined })).toMatchObject({ agency: store.name, agencyInfo: store });
+    expect(mergeDuplicateListings(make(), { ...athome, agency: undefined })).not.toHaveProperty("agency");
   });
 });

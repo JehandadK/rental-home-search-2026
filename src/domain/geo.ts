@@ -2,7 +2,7 @@
  * Geographic primitives: straight-line distance, walking-time estimation,
  * and nearest-place lookup. Pure functions with no I/O.
  */
-import type { GeoPoint, NamedPlace, Proximity } from "../types";
+import type { GeoPoint, NamedPlace, Proximity } from "./types";
 
 const EARTH_RADIUS_M = 6_371_000;
 

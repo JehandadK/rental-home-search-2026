@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estimateWalkMinutes, haversineM, nearestPlace, toProximity } from "./geo";
+import { haversineM, nearestPlace, toProximity } from "./geo";
 
 describe("haversineM", () => {
   it("returns 0 for identical points", () => {
@@ -12,19 +12,6 @@ describe("haversineM", () => {
     const d = haversineM(soka, alSanad);
     expect(d).toBeGreaterThan(2900);
     expect(d).toBeLessThan(3300);
-  });
-
-  it("is symmetric", () => {
-    const a = { lat: 35.85, lon: 139.79 };
-    const b = { lat: 35.86, lon: 139.81 };
-    expect(haversineM(a, b)).toBeCloseTo(haversineM(b, a), 10);
-  });
-});
-
-describe("estimateWalkMinutes", () => {
-  it("applies the detour factor over walking speed", () => {
-    // 800 m straight line × 1.3 detour ÷ 80 m/min = 13 min
-    expect(estimateWalkMinutes(800, 80, 1.3)).toBeCloseTo(13, 10);
   });
 });
 

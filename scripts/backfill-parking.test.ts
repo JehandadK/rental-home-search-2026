@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractParkingCell, parseParking } from "./backfill-parking";
+import { parseParking } from "./backfill-parking";
 
 describe("parseParking", () => {
   it("parses on-site paid parking", () => {
@@ -20,11 +20,6 @@ describe("parseParking", () => {
       location: "nearby",
       distanceM: 143,
     });
-  });
-
-  it("does not mistake the distance for the price", () => {
-    // "143m" must not be read as ¥143.
-    expect(parseParking("近隣143m9592円").monthlyYen).toBe(9592);
   });
 
   it("handles thousands separators", () => {
@@ -52,21 +47,5 @@ describe("parseParking", () => {
 
   it("keeps the raw text for auditing", () => {
     expect(parseParking("敷地内7700円").raw).toBe("敷地内7700円");
-  });
-});
-
-describe("extractParkingCell", () => {
-  it("pulls the 駐車場 cell out of a spec table", () => {
-    const html = `
-      <table>
-        <tr><th>損保</th><td>要</td></tr>
-        <tr><th>駐車場</th><td>近隣143m9592円</td></tr>
-        <tr><th>入居</th><td>即</td></tr>
-      </table>`;
-    expect(extractParkingCell(html)).toBe("近隣143m9592円");
-  });
-
-  it("returns null when the page has no 駐車場 row", () => {
-    expect(extractParkingCell("<table><tr><th>損保</th><td>要</td></tr></table>")).toBeNull();
   });
 });

@@ -1,0 +1,686 @@
+.count {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.tableHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+}
+
+.tableHeading h2 {
+  margin-bottom: 10px;
+}
+
+.columnPicker {
+  position: relative;
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.columnPicker > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 5px 9px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 6px;
+  background: var(--rs-slate-50);
+  color: var(--rs-slate-700);
+  user-select: none;
+}
+
+.columnPicker > summary::-webkit-details-marker {
+  display: none;
+}
+
+.columnPicker > summary::before {
+  content: "☷ ";
+  color: var(--rs-muted);
+}
+
+.columnPicker > summary span {
+  color: var(--rs-muted);
+  font-size: 10px;
+}
+
+.columnPicker[open] > summary {
+  border-color: var(--rs-slate-400);
+  background: var(--rs-accent-wash);
+}
+
+.columnMenu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 5px);
+  right: 0;
+  width: 255px;
+  max-height: min(420px, 65vh);
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 10px;
+  padding: 10px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 8px;
+  background: var(--rs-card);
+  box-shadow: 0 10px 28px rgb(var(--rs-shadow) / 0.18);
+}
+
+.columnMenu label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 2px;
+  color: var(--rs-slate-700);
+  cursor: pointer;
+}
+
+.columnMenu input {
+  margin: 0;
+  accent-color: var(--rs-accent);
+}
+
+.columnMenu .lockedColumn {
+  color: var(--rs-muted);
+  cursor: default;
+}
+
+.columnActions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  padding-bottom: 7px;
+  margin-bottom: 3px;
+  border-bottom: 1px solid var(--rs-line);
+}
+
+.columnActions button {
+  flex: 1;
+  padding: 4px 7px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 5px;
+  background: var(--rs-slate-50);
+  color: var(--rs-slate-600);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.columnActions button:hover {
+  background: var(--rs-accent-wash);
+}
+
+.scroll {
+  overflow: auto;
+  max-height: 68vh;
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12.5px;
+}
+
+.table th,
+.table td {
+  padding: 6px 7px;
+  border-bottom: 1px solid var(--rs-line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  background: var(--rs-card);
+  font-size: 11px;
+  color: var(--rs-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.left {
+  text-align: left !important;
+}
+
+.locateHeader,
+.locateCell {
+  width: 25px;
+  padding-left: 3px !important;
+  padding-right: 3px !important;
+  text-align: center !important;
+}
+
+.locateButton {
+  display: inline-grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 4px;
+  background: var(--rs-slate-50);
+  color: var(--rs-accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.locateButton:hover,
+.locateButton:focus-visible {
+  border-color: var(--rs-accent);
+  background: var(--rs-blue-100);
+  outline: none;
+}
+
+.noLocation {
+  color: var(--rs-slate-300);
+  font-size: 10px;
+}
+
+.name {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Cross-listed badge: the same room advertised on several portals. */
+.badgeMulti {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--rs-indigo-50);
+  color: var(--rs-indigo-600);
+  border: 1px solid var(--rs-indigo-200);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+/* Lifecycle badges: freshly discovered vs no longer advertised. */
+.badgeNew {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--rs-green-600);
+  color: var(--rs-on-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+.badgeSold {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--rs-gray-400);
+  color: var(--rs-on-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+.badgeRentedOut {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--rs-amber-700);
+  color: var(--rs-on-accent);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+/* One portal ad plus its "mark gone" control. */
+.adLink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.linkGone {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.adToggle {
+  padding: 0 3px;
+  font-size: 10px;
+  line-height: 1.2;
+  background: transparent;
+  color: var(--rs-gray-400);
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.adToggle:hover {
+  color: var(--rs-amber-700);
+  background: var(--rs-amber-100);
+}
+
+/* Sold rows stay visible but recede so active listings stand out. */
+.sold {
+  opacity: 0.5;
+}
+
+/* Ruled-out rows (taken / not interested / no foreigners) recede the same way. */
+.ruledOut {
+  opacity: 0.55;
+}
+
+/* Decision column: the user's own ruling on each property. */
+.markCell {
+  text-align: center !important;
+}
+
+.markSelect {
+  max-width: 128px;
+  padding: 2px 3px;
+  border: 1px solid var(--rs-line);
+  border-radius: 6px;
+  background: var(--rs-card);
+  color: var(--rs-muted);
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.markSelect.markPositive {
+  border-color: var(--rs-amber-600);
+  background: var(--rs-amber-50);
+  color: var(--rs-amber-800);
+  font-weight: 600;
+}
+
+.markSelect.markNegative {
+  border-color: var(--rs-red-300);
+  background: var(--rs-red-50);
+  color: var(--rs-red-800);
+}
+
+.listing:hover {
+  background: var(--rs-row-hover);
+  cursor: pointer;
+}
+
+/* Row highlighted because its dot is hovered on the map. */
+.hovered,
+.hovered:hover {
+  background: var(--rs-row-linked);
+  box-shadow: inset 3px 0 0 var(--rs-amber-500);
+}
+
+/* Row for the listing selected (clicked) on the map. */
+.selected,
+.selected:hover {
+  background: var(--rs-blue-100);
+  box-shadow: inset 3px 0 0 var(--rs-accent);
+}
+
+.selected.hovered {
+  background: var(--rs-row-selected-linked);
+}
+
+.city {
+  color: var(--rs-muted);
+  font-size: 11.5px;
+  text-align: left !important;
+}
+
+.source {
+  display: block;
+  color: var(--rs-slate-400);
+  font-size: 9.5px;
+  text-transform: uppercase;
+}
+
+.pill {
+  display: inline-block;
+  min-width: 40px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  color: var(--rs-on-accent);
+  font-weight: 600;
+  text-align: center;
+}
+
+.links {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* The preferred portal (athome → suumo → nifty) leads a merged row's links. */
+.primaryLink {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.remove {
+  margin-left: 8px;
+  padding: 0 6px;
+  font-size: 11px;
+  background: var(--rs-danger-wash);
+  color: var(--rs-danger-ink);
+  border-radius: 4px;
+}
+
+.detail td {
+  background: var(--rs-row-detail);
+  white-space: normal;
+  text-align: left;
+}
+
+.bars {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px 20px;
+  padding: 8px 4px;
+}
+
+.barLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--rs-muted);
+}
+
+.barLabel em {
+  font-style: normal;
+  color: var(--rs-slate-400);
+}
+
+.track {
+  height: 7px;
+  background: var(--rs-track);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.loadMore {
+  display: block;
+  margin: 10px auto 2px;
+  padding: 6px 14px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 6px;
+  background: var(--rs-slate-50);
+  color: var(--rs-slate-700);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.loadMore:hover {
+  background: var(--rs-accent-wash);
+  border-color: var(--rs-slate-400);
+}
+
+.sources {
+  font-size: 10.5px;
+  color: var(--rs-muted);
+  margin: 10px 0 0;
+}
+
+/* Move-in cost breakdown inside the expanded row. */
+.moveIn {
+  background: var(--rs-move-in-bg);
+  border: 1px solid var(--rs-move-in-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 8px 4px 4px;
+}
+
+.moveInHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.sunk {
+  color: var(--rs-red-700);
+  font-weight: 600;
+}
+
+.back {
+  color: var(--rs-green-700);
+  font-weight: 600;
+}
+
+.moveInList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1px 18px;
+}
+
+.moveInList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11.5px;
+  color: var(--rs-orange-900);
+  border-bottom: 1px dotted var(--rs-move-in-rule);
+  padding: 2px 0;
+}
+
+.refundableItem {
+  color: var(--rs-green-700) !important;
+}
+
+.est {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--rs-stone-400);
+}
+
+.moveInNote {
+  font-size: 10.5px;
+  color: var(--rs-muted);
+  margin: 6px 0 0;
+  line-height: 1.45;
+}
+
+.parking {
+  font-size: 11.5px;
+  color: var(--rs-orange-900);
+  margin: 4px 0 0;
+}
+
+.parking strong {
+  color: var(--rs-amber-700);
+}
+
+.parking em {
+  font-style: normal;
+  color: var(--rs-muted);
+}
+
+.attributes {
+  margin: 7px 0;
+  padding: 6px 8px;
+  border: 1px solid var(--rs-panel-border);
+  border-radius: 6px;
+  background: var(--rs-card);
+}
+
+.attributes summary {
+  cursor: pointer;
+  color: var(--rs-slate-700);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.attributeGroup {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.attributeGroup > strong {
+  color: var(--rs-slate-600);
+  font-size: 10.5px;
+}
+
+.attributeGroup small {
+  display: block;
+  color: var(--rs-slate-400);
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.attributeGroup > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.attributeGroup > div > span {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--rs-emerald-50);
+  color: var(--rs-green-800);
+  font-size: 10px;
+}
+
+.attributeGroup > div > span.attributeNo {
+  background: var(--rs-slate-50);
+  color: var(--rs-muted);
+  text-decoration: line-through;
+}
+
+/* Listing photo thumbnail, first column after the rank. */
+.photoCell {
+  width: 56px;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  text-align: center !important;
+}
+
+/* Expanded row: the photo sits beside the move-in costs, stacking when narrow. */
+.detailTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 12px;
+}
+
+.detailTop > :last-child {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.detailGallery {
+  flex: 0 0 260px;
+  max-width: 100%;
+  margin: 8px 4px 4px;
+}
+
+/* The user's own note, or the booked viewing when there is one. */
+.badgeNote {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--rs-yellow-100);
+  color: var(--rs-yellow-800);
+  border: 1px solid var(--rs-amber-200);
+  font-size: 9.5px;
+  font-weight: 700;
+  vertical-align: 1px;
+  cursor: help;
+}
+
+.compareCell {
+  text-align: center !important;
+}
+
+.compareCell input {
+  cursor: pointer;
+}
+
+.compareLink {
+  margin-left: auto;
+  align-self: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--rs-emerald-50);
+  border: 1px solid var(--rs-emerald-200);
+  color: var(--rs-emerald-700);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.scoreTd {
+  white-space: nowrap;
+}
+
+.scoreCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Partial scores: a hollow ring, so incompleteness does not rely on colour. */
+.pillPartial {
+  background: var(--rs-card);
+  border: 2px dashed;
+  padding: 0 6px;
+}
+
+.coverage {
+  font-size: 10.5px;
+  color: var(--rs-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rankMove {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  /* Fades in only: it stays solid for the whole hold, which a later change can extend. */
+  animation: rankMoveIn 0.2s ease-out;
+}
+
+.rankUp {
+  color: var(--rs-green-700);
+}
+
+.rankDown {
+  color: var(--rs-red-700);
+}
+
+@keyframes rankMoveIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rankMove {
+    animation: none;
+  }
+}

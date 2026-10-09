@@ -26,8 +26,17 @@
 - A detail fetch parses parking, lease, availability, fees, structure and amenities
   together. Valid HTML is cached; `--replay` re-parses it with zero requests.
   `--force` explicitly rechecks within the budget. Deferred URLs live in
-  `src/data/detail-queue.json`, independent of scrape `newListingIds`.
-- Shared-address geocodes persist in `src/data/geocodes.json`. New results are
+  `data/detail-queue.json`, independent of scrape `newListingIds`.
+- AtHome and RoomSpot list pages do not name the agency. `npm run detail:athome`
+  and `npm run detail:roomspot` (default `--limit 10`) read current ads' detail
+  pages in the headed browser for the store block only (掲載不動産会社 / 広告主情報):
+  `agency` and `agencyInfo`, added together and never overwritten or cleared.
+  Queues live in `data/<source>-detail-queue.json`; captures in
+  `data/.captures/details/`, replayed with `--replay` and zero requests. A
+  verification, block (403/429) or unrecognised page stops all requests and pauses
+  the source for an hour, doubling on repeats; `ATHOME_VERIFY_WAIT_SECONDS` lets
+  a person complete AtHome's check in the window first. Refresh never runs them.
+- Shared-address geocodes persist in `data/geocodes.json`. New results are
   checkpointed immediately, reused within the same run, and written atomically.
   No-match results expire after 7 days; transient HTTP failures are not cached.
 - Source observation times come from the capture, not the build clock, and any
@@ -38,6 +47,70 @@
 - `--full` now fails safely: existing fixed-page collectors do NOT prove full
   per-city exhaustion. Use `--deep` for wider non-destructive discovery. Automated
   SOLD auditing remains unavailable until explicit exhaustion is implemented.
+
+## Parallel collection and the Playwright driver
+
+- Collectors for different sources (SUUMO, AtHome, RoomSpot, Nifty) run at the
+  same time; the Nifty cities share `nifty.json`, so they run in order
+  inside one group. `--concurrency N` caps it (`1` = fully sequential).
+- Without the Pi Control Chrome bridge, set `BROWSER_DRIVER=playwright` (for
+  example `BROWSER_DRIVER=playwright npm run refresh -- --resume`). It launches
+  a local Playwright Chromium (`src/collectors/shared/playwrightBridge.ts`),
+  **headed** by default: Nifty and AtHome serve a wait/verification page to
+  headless Chromium. `PLAYWRIGHT_HEADLESS=1` opts out; `PLAYWRIGHT_EXECUTABLE_PATH`
+  overrides the browser, else the newest cached Chromium is used.
+- The AtHome adapter handles both templates: the legacy `#search-parameter` AJAX
+  form and the modern `.property-card` pages, which it reads as
+  `/list/pageN/?sort=33` documents and projects offline with
+  `athomeDownloadedCapture`. It never retries or works around AtHome's
+  verification page ("認証にご協力ください"); it stops with an error instead.
+- If AtHome shows that page to the automated browser, pass it once by hand: run
+  with `PLAYWRIGHT_USER_DATA_DIR=.context/athome-profile` (gitignored), complete
+  the check in the headed window, and later runs reuse the session. Add
+  `ATHOME_VERIFY_WAIT_SECONDS=300` so the run waits (passively; no reloads or
+  extra requests) while you complete it, and `--verbose` to see the prompt. As of
+  2026-09-30 a fresh Playwright profile was shown the page on the homepage.
+- Chromium allows one instance per profile directory, so `npm run refresh` passes
+  `PLAYWRIGHT_USER_DATA_DIR` only to the AtHome stage (`stageEnv` in
+  `src/refresh/refreshPlan.ts`). SUUMO, RoomSpot and Nifty get a fresh,
+  non-persistent context and run in parallel with it. Before this, every collector
+  launched the shared profile and Chromium refused the second one ("Opening in
+  existing browser session… profile is already in use"); on 2026-10-02 AtHome
+  and RoomSpot failed at launch, and only `--concurrency 1` worked. The default
+  parallel run now works with the profile set.
+
+## Rented-out detection
+
+A property is **rented out** when every portal ad we know for it has been seen
+gone. One live ad keeps it available. This is separate from `sold`, which is
+only inferred from absence in crawls.
+
+- `npm run check:availability` visits ad pages in the **headed browser only**
+  (`BROWSER_DRIVER=playwright`, else the Chrome bridge; never curl/fetch).
+  It picks the properties a refresh has not seen for longest, checks the
+  cheapest portal first (Nifty, SUUMO, RoomSpot, Yahoo, AtHome) and stops at the
+  first live ad, so an available property costs one page load. Ads already
+  recorded gone are never revisited. Flags: `--limit N` (25), `--stale-days D`
+  (3), `--city`, `--min-size`, `--max-rent`, `--recheck-gone`, `--url <ad>`,
+  `--dry-run` (no browser).
+- What "gone" looks like (`src/collectors/availability/classify.ts`): AtHome
+  HTTP 404 「お探しのページが見つかりません」; SUUMO HTTP 404 「エラー｜SUUMO」 or a
+  redirect to the building's `/library/` page; RoomSpot HTTP 404 with 掲載終了;
+  Nifty a redirect from `detail_…` to the building's `/mansion-info/` page.
+  A `/mansion-info/…/mansion_<id>/` (Nifty) or `/library/…` (SUUMO) URL is a
+  **building page, not a rental ad**: portals send taken-down ads there, and the
+  live ad's breadcrumb also links to it. Stored ad URLs are always
+  `/rent/<pref>/<city>/detail_<id>/` and `/chintai/jnc_<id>/`; if you click one
+  and land on a building page, the ad is gone (run `check:availability --url
+  <ad>`), not mis-collected. Seen 2026-10-07 for 日商岩井草加マンション.
+  Verification/busy pages, errors and anything unrecognised are `unknown` and
+  never recorded as gone. Use `ATHOME_VERIFY_WAIT_SECONDS` to pass a check by hand.
+- Results live in `data/availability.json` (newest check wins per ad), separate
+  from the source snapshots so refreshes cannot wipe them. `npm run data:web`
+  bakes them into each ad in `public/data/listings.json`.
+- Dashboard: rented-out properties are hidden by default (filter: hide / show /
+  only), badged **RENTED OUT**, and each portal link has a small ✕ / ↺ to mark
+  that ad gone or still listed by hand (browser-local, newest check wins).
 
 ## Agent-operated browser collection
 
@@ -52,13 +125,18 @@ run the human CLI's direct-Bridge collectors from the agent shell.
    a cold tab at a deep search URL: that can trigger blocking and stuck reads.
    If the homepage is blocked or times out, stop for manual inspection; do not
    proceed to results, replay navigation, or restart the browser automatically.
-   Then prefer the working `/chintai/saitama/list/?pref=11&cities=...&cityCds=...`
-   search supplied by the user. Preserve their other filters; narrow `cities`
-   and `cityCds` together for each city. Pagination is `/list/pageN/`, retaining
-   the query. Verify `select[name=SORT]` is **33** in every response. This modern
+   Then use the city-path search `/chintai/<pref>/<city>-city/list/?sort=33`
+   (`saitama/soka`, `saitama/koshigaya`, `saitama/kawaguchi`, `tokyo/katsushika`). As of 2026-09-29 the prefecture search
+   `/chintai/saitama/list/?pref=11&cities=...&cityCds=...` ignores its city
+   filter and returns Saitama-wide cards (the importer rejects them as wrong
+   city). Pagination is `/list/pageN/`, retaining `?sort=33`. Verify
+   `select[name=SORT]` is **33** in every response. Save each page's HTML and
+   convert it with `npm run capture:athome-html -- --file <html> --url <pageUrl>
+   --captured-at <iso>` before `capture:import`. This modern
    template uses `.property-card` / `.room-info-section` (mapping below), not
-   `.p-property`. Legacy single-city pages still require AJAX form `SORT=33`;
-   their lower-case URL query alone does not select it.
+   `.p-property`, and honours the `?sort=33` query. Only the older `.p-property`
+   template needed the AJAX form `SORT=33` (as `scripts/lib/athomeBrowser.ts`
+   still sends); on that template the URL query alone did not select it.
 3. RoomSpot: confirm `sort=new_arrival`; the existing page's public REST search
    parameters support each configured city, avoiding full navigations per city.
 4. Nifty: newest is **sort=regDate-desc**, NOT the default `recommend` order.
@@ -88,8 +166,9 @@ run the human CLI's direct-Bridge collectors from the agent shell.
    is needed; temporary Agent tabs follow normal host turn cleanup.
 
 PageCapture schema: `schemaVersion:1, source, city, url, page, capturedAt,
-httpStatus:200, sortedNewest:true, html`. Cities: Soka/Koshigaya/Kawaguchi.
-Captures and progress receipts live in `src/data/.captures/`; never put full
+httpStatus:200, sortedNewest:true, html`. Cities: Soka/Koshigaya/Kawaguchi/Katsushika
+(`src/collectors/shared/targetCities.ts` is the one list every collector reads).
+Captures and progress receipts live in `data/.captures/`; never put full
 HTML, source JSON, browser storage, cookies or tokens into model context.
 
 ## 2026-09-07 recovery result
@@ -311,12 +390,136 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
 - The task-local offline download adapters are in `.context/`; only sanitized
   captures and compact progress receipts are imported into the durable dataset.
 
+## 2026-10-02 recent-listing refresh (Playwright, no Chrome bridge) — completed
+
+- Run `2026-10-02T10-37-14-683Z-6b3c2254`: **SUCCESS**, all four portals, no
+  page cap; every source/city stopped on two all-known pages. Headed Playwright
+  (`BROWSER_DRIVER=playwright`) with the AtHome profile in `.context/`.
+- Source additions before cross-source merge: SUUMO **99**, AtHome **336**
+  (390 overlaps refreshed, 39 pages: 6/20/13), RoomSpot **37** (128 refreshed),
+  Nifty **83** (Soka 18, Koshigaya 25, Kawaguchi 40). Zero detail requests.
+- Rebuild: **3822 archival / 3820 dashboard rows**, ~160 newly tracked (Soka 21,
+  Koshigaya 56, Kawaguchi 83); 23 exceed 70m². All geocoded; none SOLD.
+- Gotcha: with `PLAYWRIGHT_USER_DATA_DIR` set, parallel collectors contend for
+  one Chromium profile and AtHome/RoomSpot fail at launch. Resume with
+  `--concurrency 1`. AtHome showed its verification page; passed by hand.
+- `check:availability --limit 150`: **112 rented out**, 38 still listed,
+  0 unresolved. One Nifty ad was recorded gone on HTTP 404 with its ad title
+  still shown (ソライエアイル草加 207, 1K); its sibling unit redirected as gone.
+- **610 tests, typecheck and production build pass.**
+
+## 2026-10-04 recent-listing refresh + photo backfill (Playwright)
+
+- Run `2026-10-04T05-50-30-782Z-39b938f4`: **SUCCESS**, all four portals,
+  every source/city stopped on two all-known pages. Source additions: SUUMO
+  **20**, AtHome **92**, RoomSpot **34**, Nifty **39** (8/5/26). Zero detail
+  requests; **57 unique properties added** (3860 → 3897). AtHome reused the
+  October 3 profile without a verification page.
+- Photo backfill: photo capture landed after the October 3 run, so 1235 active
+  AtHome/Nifty/RoomSpot-only rows had no picture. Deep newest-first passes
+  re-read older result pages: RoomSpot 18 pages, Nifty 39/40/40 (Soka 404'd
+  past its last page), AtHome 34/34/16 (Kawaguchi then showed its verification
+  page; not bypassed). Photo-less active rows: **1235 → 803**. The deep passes
+  also found ads the incremental pass never reached: **3968 archival / 3964
+  dashboard rows**, all geocoded (18 queries, 0 unresolved). None SOLD.
+- Gotcha: `--deep` AtHome/RoomSpot runs off the end of a city's results and
+  then throws, and they commit only after every city, so nothing is saved.
+  Cap with `--max-pages` at the smallest city's depth, or import the cached
+  pages (6h) page by page with `capture:import` (what this run did for AtHome).
+- **697 tests, typecheck and production build pass.**
+
+## 2026-10-04 Katsushika-ku (Tokyo) first load (Playwright)
+
+- Added Katsushika as the fourth target city (`targetCities.ts`). Portal paths,
+  each checked in the headed browser first: SUUMO `tokyo/sc_katsushika`, AtHome
+  `tokyo/katsushika-city`, Nifty `tokyo/katsushikaku_ct`, RoomSpot
+  `pref_13/city_122`. SUUMO list pages now load in the headed browser too.
+- Loaded with `--city Katsushika`, to each portal's last page: SUUMO **38** pages
+  (572 rooms), AtHome **81** (1121), Nifty **110** (page 111 is a 404; one
+  transient HTTP 405 on page 59 was resumed from cache with `--deep`), RoomSpot
+  **2** (21). AtHome showed its verification page once; it was passed by hand.
+- Gotcha: each collector's last page is far below the 100-page ceiling, and
+  AtHome/RoomSpot/SUUMO throw on the page after it, so nothing commits. Re-run
+  with `--city <label> --max-pages <last page>`: the pages come from the
+  6-hour capture cache with zero requests.
+- RoomSpot dropped whole-man rents (`<strong>12</strong>万円`): the parser read
+  only `<strong>`. Fixed; Saitama ads with such rents were affected too and
+  reappear as refreshes revisit them.
+- Rebuild: **929 Katsushika properties** after cross-source dedup (3965 → 4894
+  dashboard rows), all geocoded (291 GSI queries, 0 unresolved); none SOLD.
+  Katsushika median rent ¥130,000; 155 at ≤¥150,000 and ≥50㎡; 143 ≥70㎡.
+- **766 tests, typecheck and production build pass.**
+
+## 2026-10-05 city-by-city, source-by-source refresh (Playwright)
+
+- Ran each collector on its own with `--city <label>` (SUUMO → AtHome →
+  RoomSpot → Nifty), rebuilding after each city. No `npm run refresh` ledger
+  entry. Every source/city stopped on two all-known pages or its last page.
+  Zero detail requests. AtHome showed its verification page once (Soka);
+  it was passed by hand.
+- Source additions (SUUMO / AtHome / RoomSpot / Nifty): Soka 5/21/53/3,
+  Koshigaya 8/10/136/6, Kawaguchi 56/8/57/21, Katsushika 21/18/0/13.
+- RoomSpot ran off the last page in Soka (7), Koshigaya (11) and Kawaguchi (6)
+  and threw, so nothing committed; re-run with `--max-pages <last page>`.
+  Kawaguchi page 7 failed the same way on a second try before the cap was used.
+- Dashboard **4894 → 4975** (+81 newly tracked: Soka 6, Koshigaya 15,
+  Kawaguchi 48, Katsushika 12). All geocoded (72 queries, 0 unresolved); none SOLD.
+- **770 tests, typecheck and production build pass.**
+
+## 2026-10-07 parallel per-source load (Playwright, one worktree per source)
+
+- One agent per collector, each in its own git worktree off `main` (node_modules
+  symlinked; AtHome got a copy of the warmed profile), all four cities each,
+  committing only its `data/sources/<source>.json`. Each finished branch was
+  merged into main on its own and the derived data rebuilt (`data:build`,
+  `enrich`, `data:web`) before the next, so rebuilds never conflicted.
+  Every source/city stopped on two all-known pages; zero detail requests.
+- Source additions (Soka / Koshigaya / Kawaguchi / Katsushika): Nifty 20/29/58/28
+  (29 pages), RoomSpot 15/17/0/0 (11 pages), SUUMO 9/17/3/26 (28 pages),
+  AtHome 48/121/19/101 (44 pages). AtHome showed its verification page once
+  (Soka); it was passed by hand.
+- Gotcha: RoomSpot and AtHome both timed out on their first navigation waiting
+  for the load event. The pages arrived (AtHome's homepage in 374 ms, no
+  verification page), but trackers (`b6.im-apps.net/topics`, `clarity.ms`) never
+  finish, so `load` never fires. RoomSpot now navigates with `wait: false`
+  (`fetchPage` polls for `window.localize`); AtHome waits for
+  `domcontentloaded`, which the Playwright bridge now accepts as `wait`.
+- Gotcha: the Bash sandbox blocks Chromium launch, ssh commit signing and the
+  GSI geocoder (`enrich` reports every new address as a transient failure);
+  run those outside it.
+- Archival rows **4978 → 5110** (126 newly tracked across the four merges; older
+  duplicates consolidated after the AtHome merge). Dashboard **4972 → 5108**;
+  120 rows first seen today (Soka 23, Koshigaya 22, Kawaguchi 40, Katsushika 35),
+  12 of them ≥70㎡, 59 at ≤¥150,000 and ≥50㎡. All geocoded; none SOLD.
+- **774 tests, typecheck and production build pass.**
+
+## 2026-10-08 repeat parallel per-source load (hours after the 2026-10-07 one)
+
+- Same layout: one agent and worktree per source, each merged and rebuilt on
+  its own. Every source/city stopped on two all-known pages or its last page;
+  zero detail requests. The `domcontentloaded` (AtHome) and `wait: false`
+  (RoomSpot) navigation fixes held: no load-event timeouts.
+- Source additions (Soka / Koshigaya / Kawaguchi / Katsushika): Nifty 0/2/5/2
+  (11 pages), RoomSpot 10/6/0/1 (11 pages; Katsushika ran off its last page
+  and was re-run with `--max-pages 2`), SUUMO 0/5/41/12 (39 pages; Kawaguchi
+  needed 23), AtHome 4/12/19/10 (11 pages). AtHome showed its verification
+  page once (Soka); it was passed by hand.
+- Gotcha: `git worktree remove --force` deletes the worktree's untracked
+  `.context/athome-profile` too. Move the profile out first, or AtHome is
+  back on an older profile and shows its verification page again.
+- An AtHome card can show fewer photos than before; the source row then keeps
+  only the current ones, but the property document keeps every photo URL seen.
+- Archival rows **5110 → 5143** (36 newly tracked: Nifty 6, RoomSpot 1,
+  SUUMO 28, AtHome 1). All geocoded; none SOLD.
+- **774 tests, typecheck and production build pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
 `import-capture.ts`, `lib/captureStore.ts`: native capture import/cache.
 `lib/{athome,roomspot,nifty}.ts`: pure list parsers and incremental merge.
-`enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded detail work.
+`enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded SUUMO detail work, loaded in the headed browser (`src/collectors/shared/browserFetch.ts`; set `BROWSER_DRIVER=playwright` without the Chrome bridge). Detail pages carry 情報更新日 / 次回更新予定日, which the property documents keep.
 `lib/observations.ts`: actual source evidence and lifecycle restoration.
+`sync-properties.ts`, `src/data-layer/properties/`: additive per-property documents (`data/properties/`), synced by `data:build` and `check:availability`.
 `enrich.ts`, `lib/geocodeCache.ts`: address caching.
 `build-web-data.ts`, `src/domain/webPayload.ts`: dictionary payload + hydration.

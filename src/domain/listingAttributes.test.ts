@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 import { featureState, normalizeListingAttributes } from "./listingAttributes";
 
 const listing = (features: string[], conditions: string[] = []): EnrichedListing => ({

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  effectiveMonthlyCost,
   parkingMonthlyYen,
   computeMoveInCosts,
   DEFAULT_MOVE_IN_ASSUMPTIONS,
+  monthlyOutlay,
+  stayCost,
   sunkCostInMonths,
 } from "./moveInCost";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 const listing = (over: Partial<EnrichedListing> = {}): EnrichedListing => ({
   name: "L",
@@ -90,12 +91,6 @@ describe("computeMoveInCosts", () => {
     expect(c.firstMonthRent).toBe(100_000);
   });
 
-  it("excludes the first month's rent from sunk cost", () => {
-    const c = computeMoveInCosts(listing({ depositYen: 0, keyMoneyYen: 0, cleaningFeeYen: 0 }));
-    expect(c.sunkCost).not.toContain(c.firstMonthRent);
-    expect(c.sunkCost).toBe(180_000); // agency + guarantor + insurance only
-  });
-
   it("estimates cleaning from floor area with a floor value", () => {
     expect(computeMoveInCosts(listing({ sizeM2: 80 })).cleaningFee).toBe(96_000);
     expect(computeMoveInCosts(listing({ sizeM2: 10 })).cleaningFee).toBe(30_000); // minimum
@@ -167,8 +162,8 @@ describe("nested cost blocks from detail-page imports", () => {
 });
 
 describe("parking costs", () => {
-  const withParking = (p: Partial<import("../types").ParkingInfo> | null) =>
-    listing({ costs: { parking: p as import("../types").ParkingInfo | null } });
+  const withParking = (p: Partial<import("./types").ParkingInfo> | null) =>
+    listing({ costs: { parking: p as import("./types").ParkingInfo | null } });
 
   it("reads the monthly charge from structured parking data", () => {
     expect(parkingMonthlyYen(withParking({ monthlyYen: 7700, available: true }))).toBe(7700);
@@ -189,14 +184,70 @@ describe("parking costs", () => {
   it("falls back to a flat parkingYen figure", () => {
     expect(parkingMonthlyYen(listing({ costs: { parkingYen: 9000 } }))).toBe(9000);
   });
+});
 
-  it("adds parking to rent only when asked", () => {
-    const l = listing({ rent: 80_000, costs: { parking: { monthlyYen: 8_000, available: true, location: "onsite", distanceM: null, raw: "敷地内8000円" } } });
-    expect(effectiveMonthlyCost(l, false)).toBe(80_000);
-    expect(effectiveMonthlyCost(l, true)).toBe(88_000);
+describe("monthlyOutlay", () => {
+  const parked = { monthlyYen: 8_000, available: true, location: "onsite" as const, distanceM: null, raw: "敷地内8000円" };
+
+  it("adds recurring extras listed outside rent, and parking only when asked", () => {
+    const l = listing({ rent: 80_000, costs: { parking: parked, monthlyExtrasYen: 1_100 } });
+    expect(monthlyOutlay(l, false)).toBe(81_100);
+    expect(monthlyOutlay(l, true)).toBe(89_100);
   });
 
-  it("leaves rent untouched when parking is unknown", () => {
-    expect(effectiveMonthlyCost(listing({ rent: 80_000 }), true)).toBe(80_000);
+  it("is plain rent when the ad lists nothing else", () => {
+    expect(monthlyOutlay(listing({ rent: 80_000 }), true)).toBe(80_000);
+  });
+});
+
+describe("stayCost", () => {
+  it("adds two years of monthly payments to the sunk move-in money", () => {
+    // Defaults on ¥100k rent, 50㎡: key money 100k + agency 110k + guarantor 50k
+    // + insurance 20k + cleaning 60k + 30% of the 100k deposit = ¥370k sunk.
+    const cost = stayCost(listing(), DEFAULT_MOVE_IN_ASSUMPTIONS, false);
+    expect(cost).toEqual({ months: 24, monthly: 100_000, sunk: 370_000, total: 2_770_000, parkingUnknown: false });
+  });
+
+  it("follows the move-in assumptions and the stay length", () => {
+    const cost = stayCost(listing({ depositYen: 0, keyMoneyYen: 0, cleaningFeeYen: 0 }),
+      { ...DEFAULT_MOVE_IN_ASSUMPTIONS, agencyFeeMonths: 0.55 }, false, 12);
+    expect(cost.sunk).toBe(55_000 + 50_000 + 20_000);
+    expect(cost.total).toBe(cost.sunk + 12 * 100_000);
+  });
+
+  it("flags parking that should count but has no stated price", () => {
+    expect(stayCost(listing(), DEFAULT_MOVE_IN_ASSUMPTIONS, true).parkingUnknown).toBe(true);
+    expect(stayCost(listing(), DEFAULT_MOVE_IN_ASSUMPTIONS, false).parkingUnknown).toBe(false);
+    expect(stayCost(listing({ costs: { parkingYen: 0 } }), DEFAULT_MOVE_IN_ASSUMPTIONS, true).parkingUnknown).toBe(false);
+  });
+});
+
+describe("fee-note charges", () => {
+  const notes = "※退去時クリーニング費用【82500円（税込）】鍵交換費用33000円～(税込)　入居安心サポート（2200円(税込)/月）抗菌施工代16500円(税込)";
+
+  it("adds itemised signing fees to the sunk cost and uses a stated cleaning fee", () => {
+    const base = computeMoveInCosts(listing());
+    const c = computeMoveInCosts(listing({ costs: { feeNotes: notes, oneOffFeesYen: 320 } }));
+    expect(c.otherFeeItems).toEqual([{ label: "鍵交換費用", yen: 33_000 }, { label: "抗菌施工代", yen: 16_500 }]);
+    expect(c.otherFees).toBe(49_500);
+    expect(c.cleaningFee).toBe(82_500);
+    expect(c.estimated.cleaningFee).toBe(false);
+    // The garbled stored total (320) is ignored in favour of the itemised text.
+    expect(c.sunkCost).toBe(base.sunkCost - base.cleaningFee + 82_500 + 49_500);
+    expect(c.totalUpfront).toBe(base.totalUpfront - base.cleaningFee + 82_500 + 49_500);
+  });
+
+  it("leaves out a single fee larger than a month's rent as a typo", () => {
+    const c = computeMoveInCosts(listing({ rent: 62_000, costs: { feeNotes: "ホームアシスト2416500円(初期)　鍵交換費38500円(初期)" } }));
+    expect(c.otherFeeItems).toEqual([{ label: "鍵交換費", yen: 38_500 }]);
+  });
+
+  it("falls back to the stored total when the notes carry no amounts", () => {
+    const c = computeMoveInCosts(listing({ costs: { feeNotes: "備考：[物件コード]016201-10688c", oneOffFeesYen: 16_500 } }));
+    expect(c.otherFees).toBe(16_500);
+  });
+
+  it("counts monthly charges from the notes in the monthly outlay", () => {
+    expect(monthlyOutlay(listing({ rent: 80_000, costs: { feeNotes: notes, monthlyExtrasYen: 99 } }), false)).toBe(82_200);
   });
 });

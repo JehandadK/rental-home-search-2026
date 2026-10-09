@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { RawListing } from "../src/types";
+import type { RawListing } from "../src/domain/types";
 import type { LegacyListing } from "../src/data-layer/contracts";
 import type { SourceBootstrapAudit, SourceBootstrapRequest } from "../src/data-layer/bootstrap/contracts";
 import { InvalidSourceBootstrapError, SourceBootstrapService } from "../src/data-layer/bootstrap/service";
@@ -11,11 +11,10 @@ import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { contentFingerprint } from "../src/data-layer/contentIdentity";
 import { RevisionConflictError } from "../src/data-layer/errors";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
-import { DATA_DIR, JsonSourceStore } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
-import { newerRows } from "./lib/captureValidation";
-import { reconcileLifecycle } from "./lib/lifecycle";
-import { restoreObservedLifecycle } from "./lib/observations";
+import { DATA_DIR, JsonSourceStore } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
+import { reconcileLifecycle } from "../src/data-layer/lifecycle";
+import { restoreObservedLifecycle } from "../src/storage/json/observations";
 import { runSourceMigration } from "./migrate-sources";
 
 const importedAt = "2026-09-25T00:00:00.000Z", oldAt = "2026-08-01T00:00:00.000Z";
@@ -114,11 +113,11 @@ describe("audited historical source bootstrap", () => {
     const write = store.writeSource.bind(store);
     vi.spyOn(store, "writeSource").mockImplementationOnce(write).mockRejectedValueOnce(new Error("simulated disk failure"));
     await expect(runSourceMigration(inputPath, service, log)).rejects.toThrow("simulated disk failure");
-    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: 1 listings → src/data/sources/athome.json"]);
+    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: 1 listings → data/sources/athome.json"]);
     expect(await store.readSource("suumo")).toBeNull();
     const firstBytes = await readFile(store.sourcePath("athome"), "utf8"); log.mockClear();
     expect(await runSourceMigration(inputPath, service, log)).toMatchObject([{ source: "athome", status: "skipped" }, { source: "suumo", status: "created" }]);
-    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: source file already exists, skipped", "  suumo: 1 listings → src/data/sources/suumo.json", "\nNext: npm run data:build"]);
+    expect(log.mock.calls.map(([line]) => line)).toEqual(["  athome: source file already exists, skipped", "  suumo: 1 listings → data/sources/suumo.json", "\nNext: npm run data:build"]);
     expect(await readFile(store.sourcePath("athome"), "utf8")).toBe(firstBytes);
     expect((await store.readSource("suumo"))!.listings).toEqual([records[1]]);
     expect(JSON.parse(await readFile(inputPath, "utf8"))).toEqual(records);
@@ -190,9 +189,7 @@ describe("audited historical source bootstrap", () => {
     const old = row("nifty-aabbcc", "nifty", { url: "https://myhome.nifty.com/rent/detail_aabbcc/" });
     const other = row("nifty-ddeeff", "nifty", { url: "https://myhome.nifty.com/rent/detail_ddeeff/" });
     await service.bootstrapSources(request([old, other]));
-    const previous = (await store.readSource("nifty"))!;
     const fresh = { ...old, rent: 91000 }; const at = "2026-09-20T00:00:00.000Z";
-    expect(newerRows(previous, [fresh], at, (listing) => [listing.id!])).toEqual([fresh]);
     const scrape = (listing: RawListing, capturedAt: string, batchId: string): ScrapeBatch => ({ schemaVersion: 1, source: "nifty",
       scraper: { name: "nifty-list", version: "1", parserVersion: "1" }, runId: "capture-run", batchId, mode: "discovery", capturedAt,
       scope: { urls: [listing.url!], cities: ["Soka"], filters: {} }, observations: [{ sourceListingId: listing.id!, observedAt: capturedAt,

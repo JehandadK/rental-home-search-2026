@@ -9,13 +9,13 @@
  *   npm run find:new -- --bike --parking required
  */
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { DEFAULT_CONFIG } from "../src/config/scoring";
+import { join } from "node:path";
+import { DATA_DIR } from "../src/node/dataPaths";
+import { DEFAULT_CONFIG } from "../src/domain/scoringConfig";
 import { isNewListing, isSold } from "../src/domain/lifecycle";
 import { parkingInfo } from "../src/domain/moveInCost";
 import { scoreListing } from "../src/domain/scoring";
-import type { EnrichedListing } from "../src/types";
+import type { EnrichedListing } from "../src/domain/types";
 
 const argv = process.argv.slice(2);
 const value = (flag: string): string | undefined => {
@@ -40,7 +40,7 @@ if (!["any", "required", "free"].includes(parking)) {
   throw new Error("--parking must be any, required, or free");
 }
 
-const dataFile = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "listings.json");
+const dataFile = join(DATA_DIR, "listings.json");
 const listings = JSON.parse(await readFile(dataFile, "utf8")) as EnrichedListing[];
 const config = argv.includes("--bike")
   ? { ...DEFAULT_CONFIG, travelMode: "bicycle" as const }
@@ -92,7 +92,7 @@ for (const [i, { listing, score }] of rows.slice(0, topN).entries()) {
       `${listing.city?.padEnd(9) ?? "?        "} ¥${yen.format(listing.rent).padStart(7)}  ` +
       `${String(listing.sizeM2 ?? "?").padStart(5)}㎡ ${String(listing.layout ?? "?").padEnd(5)} ` +
       `${listing.name}\n` +
-      `    station ${Math.round(part("station") ?? 0)}m · Al Sanad ${Math.round(part("poi1") ?? 0)}m` +
+      `    station ${Math.round(part("station") ?? 0)}m · private school ${Math.round(part("poi1") ?? 0)}m` +
       ` · Masjid ${Math.round(part("poi2") ?? 0)}m · parking ${parkingText}` +
       `${listing.url ? `\n    ${listing.url}` : ""}`,
   );

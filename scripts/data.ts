@@ -5,13 +5,15 @@
  *   npm run data:build    rebuild listings_raw.json from all source files
  *
  * `listings_raw.json` is derived; never edit it by hand. Each source file
- * under src/data/sources/ is owned by its own importer.
+ * under data/sources/ is owned by its own importer.
  */
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { BACKUP_DIR, MANIFEST_PATH, RAW_PATH, buildRaw, listSources } from "./lib/dataStore";
-import type { BuildManifest } from "./lib/dataStore";
+import { BACKUP_DIR, MANIFEST_PATH, RAW_PATH, buildRaw, listSources } from "../src/storage/json/dataStore";
+import type { BuildManifest } from "../src/storage/json/dataStore";
 import { sourceSnapshotCaptureTime } from "../src/data-layer/sourceObservationTime";
+import { describePropertySync } from "../src/data-layer/properties/service";
+import { syncCurrentProperties } from "../src/storage/json/propertyEvidence";
 
 const ago = (iso: string): string => {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -57,7 +59,7 @@ async function status(): Promise<void> {
           (entry.duplicatesDropped ? `   (${entry.duplicatesDropped} dropped as duplicates)` : ""),
       );
     }
-    const stale = sources.filter((s) => new Date(s.scrapedAt) > new Date(manifest.builtAt));
+    const stale = sources.filter((s) => new Date(s.committedAt ?? s.scrapedAt) > new Date(manifest.builtAt));
     if (stale.length > 0) {
       console.log(`\n  ! ${stale.map((s) => s.source).join(", ")} changed since the last build — run \`npm run data:build\``);
     }
@@ -85,6 +87,8 @@ async function build(): Promise<void> {
         (reactivated ? `, ${reactivated} re-listed` : ""),
     );
   }
+  // Record this build's evidence before anything can overwrite or compact it.
+  console.log(`\n${describePropertySync(await syncCurrentProperties("data:build"))}`);
   console.log(`\nNext: npm run enrich`);
 }
 

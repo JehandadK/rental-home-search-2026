@@ -1,8 +1,9 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import { deduplicateListings } from "../../domain/listingDedup";
 import type { ListingObservationBatch, ListingSourceSnapshot } from "../contracts";
 import type { DetailEnrichmentOptions, DetailPatchBatch, ListingDetailPatch } from "./contracts";
 import { InvalidScrapeBatchError } from "./errors";
+import { isListingAgency } from "./agencyPatch";
 
 const defined = <T extends object>(value: T): Partial<T> => Object.fromEntries(Object.entries(value).filter(([, v]) => v != null && (!Array.isArray(v) || v.length > 0))) as Partial<T>;
 
@@ -97,6 +98,7 @@ export function validateDetailPatch(value: unknown): void {
   const building = fields({ floor: nullable(text), totalFloors: nullable(number), structure: nullable(text),
     features: nullable(texts), conditions: nullable(texts) });
   const check = fields({ parking: nullable(parking), costs, tenancy, building,
-    sourceDetails: (v) => object(v) && Object.keys(v).length > 0 && Object.values(v).every(text) });
+    sourceDetails: (v) => object(v) && Object.keys(v).length > 0 && Object.values(v).every(text),
+    agency: nullable(text), agencyInfo: nullable(isListingAgency) });
   if (!check(value)) throw new InvalidScrapeBatchError("Invalid or forbidden detail patch fields");
 }

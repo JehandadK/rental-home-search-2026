@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { REFRESH_LOCK_PATH, readRefreshLedger, type RefreshRunRecord } from "./lib/refreshLedger";
+import { REFRESH_LOCK_PATH, readRefreshLedger, type RefreshRunRecord } from "../src/refresh/refreshLedger";
 
 const argv = process.argv.slice(2);
 const limitFlag = argv.indexOf("--limit");

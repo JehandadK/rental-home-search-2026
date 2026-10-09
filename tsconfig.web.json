@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/web",
+    "src/domain",
+    "src/integrations",
+    "src/data-layer/**/contracts.ts"
+  ],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx"]
+}

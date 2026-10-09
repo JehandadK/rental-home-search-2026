@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { diagnoseAll, diagnoseParameter } from "./diagnostics";
-import type { ScoredRow } from "../lib/export";
-import type { EnrichedListing, ScoreParameterKey } from "../types";
+import type { ScoredRow } from "./scoring";
+import type { EnrichedListing, ScoreParameterKey } from "./types";
 import type { ListingScore, ScorePart } from "./scoring";
 
 const listing = { name: "L", address: "a", rent: 1 } as EnrichedListing;

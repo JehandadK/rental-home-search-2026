@@ -2,9 +2,9 @@
  * Converts Nifty (myhome.nifty.com) detail-page scrapes into observations
  * and submits them to the data layer; canonical builds remain explicit.
  *
- * Input:  src/data/nifty_detail_raw.json  — detail pages captured through
+ * Input:  data/nifty_detail_raw.json  — detail pages captured through
  *         the logged-in browser session (see pi-web-ui bridge).
- * Output: src/data/sources/nifty.json     — this script owns that file and
+ * Output: data/sources/nifty.json     — this script owns that file and
  *         nothing else; SUUMO data is never touched.
  *
  * Run with: npm run import:nifty
@@ -12,8 +12,10 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { parsePortalListingDates } from "../src/domain/portalDates";
+import { cityForAddress } from "../src/collectors/shared/targetCities";
+import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR, sourcePath } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService, scrapeFingerprint } from "../src/data-layer/ingestion/service";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import {
@@ -27,11 +29,28 @@ import {
   splitTags,
   sumMonthlyExtras,
   sumOneOffFees,
-} from "./lib/parseJa";
-import type { RawListing } from "../src/types";
-import { parseParking } from "./lib/parking";
+} from "../src/collectors/shared/parseJa";
+import type { ListingAgency, RawListing } from "../src/domain/types";
+import { parseParking } from "../src/collectors/shared/parking";
+import { toListingAgency } from "../src/collectors/shared/agency";
+import { normaliseStationName, parseStation, parseStationDistance } from "../src/collectors/nifty/niftyStation";
+
+export { normaliseStationName, parseStation, parseStationDistance };
 
 const NIFTY_PATH = join(DATA_DIR, "nifty_detail_raw.json");
+
+/**
+ * Bumped whenever `toRawListing` parses the same capture differently.
+ * 2: fee notes are itemised (full-width thousands separators, renewal and
+ *    conditional charges left out) instead of summing every amount.
+ * 3: the portal's own dates (情報公開日 / 次回更新日), which Nifty prints as
+ *    free text outside the detail table, are read from the page text.
+ * 4: the agency's store (取り扱い不動産会社): brand, branch, office address
+ *    and city, phone and licence, from the value under the store's label.
+ * The version is part of the run ID, so re-importing a dump already imported
+ * by an older parser is a new batch, not a replay conflict.
+ */
+export const NIFTY_DETAIL_PARSER_VERSION = "4";
 
 export interface NiftyDetail {
   capturedAt?: string;
@@ -39,6 +58,8 @@ export interface NiftyDetail {
   httpStatus?: number;
   h1?: string;
   kv?: Record<string, string>;
+  /** The page's visible text, when the capture kept it. */
+  text?: string;
   error?: string;
 }
 
@@ -74,44 +95,6 @@ function parseBuiltYear(text: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
-/**
- * Nifty's station cell sometimes gives distance instead of 徒歩分
- * ("草加駅 3.6km"). Convert with the Japanese walking convention so the
- * scorer does not discard useful agency data and fall back to coarse geocode.
- */
-export function parseStationDistance(text: string): { station?: string; walkMin?: number } {
-  const direct = parseStation(text);
-  if (direct.station) return direct;
-  const match = text.match(/([^\s/／]+駅)\s*([\d.]+)\s*km/i);
-  if (!match) return {};
-  return {
-    station: normaliseStationName(match[1]),
-    walkMin: Math.ceil((Number(match[2]) * 1000) / 80),
-  };
-}
-
-/** "東武伊勢崎線/新田駅 歩7分" or "新田駅 歩6分\n （伊勢崎線）" → { station, walkMin } */
-export function parseStation(text: string): { station?: string; walkMin?: number } {
-  const m = text.match(/[/／]?\s*(.+?駅)\s*歩(\d+)分/);
-  if (!m) return {};
-  const station = normaliseStationName(m[1]);
-  return { station, walkMin: parseInt(m[2], 10) };
-}
-
-/**
- * Reduces a station cell to the bare station name so it matches the naming
- * used by SUUMO entries and stations.json:
- *   "東武伊勢崎線/新田駅"                      → "新田駅"
- *   "利用可能駅（ニフティ不動産調べ）谷塚駅"        → "谷塚駅"
- */
-export function normaliseStationName(raw: string): string {
-  let name = raw.replace(/\s/g, "");
-  // Drop the line prefix (東武伊勢崎線/…) and any leading boilerplate.
-  name = name.split(/[/／]/).pop() ?? name;
-  name = name.replace(/^.*?調べ）/, "").replace(/^利用可能駅/, "");
-  return name;
-}
-
 /** First non-empty line of a scraped cell, e.g. "即\n\n質問…" → "即". */
 function firstLine(text: string | undefined): string {
   return (text ?? "").split("\n").map((l) => l.trim()).find(Boolean) ?? "";
@@ -138,6 +121,25 @@ const KNOWN_LABELS = new Set([
 function parseAgency(kv: Record<string, string>): string | null {
   const label = Object.keys(kv).find((k) => !KNOWN_LABELS.has(k));
   return label ?? null;
+}
+
+/**
+ * The store's value runs its fields together:
+ * "埼玉県草加市氷川町　2120-6　中山ビル1階電話番号：0800-1700231営業時間：…免許番号：埼玉県知事（１）第２４８８８号加盟団体名：…"
+ */
+export function parseAgencyInfo(kv: Record<string, string>): ListingAgency | null {
+  const name = parseAgency(kv);
+  if (!name) return null;
+  const value = kv[name] ?? "";
+  return toListingAgency({ name, address: value.split(/電話番号|営業時間|免許番号/)[0],
+    phone: value.match(/電話番号[：:]([^営免加]*)/)?.[1], licence: value.match(/免許番号[：:]([^加所公]*)/)?.[1] });
+}
+
+/** 情報公開日 / 情報更新日 / 次回更新日 from free text, as detail rows (kv rows win). */
+function portalDateDetails(text: string | undefined): Record<string, string> {
+  const dates = parsePortalListingDates(text ?? "");
+  const rows: [string, string | undefined][] = [["情報公開日", dates.publishedOn], ["情報更新日", dates.updatedOn], ["次回更新日", dates.nextUpdateOn]];
+  return Object.fromEntries(rows.filter((row): row is [string, string] => Boolean(row[1])));
 }
 
 export function toRawListing(detail: NiftyDetail): RawListing | null {
@@ -179,13 +181,7 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
     id: parseId(detail.url),
     name: parseName(detail.h1 ?? ""),
     address,
-    city: address.includes("越谷市")
-      ? "Koshigaya"
-      : address.includes("草加市")
-        ? "Soka"
-        : address.includes("川口市")
-          ? "Kawaguchi"
-          : undefined,
+    city: cityForAddress(address)?.label,
     rent: rent ?? 0,
     layout,
     sizeM2,
@@ -196,7 +192,8 @@ export function toRawListing(detail: NiftyDetail): RawListing | null {
     source: "nifty",
     notes: noteParts.join("・"),
     agency: parseAgency(kv),
-    sourceDetails: kv,
+    agencyInfo: parseAgencyInfo(kv),
+    sourceDetails: { ...portalDateDetails(detail.text), ...kv },
     // Missing detail text is not a request to erase previously captured parking.
     ...(parking && !/^[－-]$/.test(parking) ? { parking: parseParking(parking) } : {}),
     costs: {
@@ -245,8 +242,8 @@ export async function prepareNiftyDetailImport(dump: NiftyDump) {
   const batch: ScrapeBatch = {
     schemaVersion: 1,
     source: "nifty",
-    scraper: { name: "nifty-detail", version: "1", parserVersion: "1" },
-    runId: `nifty-detail-import:${dump.scrapedAt}`,
+    scraper: { name: "nifty-detail", version: "1", parserVersion: NIFTY_DETAIL_PARSER_VERSION },
+    runId: `nifty-detail-import:${dump.scrapedAt}:parser-${NIFTY_DETAIL_PARSER_VERSION}`,
     batchId: await scrapeFingerprint(dump),
     mode: "detail-enrichment",
     capturedAt: dump.scrapedAt,
@@ -264,6 +261,8 @@ export async function prepareNiftyDetailImport(dump: NiftyDump) {
       capturedBy: "logged-in browser session via Pi Control Chrome",
       detailPages: dump.listings.length,
       familyListings: converted.length,
+      // A stable label, not a live path: batch fingerprints include provenance, so
+      // renaming it would turn a replay of an imported dump into a conflict.
       input: "src/data/nifty_detail_raw.json",
     },
   };

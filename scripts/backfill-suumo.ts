@@ -5,8 +5,8 @@
  * Run with: npm run data:backfill
  */
 import { randomUUID } from "node:crypto";
-import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { BACKUP_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { SourceCorrectionService } from "../src/data-layer/corrections/service";
 import type { SourceCorrections } from "../src/data-layer/corrections/contracts";
 

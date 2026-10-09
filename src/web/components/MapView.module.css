@@ -1,0 +1,686 @@
+.wrap {
+  position: relative;
+  /* Lets overlays size things in units of the map's rendered width (cqw). */
+  container-type: inline-size;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  /*
+   * The 1100×680 frame's shape, but never taller than the viewport: past
+   * that, a wider box shows more map to the sides (MapView measures the shape).
+   */
+  height: min(calc(100cqw * 680 / 1100), calc(100vh - 110px));
+  border-radius: 8px;
+  background: var(--rs-map-bg);
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas.dragging {
+  cursor: grabbing;
+}
+
+.canvas.overDot {
+  cursor: pointer;
+}
+
+.popup {
+  position: absolute;
+  z-index: 3;
+  left: 12px;
+  bottom: 12px;
+  width: min(390px, calc(100% - 70px));
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 10px;
+  background: rgb(var(--rs-glass) / 0.97);
+  box-shadow: 0 10px 30px rgb(var(--rs-shadow) / 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.popupClose {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  right: 7px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(var(--rs-glass) / 0.92);
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.18);
+  color: var(--rs-slate-600);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* The selected home's photo, a short banner above its details. */
+.popupGallery {
+  margin: -4px -4px 9px;
+}
+
+/* The photo stage only; the tab row below it keeps its own height. */
+.popupGallery > div:first-child {
+  aspect-ratio: auto;
+  height: 140px;
+}
+
+.popupHeader {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-right: 20px;
+}
+
+.popupHeader strong,
+.popupHeader small {
+  display: block;
+}
+
+.popupHeader strong {
+  max-width: 290px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--rs-ink-strong);
+  font-size: 14px;
+}
+
+.popupHeader small {
+  margin-top: 2px;
+  color: var(--rs-muted);
+  font-size: 10px;
+}
+
+.popupScore {
+  display: grid;
+  place-items: center;
+  flex: 0 0 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: var(--rs-on-accent);
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 2px rgb(var(--rs-glass) / 0.65);
+}
+
+.popupFacts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 9px 0 7px;
+}
+
+.popupFacts strong {
+  padding: 5px 3px;
+  border-radius: 5px;
+  background: var(--rs-slate-100);
+  color: var(--rs-slate-800);
+  text-align: center;
+  font-size: 11px;
+}
+
+.popupFacts small {
+  display: block;
+  margin-top: 1px;
+  color: var(--rs-muted);
+  font-size: 8.5px;
+  font-weight: 400;
+}
+
+/* Distance from the selected home to the POIs and nearest places. */
+.popupDistances {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 3px 10px;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--rs-slate-200);
+  list-style: none;
+}
+
+.popupDistances li {
+  display: contents;
+  color: var(--rs-slate-700);
+  font-size: 11px;
+}
+
+.distanceLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distanceLabel small {
+  margin-left: 5px;
+  color: var(--rs-muted);
+  font-size: 9.5px;
+}
+
+.distanceKm,
+.distanceWalk {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.distanceWalk small {
+  color: var(--rs-muted);
+  font-size: 9px;
+}
+
+.distanceTarget > span {
+  color: var(--rs-ink-strong);
+  font-weight: 700;
+}
+
+/* The score breakdown, collapsed under the distances. */
+.popupScores {
+  padding: 4px 0;
+  border-top: 1px solid var(--rs-slate-200);
+  border-bottom: 1px solid var(--rs-slate-200);
+}
+
+.popupScores summary {
+  color: var(--rs-muted);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.popupBreakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  padding: 5px 0 2px;
+}
+
+.popupBreakdown > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--rs-slate-600);
+  font-size: 9.5px;
+}
+
+.popupBreakdown small {
+  color: var(--rs-slate-400);
+}
+
+.popupAddress {
+  overflow: hidden;
+  margin: 6px 0;
+  color: var(--rs-muted);
+  font-size: 9.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clusterNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 5px 0;
+  color: var(--rs-slate-600);
+  font-size: 10px;
+}
+
+.clusterNav button {
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 4px;
+  background: var(--rs-card);
+  color: var(--rs-slate-700);
+  cursor: pointer;
+}
+
+/* Decision-mark picker inside the selected-listing popup. */
+.popupMark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--rs-slate-200);
+}
+
+.popupMark label {
+  flex-shrink: 0;
+  color: var(--rs-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popupMark select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 6px;
+  background: var(--rs-card);
+  color: var(--rs-slate-800);
+  font-size: 11px;
+}
+
+.popupActions {
+  display: flex;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.popupActions a {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
+  text-align: center;
+  text-decoration: none;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.popupActions a:last-child {
+  background: var(--rs-slate-600);
+}
+
+.controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.controls button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--rs-line);
+  border-radius: 6px;
+  background: rgb(var(--rs-glass) / 0.92);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--rs-slate-700);
+  box-shadow: 0 1px 2px rgb(var(--rs-shade) / 0.08);
+}
+
+.controls button:hover {
+  background: var(--rs-card);
+  border-color: var(--rs-hover-border);
+}
+
+.controls .reset {
+  font-size: 12px;
+}
+
+@media (max-width: 650px) {
+  .popup {
+    left: 6px;
+    bottom: 6px;
+    width: calc(100% - 52px);
+    padding: 9px;
+  }
+
+  .popupFacts {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .popupBreakdown {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info {
+  font-size: 12px;
+  color: var(--rs-muted);
+  min-height: 18px;
+  margin-top: 6px;
+}
+
+/* Layer toggles, top-left. */
+.layers {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: calc(100% - 60px);
+}
+
+.layerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border: 1px solid var(--rs-chip-border);
+  border-radius: 99px;
+  background: rgb(var(--rs-glass) / 0.85);
+  color: var(--rs-slate-400);
+  cursor: pointer;
+  font-size: 11px;
+  box-shadow: 0 1px 2px rgb(var(--rs-shade) / 0.06);
+}
+
+.layerChip i {
+  width: 8px;
+  height: 8px;
+  background: var(--rs-slate-300);
+}
+
+.layerChip.layerOn {
+  border-color: var(--rs-hover-border);
+  background: rgb(var(--rs-glass) / 0.96);
+  color: var(--rs-slate-700);
+}
+
+.layerOn.layer_stations i { background: var(--rs-map-station); }
+.layerOn.layer_schools i { background: var(--rs-map-school); border-radius: 50%; }
+.layerOn.layer_mosques i { background: var(--rs-map-mosque); transform: rotate(45deg) scale(0.85); }
+.layer_newRings i { background: transparent; border: 1.5px solid var(--rs-slate-300); border-radius: 50%; }
+.layerOn.layer_newRings i { border-color: var(--rs-map-new-ring); }
+.layer_rings i { background: transparent; border: 1.5px dashed var(--rs-slate-300); border-radius: 50%; }
+.layerOn.layer_rings i { border-color: var(--rs-map-ring); }
+.layer_schools i { border-radius: 50%; }
+.layer_mosques i { transform: rotate(45deg) scale(0.85); }
+
+/* Legend and scale bar, bottom-right. */
+.legend {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  max-width: 250px;
+  padding: 7px 9px;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 8px;
+  background: rgb(var(--rs-glass) / 0.92);
+  color: var(--rs-slate-600);
+  font-size: 10.5px;
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.08);
+}
+
+.legend summary {
+  color: var(--rs-slate-700);
+  cursor: pointer;
+  font-weight: 700;
+  list-style-position: inside;
+}
+
+/* <details> does not reliably honour grid/flex, so space its children directly. */
+.legend > * + * {
+  margin-top: 5px;
+}
+
+.legend:not([open]) {
+  padding: 4px 9px;
+}
+
+.legendScore {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0 7px;
+}
+
+.legendScore > span:first-child {
+  grid-row: span 2;
+  font-weight: 700;
+  color: var(--rs-slate-700);
+}
+
+.legendGradient {
+  height: 7px;
+  border-radius: 4px;
+  grid-column: 2;
+}
+
+.legendScore small {
+  grid-column: 2;
+  grid-row: 2;
+  color: var(--rs-slate-400);
+  font-size: 9px;
+}
+
+.legendScore small:last-child {
+  justify-self: end;
+}
+
+.legendKeys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+}
+
+.legendKeys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.legendKeys span.legendNote {
+  align-items: flex-start;
+  max-width: 220px;
+  white-space: normal;
+}
+
+.legendKeys i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  font-style: normal;
+}
+
+.legendKeys .keyStar {
+  width: auto;
+  height: auto;
+  color: var(--rs-red-600);
+  font-size: 12px;
+  line-height: 9px;
+}
+
+.keyMosque { background: var(--rs-map-mosque); transform: rotate(45deg) scale(0.85); }
+.keyStation { background: var(--rs-map-station); }
+.keyRailStation { background: var(--rs-map-rail-station); transform: scale(0.6); }
+.keyPrefecture { height: 0 !important; border-top: 1.5px solid var(--rs-map-prefecture-line); }
+.keySchool { background: var(--rs-map-school); border-radius: 50%; transform: scale(0.65); }
+.keyNew { border: 1.5px solid var(--rs-map-new-ring); border-radius: 50%; }
+.legendKeys .keyCandidate,
+.legendKeys .keyRuledOut {
+  width: auto;
+  height: auto;
+  line-height: 9px;
+}
+.legendKeys .keyCandidate { color: var(--rs-amber-400); font-size: 13px; -webkit-text-stroke: 1px var(--rs-map-candidate); }
+.legendKeys .keyRuledOut { color: var(--rs-map-dimmed); font-size: 10px; font-weight: 700; }
+.keyUndecided { background: var(--rs-amber-500); border-radius: 50%; }
+.keyRing { border: 1.5px dashed var(--rs-map-ring); border-radius: 50%; }
+.keyDimmed { background: var(--rs-map-dimmed); border-radius: 50%; opacity: 0.6; }
+
+.scaleBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rs-slate-600);
+}
+
+.scaleBar span {
+  height: 5px;
+  border: 1.5px solid var(--rs-slate-700);
+  border-top: 0;
+}
+
+.scaleBar small {
+  font-size: 9.5px;
+}
+
+/* Hover preview card, anchored to the hovered dot. */
+.hoverCard {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px;
+  border: 1px solid var(--rs-slate-300);
+  border-radius: 10px;
+  background: rgb(var(--rs-glass) / 0.98);
+  box-shadow: 0 8px 24px rgb(var(--rs-shadow) / 0.2);
+  pointer-events: none;
+}
+
+.hoverCard .hoverThumb {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 63px;
+  border-radius: 7px;
+}
+
+.hoverText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.hoverText strong {
+  overflow: hidden;
+  color: var(--rs-ink-strong);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hoverText span {
+  overflow: hidden;
+  color: var(--rs-slate-700);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hoverText small {
+  overflow: hidden;
+  color: var(--rs-muted);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hoverScore {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--rs-on-accent);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+@media (max-width: 650px) {
+  /* Touch screens have no hover, and the pinned card has no room for a photo
+     here; the expanded table row still shows it. */
+  .hoverCard,
+  .popupGallery {
+    display: none;
+  }
+
+  .legend {
+    max-width: calc(100% - 16px);
+  }
+}
+
+.popupActions {
+  flex-wrap: wrap;
+}
+
+.popupActions button {
+  flex: 1 0 100%;
+  padding: 6px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.popupActions button.comparing {
+  background: var(--rs-emerald-50);
+  color: var(--rs-emerald-700);
+  border: 1px solid var(--rs-emerald-200);
+}
+
+.popupNote {
+  margin: 0 0 6px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: var(--rs-yellow-100);
+  color: var(--rs-yellow-900);
+  font-size: 10.5px;
+  white-space: pre-wrap;
+  max-height: 72px;
+  overflow-y: auto;
+}
+
+.hoverNote {
+  overflow: hidden;
+  color: var(--rs-yellow-800) !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Opens the area picker; bottom-left, clear of the layer chips and the legend. */
+.areasButton {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  padding: 4px 10px;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 999px;
+  background: rgb(var(--rs-glass) / 0.92);
+  color: var(--rs-slate-700);
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.08);
+  cursor: pointer;
+}
+
+/* Shown when a locate request targets a listing in a hidden area. */
+.hiddenHint {
+  position: absolute;
+  left: 8px;
+  bottom: 40px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 999px;
+  background: rgb(var(--rs-glass) / 0.95);
+  color: var(--rs-slate-700);
+  font-size: 11px;
+  box-shadow: 0 1px 3px rgb(var(--rs-shadow) / 0.08);
+}
+
+.hiddenHint button {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}

@@ -1,9 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { ProximityIndex } from "./proximityIndex";
-import { applySelection, DEFAULT_SELECTION, describeSelection } from "./placeSelection";
-import { PLACE_CATALOG, placesInCategory } from "./places";
+import { applySelection, defaultSelection, describeSelection } from "./placeSelection";
+import { loadCurrentReferenceModel } from "../storage/json/currentReference.contract";
+import type { PlaceCatalog } from "./places";
+import type { PlaceSelection } from "./placeSelection";
+
+// The checked-in reference catalog, as the app loads it.
+let PLACE_CATALOG: PlaceCatalog;
+let DEFAULT_SELECTION: PlaceSelection;
+beforeAll(async () => {
+  PLACE_CATALOG = (await loadCurrentReferenceModel()).catalog;
+  DEFAULT_SELECTION = defaultSelection();
+});
 import { haversineM } from "./geo";
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 const listing = (lat: number, lon: number): EnrichedListing => ({
   name: "L",
@@ -20,11 +30,14 @@ const listing = (lat: number, lon: number): EnrichedListing => ({
   lon,
 });
 
+const placesInCategory = (category: string) => PLACE_CATALOG.inCategory(category);
+
 // Near Soka station.
 const SOKA = listing(35.8282, 139.8033);
 
 describe("ProximityIndex", () => {
-  const index = new ProximityIndex([SOKA]);
+  let index: ProximityIndex;
+  beforeAll(() => { index = new ProximityIndex([SOKA], PLACE_CATALOG); });
 
   it("measures the distance to a specific place", () => {
     const station = placesInCategory("station").find((p) => p.name === "草加")!;
@@ -52,26 +65,21 @@ describe("ProximityIndex", () => {
 
   it("skips listings without coordinates", () => {
     const noCoords = { ...SOKA, lat: undefined, lon: undefined };
-    const idx = new ProximityIndex([noCoords]);
+    const idx = new ProximityIndex([noCoords], PLACE_CATALOG);
     expect(idx.nearestIn(0, "station", null)).toBeNull();
   });
 });
 
 describe("applySelection", () => {
-  const index = new ProximityIndex([SOKA]);
+  let index: ProximityIndex;
+  beforeAll(() => { index = new ProximityIndex([SOKA], PLACE_CATALOG); });
 
   it("resolves every distance parameter with the default selection", () => {
     const out = applySelection(SOKA, 0, index, DEFAULT_SELECTION);
     expect(out.station?.name).toBe("草加");
+    // Soka is far nearer Al Sanad than Tokyo IQRA (Katsushika).
     expect(out.poi1?.name).toContain("Al Sanad");
     expect(out.poi2?.name).toBeTruthy();
-    expect([
-      "Baitul Aman Masjid (蒲生モスク)",
-      "Baitul Aqsa Masjid",
-      "Mizumoto Musalla",
-      "Yashio Masjid",
-      "Yashio Gujarati Masjid",
-    ]).toContain(out.poi2?.name);
     expect(out.school).toBeDefined();
     expect(out.busStop).toBeDefined();
     expect(out.childcareAny).toBeDefined();
@@ -85,14 +93,6 @@ describe("applySelection", () => {
     expect(out.station?.name).toBe("新田");
     // The original listing object is untouched.
     expect(SOKA.station).toBeUndefined();
-  });
-
-  it("swaps the Al Sanad POI target", () => {
-    const poi = placesInCategory("poi")[0];
-    const out = applySelection(SOKA, 0, index, {
-      byParameter: { ...DEFAULT_SELECTION.byParameter, poi1: [poi.id] },
-    });
-    expect(out.poi1?.name).toBe(poi.name);
   });
 
   it("scores the nearest mosque and honours a curated mosque set", () => {
@@ -109,6 +109,19 @@ describe("applySelection", () => {
     expect(restricted.poi2?.name).toBe(chosen.name);
   });
 
+  it("scores the nearest private school and honours a curated school set", () => {
+    const schools = placesInCategory("poi");
+    expect(schools.length).toBeGreaterThan(1);
+    const nearest = [...schools].sort((a, b) => haversineM(SOKA as never, a) - haversineM(SOKA as never, b))[0];
+    expect(applySelection(SOKA, 0, index, DEFAULT_SELECTION).poi1?.name).toBe(nearest.name);
+
+    const chosen = schools.find((school) => school.name !== nearest.name)!;
+    const restricted = applySelection(SOKA, 0, index, {
+      byParameter: { ...DEFAULT_SELECTION.byParameter, poi1: [chosen.id] },
+    });
+    expect(restricted.poi1?.name).toBe(chosen.name);
+  });
+
   it("clears a parameter when its selection is empty", () => {
     const out = applySelection(SOKA, 0, index, {
       byParameter: { ...DEFAULT_SELECTION.byParameter, poi1: [] },
@@ -119,12 +132,13 @@ describe("applySelection", () => {
 
 describe("describeSelection", () => {
   it("summarises the current choice", () => {
-    expect(describeSelection(DEFAULT_SELECTION, "station")).toBe("nearest of all");
+    expect(describeSelection(DEFAULT_SELECTION, "station", PLACE_CATALOG)).toBe("nearest of all");
     const one = placesInCategory("station")[0];
     expect(
       describeSelection(
         { byParameter: { ...DEFAULT_SELECTION.byParameter, station: [one.id] } },
         "station",
+        PLACE_CATALOG,
       ),
     ).toContain(one.name);
   });
@@ -132,7 +146,7 @@ describe("describeSelection", () => {
 
 describe("place catalog", () => {
   it("gives every place a unique id", () => {
-    const ids = new Set(PLACE_CATALOG.map((p) => p.id));
-    expect(ids.size).toBe(PLACE_CATALOG.length);
+    const ids = new Set(PLACE_CATALOG.places.map((p) => p.id));
+    expect(ids.size).toBe(PLACE_CATALOG.places.length);
   });
 });

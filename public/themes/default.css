@@ -1,0 +1,148 @@
+/*
+ * Soka Rental Scorer — default theme.
+ *
+ * Every colour, the font stack and the corner radius the app uses are
+ * defined here and nowhere else. The app's stylesheet only references these
+ * custom properties, and index.html loads this file separately from the app
+ * bundle, so a host site can replace it, or merge these properties into its
+ * own stylesheet, without rebuilding the app.
+ *
+ * A theme must define every property below. Start with "Core": most of the
+ * app's chrome follows those. The palette and role colours cover badges,
+ * states and the map; override them for a full re-skin.
+ *
+ * `--rs-shadow`, `--rs-shade` and `--rs-glass` are space-separated RGB
+ * channels, used as `rgb(var(--rs-shadow) / 0.2)` so one colour serves every
+ * opacity.
+ */
+:root {
+  /* Core */
+  --rs-font: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --rs-radius: 10px;
+  --rs-ink: #1a2332;
+  --rs-ink-strong: #172033;
+  --rs-muted: #64748b;
+  --rs-line: #dde4ee;
+  --rs-bg: #f6f8fb;
+  --rs-card: #ffffff;
+  --rs-accent: #2563eb;
+  --rs-on-accent: #ffffff;
+  --rs-shadow: 15 23 42;
+  --rs-shade: 0 0 0;
+  --rs-glass: 255 255 255;
+
+  /* Palette */
+  --rs-slate-50: #f8fafc;
+  --rs-slate-100: #f1f5f9;
+  --rs-slate-200: #e2e8f0;
+  --rs-slate-300: #cbd5e1;
+  --rs-slate-400: #94a3b8;
+  --rs-slate-600: #475569;
+  --rs-slate-700: #334155;
+  --rs-slate-800: #1e293b;
+  --rs-gray-400: #9ca3af;
+  --rs-gray-500: #6b7280;
+  --rs-gray-900: #111827;
+  --rs-blue-50: #eff6ff;
+  --rs-blue-100: #dbeafe;
+  --rs-blue-600: #2563eb;
+  --rs-blue-700: #1d4ed8;
+  --rs-indigo-50: #eef2ff;
+  --rs-indigo-200: #c7d2fe;
+  --rs-indigo-600: #4f46e5;
+  --rs-violet-600: #7c3aed;
+  --rs-violet-800: #5b21b6;
+  --rs-red-50: #fef2f2;
+  --rs-red-300: #fca5a5;
+  --rs-red-600: #dc2626;
+  --rs-red-700: #b91c1c;
+  --rs-red-800: #991b1b;
+  --rs-red-900: #7f1d1d;
+  --rs-rose-50: #fff1f2;
+  --rs-rose-100: #ffe4e6;
+  --rs-rose-200: #fecdd3;
+  --rs-rose-800: #9f1239;
+  --rs-orange-50: #fff7ed;
+  --rs-orange-200: #fed7aa;
+  --rs-orange-600: #ea580c;
+  --rs-orange-800: #9a3412;
+  --rs-orange-900: #7c2d12;
+  --rs-amber-50: #fffbeb;
+  --rs-amber-100: #fef3c7;
+  --rs-amber-200: #fde68a;
+  --rs-amber-400: #fbbf24;
+  --rs-amber-500: #f59e0b;
+  --rs-amber-600: #d97706;
+  --rs-amber-700: #b45309;
+  --rs-amber-800: #92400e;
+  --rs-amber-900: #78350f;
+  --rs-yellow-100: #fef9c3;
+  --rs-yellow-800: #854d0e;
+  --rs-yellow-900: #713f12;
+  --rs-green-600: #16a34a;
+  --rs-green-700: #15803d;
+  --rs-green-800: #166534;
+  --rs-emerald-50: #ecfdf5;
+  --rs-emerald-200: #a7f3d0;
+  --rs-emerald-700: #047857;
+  --rs-stone-400: #a8a29e;
+
+  /* Roles */
+  --rs-heading-strong: #1e3a5f;
+  --rs-link-strong: #1e3a6e;
+  --rs-button-secondary: #eef2f8;
+  --rs-accent-wash: #eef4ff;
+  --rs-hover-border: #b8c6dd;
+  --rs-chip-border: #d5dde8;
+  --rs-panel-border: #dbe4ef;
+  --rs-track: #e8edf5;
+  --rs-danger-wash: #f3e8e8;
+  --rs-danger-ink: #aa3333;
+  --rs-note-bg: #fffdf5;
+  --rs-photo-bg: #eef2f7;
+  --rs-photo-ink: #a3b1c4;
+  --rs-row-hover: #f2f7ff;
+  --rs-row-linked: #fff3d6;
+  --rs-row-selected-linked: #cfe0fb;
+  --rs-row-detail: #fbfdff;
+  --rs-row-divider: #f0f3f9;
+  --rs-move-in-bg: #fffbf5;
+  --rs-move-in-border: #fde3c4;
+  --rs-move-in-rule: #f3d9bd;
+
+  /* Map (legend and canvas) */
+  --rs-map-bg: #f4f8fd;
+  --rs-map-halo: rgb(255 255 255 / 0.9);
+  --rs-map-neighbour-fill: #fbfcfd;
+  --rs-map-neighbour-line: #cfd7e3;
+  --rs-map-focus-fill: rgb(232 240 252 / 0.8);
+  --rs-map-focus-line: #6f8bb5;
+  --rs-map-focus-label: #4b6290;
+  --rs-map-city-label: var(--rs-slate-400);
+  --rs-map-marker-outline: #ffffff;
+  --rs-map-station: var(--rs-blue-600);
+  --rs-map-station-label: #1e3a6e;
+  --rs-map-rail-station: #7189ad;
+  --rs-map-rail-station-label: #44608c;
+  --rs-map-prefecture-line: #8d9cb3;
+  --rs-map-prefecture-label: #7d8ba1;
+  --rs-map-area-selected: rgb(37 99 235 / 0.32);
+  --rs-map-area-hovered: rgb(37 99 235 / 0.55);
+  --rs-map-school: #9db4ce;
+  --rs-map-mosque: var(--rs-violet-600);
+  --rs-map-mosque-label: var(--rs-violet-800);
+  --rs-map-mosque-ring-stroke: rgb(124 58 237 / 0.45);
+  --rs-map-mosque-ring-label: var(--rs-violet-800);
+  --rs-map-target: var(--rs-red-600);
+  --rs-map-target-label: var(--rs-red-900);
+  --rs-map-ring: var(--rs-red-600);
+  --rs-map-ring-stroke: rgb(220 38 38 / 0.5);
+  --rs-map-ring-label: var(--rs-red-800);
+  --rs-map-new-ring: var(--rs-green-600);
+  --rs-map-new-ring-stroke: rgb(22 163 74 / 0.7);
+  --rs-map-candidate: var(--rs-amber-600);
+  --rs-map-dimmed: var(--rs-gray-400);
+  --rs-map-ruled-out: var(--rs-gray-500);
+  --rs-map-selected: var(--rs-accent);
+  --rs-map-hovered: var(--rs-gray-900);
+}

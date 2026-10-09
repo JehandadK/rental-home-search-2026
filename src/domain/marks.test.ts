@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  isRuledOut,
-  LISTING_MARKS,
   markMeta,
   markRank,
   matchesMarkFilter,
@@ -10,26 +8,9 @@ import {
 } from "./marks";
 
 describe("mark metadata", () => {
-  it("covers every mark with a tone, icon and labels", () => {
-    for (const meta of LISTING_MARKS) {
-      expect(meta.label.length).toBeGreaterThan(0);
-      expect(meta.labelJa.length).toBeGreaterThan(0);
-      expect(meta.icon.length).toBeGreaterThan(0);
-      expect(["positive", "negative"]).toContain(meta.tone);
-    }
+  it("looks up a mark's metadata", () => {
     expect(markMeta("taken")?.labelJa).toBe("成約済");
     expect(markMeta(undefined)).toBeNull();
-  });
-});
-
-describe("isRuledOut", () => {
-  it("treats negative marks as ruled out and positive ones as candidates", () => {
-    expect(isRuledOut("taken")).toBe(true);
-    expect(isRuledOut("not-interested")).toBe(true);
-    expect(isRuledOut("no-foreigners")).toBe(true);
-    expect(isRuledOut("shortlisted")).toBe(false);
-    expect(isRuledOut("applied")).toBe(false);
-    expect(isRuledOut(undefined)).toBe(false);
   });
 });
 

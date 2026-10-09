@@ -10,8 +10,8 @@
  * These helpers detect that situation and propose anchors fitted to the
  * data actually on screen.
  */
-import type { ScoreParameterKey } from "../types";
-import type { ScoredRow } from "../lib/export";
+import type { ScoreParameterKey } from "./types";
+import type { ScoredRow } from "./scoring";
 
 /** Share of listings at the floor/ceiling above which a parameter is "dead". */
 const DEAD_SHARE = 0.9;

@@ -1,27 +1,28 @@
 /** List-first Nifty discovery. Zero mandatory detail requests; per-page checkpoints. */
-import { NiftyBrowser } from "./lib/niftyBrowser";
-import { niftyCaptureExpression } from "./lib/niftyCapture";
-import { cachedPage } from "./lib/captureStore";
-import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { NiftyBrowser } from "../src/collectors/nifty/niftyBrowser";
+import { niftyCaptureExpression } from "../src/collectors/nifty/niftyCapture";
+import { cachedPage } from "../src/collectors/shared/captureStore";
+import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
-import { ingestNiftyListPage } from "./lib/niftyIngestion";
-import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "./lib/refreshPlan";
+import { ingestNiftyListPage } from "../src/collectors/nifty/niftyIngestion";
+import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
+import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
 
 const args = process.argv.slice(2);
 const arg = (name: string) => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
 const slug = arg("--city") ?? "sokashi_ct";
-const cities: Record<string, string> = { sokashi_ct: "Soka", koshigayashi_ct: "Koshigaya", kawaguchishi_ct: "Kawaguchi" };
-if (!cities[slug]) throw new Error("Unknown Nifty city");
+const city = TARGET_CITIES.find((candidate) => candidate.nifty === slug);
+if (!city) throw new Error("Unknown Nifty city");
 const limit = positiveInteger(arg("--pages"), DEFAULT_INCREMENTAL_PAGE_CEILING);
 const deep = args.includes("--deep");
-const urlFor = (page: number) => `https://myhome.nifty.com/rent/saitama/${slug}/${page > 1 ? page + "/" : ""}?sort=regDate-desc`;
+const urlFor = (page: number) => `https://myhome.nifty.com/rent/${city.prefectureSlug}/${slug}/${page > 1 ? page + "/" : ""}?sort=regDate-desc`;
 const browser = new NiftyBrowser();
 const ingestion = new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR)));
 let connected = false, knownPages = 0, totalAdded = 0, pages = 0;
 try {
   for (let page = 1; page <= limit; page++) {
-    const capture = await cachedPage({ source: "nifty", city: cities[slug], url: urlFor(page), page }, async () => {
+    const capture = await cachedPage({ source: "nifty", city: city.label, url: urlFor(page), page }, async () => {
       if (!connected) { await browser.connect(urlFor(page)); connected = true; }
       return browser.evaluate<string>(niftyCaptureExpression(urlFor(page)));
     });

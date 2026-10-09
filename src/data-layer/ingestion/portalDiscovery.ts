@@ -1,19 +1,19 @@
 import type { ListingSourceSnapshot } from "../contracts";
 import { canonicalJson, contentFingerprint } from "../contentIdentity";
 import { indexSourceRows } from "../sourceRowIdentity";
-import type { PortalDiscoveryOptions, PortalDiscoverySession, ScrapeBatch, ScrapeIngestionReceipt, SuumoDiscoveryPageResult } from "./contracts";
+import { portalPageUrl, type PortalDiscoveryOptions, type PortalDiscoverySession, type ScrapeBatch, type ScrapeIngestionReceipt, type SuumoDiscoveryPageResult } from "./contracts";
 import { InvalidScrapeBatchError } from "./errors";
-import { portalDiscoveryKeys } from "./portalPolicy";
+import type { SourcePolicy, SourcePolicyRegistry } from "./sourcePolicy";
 
-export function portalPageUrl(source: "athome" | "roomspot", base: string, page: number): string {
-  return source === "athome" ? `${base}?sort=33&page=${page}` : `${base}&page_num=${page}`;
-}
-export function validatePortalOptions(options: PortalDiscoveryOptions): void {
-  const host = options?.source === "athome" ? "www.athome.co.jp" : "www.roomspot.net";
-  if (!options || !["athome", "roomspot"].includes(options.source) || typeof options.deep !== "boolean" || !Number.isInteger(options.maxPages) || options.maxPages < 1
+/** Returns the source's policy; only sources with a portal-discovery policy qualify. */
+export function validatePortalOptions(options: PortalDiscoveryOptions, policies: SourcePolicyRegistry): SourcePolicy & Required<Pick<SourcePolicy, "portalDiscovery">> {
+  const policy = policies.get(options?.source);
+  const host = policy?.host;
+  if (!options || !policy?.portalDiscovery || typeof options.deep !== "boolean" || !Number.isInteger(options.maxPages) || options.maxPages < 1
     || !Array.isArray(options.cities) || !options.cities.length || !options.cities.every((city) => {
       try { const url = new URL(city.url); return typeof city.label === "string" && city.label.trim() && url.protocol === "https:" && url.hostname === host && !url.username && !url.password; } catch { return false; }
     }) || new Set(options.cities.map((city) => city.label)).size !== options.cities.length) throw new InvalidScrapeBatchError("Invalid portal discovery options");
+  return policy as SourcePolicy & Required<Pick<SourcePolicy, "portalDiscovery">>;
 }
 
 /** Shared bounded-window orchestration; source-specific identity and merges remain in portalPolicy. */
@@ -21,17 +21,19 @@ export class StagedPortalDiscovery implements PortalDiscoverySession {
   readonly bootstrap: boolean;
   readonly deep: boolean;
   private readonly known: Set<string>;
-  private readonly seen = new Set<string>();
+  private readonly seen = new Map<string, string | null>();
   private readonly pages: ScrapeBatch[] = [];
   private readonly cities = new Map<string, { pages: number; known: number; done: boolean }>();
   private closed = false;
   private committing?: Promise<ScrapeIngestionReceipt>;
-  constructor(private readonly options: PortalDiscoveryOptions, previous: ListingSourceSnapshot | null,
+  constructor(private readonly options: PortalDiscoveryOptions,
+    private readonly policy: NonNullable<SourcePolicy["portalDiscovery"]>,
+    previous: ListingSourceSnapshot | null,
     private readonly validate: (batch: ScrapeBatch) => void,
     private readonly commitBatch: (batch: ScrapeBatch, options: { allowShrink?: boolean }) => Promise<ScrapeIngestionReceipt>) {
     indexSourceRows(previous?.listings ?? []);
     this.bootstrap = !previous; this.deep = options.deep || this.bootstrap;
-    this.known = new Set((previous?.listings ?? []).flatMap((row) => portalDiscoveryKeys(options.source, row)));
+    this.known = new Set((previous?.listings ?? []).flatMap((row) => policy.keys(row)));
     for (const city of options.cities) this.cities.set(city.label, { pages: 0, known: 0, done: false });
   }
   stagePage(input: ScrapeBatch): SuumoDiscoveryPageResult {
@@ -47,9 +49,11 @@ export class StagedPortalDiscovery implements PortalDiscoverySession {
         || batch.observations.some((observation) => observation.observedAt !== batch.capturedAt)) throw new InvalidScrapeBatchError("Unexpected portal page sequence/scope/time");
       let novel = 0, overlap = 0, duplicate = 0;
       for (const observation of batch.observations) {
-        const keys = portalDiscoveryKeys(this.options.source, observation.listing);
-        if (keys.some((key) => this.seen.has(key))) { duplicate++; continue; }
-        keys.forEach((key) => this.seen.add(key));
+        const keys = this.policy.keys(observation.listing);
+        // Same as the commit merge: distinct source IDs are distinct ads even when they share a property alias.
+        const id = observation.listing.id ?? null;
+        if (keys.some((key) => this.seen.has(key) && (this.seen.get(key) == null || id === null || this.seen.get(key) === id))) { duplicate++; continue; }
+        keys.forEach((key) => this.seen.set(key, id));
         if (keys.some((key) => this.known.has(key))) overlap++; else novel++;
       }
       state.pages++;
@@ -75,8 +79,8 @@ export class StagedPortalDiscovery implements PortalDiscoverySession {
       mode: "discovery" as const, capturedAt, observations,
       scope: { urls: this.pages.flatMap((page) => page.scope.urls), cities: this.options.cities.map((city) => city.label), filters: { deep: this.deep, maxPages: this.options.maxPages } },
       provenance: { mode: this.deep ? "deep newest-first" : "incremental newest-first", pagesFetched: this.pages.length,
-        cities: this.options.cities.map((city) => source === "athome" ? new URL(city.url).pathname.split("/")[3] : city.label),
-        capturedBy: source === "athome" ? "scripts/scrape-athome.ts" : "scripts/scrape-roomspot.ts via Pi Control Chrome" } };
+        cities: this.options.cities.map((city) => this.policy.provenanceCity(city)),
+        capturedBy: this.policy.capturedBy } };
     const batch = { ...body, runId: `${source}-discovery:${capturedAt}`, batchId: await contentFingerprint(body) };
     this.validate(batch); return this.commitBatch(batch, options);
   }

@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 
 /** Public scraper boundary. No paths, storage revision, or pre-merged source rows. */
 export interface ScrapeBatch {
@@ -32,7 +32,7 @@ export interface ScrapeObservation {
 }
 
 /** Detail pages may not assert identity, prices, lifecycle, or user-owned fields. */
-export type ListingDetailPatch = Pick<RawListing, "parking" | "costs" | "tenancy" | "building" | "sourceDetails">;
+export type ListingDetailPatch = Pick<RawListing, "parking" | "costs" | "tenancy" | "building" | "sourceDetails" | "agency" | "agencyInfo">;
 
 export interface DetailPatchObservation {
   /** Exact source URL is the stable ad identity for this patch; resolved by the data layer. */
@@ -43,7 +43,7 @@ export interface DetailPatchObservation {
 }
 
 export interface DetailPatchBatch extends Omit<ScrapeBatch, "observations" | "observationKind"> {
-  source: "suumo";
+  source: "suumo" | PortalDetailSource;
   mode: "detail-enrichment";
   observationKind: "detail-patch";
   observations: readonly DetailPatchObservation[];
@@ -60,6 +60,20 @@ export interface DetailEnrichmentOptions {
 /** Read-side application query: collectors get URLs, never mutable source snapshots. */
 export interface DetailEnrichmentPlanner {
   planDetailEnrichment(options: DetailEnrichmentOptions): Promise<readonly string[]>;
+}
+
+/** Portals whose list pages do not name the agency; their detail pages do. */
+export type PortalDetailSource = "athome" | "roomspot";
+
+export interface AgencyDetailOptions {
+  source: PortalDetailSource;
+  /** Also plan ads whose store is already known (re-reading their pages). */
+  force: boolean;
+}
+
+/** Exact source URLs of current ads whose detail page should be read for the store block. */
+export interface AgencyDetailPlanner {
+  planAgencyDetails(options: AgencyDetailOptions): Promise<readonly string[]>;
 }
 
 /** Bounded SUUMO discovery is staged in application memory; only commit writes source data. */
@@ -93,6 +107,11 @@ export interface PortalDiscoveryOptions {
   maxPages: number;
   cities: readonly { label: string; url: string }[];
 }
+/** Result-page URL a portal collector fetches; discovery validates each staged page against it. */
+export function portalPageUrl(source: "athome" | "roomspot", base: string, page: number): string {
+  return source === "athome" ? `${base}?sort=33&page=${page}` : `${base}&page_num=${page}`;
+}
+
 export interface PortalDiscoverySession extends SuumoDiscoverySession {
   readonly bootstrap: boolean;
   readonly deep: boolean;

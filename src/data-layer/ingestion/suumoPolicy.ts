@@ -1,4 +1,4 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import { trackingKey } from "../../domain/listingIdentity";
 import type { ListingSourceSnapshot, SourceReconciliation } from "../contracts";
 import { indexSourceRows, sourceRowKey, sourceRowLocator } from "../sourceRowIdentity";
@@ -6,6 +6,8 @@ import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sou
 import type { ScrapeBatch } from "./contracts";
 import { InvalidScrapeBatchError } from "./errors";
 import { mergeSuumoObserved, suumoKey, suumoDiscoveryMatchKeys as suumoMatchKeys } from "./suumoIdentity";
+import { prepareSuumoDetailBatch, validateDetailPatch } from "./suumoDetailPolicy";
+import type { SourcePolicy } from "./sourcePolicy";
 
 const defined = <T extends object>(value: T): Partial<T> => Object.fromEntries(Object.entries(value).filter(([, v]) => v != null)) as Partial<T>;
 
@@ -74,3 +76,11 @@ export function prepareSuumoBatch(request: ScrapeBatch, snapshot: ListingSourceS
   return { reconciliation, added: merged.added, updated: merged.updated, novel: novelObservations.length, observedCount,
     ignored: request.observations.length - acceptedObservations.length, previousCount: previous.listings.length, currentCount: merged.listings.length };
 }
+
+export const suumoSourcePolicy: SourcePolicy = {
+  source: "suumo",
+  host: "suumo.jp",
+  listings: { prepare: prepareSuumoBatch, exactUrlDiscovery: true },
+  // Parser 2 adds the agency store block (この物件を取り扱う店舗).
+  detailPatches: { producer: "suumo-detail", parserVersions: ["1", "2"], validate: validateDetailPatch, prepare: prepareSuumoDetailBatch },
+};

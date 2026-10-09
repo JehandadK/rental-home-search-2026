@@ -1,10 +1,11 @@
-import type { RawListing } from "../../types";
+import type { RawListing } from "../../domain/types";
 import type { ListingSourceSnapshot } from "../contracts";
 import { trackingKey } from "../../domain/listingIdentity";
-import { sourceObservationBatch } from "../sourceObservationBatch";
 import { sourceObservationFallbackTime, sourceSnapshotCaptureTime } from "../sourceObservationTime";
 import { exactReconciliation } from "./reconciliation";
 import type { ScrapeBatch } from "./contracts";
+import type { SourcePolicy } from "./sourcePolicy";
+import { preparePortalDetailBatch, validateAgencyDetailPatch } from "./portalDetailPolicy";
 
 export type BrowserPortal = "athome" | "roomspot";
 const norm = (value: string | null | undefined) => (value ?? "").normalize("NFKC").replace(/\s+/g, "").toLowerCase();
@@ -20,71 +21,82 @@ function keys(source: BrowserPortal, row: RawListing): string[] {
   return [...new Set([source === "athome" ? athomeKey(row) : roomspotKey(row), `property:${trackingKey(row)}`,
     `market:${norm(row.address)}|${row.rent}|${row.sizeM2 ?? ""}|${norm(row.layout)}`])];
 }
-export const athomeMatchKeys = (row: RawListing) => keys("athome", row);
-export const roomspotMatchKeys = (row: RawListing) => keys("roomspot", row);
-export const isAthomeOverlap = (a: RawListing, b: RawListing) => athomeMatchKeys(b).some((key) => athomeMatchKeys(a).includes(key));
-export const isRoomspotOverlap = (a: RawListing, b: RawListing) => roomspotMatchKeys(b).some((key) => roomspotMatchKeys(a).includes(key));
 export const portalDiscoveryKeys = (source: BrowserPortal, row: RawListing) => [...(row.url ? [`url:${row.url}`] : []), ...keys(source, row)];
 
-function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: readonly RawListing[], publicPolicy: boolean) {
-  const match = (row: RawListing) => publicPolicy ? portalDiscoveryKeys(source, row) : keys(source, row);
+/**
+ * List pages never name the agency store, so the same ad keeps its stored store
+ * whole (name and details together). A different ad matched by a property or
+ * market alias (a relisting, perhaps by another agency) never inherits one.
+ */
+function withStore(merged: RawListing, prior: RawListing, row: RawListing): RawListing {
+  const { agency: _agency, agencyInfo: _agencyInfo, ...rest } = merged;
+  // The same ad keeps a store it already has; one it never had may come from the row.
+  const from = prior.id === row.id && (prior.agency != null || prior.agencyInfo != null || (row.agency == null && row.agencyInfo == null)) ? prior : row;
+  return { ...rest, ...(from.agency != null ? { agency: from.agency } : {}), ...(from.agencyInfo != null ? { agencyInfo: from.agencyInfo } : {}) };
+}
+
+function merge(source: BrowserPortal, existing: readonly RawListing[], fresh: readonly RawListing[]) {
+  const match = (row: RawListing) => portalDiscoveryKeys(source, row);
   const byAlias = new Map<string, RawListing>();
   for (const row of existing) for (const alias of match(row)) if (!byAlias.has(alias)) byAlias.set(alias, row);
-  const seen = new Set<string>(), used = new Set<RawListing>(), listings: RawListing[] = [];
+  // Rooms in one building often share name/address/size, so the shared `property:` alias
+  // cannot make two rows with different source IDs the same ad within one batch.
+  const seen = new Map<string, string | null>(), used = new Set<RawListing>(), listings: RawListing[] = [];
+  const conflicts = (alias: string, id: string | null | undefined) => {
+    if (!seen.has(alias)) return false;
+    const seenId = seen.get(alias);
+    return seenId == null || id == null || seenId === id;
+  };
   let added = 0, updated = 0, overlaps = 0;
   for (const row of fresh) {
     const aliases = match(row);
-    if (aliases.some((alias) => seen.has(alias))) { overlaps++; continue; }
-    const prior = aliases.map((alias) => byAlias.get(alias)).find(Boolean);
-    aliases.forEach((alias) => seen.add(alias));
+    if (aliases.some((alias) => conflicts(alias, row.id))) { overlaps++; continue; }
+    const prior = aliases.map((alias) => byAlias.get(alias)).find((candidate) => candidate && !used.has(candidate));
+    aliases.forEach((alias) => seen.set(alias, row.id ?? null));
     if (!prior) { listings.push(row); added++; continue; }
     used.add(prior); updated++; overlaps++;
+    // The same ad (source ID) keeps its stored locator: AtHome list hrefs carry a
+    // changing sibling-room query, which is not evidence of a new advertisement.
+    const locator = prior.id === row.id && prior.url ? { url: prior.url } : {};
     if (source === "athome") {
       const parking = row.parking == null ? prior.parking
         : row.parking.available !== false && row.parking.monthlyYen == null && prior.parking?.monthlyYen != null ? prior.parking : row.parking;
-      listings.push({ ...prior, ...row, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } });
+      listings.push(withStore({ ...prior, ...row, ...locator, parking, building: { ...prior.building, ...row.building }, costs: { ...prior.costs, ...row.costs, parking: parking ?? null } }, prior, row));
     } else {
-      listings.push({ ...prior, ...row, ...(publicPolicy ? {
+      listings.push(withStore({ ...prior, ...row, ...locator,
         ...(prior.costs || row.costs ? { costs: { ...prior.costs, ...row.costs } } : {}),
         ...(prior.building || row.building ? { building: { ...prior.building, ...row.building } } : {}),
-        ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}),
-      } : {}) });
+        ...(prior.tenancy || row.tenancy ? { tenancy: { ...prior.tenancy, ...row.tenancy } } : {}) }, prior, row));
     }
   }
   for (const prior of existing) {
+    // Stored rows superseded by a fresh alias are still absorbed (and archived by the caller).
     if (used.has(prior) || match(prior).some((alias) => seen.has(alias))) continue;
-    if (!publicPolicy) match(prior).forEach((alias) => seen.add(alias));
     listings.push(prior);
   }
   return { listings, added, updated, overlaps };
 }
-export const mergeAthomeIncremental = (existing: readonly RawListing[], fresh: readonly RawListing[]) => merge("athome", existing, fresh, false);
-export const mergeRoomspotIncremental = (existing: readonly RawListing[], fresh: readonly RawListing[]) => merge("roomspot", existing, fresh, false);
-
-/** Compatibility batch builders; new collectors submit observations to the public service instead. */
-type LegacyBatchInput = Omit<Parameters<typeof sourceObservationBatch>[0], "source" | "matchKeys"> & { completeness?: "incremental" | "complete" };
-function legacyBatch(source: BrowserPortal, input: LegacyBatchInput) {
-  if (input.current.some((row) => !row.id)) throw new Error(`${source} listing has no stable source ID`);
-  const batch = sourceObservationBatch({ ...input, source, matchKeys: (row) => keys(source, row) });
-  return { ...batch, completeness: input.completeness ?? "incremental" as const,
-    retirements: batch.retirements?.map((entry) => ({ ...entry, reason: `Superseded by a newer ${source} advertisement with matching unit aliases` })) };
-}
-export const athomeObservationBatch = (input: LegacyBatchInput) => legacyBatch("athome", input);
-export const roomspotObservationBatch = (input: LegacyBatchInput) => legacyBatch("roomspot", input);
 
 export function preparePortalBatch(request: ScrapeBatch, previous: ListingSourceSnapshot | null) {
   const source = request.source as BrowserPortal;
   const match = (row: RawListing) => portalDiscoveryKeys(source, row);
-  const byAlias = new Map<string, RawListing>();
-  for (const row of previous?.listings ?? []) for (const key of match(row)) if (!byAlias.has(key)) byAlias.set(key, row);
+  const byAlias = new Map<string, RawListing[]>();
+  for (const row of previous?.listings ?? []) for (const key of match(row)) byAlias.set(key, [...(byAlias.get(key) ?? []), row]);
   const times = { ...previous?.provenance?.observedAtByKey as Record<string, string> | undefined };
+  // Every stored row an observation could update or supersede must be no newer than it.
   const eligible = request.observations.filter((observation) => {
-    const prior = match(observation.listing).map((key) => byAlias.get(key)).find(Boolean);
-    const at = prior ? times[trackingKey(prior)] ?? sourceObservationFallbackTime(previous) : undefined;
-    return at === undefined || Date.parse(observation.observedAt!) >= Date.parse(at);
+    const priors = new Set(match(observation.listing).flatMap((key) => byAlias.get(key) ?? []));
+    return [...priors].every((prior) => {
+      const at = times[trackingKey(prior)] ?? sourceObservationFallbackTime(previous);
+      return at === undefined || Date.parse(observation.observedAt!) >= Date.parse(at);
+    });
   });
-  const merged = merge(source, previous?.listings ?? [], eligible.map((observation) => observation.listing), true);
-  for (const observation of eligible) times[trackingKey(observation.listing)] = observation.observedAt!;
+  const merged = merge(source, previous?.listings ?? [], eligible.map((observation) => observation.listing));
+  for (const observation of eligible) {
+    // A cached page staged after a fresher one must not move stored evidence backwards.
+    const key = trackingKey(observation.listing), at = times[key];
+    if (at === undefined || Date.parse(observation.observedAt!) > Date.parse(at)) times[key] = observation.observedAt!;
+  }
   const previousAt = previous ? sourceSnapshotCaptureTime(previous) : undefined;
   const observedAt = previousAt && Date.parse(previousAt) > Date.parse(request.capturedAt) ? previousAt : request.capturedAt;
   const novelRows = eligible.filter((observation) => !match(observation.listing).some((key) => byAlias.has(key)));
@@ -98,3 +110,29 @@ export function preparePortalBatch(request: ScrapeBatch, previous: ListingSource
     ignored: request.observations.length - merged.added - merged.updated,
     previousCount: previous?.listings.length ?? 0, currentCount: merged.listings.length };
 }
+
+export const athomeSourcePolicy: SourcePolicy = {
+  source: "athome",
+  host: "www.athome.co.jp",
+  listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
+  // Detail pages (掲載不動産会社) only add the agency store the list pages leave out.
+  detailPatches: { producer: "athome-detail", parserVersions: ["1"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
+  portalDiscovery: {
+    keys: (row) => portalDiscoveryKeys("athome", row),
+    provenanceCity: (city) => new URL(city.url).pathname.split("/")[3],
+    capturedBy: "scripts/scrape-athome.ts",
+  },
+};
+
+export const roomspotSourcePolicy: SourcePolicy = {
+  source: "roomspot",
+  host: "www.roomspot.net",
+  listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
+  // Detail pages (広告主情報) only add the agency store the list pages leave out.
+  detailPatches: { producer: "roomspot-detail", parserVersions: ["1"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
+  portalDiscovery: {
+    keys: (row) => portalDiscoveryKeys("roomspot", row),
+    provenanceCity: (city) => city.label,
+    capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome",
+  },
+};

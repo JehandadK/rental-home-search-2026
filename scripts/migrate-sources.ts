@@ -5,8 +5,10 @@
  */
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { BACKUP_DIR, JsonSourceStore, RAW_PATH, SOURCES_DIR } from "./lib/dataStore";
-import { JsonListingRepository } from "./lib/jsonListingRepository";
+import { relative } from "node:path";
+import { BACKUP_DIR, JsonSourceStore, RAW_PATH, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { REPO_ROOT } from "../src/node/dataPaths";
+import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { SourceBootstrapService } from "../src/data-layer/bootstrap/service";
 import type { SourceBootstrap } from "../src/data-layer/bootstrap/contracts";
 import type { LegacyListing } from "../src/data-layer/contracts";
@@ -26,7 +28,7 @@ export async function runSourceMigration(inputPath: string, client: SourceBootst
     input: { datasetId: "listings_raw.json", records },
   }, (result) => {
     if (result.status === "skipped") log(`  ${result.source}: source file already exists, skipped`);
-    else log(`  ${result.source}: ${result.count} listings → src/data/sources/${result.source}.json`);
+    else log(`  ${result.source}: ${result.count} listings → ${relative(REPO_ROOT, SOURCES_DIR)}/${result.source}.json`);
   });
   log("\nNext: npm run data:build");
   return results;

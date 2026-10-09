@@ -1,0 +1,58 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 4px 4px;
+  max-width: 640px;
+  white-space: normal;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.label small {
+  color: var(--rs-muted);
+  font-weight: 400;
+}
+
+.text {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--rs-line);
+  border-radius: 6px;
+  resize: vertical;
+  background: var(--rs-note-bg);
+}
+
+.viewing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.viewing input {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--rs-line);
+  border-radius: 6px;
+}
+
+.viewing button {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.when {
+  color: var(--rs-accent);
+  font-weight: 600;
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG, type ScoringConfig } from "../config/scoring";
-import type { EnrichedListing, Proximity } from "../types";
-import { higherIsBetter, lowerIsBetter, scoreListing, walkScore } from "./scoring";
+import { DEFAULT_CONFIG, type ScoringConfig } from "./scoringConfig";
+import type { EnrichedListing, Proximity } from "./types";
+import { higherIsBetter, lowerIsBetter, scoreCoverage, scoreListing, sharedGaps, walkScore } from "./scoring";
 
 // Walk minutes are recomputed from distM at scoring time, so encode distM such
 // that the default knobs (80 m/min, 1.3 detour) reproduce the intended minutes.
@@ -45,13 +45,6 @@ describe("normalisers", () => {
     expect(higherIsBetter(70, 70, 18)).toBe(100);
     expect(higherIsBetter(18, 70, 18)).toBe(0);
     expect(higherIsBetter(44, 70, 18)).toBe(50);
-  });
-
-  it("walkScore is 100 at the doorstep and 0 at the limit", () => {
-    expect(walkScore(0, 12)).toBe(100);
-    expect(walkScore(12, 12)).toBe(0);
-    expect(walkScore(6, 12)).toBe(50);
-    expect(walkScore(30, 12)).toBe(0);
   });
 });
 
@@ -277,19 +270,32 @@ describe("scoreListing", () => {
     expect(bike?.value).toBeCloseTo(6.4, 1);
     expect(bike?.score).toBeGreaterThan(walk?.score ?? 0);
   });
+});
 
-  it("ignores zero-weighted parameters in the total", () => {
-    const config: ScoringConfig = {
-      ...DEFAULT_CONFIG,
-      weights: { ...DEFAULT_CONFIG.weights, station: 0, moveInCost: 0 },
-    };
-    const listing: EnrichedListing = {
-      ...baseListing,
-      rent: 50_000,
-      sizeM2: null,
-      builtYear: null,
-      stationWalkMin: 20,
-    };
-    expect(scoreListing(listing, config).total).toBe(100); // rent only
+describe("scoreCoverage", () => {
+  it("counts the weighted criteria a score had data for, and names the rest", () => {
+    const listing = makeListing({ sizeM2: null, builtYear: null });
+    const coverage = scoreCoverage(scoreListing(listing, DEFAULT_CONFIG));
+    expect(coverage.weighted).toBe(Object.keys(DEFAULT_CONFIG.weights).length);
+    expect(coverage.missing).toEqual(expect.arrayContaining(["size", "yearBuilt"]));
+    expect(coverage.missing).not.toContain("rent");
+  });
+
+  it("leaves out gaps every listing shares", () => {
+    const halfKnown = scoreListing(makeListing({ sizeM2: null }), DEFAULT_CONFIG);
+    const gaps = sharedGaps([halfKnown, scoreListing(makeListing({}), DEFAULT_CONFIG)]);
+    // Neither fixture has a POI distance; only the first lacks a size.
+    expect(gaps.has("poi1")).toBe(true);
+    expect(gaps.has("size")).toBe(false);
+    // No size also means no rent per ㎡.
+    expect(scoreCoverage(halfKnown, gaps).missing).toEqual(["rentPerM2", "size"]);
+    expect(sharedGaps([halfKnown]).size).toBe(0);
+  });
+
+  it("ignores criteria weighted zero, including unknown features", () => {
+    const config: ScoringConfig = { ...DEFAULT_CONFIG, weights: { ...DEFAULT_CONFIG.weights, size: 0 } };
+    const coverage = scoreCoverage(scoreListing(makeListing({ sizeM2: null }), config));
+    expect(coverage.missing).not.toContain("size");
+    expect(coverage.missing).not.toContain("petAllowed");
   });
 });

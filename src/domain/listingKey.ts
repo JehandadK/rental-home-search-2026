@@ -4,7 +4,7 @@
  * building appears with different layouts), so the key folds in address
  * and rent as a tiebreak.
  */
-import type { EnrichedListing } from "../types";
+import type { EnrichedListing } from "./types";
 
 export function listingKey(listing: EnrichedListing): string {
   return listing.id ?? `${listing.name}|${listing.address}|${listing.rent}`;

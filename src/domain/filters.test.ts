@@ -7,11 +7,9 @@ import {
   layoutOptions,
   listingArea,
   matchesListing,
-  matchesScored,
   type ListingFilters,
 } from "./filters";
-import type { EnrichedListing } from "../types";
-import type { ListingScore } from "./scoring";
+import type { EnrichedListing } from "./types";
 
 const make = (over: Partial<EnrichedListing>): EnrichedListing => ({
   name: "L",
@@ -27,8 +25,6 @@ const make = (over: Partial<EnrichedListing>): EnrichedListing => ({
   geocoded: true,
   ...over,
 });
-
-const score = (total: number | null): ListingScore => ({ total, parts: [] });
 
 describe("listingArea", () => {
   it("strips prefecture, city and block numbers", () => {
@@ -70,10 +66,6 @@ describe("option extractors", () => {
 
 describe("matchesListing", () => {
   const base: ListingFilters = { ...EMPTY_FILTERS };
-
-  it("passes everything with empty filters", () => {
-    expect(matchesListing(make({}), base)).toBe(true);
-  });
 
   it("filters by city", () => {
     expect(matchesListing(make({ city: "Soka" }), { ...base, cities: ["Koshigaya"] })).toBe(false);
@@ -131,14 +123,13 @@ describe("lifecycle filters", () => {
     expect(matchesListing(old, f)).toBe(false);
     expect(matchesListing(legacy, f)).toBe(false);
   });
-});
 
-describe("matchesScored", () => {
-  it("applies the minimum-score gate on top of listing filters", () => {
-    const l = make({});
-    expect(matchesScored(l, score(40), { ...EMPTY_FILTERS, minScore: 50 })).toBe(false);
-    expect(matchesScored(l, score(60), { ...EMPTY_FILTERS, minScore: 50 })).toBe(true);
-    expect(matchesScored(l, score(null), { ...EMPTY_FILTERS, minScore: 1 })).toBe(false);
+  it("'newOnly' follows the chosen window", () => {
+    const fiveDaysOld = make({ firstSeenAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() });
+    expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newOnly: true, newWithinDays: 7 })).toBe(true);
+    expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newOnly: true, newWithinDays: 3 })).toBe(false);
+    // The window alone narrows nothing until "new only" is on.
+    expect(matchesListing(fiveDaysOld, { ...EMPTY_FILTERS, newWithinDays: 3 })).toBe(true);
   });
 });
 

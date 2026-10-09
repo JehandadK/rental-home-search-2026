@@ -5,14 +5,14 @@
  * Run with: npm run rank [-- -n 20]
  */
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { DEFAULT_CONFIG } from "../src/config/scoring";
+import { join } from "node:path";
+import { DATA_DIR } from "../src/node/dataPaths";
+import { DEFAULT_CONFIG } from "../src/domain/scoringConfig";
 import { scoreListing } from "../src/domain/scoring";
 import { isNewListing, isSold } from "../src/domain/lifecycle";
-import type { EnrichedListing } from "../src/types";
+import type { EnrichedListing } from "../src/domain/types";
 
-const DATA_FILE = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "data", "listings.json");
+const DATA_FILE = join(DATA_DIR, "listings.json");
 
 const nFlagIndex = process.argv.indexOf("-n");
 const topN = nFlagIndex >= 0 ? Math.max(1, parseInt(process.argv[nFlagIndex + 1], 10) || 15) : 15;
@@ -43,9 +43,9 @@ const row = (r: (typeof ranked)[number], i: number) => {
     `${s.parts.find((p) => p.key === key)?.value?.toFixed(0) ?? "?"}m`;
   const stationName = l.station?.name ?? l.advertisedStation ?? "?";
   const stn = `${stationName} ${minutes("station")}`;
-  const alSanad = minutes("poi1");
+  const privateSchool = minutes("poi1");
   const masjid = minutes("poi2");
-  return `${String(i + 1).padStart(3)}. ${score} ${city} ${rent} ${size} ${layout} ${l.name.slice(0, 22).padEnd(22)} ${stn.padEnd(16)} alSanad:${alSanad.padEnd(6)} masjid:${masjid}${flags}`;
+  return `${String(i + 1).padStart(3)}. ${score} ${city} ${rent} ${size} ${layout} ${l.name.slice(0, 22).padEnd(22)} ${stn.padEnd(16)} school:${privateSchool.padEnd(6)} masjid:${masjid}${flags}`;
 };
 
 console.log(

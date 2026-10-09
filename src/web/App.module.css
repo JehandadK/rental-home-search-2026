@@ -1,0 +1,70 @@
+.header {
+  padding: 14px 24px;
+  background: var(--rs-card);
+  border-bottom: 1px solid var(--rs-line);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  font-size: 18px;
+}
+
+.subtitle {
+  color: var(--rs-muted);
+  font-size: 12px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+}
+
+/* Wide screens: give the margins back to the map and table. */
+@media (min-width: 1600px) {
+  .header {
+    padding-inline: 16px;
+  }
+
+  .layout {
+    padding-inline: 16px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.card {
+  background: var(--rs-card);
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 14px 16px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rs-muted);
+  margin-bottom: 10px;
+}

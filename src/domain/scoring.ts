@@ -3,8 +3,8 @@
  * a per-parameter breakdown and weighted total come out. No I/O, no React —
  * this module is the testable heart of the tool.
  */
-import { FEATURE_PARAMETERS, travelSpeed, type ScoringConfig } from "../config/scoring";
-import type { EnrichedListing, Proximity, ScoringCriterionKey } from "../types";
+import { FEATURE_PARAMETERS, travelSpeed, type ScoringConfig } from "./scoringConfig";
+import type { EnrichedListing, Proximity, ScoringCriterionKey } from "./types";
 import { featureState } from "./listingAttributes";
 import { estimateWalkMinutes, round1 } from "./geo";
 import {
@@ -30,6 +30,12 @@ export interface ListingScore {
   /** Weighted average of available parts, 0–100. Null if nothing is scoreable. */
   total: number | null;
   parts: ScorePart[];
+}
+
+/** A listing paired with its computed score, as ranked, displayed, and exported. */
+export interface ScoredRow {
+  listing: EnrichedListing;
+  score: ListingScore;
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -234,6 +240,41 @@ export function scoreListing(listing: EnrichedListing, config: ScoringConfig): L
     : null;
 
   return { total, parts };
+}
+
+/** How much of a score rests on real data. */
+export interface ScoreCoverage {
+  /** Weighted criteria the listing has data for. */
+  known: number;
+  /** Every criterion with a weight above zero. */
+  weighted: number;
+  /** The weighted criteria with no data, which the total silently skipped. */
+  missing: ScoringCriterionKey[];
+}
+
+/**
+ * A missing value drops its weight from the average rather than scoring 0,
+ * so a listing known on 5 of 11 criteria can outrank a fully known one. This
+ * says how complete the evidence behind a total is.
+ *
+ * `ignore` leaves out criteria no listing has data for (a place choice
+ * cleared, say): a gap every home shares does not distinguish any of them.
+ */
+export function scoreCoverage(score: ListingScore, ignore?: ReadonlySet<ScoringCriterionKey>): ScoreCoverage {
+  const weighted = score.parts.filter((part) => part.weight > 0 && !ignore?.has(part.key));
+  const missing = weighted.filter((part) => part.score == null).map((part) => part.key);
+  return { known: weighted.length - missing.length, weighted: weighted.length, missing };
+}
+
+/** Weighted criteria that every one of these rows lacks data for. */
+export function sharedGaps(scores: readonly ListingScore[]): Set<ScoringCriterionKey> {
+  if (scores.length < 2) return new Set();
+  const gaps = new Set(scoreCoverage(scores[0]).missing);
+  for (const score of scores) {
+    if (!gaps.size) break;
+    for (const key of gaps) if (score.parts.find((part) => part.key === key)?.score != null) gaps.delete(key);
+  }
+  return gaps;
 }
 
 /** Colour scale for scores: red (poor) → amber → green (excellent). */

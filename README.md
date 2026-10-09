@@ -4,7 +4,9 @@ A weighted scoring tool for comparing rental homes in **Soka City**,
 **Koshigaya City**, and nearby **Kawaguchi City**, Saitama, Japan. Kawaguchi's
 eastern/northern neighbourhoods can be close to Al Sanad School. Koshigaya's
 southern wards (蒲生・新越谷) and the 北越谷 area sit close to both POIs and
-offer strong rent/size options, so all three cities are searched.
+offer strong rent/size options, so all three cities are searched. **Katsushika
+Ward** (葛飾区, Tokyo), just south of Yashio and Misato, is searched as well.
+Cities live in `src/collectors/shared/targetCities.ts`.
 
 Every listing is scored 0–100 across numeric proximity/cost/size parameters
 plus any qualitative property features the user chooses. Every captured source
@@ -28,10 +30,49 @@ npm run dev        # http://localhost:5173
 
 ```bash
 npm test           # unit tests for the scoring engine and geo math
-npm run build      # typecheck + production build
+npm run build      # data:web + typecheck + production build + release check → dist/
 npm run rank       # print the current top listings in the terminal
 npm run rank -- -n 30
 ```
+
+## Static site
+
+The dashboard needs no server. `npm run build` writes a self-contained static
+site to `dist/`, and `npm run check:release` (the last build step) refuses to
+pass anything else:
+
+| Path | What it is | Changes when |
+| --- | --- | --- |
+| `index.html` | The page | the app changes |
+| `assets/` | The app bundle (hashed JS and CSS, no theme colours) | the app changes |
+| `themes/default.css` | The theme: the interface and map colours, the page font, the radius | the look changes |
+| `data/` | `listings.json` and `reference.json` | data is committed |
+
+Upload `dist/` as-is to any static host. Every URL is relative, so it works
+from a domain root or a sub-path (`https://example.com/rentals/`) with no
+rebuild. Serve a sub-path with its trailing slash (or redirect to it): from
+`/rentals` without one, the browser resolves `./assets/` against the domain
+root.
+
+- **Data** stays in Git: refresh, commit `data/`, and rebuild. The page
+  revalidates its JSON on every load, so a redeploy shows up without cache
+  busting.
+- **Your marks, notes, compare list, presets and custom listings** stay in the
+  visitor's browser (`localStorage`). They are never uploaded, and they do not
+  follow you to another browser or device.
+- **Theme**: `index.html` links `themes/default.css` separately from the app.
+  To match a host site, replace that file, or define the same `--rs-*`
+  properties in the host's own stylesheet. The file lists them all, with the
+  core ones first. The red → green score scale is not themed: it encodes the
+  score itself (`scoreColor` in `src/domain/scoring.ts`).
+- **Sharing a page with a host stylesheet**: the app's styles are scoped to
+  `.rs-app` and never reach the host's elements. Inside it, a host's bare
+  element rules (`body {…}`, `button {…}`, `* {…}`) are reset. Stronger host
+  selectors (`a:hover`, `input[type=checkbox]`, ids, a full reset such as
+  Bootstrap Reboot) can still reach in, so share the host's theme properties
+  with this page rather than its whole stylesheet.
+- **Outside requests**: listing photos load straight from the portals, and the
+  map links open Google Maps. Nothing else leaves the page.
 
 ## Numeric and qualitative scoring parameters
 
@@ -42,7 +83,7 @@ npm run rank -- -n 30
 | Move-in cost (初期費用) | 4 | **sunk** cost in months of rent: ≤2 → 100; ≥6 → 0 |
 | Size | 5 | 70 ㎡+ → 100; 18 ㎡ or less → 0 |
 | Year built | 3 | new → 100; 45 years old → 0 |
-| POI 1 — Al Sanad School Japan (原町2-3-1) | 8 | doorstep → 100; 12 min walk → 0 |
+| Nearest private school | 8 | Nearest of Al Sanad School Japan (原町2-3-1) and Tokyo IQRA Int'l School (お花茶屋); doorstep → 100; 12 min → 0 |
 | Nearest mosque / masjid / musalla | 8 | Nearest of Baitul Aman, Baitul Aqsa, Mizumoto Musalla, Yashio Masjid, Yashio Gujarati Masjid, etc.; doorstep → 100; 12 min → 0 |
 | Nearest station | 9 | doorstep → 100; 20 min walk → 0 |
 | Nearest bus stop | 4 | doorstep → 100; 10 min walk → 0 |
@@ -135,7 +176,7 @@ build the index, then **2–3 ms** to re-score everything when a choice changes.
 
 That means the **Places** panel is pure selection, never a pipeline re-run:
 
-- **Al Sanad POI** — fixed/curated school target.
+- **Nearest private school** — automatically uses the nearest private school from the catalog (Al Sanad, Tokyo IQRA); optionally restrict it to a subset.
 - **Nearest mosque** — automatically uses the nearest mosque, masjid or musalla from the catalog; optionally restrict it to a trusted subset.
 - **Station** — "nearest of all", or restrict it to the stations you would
   really commute from (e.g. only 獨協大学前〈草加松原〉).
@@ -196,11 +237,46 @@ exports all reflect the filtered set live.
 
 ### Map ↔ table linking
 
-The map shows both cities (with the surrounding municipalities dashed in for
-context) and every listing as a score-coloured dot. **Hovering a dot highlights
-the matching table row; clicking a dot pins it and scrolls that row into view;
-hovering a table row highlights its dot on the map.** Scroll to zoom, drag to
-pan, and use the +/−/⤢ buttons to reset the view.
+The map draws the areas you choose, by default the search area (Soka,
+Koshigaya, Kawaguchi, Yashio and Adachi): their municipal outlines (dashed),
+prefecture borders (solid), Soka emphasised, their rail stations, and every
+listing as a score-coloured dot. **⚙ Areas** (bottom-left) opens the area
+picker: a small overview map of Kanto where clicking a municipality shows or
+hides it, a checkbox list by prefecture (a prefecture's box takes all its
+cities), search, *Search area* / *All* / *None*, and an **EN / 日本語** switch
+for city, prefecture and scored-station names (the region's other stations are
+named in Japanese only). The choice is remembered in the browser. Names appear
+as you zoom in and never overlap. Only the 20 scored stations around the search
+area count for the station score; the others are map context. **Hovering a dot
+highlights the matching table row; clicking a dot pins it and scrolls that row
+into view; hovering a table row highlights its dot on the map.** Hovering also shows a
+preview card with the home's photo, rent, layout and score. Scroll to zoom, drag
+to pan, use +/− to zoom, ◎ to fit the listings currently shown, and ⤢ to show
+all the chosen areas.
+The chips at the top toggle stations, schools, mosques and the green "new"
+rings; the legend holds the score scale and a distance scale bar. The map keeps
+true proportions (longitude is scaled by cos latitude).
+
+### Photos
+
+Listings show a thumbnail in the table, a gallery (exterior 外観, photo 写真,
+floor plan 間取り) in the expanded row, and a photo in the map's hover and
+pinned cards. Only image URLs are kept; the pictures stay on the portals and the
+browser loads them when shown.
+
+- **SUUMO:** nothing is stored. SUUMO builds its image paths from the `bc=`
+  property code already in every ad URL, so `src/domain/listingPhotos.ts`
+  derives them.
+- **AtHome, Nifty, RoomSpot:** their ad URLs carry no image path, so each
+  collector keeps the picture URLs its result page showed in `listing.photos`
+  (at most four, cleaned by `src/collectors/shared/photos.ts`: spinners and
+  "no image" art dropped, athome thumbnails asked for at gallery size).
+  Captures made before this existed have no pictures, so these listings gain
+  photos as they are refreshed. A refresh whose page shows none keeps the
+  earlier ones, and cross-listed rooms keep every portal's pictures.
+
+Photos a portal does not have (a load error or a ≤100×100 "no image"
+placeholder) are skipped in favour of the next picture, then a house icon.
 
 Walking minutes are estimated as `straight-line distance × 1.3 detour ÷ 80 m/min`
 (the 徒歩分 convention). For stations, the agent-listed 徒歩分 from SUUMO is
@@ -208,18 +284,13 @@ preferred when available, since it reflects the real route.
 
 ## Data
 
-Everything lives in `src/data/`:
+Persisted data lives in `data/` (`DATA_DIR` in `src/node/dataPaths.ts` is the only
+place that knows). The web app never imports it: `npm run data:web` publishes
+the two files the browser fetches into `public/data/` (below).
 
 | File | Contents | Source |
 |---|---|---|
-| `pois.json` | General POIs (Al Sanad and legacy Baitul Aman reference) | Curated map pins |
-| `mosques.json` | Mosque/masjid/musalla candidates used by nearest-mosque scoring | OpenStreetMap + curated map pins |
-| `stations.json` | 20 stations across Soka + Koshigaya (Tobu Skytree, JR Musashino, Nippori-Toneri…) | OpenStreetMap |
-| `elementary_schools.json` | 62 小学校 across the search area and its neighbours | OpenStreetMap |
-| `kindergartens.json` | 90 childcare facilities tagged `kindergarten` / `hoikuen` | OpenStreetMap |
-| `bus_stops.json` | ~1,000 bus stops | OpenStreetMap |
-| `soka_boundary.json` | Soka city boundary polygon | OpenStreetMap (relation 1769056) |
-| `neighbor_boundaries.json` | Koshigaya, Yashio, Kawaguchi, Adachi boundary rings (for map context) | OpenStreetMap |
+| `reference/v1/` | Managed reference catalog: versioned cities, boundaries, and places (private schools, mosques, stations, schools, childcare, bus stops), originally from OpenStreetMap and curated map pins; Kanto municipalities, boundaries and rail stations (`railStation`, map only) from MLIT 国土数値情報 N03/N02 | Revisioned updates through `JsonReferenceDataRepository`; `npm run data:reference:app-ids` after adding places; `npm run data:reference:ksj -- --n03 <dir> --n02 <N02-xx_Station.geojson> --names <総務省 code.xlsx>` to import a new N03/N02 edition with English names; `npm run data:reference:masjids` to add the saved Google Maps masjid list (`reference/imports/`) to the scored mosques |
 | `sources/suumo.json` | SUUMO family rentals (2K+) | `npm run scrape` |
 | `sources/athome.json` | AtHome family rentals (2K+), including move-in money and amenity flags | `npm run scrape:athome` |
 | `sources/roomspot.json` | RoomSpot/POLUS family rentals (2K+), including exact addresses and move-in money | `npm run scrape:roomspot` |
@@ -227,13 +298,36 @@ Everything lives in `src/data/`:
 | `sources/yahoo.json` | User-selected Yahoo! Real Estate detail listings, retained across rebuilds | Native-browser detail extraction; no automatic market crawl |
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
 | `listings.json` | Full archival data, geocoded + enriched with baked nearest places | `npm run enrich` |
-| `listings_web.json` | Compact browser payload (redundant proximities/audit text removed) | `npm run data:web` |
+| `availability.json` | Every ad-page check (listed / gone), newest per ad plus its full `history` | `npm run check:availability` |
+| `properties/<id>.json` | One additive document per property: every value each portal reported (conflicts kept side by side, plus the value shown), every sighting, every check and lifecycle event, and a derived summary (first seen and where, last seen, off-market window, days on market, portal posting dates) | `npm run data:properties` (run by `data:build`, `check:availability`, `data:journal:compact`); `npm run data:properties:backfill` replays git history and backups |
+
+Property documents are the analysis record: they only ever grow. A value that
+changes (rent, fees, address spelling) is added beside the earlier one with
+the portal and the capture times that reported it; `chosen` is the latest one
+and is what a view should show. Events (`ad.checked`, `lifecycle.status`,
+`ad.superseded`, `property.merged`) are appended once and never edited, so a
+re-listing never erases the earlier sold or gone time. See
+`src/domain/propertyDocument.ts` for the schema; readers must ignore fields
+they do not know.
+
+The catalog pins the id the app shows for each place (`attributes.appPlaceId`), so saved
+place selections survive added and retired places. The original per-category JSON
+files it was migrated from were retired after M5 (see `DATA_ARCHITECTURE.md`).
+
+Published for the browser (`public/data/`, served by Vite and copied into `dist/`):
+
+| File | Contents | Source |
+|---|---|---|
+| `listings.json` | Compact browser payload (redundant proximities/audit text removed) | `npm run data:web` |
+| `reference.json` | Snapshot of the managed reference catalog | `npm run data:web` |
+
+The app loads both at startup, with loading, error/retry, and stale-copy states.
 
 ### User-selected Yahoo! Real Estate listings
 
-`src/data/sources/yahoo.json` stores individually requested Yahoo listings as
+`data/sources/yahoo.json` stores individually requested Yahoo listings as
 an independent source, so ordinary refreshes cannot erase them. Public detail
-captures are retained in `src/data/.captures/yahoo/`; email/tracking parameters
+captures are retained in `data/.captures/yahoo/`; email/tracking parameters
 are removed from the saved listing URLs. These are partial observations, not a
 complete Yahoo market snapshot or an automated Yahoo collector.
 
@@ -333,7 +427,7 @@ and emits only a compact summary; portal collectors stop after two all-known
 pages when newest-first sorting is confirmed. Nifty now parses family units and
 parking/amenity flags directly from list cards, so discovery needs no detail
 requests. Browser captures are replayable locally; only summaries reach the model. Every invocation is checkpointed in
-`src/data/refresh-runs.json` with start/completion times, durations, attempts,
+`data/refresh-runs.json` with start/completion times, durations, attempts,
 per-stage status and discoveries, pre/post totals, net unique additions after
 deduplication, duplicate counts, and lifecycle results. A process lock prevents
 two refreshes from corrupting each other's checkpoints. If a portal fails its
@@ -354,6 +448,12 @@ amenities together. `--replay` uses cached HTML with no requests; `--force`
 rechecks within the budget. A persistent detail queue survives later scrapes.
 The old `--all-missing` sweep is no longer supported.
 
+`detail:athome` / `detail:roomspot` do the same for the agency store, which those
+portals print only on detail pages: up to `--limit` (default 10) headed-browser page
+loads, a persistent queue, per-ad backoff, a source circuit breaker on verification
+or blocked pages, and `--replay` over cached captures. Only `agency` and
+`agencyInfo` are accepted from these pages, and a stored store is never replaced.
+
 The cities scraped and their page counts are configured at the top of
 `scripts/scrape.ts` (`CITIES`).
 
@@ -365,26 +465,38 @@ estimates, but treat exact positions as ±100–200 m.
 
 ```
 src/
-  config/scoring.ts     ← all weights & anchors (the single tuning point)
-  domain/               ← pure, testable logic
-    geo.ts                · haversine, walk-time estimation
+  web/                  ← React app (reads data; never imports Node, storage or collectors)
+    data/                 · WebDataBoundary + runtime client that fetches public/data/
+    components/           · PlacePanel, FilterPanel, WeightPanel, ListingTable, MapView, AddListingForm
+    hooks/                · persisted config, filters, places, marks, custom listings
+    userState/            · the only localStorage adapter (plus an in-memory one for tests)
+    lib/export.ts         · CSV/Markdown export
+  domain/               ← pure, testable logic shared by every layer
+    types.ts              · listing, place and score shapes
+    scoringConfig.ts      · all weights & anchors (the single tuning point)
     scoring.ts            · the 0–100 engine
+    geo.ts                · haversine, walk-time estimation
+    referenceData.ts      · the reference model built from a loaded snapshot
     places.ts             · the flat catalog of every reference place
     proximityIndex.ts     · runtime listing × place distance matrix
     placeSelection.ts     · applies "which places count" to a listing
     diagnostics.ts        · finds criteria that decide nothing
     filters.ts            · area/city/rent/size/layout predicates
-  components/           ← PlacePanel, FilterPanel, WeightPanel, ListingTable,
-                          MapView, AddListingForm
-  hooks/                ← localStorage-persisted config, filters, places, listings
-  lib/                  ← GSI geocoding client, CSV/Markdown export
-  data/                 ← the datasets above
-scripts/
+  collectors/           ← fetch, parse and submit observations (suumo/, athome/, roomspot/, nifty/, enrichment/, shared/)
+  data-layer/           ← contracts, ingestion/correction/bootstrap services, per-source policies, lifecycle
+  storage/json/         ← JSON-file implementation of the data-layer repositories
+  refresh/              ← refresh plan and run ledger
+  node/                 ← locks, atomic writes, data root path
+  integrations/         ← GSI geocoding client
+data/                   ← the persisted datasets above
+public/data/            ← published web assets (npm run data:web)
+scripts/                ← CLI entry points only (npm run …)
   scrape.ts             ← incremental SUUMO collector
   scrape-athome.ts      ← Chrome-backed incremental AtHome collector
   scrape-roomspot.ts    ← Chrome-backed incremental RoomSpot/POLUS collector
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
+tools/architecture/     ← test enforcing the layer rules in DATA_ARCHITECTURE.md
 ```
 
 ## Known caveats

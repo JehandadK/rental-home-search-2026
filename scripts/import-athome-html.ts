@@ -4,11 +4,11 @@
  */
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { athomeDownloadedCapture } from "./lib/athomeCapture";
-import { CAPTURE_DIR, captureKey, validateCapture } from "./lib/captureStore";
-import { atomicWriteJson } from "./lib/dataStore";
-import { parseAthomePage } from "./lib/athome";
-import { assertParsedFamilies } from "./lib/captureValidation";
+import { athomeDownloadedCapture } from "../src/collectors/athome/athomeCapture";
+import { CAPTURE_DIR, captureKey, validateCapture } from "../src/collectors/shared/captureStore";
+import { atomicWriteJson } from "../src/storage/json/dataStore";
+import { parseAthomePage } from "../src/collectors/athome/athome";
+import { assertParsedFamilies } from "../src/collectors/shared/captureValidation";
 
 const args = process.argv.slice(2);
 const flag = (key: string) => args.includes(key) ? args[args.indexOf(key) + 1] : undefined;
