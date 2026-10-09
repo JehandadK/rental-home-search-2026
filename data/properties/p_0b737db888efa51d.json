@@ -5,7 +5,10 @@
   "aliases": [
     "ad:nifty|detail_56f4c73862c93d3699347165e39f30ba",
     "ad:suumo|jnc_000109942528|bc_100527781725",
+    "ad:ur|50_2890-000000912",
     "key:urリプレ川口二番街|埼玉県川口市川口3|76.34",
+    "key:urリプレ川口二番街|埼玉県川口市川口|76",
+    "room:suumo|jnc_000109942528|4DK|76.00",
     "room:suumo|jnc_000109942528|4DK|76.34"
   ],
   "ads": {
@@ -35,15 +38,30 @@
         "2026-09-23T05:23:18.616Z"
       ],
       "firstRecordedAt": "2026-10-04T06:34:49.603Z"
+    },
+    "ur|50_2890-000000912": {
+      "source": "ur",
+      "ids": [
+        "ur-50_2890-000000912"
+      ],
+      "urls": [
+        "https://www.ur-net.go.jp/chintai/kanto/saitama/50_2890_room.html?JKSS=000000912"
+      ],
+      "sightings": [
+        "2026-10-09T06:02:38.953Z",
+        "2026-10-09T06:04:48.829Z",
+        "2026-10-09T06:05:37.525Z"
+      ],
+      "firstRecordedAt": "2026-10-09T06:16:48.248Z"
     }
   },
   "facts": {
     "address": {
-      "chosen": "埼玉県川口市川口3丁目",
+      "chosen": "埼玉県川口市川口3-3-1",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -71,15 +89,28 @@
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": "埼玉県川口市川口3-3-1",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "advertisedStation": {
-      "chosen": "川口駅",
+      "chosen": "川口",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -107,21 +138,107 @@
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": "川口",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "agency": {
+      "chosen": "UR都市機構",
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": "UR都市機構",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "building.conditions": {
+      "chosen": [
+        "このお部屋はUR賃貸住宅取扱店（不動産会社）を通してのお申込みは出来ません。URの各営業窓口でお申込みください。"
+      ],
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": [
+            "このお部屋はUR賃貸住宅取扱店（不動産会社）を通してのお申込みは出来ません。URの各営業窓口でお申込みください。"
+          ],
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "building.features": {
       "chosen": [
-        "駐輪場あり",
-        "宅配ボックス",
         "バス・トイレ別",
-        "フローリング",
-        "オートロック"
+        "2階以上",
+        "エアコン",
+        "モニター付きインターホン",
+        "追い焚き",
+        "南向き",
+        "エレベーター",
+        "ドロップインコンロ",
+        "自動お湯張り機能",
+        "オートドアロック",
+        "モニター付インターホン",
+        "防犯カメラ",
+        "浴室換気乾燥機",
+        "シューズボックス",
+        "CATV",
+        "BS",
+        "VDSL",
+        "CATVインターネット",
+        "光配線",
+        "アルコーブ",
+        "洗面所独立",
+        "洗濯機置場（室内）",
+        "収納（物入）",
+        "バルコニー",
+        "網戸",
+        "宅配ボックス",
+        "最寄りの幼稚園・保育園が徒歩10分以内",
+        "最寄りの小中学校が徒歩10分以内"
       ],
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -160,15 +277,57 @@
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-10-04T06:34:49.603Z"
           }
+        },
+        {
+          "value": [
+            "バス・トイレ別",
+            "2階以上",
+            "エアコン",
+            "モニター付きインターホン",
+            "追い焚き",
+            "南向き",
+            "エレベーター",
+            "ドロップインコンロ",
+            "自動お湯張り機能",
+            "オートドアロック",
+            "モニター付インターホン",
+            "防犯カメラ",
+            "浴室換気乾燥機",
+            "シューズボックス",
+            "CATV",
+            "BS",
+            "VDSL",
+            "CATVインターネット",
+            "光配線",
+            "アルコーブ",
+            "洗面所独立",
+            "洗濯機置場（室内）",
+            "収納（物入）",
+            "バルコニー",
+            "網戸",
+            "宅配ボックス",
+            "最寄りの幼稚園・保育園が徒歩10分以内",
+            "最寄りの小中学校が徒歩10分以内"
+          ],
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "building.floor": {
       "chosen": "9階",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -196,15 +355,28 @@
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": "9階",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "building.structure": {
-      "chosen": "SRC",
+      "chosen": "鉄骨鉄筋コンクリート造",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -219,15 +391,28 @@
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": "鉄骨鉄筋コンクリート造",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "building.totalFloors": {
       "chosen": 14,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -242,15 +427,28 @@
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": 14,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "builtYear": {
       "chosen": 1992,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -278,15 +476,28 @@
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": 1992,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "city": {
       "chosen": "Kawaguchi",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -313,6 +524,19 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": "Kawaguchi",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -320,9 +544,9 @@
     "costs.adminFeeYen": {
       "chosen": 4000,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -349,6 +573,42 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 4000,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "costs.agencyFeeYen": {
+      "chosen": 0,
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": 0,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -356,9 +616,9 @@
     "costs.depositYen": {
       "chosen": 399400,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -372,6 +632,65 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 399400,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "costs.feeNotes": {
+      "chosen": "対象制度: 近居割",
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": "対象制度: 近居割",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "costs.guarantorRequired": {
+      "chosen": false,
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": false,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -379,9 +698,9 @@
     "costs.keyMoneyYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -395,6 +714,42 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 0,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "costs.renewalFeeYen": {
+      "chosen": 0,
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": 0,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -402,9 +757,9 @@
     "depositYen": {
       "chosen": 399400,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -431,6 +786,19 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 399400,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -438,9 +806,9 @@
     "keyMoneyYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -467,6 +835,19 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 0,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -474,9 +855,9 @@
     "layout": {
       "chosen": "4DK",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -504,15 +885,28 @@
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": "4DK",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "name": {
-      "chosen": "川口駅より徒歩2分 築34年7ヶ月 14階建",
+      "chosen": "URリプレ川口二番街",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -553,15 +947,28 @@
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-10-04T06:34:49.603Z"
           }
+        },
+        {
+          "value": "URリプレ川口二番街",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "notes": {
-      "chosen": "築35年・9階・管理費込",
+      "chosen": "912号室 · 9階 /14階 · JR京浜東北線「川口」駅 徒歩2分",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-09-23T05:23:18.616Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -576,26 +983,49 @@
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
           }
+        },
+        {
+          "value": "912号室 · 9階 /14階 · JR京浜東北線「川口」駅 徒歩2分",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "photos": {
       "chosen": [
         {
-          "kind": "exterior",
-          "source": "nifty",
-          "url": "https://image.homes.jp/smallimg/image.php?file=http%3A%2F%2Fimg.homes.jp%2F133007%2Frent%2F3854%2F2%2F1%2F6yvx.jpg&width=180&height=180"
+          "kind": "floorPlan",
+          "source": "ur",
+          "url": "https://chintai.r6.ur-net.go.jp/chintai/img_madori/50/50_289/50_289_0-00-0000_Ff_RA_01_00009.gif"
         },
         {
           "kind": "floorPlan",
-          "source": "nifty",
-          "url": "https://image.homes.jp/smallimg/image.php?file=http%3A%2F%2Fimg.homes.jp%2F133007%2Frent%2F3854%2F1%2F2%2Ffx6n.jpg&width=180&height=180"
+          "source": "ur",
+          "url": "https://chintai.r6.ur-net.go.jp/chintai/img_photo/50/50_289/50_289_TF_01.gif"
+        },
+        {
+          "kind": "photo",
+          "source": "ur",
+          "url": "https://chintai.r6.ur-net.go.jp/chintai/img_photo/50/50_289/1502891000000912/B00010526.jpg"
+        },
+        {
+          "kind": "photo",
+          "source": "ur",
+          "url": "https://chintai.r6.ur-net.go.jp/chintai/img_photo/50/50_289/1502891000000912/B00025404.jpg"
         }
       ],
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -621,15 +1051,49 @@
           "reportedAt": {
             "nifty|detail_56f4c73862c93d3699347165e39f30ba": "2026-10-04T06:34:49.603Z"
           }
+        },
+        {
+          "value": [
+            {
+              "kind": "floorPlan",
+              "source": "ur",
+              "url": "https://chintai.r6.ur-net.go.jp/chintai/img_madori/50/50_289/50_289_0-00-0000_Ff_RA_01_00009.gif"
+            },
+            {
+              "kind": "floorPlan",
+              "source": "ur",
+              "url": "https://chintai.r6.ur-net.go.jp/chintai/img_photo/50/50_289/50_289_TF_01.gif"
+            },
+            {
+              "kind": "photo",
+              "source": "ur",
+              "url": "https://chintai.r6.ur-net.go.jp/chintai/img_photo/50/50_289/1502891000000912/B00010526.jpg"
+            },
+            {
+              "kind": "photo",
+              "source": "ur",
+              "url": "https://chintai.r6.ur-net.go.jp/chintai/img_photo/50/50_289/1502891000000912/B00025404.jpg"
+            }
+          ],
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
         }
       ]
     },
     "rent": {
       "chosen": 203700,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -656,16 +1120,29 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 203700,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
     },
     "sizeM2": {
-      "chosen": 76.34,
+      "chosen": 76,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -692,6 +1169,19 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 76,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -699,9 +1189,9 @@
     "stationWalkMin": {
       "chosen": 2,
       "chosenFrom": {
-        "source": "nifty",
+        "source": "ur",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T06:11:19.462Z"
+        "observedAt": null
       },
       "values": [
         {
@@ -728,6 +1218,88 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000109942528|bc_100527781725": "2026-09-25T05:11:35.000Z"
+          }
+        },
+        {
+          "value": 2,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "tenancy.availableFrom": {
+      "chosen": "随時",
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": "随時",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "tenancy.immediateMoveIn": {
+      "chosen": true,
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": true,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
+          }
+        }
+      ]
+    },
+    "tenancy.leaseType": {
+      "chosen": "regular",
+      "chosenFrom": {
+        "source": "ur",
+        "rule": "latest-evidence",
+        "observedAt": null
+      },
+      "values": [
+        {
+          "value": "regular",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2890-000000912"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-09T06:16:48.248Z",
+          "reportedAt": {
+            "ur|50_2890-000000912": "2026-10-09T06:16:48.248Z"
           }
         }
       ]
@@ -783,8 +1355,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "nifty|detail_56f4c73862c93d3699347165e39f30ba",
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/kawaguchishi_ct/detail_56f4c73862c93d3699347165e39f30ba/",
-    "lastSeenAt": "2026-10-04T06:11:19.462Z",
-    "lastListedAt": "2026-10-04T06:11:19.462Z",
+    "lastSeenAt": "2026-10-09T06:05:37.525Z",
+    "lastListedAt": "2026-10-09T06:05:37.525Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -794,7 +1366,8 @@
     "relistCount": 0,
     "sources": [
       "nifty",
-      "suumo"
+      "suumo",
+      "ur"
     ],
     "ads": {
       "nifty|detail_56f4c73862c93d3699347165e39f30ba": {
@@ -812,13 +1385,26 @@
         "lastListedAt": "2026-09-23T05:23:18.616Z",
         "goneSince": null,
         "relistCount": 0
+      },
+      "ur|50_2890-000000912": {
+        "source": "ur",
+        "firstSeenAt": "2026-10-09T06:02:38.953Z",
+        "lastSeenAt": "2026-10-09T06:05:37.525Z",
+        "lastListedAt": "2026-10-09T06:05:37.525Z",
+        "goneSince": null,
+        "relistCount": 0
       }
     },
     "conflicts": [
       "address",
+      "advertisedStation",
       "building.features",
+      "building.structure",
       "builtYear",
-      "name"
+      "name",
+      "notes",
+      "photos",
+      "sizeM2"
     ]
   }
 }
