@@ -133,6 +133,6 @@ export const roomspotSourcePolicy: SourcePolicy = {
   portalDiscovery: {
     keys: (row) => portalDiscoveryKeys("roomspot", row),
     provenanceCity: (city) => city.label,
-    capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome",
+    capturedBy: "scripts/scrape-roomspot.ts",
   },
 };

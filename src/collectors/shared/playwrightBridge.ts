@@ -1,9 +1,9 @@
 /**
- * Drop-in replacement for ChromeBridge that drives a locally launched Playwright
+ * The browser driver for every portal collector: a locally launched Playwright
  * Chromium. Speaks only the four requests the portal browser adapters use
- * (new_tab, navigate, evaluate, close_tab), so the adapters stay unchanged.
+ * (new_tab, navigate, evaluate, close_tab).
  *
- * Enabled with BROWSER_DRIVER=playwright. Headed by default because Nifty and AtHome
+ * Headed by default because Nifty and AtHome
  * serve a wait/verification page to headless Chromium; PLAYWRIGHT_HEADLESS=1 opts out.
  * PLAYWRIGHT_USER_DATA_DIR keeps cookies between runs, so a portal's human
  * verification passed once by hand in the headed window is reused. It is never

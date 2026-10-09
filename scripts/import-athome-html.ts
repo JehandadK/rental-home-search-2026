@@ -1,5 +1,5 @@
-/** Convert a completed native Chrome HTML download into the standard capture envelope.
- * No network/browser access. Use the download's finalUrl and endTime as metadata.
+/** Convert a saved AtHome results HTML file into the standard capture envelope.
+ * No network/browser access. Use the page's final URL and load time as metadata.
  * Then run capture:import on the printed path to update/checkpoint the source.
  */
 import { readFile } from "node:fs/promises";

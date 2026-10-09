@@ -8,7 +8,7 @@ describe("classifyAdVisit (pages observed in the headed browser)", () => {
     const url = "https://www.athome.co.jp/chintai/1143327034/";
     expect(classifyAdVisit("athome", visit({ requestedUrl: url, finalUrl: url, httpStatus: 404,
       title: "お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報" })).state).toBe("gone");
-    // Without a status (Chrome bridge) the title alone is enough.
+    // Without a status the title alone is enough.
     expect(classifyAdVisit("athome", visit({ requestedUrl: url, finalUrl: url, httpStatus: null,
       title: "お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報" })).state).toBe("gone");
   });

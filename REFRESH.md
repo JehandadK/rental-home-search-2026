@@ -32,8 +32,7 @@
   `data/detail-queue.json`, independent of scrape `newListingIds`.
 - AtHome and RoomSpot list pages do not name the agency. `npm run detail:athome`
   and `npm run detail:roomspot` (default `--limit 10`) read current ads' detail
-  pages in the headed browser (`BROWSER_DRIVER=playwright` without the Chrome
-  bridge, e.g. `BROWSER_DRIVER=playwright npm run detail:roomspot -- --limit 10`)
+  pages in the headed Playwright browser (e.g. `npm run detail:roomspot -- --limit 10`)
   for the store block only (掲載不動産会社 / 広告主情報):
   `agency` and `agencyInfo`, added together and never overwritten or cleared.
   Queues live in `data/<source>-detail-queue.json`; captures in
@@ -53,14 +52,12 @@
   per-city exhaustion. Use `--deep` for wider non-destructive discovery. Automated
   SOLD auditing remains unavailable until explicit exhaustion is implemented.
 
-## Parallel collection and the Playwright driver
+## Parallel collection and the Playwright browser
 
 - Collectors for different sources (SUUMO, AtHome, RoomSpot, Nifty) run at the
   same time; the Nifty cities share `nifty.json`, so they run in order
   inside one group. `--concurrency N` caps it (`1` = fully sequential).
-- Without the Pi Control Chrome bridge, set `BROWSER_DRIVER=playwright` (for
-  example `BROWSER_DRIVER=playwright npm run refresh -- --resume`). It launches
-  a local Playwright Chromium (`src/collectors/shared/playwrightBridge.ts`),
+- Every portal page loads in a local Playwright Chromium (`src/collectors/shared/playwrightBridge.ts`),
   **headed** by default: Nifty and AtHome serve a wait/verification page to
   headless Chromium. `PLAYWRIGHT_HEADLESS=1` opts out; `PLAYWRIGHT_EXECUTABLE_PATH`
   overrides the browser, else the newest cached Chromium is used.
@@ -91,7 +88,7 @@ gone. One live ad keeps it available. This is separate from `sold`, which is
 only inferred from absence in crawls.
 
 - `npm run check:availability` visits ad pages in the **headed browser only**
-  (`BROWSER_DRIVER=playwright`, else the Chrome bridge; never curl/fetch).
+  (Playwright; never curl/fetch).
   It picks the properties a refresh has not seen for longest, checks the
   cheapest portal first (Nifty, SUUMO, RoomSpot, Yahoo, AtHome) and stops at the
   first live ad, so an available property costs one page load. Ads already
@@ -117,64 +114,30 @@ only inferred from absence in crawls.
   only), badged **RENTED OUT**, and each portal link has a small ✕ / ↺ to mark
   that ad gone or still listed by hand (browser-local, newest check wins).
 
-## Agent-operated browser collection
+## Manual capture import
 
-Use the loaded pi-control-chrome Skill and native `browser_*` tools only. Do not
-run the human CLI's direct-Bridge collectors from the agent shell.
-
-1. Confirm browser identity; create at most one owned tab per portal. For
-   Nifty/RoomSpot, use `wait: false`, then wait/read the required DOM rather than
-   slow third-party assets. AtHome requires the homepage-first sequence below.
-2. AtHome: **open `https://www.athome.co.jp/` first**, wait for the homepage to
-   load, and inspect it before navigating the same tab to results. Do not create
-   a cold tab at a deep search URL: that can trigger blocking and stuck reads.
-   If the homepage is blocked or times out, stop for manual inspection; do not
-   proceed to results, replay navigation, or restart the browser automatically.
-   Then use the city-path search `/chintai/<pref>/<city>-city/list/?sort=33`
-   (`saitama/soka`, `saitama/koshigaya`, `saitama/kawaguchi`, `tokyo/katsushika`). As of 2026-09-29 the prefecture search
-   `/chintai/saitama/list/?pref=11&cities=...&cityCds=...` ignores its city
-   filter and returns Saitama-wide cards (the importer rejects them as wrong
-   city). Pagination is `/list/pageN/`, retaining `?sort=33`. Verify
-   `select[name=SORT]` is **33** in every response. Save each page's HTML and
-   convert it with `npm run capture:athome-html -- --file <html> --url <pageUrl>
-   --captured-at <iso>` before `capture:import`. This modern
-   template uses `.property-card` / `.room-info-section` (mapping below), not
-   `.p-property`, and honours the `?sort=33` query. Only the older `.p-property`
-   template needed the AJAX form `SORT=33` (as `scripts/lib/athomeBrowser.ts`
-   still sends); on that template the URL query alone did not select it.
-3. RoomSpot: confirm `sort=new_arrival`; the existing page's public REST search
-   parameters support each configured city, avoiding full navigations per city.
-4. Nifty: newest is **sort=regDate-desc**, NOT the default `recommend` order.
-   Verify the response's selected option. See `scripts/lib/niftyCapture.ts` for
-   the bounded deterministic DOM projection (safe to use with native evaluate).
-5. Capture only public property-card markup. Remove scripts, images, inputs,
-   tracking attributes and unrelated page content. Retain parser-required
-   class/title/href/data-bukken-no/data-transport-access attributes.
-6. Keep each successful page in a transient task-owned in-page array until its
-   local save is confirmed. Export `{ captures, errors }` to a JSON Blob, return
-   **only its Blob URL/counts**, then use native `browser_download` with
-   `action: "start"`, `wait: true`. Do not auto-click repeated downloads:
-   Chrome may block them. Do not revoke the Blob before download confirmation.
-7. Import the returned local path:
-   `npm run capture:import -- --file <download-path>`.
-   Continue each city until the import receipt says `STOP` after two consecutive
-   all-known pages. Only pass `--max-pages N` when intentionally imposing a cap.
-   This validates/parses locally, checkpoints each page, updates the source, and
-   returns only added/refreshed counts and STOP/continue. Replays are idempotent.
-   Once every required city reaches overlap/budget, the corresponding failed
-   ledger stage is completed and dependent local stages are invalidated.
-8. After all source captures: `npm run refresh -- --resume --local-only`.
-   This prevents portal collection, but permits missing-address GSI geocoding.
-   It imports cached Nifty details only if newer than list evidence, then merges,
-   geocodes, and builds the dictionary-encoded dashboard payload.
-9. `npm run build` validates and builds the dashboard. No browser cleanup command
-   is needed; temporary Agent tabs follow normal host turn cleanup.
+Collectors save every page they load to the capture cache (`data/.captures/`).
+`npm run capture:import -- --file <export.json>` imports saved list pages
+offline from a `{ captures: PageCapture[] }` file, each city's pages in order:
+it validates and parses locally, checkpoints each page, updates the source, and
+prints added/refreshed counts and STOP/continue (STOP after two consecutive
+all-known pages). Replays are idempotent. `npm run capture:athome-html -- --file
+<html> --url <pageUrl> --captured-at <iso>` turns a saved AtHome results HTML
+file into a PageCapture. After imports, `npm run
+refresh -- --resume --local-only` merges, geocodes and rebuilds the dashboard
+without any portal collection.
 
 PageCapture schema: `schemaVersion:1, source, city, url, page, capturedAt,
 httpStatus:200, sortedNewest:true, html`. Cities: Soka/Koshigaya/Kawaguchi/Katsushika
 (`src/collectors/shared/targetCities.ts` is the one list every collector reads).
 Captures and progress receipts live in `data/.captures/`; never put full
 HTML, source JSON, browser storage, cookies or tokens into model context.
+
+## Run log
+
+Dated entries are a historical record. Runs before 2026-10-02 used the Pi
+Control Chrome bridge and agent-native browser tools; both have since been
+removed, and every collector now uses the headed Playwright browser.
 
 ## 2026-09-07 recovery result
 
@@ -399,7 +362,8 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
 
 - Run `2026-10-02T10-37-14-683Z-6b3c2254`: **SUCCESS**, all four portals, no
   page cap; every source/city stopped on two all-known pages. Headed Playwright
-  (`BROWSER_DRIVER=playwright`) with the AtHome profile in `.context/`.
+  (then opted into with `BROWSER_DRIVER=playwright`, since removed) with the
+  AtHome profile in `.context/`.
 - Source additions before cross-source merge: SUUMO **99**, AtHome **336**
   (390 overlaps refreshed, 39 pages: 6/20/13), RoomSpot **37** (128 refreshed),
   Nifty **83** (Soka 18, Koshigaya 25, Kawaguchi 40). Zero detail requests.
@@ -521,9 +485,9 @@ HTML, source JSON, browser storage, cookies or tokens into model context.
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
-`import-capture.ts`, `lib/captureStore.ts`: native capture import/cache.
+`import-capture.ts`, `lib/captureStore.ts`: capture import/cache.
 `lib/{athome,roomspot,nifty}.ts`: pure list parsers and incremental merge.
-`enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded SUUMO detail work, loaded in the headed browser (`src/collectors/shared/browserFetch.ts`; set `BROWSER_DRIVER=playwright` without the Chrome bridge). Detail pages carry 情報更新日 / 次回更新予定日, which the property documents keep.
+`enrich-details.ts`, `lib/detailEnrichment.ts`: optional bounded SUUMO detail work, loaded in the headed browser (`src/collectors/shared/browserFetch.ts`). Detail pages carry 情報更新日 / 次回更新予定日, which the property documents keep.
 `lib/observations.ts`: actual source evidence and lifecycle restoration.
 `sync-properties.ts`, `src/data-layer/properties/`: additive per-property documents (`data/properties/`), synced by `data:build` and `check:availability`.
 `enrich.ts`, `lib/geocodeCache.ts`: address caching.

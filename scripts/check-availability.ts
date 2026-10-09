@@ -6,8 +6,7 @@
  *   npm run check:availability -- --url <ad url>    check one ad (and its property's other ads)
  *   npm run check:availability -- --dry-run         list what would be visited; no browser
  *
- * Every visit goes through the headed browser (BROWSER_DRIVER=playwright, else
- * the Chrome bridge), never plain HTTP. A property is checked cheapest portal
+ * Every visit goes through the headed Playwright browser, never plain HTTP. A property is checked cheapest portal
  * first and the walk stops at the first live ad. Results go to
  * data/availability.json; run `npm run data:web` to publish them. Set
  * ATHOME_VERIFY_WAIT_SECONDS to give yourself time to pass a verification page.

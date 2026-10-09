@@ -39,7 +39,7 @@ const cityUrl = (city: (typeof CITIES)[number], page: number, newestFirst: boole
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** List pages load in the headed browser (BROWSER_DRIVER=playwright or the Chrome bridge), never a plain HTTP client. */
+/** List pages load in the headed browser (Playwright), never a plain HTTP client. */
 async function fetchPage(browser: BrowserFetch, url: string): Promise<string> {
   const res = await browser.fetch(url);
   if (!res.ok) throw new Error(`SUUMO ${url}: HTTP ${res.status}`);

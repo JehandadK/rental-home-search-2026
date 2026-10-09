@@ -1,5 +1,5 @@
 /**
- * Import native-browser public captures; no browser control or network in this script.
+ * Import saved public list-page captures; no browser control or network in this script.
  * Each validated page is parsed and submitted to the public ingestion boundary, which
  * owns source reads, freshness, matching, merges and the atomic source/journal commit.
  */
@@ -37,7 +37,7 @@ export interface CaptureImportDependencies {
 /** Returns the process exit code: 2 when the export itself reported failed captures. */
 export async function runCaptureImport(args: readonly string[], dependencies: CaptureImportDependencies): Promise<number> {
   const input = args[args.indexOf("--file") + 1];
-  if (!args.includes("--file") || !input) throw new Error("Usage: npm run capture:import -- --file <native-browser-export.json> [--max-pages N]");
+  if (!args.includes("--file") || !input) throw new Error("Usage: npm run capture:import -- --file <captures.json> [--max-pages N]");
   const maxPages = positiveInteger(
     args.includes("--max-pages") ? args[args.indexOf("--max-pages") + 1] : undefined,
     DEFAULT_INCREMENTAL_PAGE_CEILING,

@@ -1,11 +1,11 @@
 /**
  * AtHome protects direct scripted requests with browser verification. This
- * adapter uses the local Pi Control Chrome Bridge and AtHome's own public list
+ * adapter uses the headed Playwright browser and AtHome's own public list
  * AJAX endpoint from a real first-party tab. Start at the homepage before
  * navigating to results: opening a list URL in a cold tab can trigger a block.
- * Only public listing HTML leaves the page; cookies/storage remain in Chrome.
+ * Only public listing HTML leaves the page; cookies/storage remain in the browser.
  */
-import { createBridge } from "../shared/chromeBridge";
+import { createBridge } from "../shared/browserBridge";
 import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
 import { athomeDownloadedCapture } from "./athomeCapture";
 
@@ -21,7 +21,7 @@ interface BrowserTab {
 const MODERN_TEMPLATE = "__athome_modern_template__";
 const HOMEPAGE_URL = "https://www.athome.co.jp/";
 const NAVIGATION_TIMEOUT_MS = 30_000;
-// Leave time for the Bridge to return its navigation timeout/error.
+// Leave time for the browser to return its navigation timeout/error.
 const REQUEST_TIMEOUT_MS = NAVIGATION_TIMEOUT_MS + 5_000;
 
 export class AthomeBrowser {

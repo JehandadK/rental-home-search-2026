@@ -183,8 +183,8 @@ describe("AtHome / RoomSpot detail loading (offline)", () => {
 
   it("stops at once, without backoff or a pause, when the local browser is unavailable", async () => {
     await seed();
-    load.mockRejectedValue(new BrowserUnavailableError("Pi Control Chrome Bridge is unavailable"));
-    await expect(runPortalDetails(["--limit", "3"], dependencies)).rejects.toThrow("Chrome Bridge is unavailable");
+    load.mockRejectedValue(new BrowserUnavailableError("Playwright Chromium could not be started"));
+    await expect(runPortalDetails(["--limit", "3"], dependencies)).rejects.toThrow("Playwright Chromium could not be started");
     expect(load).toHaveBeenCalledTimes(1);
     const saved = await queue();
     expect(saved.blockedUntil).toBeUndefined();

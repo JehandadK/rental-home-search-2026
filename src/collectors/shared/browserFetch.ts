@@ -1,13 +1,13 @@
 /**
- * A `fetch` replacement that loads pages in the headed browser (createBridge:
- * Playwright or the Chrome bridge), for collectors written against `fetch`.
+ * A `fetch` replacement that loads pages in the headed Playwright browser
+ * (createBridge), for collectors written against `fetch`.
  * Portals must only ever see a browser, never a plain HTTP client.
  *
  * A page that redirects to a different path (an ended ad sent to a building or
  * search page) answers 404, so callers treat it as that ad being unavailable
  * rather than as an unrecognised page.
  */
-import { createBridge } from "./chromeBridge";
+import { createBridge } from "./browserBridge";
 
 interface BrowserTab { id: number; url?: string; tabFence?: string; incarnation?: string }
 interface NavigateResult { tab: BrowserTab; httpStatus?: number }

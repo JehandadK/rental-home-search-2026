@@ -70,7 +70,7 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     const saved = (await store.readSource("roomspot"))!;
     expect(saved.listings).toEqual(rows());
     expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 8, newListings: 8, cities: ["Soka", "Koshigaya", "Kawaguchi", "Katsushika"],
-      capturedBy: "scripts/scrape-roomspot.ts via Pi Control Chrome" });
+      capturedBy: "scripts/scrape-roomspot.ts" });
     expect(saved.provenance).not.toHaveProperty("newListingIds");
     expect(dependencies.log).toHaveBeenCalledWith("\nWrote 8 RoomSpot listings (was 0)");
     expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("Next:"));

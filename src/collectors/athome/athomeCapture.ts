@@ -7,7 +7,7 @@ const esc = (s: string): string => s.replace(/[&<>"']/g, c => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[c]!);
 
-/** Offline projection of Chrome's downloaded public results; never executes page scripts. */
+/** Offline projection of AtHome's public results HTML; never executes page scripts. */
 export function athomeDownloadedCapture(html: string, url: string, capturedAt: string): PageCapture & { sortedNewest: true } {
   const u = new URL(url);
   // City-path results (`/soka-city/list/`) filter by city; the prefecture search now ignores `cities`/`cityCds`.

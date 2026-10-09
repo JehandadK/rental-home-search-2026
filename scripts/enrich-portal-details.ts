@@ -5,8 +5,7 @@
  *   npm run detail:athome -- [--limit 10] [--force] [--replay]
  *   npm run detail:roomspot -- [--limit 10] [--force] [--replay]
  *
- * Pages load only in the headed browser (the Chrome bridge, or
- * BROWSER_DRIVER=playwright). AtHome shows fresh profiles a human-verification
+ * Pages load only in the headed Playwright browser. AtHome shows fresh profiles a human-verification
  * page: with ATHOME_VERIFY_WAIT_SECONDS set, the run waits passively for a person
  * to complete it in that window; it never answers or works around it. A
  * verification, block or unknown page stops all requests (circuit breaker) and

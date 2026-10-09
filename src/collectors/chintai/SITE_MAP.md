@@ -1,7 +1,6 @@
 # CHINTAI (www.chintai.net) site map and source plan
 
-Mapped on **2026-10-04** in a headed Playwright browser (`BROWSER_DRIVER=playwright`),
-one tab, 8–14 s between pages, 56 pages in total (robots.txt, 15 sitemaps, hubs,
+Mapped on **2026-10-04** in a headed Playwright browser, one tab, 8–14 s between pages, 56 pages in total (robots.txt, 15 sitemaps, hubs,
 list, detail, building, rent, archive and shop pages). Nothing was fetched with
 curl or fetch. The URL grammar below is in code in
 [`chintaiSite.ts`](chintaiSite.ts) and the town codes are in

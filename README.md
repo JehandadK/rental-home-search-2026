@@ -390,12 +390,11 @@ run. `--full` is currently rejected until collectors can positively verify per-c
 exhaustion; page limits never authorize SOLD reconciliation. See REFRESH.md.
 
 AtHome's public pages use browser verification, so its collector reads the
-public search-result HTML through the local Pi Control Chrome Bridge and the
+public search-result HTML in a headed Playwright browser and through the
 site's own list endpoint. It opens **the AtHome homepage first**, waits for it to
 load, then navigates the same tab to the requested search; it never cold-opens
 that tab at a deep results URL. Navigation and capture requests are bounded,
-with no automatic retries on a blocked/uncertain page. Run `/chrome connect`
-first if needed. It captures
+with no automatic retries on a blocked/uncertain page. It captures
 rent + management fee, layout, area, build year, deposit, key money, station
 walk time, parking availability, pet/instant-move-in and other visible amenity
 flags without crawling every detail page.
@@ -492,8 +491,8 @@ data/                   ← the persisted datasets above
 public/data/            ← published web assets (npm run data:web)
 scripts/                ← CLI entry points only (npm run …)
   scrape.ts             ← incremental SUUMO collector
-  scrape-athome.ts      ← Chrome-backed incremental AtHome collector
-  scrape-roomspot.ts    ← Chrome-backed incremental RoomSpot/POLUS collector
+  scrape-athome.ts      ← headed-browser incremental AtHome collector
+  scrape-roomspot.ts    ← headed-browser incremental RoomSpot/POLUS collector
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
 tools/architecture/     ← test enforcing the layer rules in DATA_ARCHITECTURE.md

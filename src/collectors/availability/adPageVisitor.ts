@@ -1,9 +1,9 @@
 /**
- * Loads portal ad pages in the headed browser (createBridge: Playwright or the
- * Chrome bridge) and reports what was shown. Never uses plain HTTP clients:
+ * Loads portal ad pages in the headed Playwright browser (createBridge) and
+ * reports what was shown. Never uses plain HTTP clients:
  * portals treat those differently from a person browsing.
  */
-import { createBridge } from "../shared/chromeBridge";
+import { createBridge } from "../shared/browserBridge";
 import type { AdVisit } from "./classify";
 
 interface BrowserTab { id: number; url?: string; tabFence?: string; incarnation?: string }

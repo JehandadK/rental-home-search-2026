@@ -1,5 +1,5 @@
-/** Chrome-backed public RoomSpot search collector. */
-import { createBridge } from "../shared/chromeBridge";
+/** Headed-browser public RoomSpot search collector. */
+import { createBridge } from "../shared/browserBridge";
 import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
 
 interface BrowserTab { id: number; tabFence?: string; incarnation?: string }

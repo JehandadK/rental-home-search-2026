@@ -88,7 +88,7 @@ describe("efficient refresh", () => {
 });
 
 describe("persistent Playwright profile under parallel collection", () => {
-  const env = { BROWSER_DRIVER: "playwright", PLAYWRIGHT_USER_DATA_DIR: ".context/athome-profile", PATH: "/bin" };
+  const env = { PLAYWRIGHT_HEADLESS: "0", PLAYWRIGHT_USER_DATA_DIR: ".context/athome-profile", PATH: "/bin" };
 
   it("hands the profile to at most one concurrently running collector", () => {
     // Chromium refuses a second instance on one user-data dir ("profile is already in use").
@@ -99,7 +99,7 @@ describe("persistent Playwright profile under parallel collection", () => {
   });
   it("keeps the rest of the environment and never mutates the parent's", () => {
     expect(stageEnv("athome", env)).toEqual(env);
-    expect(stageEnv("roomspot", env)).toEqual({ BROWSER_DRIVER: "playwright", PATH: "/bin" });
+    expect(stageEnv("roomspot", env)).toEqual({ PLAYWRIGHT_HEADLESS: "0", PATH: "/bin" });
     expect(stageEnv("nifty-soka", env)).not.toHaveProperty("PLAYWRIGHT_USER_DATA_DIR");
     expect(env.PLAYWRIGHT_USER_DATA_DIR).toBe(".context/athome-profile");
     expect(stageEnv("suumo", { PATH: "/bin" })).toEqual({ PATH: "/bin" });
