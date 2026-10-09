@@ -4,6 +4,7 @@
   "createdAt": "2026-10-04T06:34:49.603Z",
   "aliases": [
     "ad:athome|6992508090",
+    "ad:nifty|detail_52861c063045347c951f1ac9919f03cd",
     "ad:suumo|jnc_000107430393|bc_100520161623",
     "key:アバンサールプリモb|埼玉県川口市上青木西5|39.74",
     "room:suumo|jnc_000107430393|2DK|39.74"
@@ -19,9 +20,23 @@
       ],
       "sightings": [
         "2026-10-08T07:28:36.927Z",
-        "2026-10-08T12:14:30.102Z"
+        "2026-10-08T12:14:30.102Z",
+        "2026-10-09T01:41:04.479Z"
       ],
       "firstRecordedAt": "2026-10-08T07:38:37.255Z"
+    },
+    "nifty|detail_52861c063045347c951f1ac9919f03cd": {
+      "source": "nifty",
+      "ids": [
+        "nifty-52861c063045347c951f1ac9919f03cd"
+      ],
+      "urls": [
+        "https://myhome.nifty.com/rent/saitama/kawaguchishi_ct/detail_52861c063045347c951f1ac9919f03cd/"
+      ],
+      "sightings": [
+        "2026-10-09T01:40:35.167Z"
+      ],
+      "firstRecordedAt": "2026-10-09T01:43:39.168Z"
     },
     "suumo|jnc_000107430393|bc_100520161623": {
       "source": "suumo",
@@ -39,11 +54,11 @@
   },
   "facts": {
     "address": {
-      "chosen": "埼玉県川口市上青木西５丁目",
+      "chosen": "埼玉県川口市上青木西５丁目24-2",
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -66,20 +81,66 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": "埼玉県川口市上青木西５丁目24-2",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
+          }
+        }
+      ]
+    },
+    "building.features": {
+      "chosen": [
+        "駐車場あり",
+        "駐輪場あり",
+        "バス・トイレ別",
+        "フローリング"
+      ],
+      "chosenFrom": {
+        "source": "nifty",
+        "rule": "latest-evidence",
+        "observedAt": "2026-10-09T01:40:35.167Z"
+      },
+      "values": [
+        {
+          "value": [
+            "駐車場あり",
+            "駐輪場あり",
+            "バス・トイレ別",
+            "フローリング"
+          ],
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
     },
     "building.floor": {
-      "chosen": "2階",
+      "chosen": "1階",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-09-28T22:38:12.801Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -94,15 +155,51 @@
           "reportedAt": {
             "suumo|jnc_000107430393|bc_100520161623": "2026-09-28T23:34:10.000Z"
           }
+        },
+        {
+          "value": "1階",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
+          }
+        }
+      ]
+    },
+    "building.structure": {
+      "chosen": "木造",
+      "chosenFrom": {
+        "source": "nifty",
+        "rule": "latest-evidence",
+        "observedAt": "2026-10-09T01:40:35.167Z"
+      },
+      "values": [
+        {
+          "value": "木造",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
+          }
         }
       ]
     },
     "building.totalFloors": {
       "chosen": 2,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -112,20 +209,33 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 2,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
     },
     "builtYear": {
-      "chosen": 1992,
+      "chosen": 1993,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -148,10 +258,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 1993,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -159,9 +282,9 @@
     "city": {
       "chosen": "Kawaguchi",
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -184,10 +307,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": "Kawaguchi",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -195,9 +331,9 @@
     "costs.adminFeeYen": {
       "chosen": 3000,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -220,10 +356,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 3000,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -231,9 +380,9 @@
     "costs.depositYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -243,10 +392,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 0,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -254,9 +416,9 @@
     "costs.keyMoneyYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -266,10 +428,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 0,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -277,9 +452,9 @@
     "depositYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -302,10 +477,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 0,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -313,9 +501,9 @@
     "keyMoneyYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -338,10 +526,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 0,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -349,9 +550,9 @@
     "layout": {
       "chosen": "2DK",
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -374,20 +575,33 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": "2DK",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
     },
     "name": {
-      "chosen": "アバンサールプリモＢ",
+      "chosen": "アバンサールプリモB",
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -410,10 +624,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": "アバンサールプリモB",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -423,7 +650,7 @@
       "chosenFrom": {
         "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:41:04.479Z"
       },
       "values": [
         {
@@ -446,7 +673,7 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
@@ -454,28 +681,69 @@
         }
       ]
     },
+    "parking.available": {
+      "chosen": true,
+      "chosenFrom": {
+        "source": "nifty",
+        "rule": "latest-evidence",
+        "observedAt": "2026-10-09T01:40:35.167Z"
+      },
+      "values": [
+        {
+          "value": true,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
+          }
+        }
+      ]
+    },
+    "parking.raw": {
+      "chosen": "駐車場あり",
+      "chosenFrom": {
+        "source": "nifty",
+        "rule": "latest-evidence",
+        "observedAt": "2026-10-09T01:40:35.167Z"
+      },
+      "values": [
+        {
+          "value": "駐車場あり",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
+          }
+        }
+      ]
+    },
     "photos": {
       "chosen": [
         {
-          "kind": "photo",
-          "source": "athome",
-          "url": "https://www.athome.co.jp/image_files/path/pvMKh5eHVyQ2ivpQX-zvlQ=="
+          "kind": "exterior",
+          "source": "nifty",
+          "url": "https://image.homes.jp/smallimg/image.php?file=http%3A%2F%2Fimg.homes.jp%2F134680%2Frent%2F115946%2F2%2F1%2Fpyuk.jpg&width=180&height=180"
         },
         {
-          "kind": "photo",
-          "source": "athome",
-          "url": "https://www.athome.co.jp/image_files/path/4_Joi0bA_XI0PlziLcHHuA=="
-        },
-        {
-          "kind": "photo",
-          "source": "athome",
-          "url": "https://www.athome.co.jp/image_files/path/t2cA8yzXL-seYnym9vARMQ=="
+          "kind": "floorPlan",
+          "source": "nifty",
+          "url": "https://image.homes.jp/smallimg/image.php?file=http%3A%2F%2Fimg.homes.jp%2F134680%2Frent%2F115946%2F1%2F2%2Fsutf.jpg&width=180&height=180"
         }
       ],
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -530,10 +798,34 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T12:14:30.102Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T12:16:44.348Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T12:16:44.348Z"
+          }
+        },
+        {
+          "value": [
+            {
+              "kind": "exterior",
+              "source": "nifty",
+              "url": "https://image.homes.jp/smallimg/image.php?file=http%3A%2F%2Fimg.homes.jp%2F134680%2Frent%2F115946%2F2%2F1%2Fpyuk.jpg&width=180&height=180"
+            },
+            {
+              "kind": "floorPlan",
+              "source": "nifty",
+              "url": "https://image.homes.jp/smallimg/image.php?file=http%3A%2F%2Fimg.homes.jp%2F134680%2Frent%2F115946%2F1%2F2%2Fsutf.jpg&width=180&height=180"
+            }
+          ],
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -541,9 +833,9 @@
     "rent": {
       "chosen": 68000,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -566,10 +858,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 68000,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -577,9 +882,9 @@
     "sizeM2": {
       "chosen": 39.74,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-08T12:14:30.102Z"
+        "observedAt": "2026-10-09T01:40:35.167Z"
       },
       "values": [
         {
@@ -602,10 +907,23 @@
             "athome|6992508090"
           ],
           "firstObservedAt": "2026-10-08T07:28:36.927Z",
-          "lastObservedAt": "2026-10-08T12:14:30.102Z",
+          "lastObservedAt": "2026-10-09T01:41:04.479Z",
           "firstRecordedAt": "2026-10-08T07:38:37.255Z",
           "reportedAt": {
             "athome|6992508090": "2026-10-08T07:38:37.255Z"
+          }
+        },
+        {
+          "value": 39.74,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_52861c063045347c951f1ac9919f03cd"
+          ],
+          "firstObservedAt": "2026-10-09T01:40:35.167Z",
+          "lastObservedAt": "2026-10-09T01:40:35.167Z",
+          "firstRecordedAt": "2026-10-09T01:43:39.168Z",
+          "reportedAt": {
+            "nifty|detail_52861c063045347c951f1ac9919f03cd": "2026-10-09T01:43:39.168Z"
           }
         }
       ]
@@ -614,7 +932,8 @@
   "seenByBuilds": [
     "2026-09-28T22:38:12.801Z",
     "2026-10-08T07:28:36.927Z",
-    "2026-10-08T12:14:30.102Z"
+    "2026-10-08T12:14:30.102Z",
+    "2026-10-09T01:41:04.479Z"
   ],
   "events": [
     {
@@ -647,8 +966,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "suumo|jnc_000107430393|bc_100520161623",
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000107430393/?bc=100520161623",
-    "lastSeenAt": "2026-10-08T12:14:30.102Z",
-    "lastListedAt": "2026-10-08T12:14:30.102Z",
+    "lastSeenAt": "2026-10-09T01:41:04.479Z",
+    "lastListedAt": "2026-10-09T01:41:04.479Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -662,14 +981,23 @@
     "relistCount": 0,
     "sources": [
       "athome",
+      "nifty",
       "suumo"
     ],
     "ads": {
       "athome|6992508090": {
         "source": "athome",
         "firstSeenAt": "2026-10-08T07:28:36.927Z",
-        "lastSeenAt": "2026-10-08T12:14:30.102Z",
-        "lastListedAt": "2026-10-08T12:14:30.102Z",
+        "lastSeenAt": "2026-10-09T01:41:04.479Z",
+        "lastListedAt": "2026-10-09T01:41:04.479Z",
+        "goneSince": null,
+        "relistCount": 0
+      },
+      "nifty|detail_52861c063045347c951f1ac9919f03cd": {
+        "source": "nifty",
+        "firstSeenAt": "2026-10-09T01:40:35.167Z",
+        "lastSeenAt": "2026-10-09T01:40:35.167Z",
+        "lastListedAt": "2026-10-09T01:40:35.167Z",
         "goneSince": null,
         "relistCount": 0
       },
@@ -684,6 +1012,8 @@
     },
     "conflicts": [
       "address",
+      "building.floor",
+      "builtYear",
       "name",
       "notes",
       "photos"
