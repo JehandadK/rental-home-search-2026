@@ -208,14 +208,36 @@ signal for availability checks.
 - 基本情報: 築年, 建物種別/構造, 階建, 住所, 交通, 駐車場, 建物設備.
 - Rent context: city average, town average, cheapest and dearest town.
 
-### Rent-market pages (`…/rent/`)
-JavaScript-rendered tables, updated daily (「2026年10月04日更新」). Average rent of
-ads built in the last 20 years, excluding fees, from current CHINTAI ads.
-- `/rent/{pref}/`: per city (草加市 7.65万円, 川口市 8.65万円 on 2026-10-04).
-- `/{pref}/area/{city}/rent/`: per town (草加市: 34 towns, 北谷 5.80 → 八幡町 10.90万円).
-- `/{pref}/ensen/{line}/rent/`: per station.
-- Each narrows by layout or type: `/rent/2ldk/`, `/rent/kodate/`.
-- `/rent/{pref}/ensen/` gives ad counts per line (東武スカイツリーライン 37,596).
+### Rent-market pages (家賃相場, `…/rent/`): average rent by area
+These are the pages that give **average rent per city, town and station**.
+URLs come from `chintaiRentUrl()`. No collector reads them yet; see
+"Rent-average job (later)" in the plan.
+
+| Level | URL | Rows | Example (2026-10-04) |
+| --- | --- | --- | --- |
+| Cities of a prefecture | `/rent/{pref}/` | every city/ward | 草加市 7.65, 越谷市 8.20, 川口市 8.65万円 |
+| Towns of a city | `/{pref}/area/{city}/rent/` | towns with enough ads (草加市: 34 of 38) | 草加市: 北谷 5.80 → 八幡町 10.90万円 |
+| Stations of a line | `/{pref}/ensen/{line}/rent/` | stations of the line in that prefecture | 谷塚 8.30, 獨協大学前 7.90, 新田 7.90, 蒲生 8.20万円 |
+| One town or station | `/{pref}/area/{town}/rent/`, `/{pref}/ensen/{station}/rent/` | linked from the rows above (not loaded yet) | |
+| Any of the above, one layout or type | append `{layout}/` or `{type}/`: `1r`…`5ldk`, `mansion`, `apart`, `kodate` | same rows, narrowed | 草加市 2LDK: 高砂 15.70, 八幡町 13.50, 瀬崎 11.00万円 |
+| Lines of a prefecture | `/rent/{pref}/ensen/` | each line with its ad count, linking to its rent page | 東武スカイツリーライン (37,596件) |
+
+What the figure is, as the page states it:
+- Average **rent only** (管理費・駐車場代などを除く) of CHINTAI's **current** ads,
+  counting only buildings **built in the last 20 years** when no condition is set.
+- Recomputed **daily**; the page shows the date (「【2026年10月04日更新】」).
+- Areas with too few ads get no figure ("物件数が少ないときは…算出ができない").
+- Town rows also show a 「通常時との相場差額」 column (+0円 on every row seen).
+- Each row links to that area's own rent page and its list page, so a city page
+  is also a town index.
+- The page's narrowing form (こだわり: バス・トイレ別, 室内洗濯機置場, オートロック,
+  エアコン; 専有面積; 駅徒歩; 築年数) runs in JavaScript (`rentSubmit()`), not in
+  the path. Only the layout and type segments have URLs.
+- The tables are built by JavaScript after load, so read them in the headed
+  browser after rendering, not from the first HTML.
+
+Building pages repeat a short version: city average, town average, and the
+cheapest and dearest town in the city.
 
 ### Archive (`/archive/{pref}/area/{city}/`)
 Every building CHINTAI has ever listed in the city (草加市: 10,926, 547 pages of
@@ -279,9 +301,14 @@ keeps every observation and conflict; capture every field a page shows.
 5. **Availability.** A 404 with 「掲載は、終了しました」 is gone for that ad; the
    unit is gone when every ad for it is gone. Building pages list the current
    vacancies, so one building load checks several units.
-6. **Statistics jobs.** Daily rent pages per city (`/area/{city}/rent/` and its
-   layout variants) and per station; weekly archive sweep of each city for
-   building history.
+6. **Rent-average job (later; not built).** Once a day, load each target
+   city's town table (`/saitama/area/{city}/rent/`) and its family-layout
+   variants (`2k/` … `5ldk/`, `kodate/`), plus the 東武スカイツリーライン station
+   table (`/saitama/ensen/102082/rent/`). That is about 30 pages a day for the
+   three cities. Store each table as a dated observation (area code, layout or
+   type, average, the page's 更新 date), appended and never overwritten, so it
+   builds a per-town and per-station rent history. Weekly, sweep each city's
+   archive for building history.
 
 Volume for the three cities (estimate): about 50–80 list pages per full family-layout
 sweep (草加 2LDK alone is 4), plus details for new keys. At 8–14 s per page that is
