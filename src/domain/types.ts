@@ -241,6 +241,12 @@ export interface ListingAgency {
   phone: string | null;
   /** 宅建業 licence, e.g. "国土交通大臣(9)第3918号". */
   licence: string | null;
+  /**
+   * Derived, not printed on any page: set only in the web payload (a RoomSpot ad
+   * whose detail page is not read yet is always advertised by Polus's 中央ビル管理).
+   * Never stored; the detail-patch validators reject it.
+   */
+  inferred?: true;
 }
 
 /** Distance from a listing to one reference place. */

@@ -34,8 +34,11 @@ const BRANDS: readonly { brand: string; aliases: readonly string[]; label?: true
 const LEGAL_FORM = /株式会社|有限会社|合同会社|独立行政法人|\((?:株|有|同)\)/;
 const SPELLED_OUT: Record<string, string> = { "(株)": "株式会社", "(有)": "有限会社", "(同)": "合同会社" };
 const BRANCH_SUFFIX = "(?:店|営業所|支店|出張所|案内所|営業センター)";
-/** A place-name run (kanji/hiragana) ending in a branch suffix, at the end of a token. */
-const BRANCH_TAIL = new RegExp(`([\\p{Script=Han}\\p{Script=Hiragana}ヶ々]+${BRANCH_SUFFIX})$`, "u");
+/**
+ * A place-name run (kanji/hiragana) ending in a branch suffix, at the end of a token.
+ * Place names may put katakana ノ/ケ/ツ between kanji: 竹ノ塚, 鎌ケ谷, 一ツ木.
+ */
+const BRANCH_TAIL = new RegExp(`((?:[\\p{Script=Han}\\p{Script=Hiragana}ヶ々]|[ノケツ](?=\\p{Script=Han}))+${BRANCH_SUFFIX})$`, "u");
 /** Business words that end a company name, not begin a branch ("三和不動産越谷店" → "越谷店"). */
 const BUSINESS_WORD = /^.*(?:不動産|住宅|建物|管理|建設|商事|開発|地所|興業|企画|建託)/u;
 

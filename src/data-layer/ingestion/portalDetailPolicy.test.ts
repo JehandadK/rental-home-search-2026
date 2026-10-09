@@ -77,6 +77,18 @@ describe("AtHome / RoomSpot agency detail patches", () => {
     expect(addAgency({ ...row("1"), agency: store().name }, withStore())).toEqual(withStore());
   });
 
+  it("lets a newer parser re-derive the split of the same printed store, but never a printed value", () => {
+    const name = "株式会社中央ビル管理 竹ノ塚営業所";
+    const misread = store({ name, branch: "塚営業所", phone: "0120-000-000" });
+    const reparsed = store({ name, branch: "竹ノ塚営業所", phone: "0120-111-111" });
+    expect(addAgency({ ...row("1"), agency: name, agencyInfo: misread }, withStore(reparsed)))
+      .toEqual({ agency: name, agencyInfo: { ...misread, branch: "竹ノ塚営業所" } });
+    // A different printed address keeps the stored city it was derived from.
+    const moved = store({ name, branch: "竹ノ塚営業所", address: "東京都葛飾区1", city: "葛飾区" });
+    expect(addAgency({ ...row("1"), agency: name, agencyInfo: misread }, withStore(moved))!.agencyInfo)
+      .toMatchObject({ address: misread.address, city: misread.city, branch: "竹ノ塚営業所" });
+  });
+
   it("lets an older capture, or a newer parser's reading of it, fill a store that is still missing", async () => {
     await seed([row("1")], "roomspot", { detailObservedAtByUrl: { [row("1").url!]: laterAt } });
     // The first parser found no store in the capture; a later parser reads the same capture.
@@ -134,7 +146,7 @@ describe("AtHome / RoomSpot agency detail patches", () => {
   });
 
   it.each([
-    ["an unknown parser version", (batch: DetailPatchBatch) => { batch.scraper.parserVersion = "2"; }, "parserVersion"],
+    ["an unknown parser version", (batch: DetailPatchBatch) => { batch.scraper.parserVersion = "3"; }, "parserVersion"],
     ["another portal's URL", (batch: DetailPatchBatch) => {
       const url = "https://www.athome.co.jp/chintai/1/";
       batch.scope = { ...batch.scope, urls: [url] };

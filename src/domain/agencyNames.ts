@@ -9,7 +9,7 @@
  *       · branch 北越谷 → station 北越谷 → Koshigaya (越谷市)
  */
 import type { ReferenceCity } from "./referenceData";
-import type { ListingAgency } from "./types";
+import type { ListingAgency, RawListing } from "./types";
 
 /** Official English names of chains and franchises (keys as stored in `brand`). */
 const BRAND_EN: Record<string, string> = {
@@ -238,6 +238,22 @@ export interface AgencyIdentity {
 type StoreFields = Pick<ListingAgency, "name" | "brand" | "company" | "branch"> & Partial<Pick<ListingAgency, "address">>;
 
 /** The agency a store belongs to, and the key its stores group under: its company, else its brand or name. */
+/**
+ * RoomSpot is Polus's own site: all 577 RoomSpot ads read by 2026-10-09 were
+ * advertised by 株式会社中央ビル管理, from 18 different offices that the listing
+ * itself does not reveal. Until an ad's page is read, the company is known, the
+ * office is not.
+ */
+const ROOMSPOT_ADVERTISER: ListingAgency = { name: "株式会社中央ビル管理", brand: "中央ビル管理", company: "株式会社中央ビル管理",
+  branch: null, address: null, prefecture: null, city: null, phone: null, licence: "国土交通大臣(9)第3918号", inferred: true };
+
+/** The advertiser a listing implies when no page has named its store; null when nothing can be inferred. */
+export function inferredAgency(listing: Pick<RawListing, "source" | "sourceListings" | "agency" | "agencyInfo">): ListingAgency | null {
+  if (listing.agency != null || listing.agencyInfo != null) return null;
+  const onRoomspot = listing.source === "roomspot" || listing.sourceListings?.some((reference) => reference.source === "roomspot");
+  return onRoomspot ? { ...ROOMSPOT_ADVERTISER } : null;
+}
+
 export function agencyOf(store: Pick<ListingAgency, "name" | "brand" | "company">): { agency: string; groupKey: string } {
   const agency = store.company ? companyCore(store.company) : (store.brand ?? store.name);
   return { agency, groupKey: agency.normalize("NFKC").replace(/\s+/g, "") };

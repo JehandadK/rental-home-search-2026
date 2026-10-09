@@ -19,6 +19,9 @@ describe("splitAgencyName", () => {
     ["株式会社三和不動産越谷店", "三和不動産", "株式会社三和不動産", "越谷店"],
     ["有限会社マルフク不動産", "マルフク不動産", "有限会社マルフク不動産", null],
     ["AnRe不動産", "AnRe不動産", null, null],
+    // Place names with a katakana ノ/ケ between kanji (RoomSpot, 2026-10-09).
+    ["株式会社中央ビル管理 竹ノ塚営業所", "中央ビル管理", "株式会社中央ビル管理", "竹ノ塚営業所"],
+    ["(株)ハウスパートナー鎌ケ谷店", "ハウスパートナー", "株式会社ハウスパートナー", "鎌ケ谷店"],
     // Trades ending in 店 are company names, not branches.
     ["株式会社中村工務店", "中村工務店", "株式会社中村工務店", null],
   ])("%s", (name, brand, company, branch) => {

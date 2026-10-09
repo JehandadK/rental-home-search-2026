@@ -22,6 +22,7 @@ import { normalizeListingAttributes } from "../src/domain/listingAttributes";
 import { deduplicateListings } from "../src/domain/listingDedup";
 import { packListings } from "../src/domain/webPayload";
 import { withAvailability } from "../src/domain/availability";
+import { inferredAgency } from "../src/domain/agencyNames";
 import { readAvailability } from "../src/storage/json/availabilityStore";
 import { toListingAgency } from "../src/collectors/shared/agency";
 
@@ -64,7 +65,8 @@ const compact = uniqueListings.map((listing) => {
     ...attribute,
     raw: attribute.raw === attribute.labelJa ? "" : attribute.raw,
   }));
-  const store = agencyInfo ?? (agency ? toListingAgency({ name: agency }) : null);
+  // A RoomSpot ad not read yet: its company is known (inferredAgency), its office is not.
+  const store = agencyInfo ?? (agency ? toListingAgency({ name: agency }) : inferredAgency(listing));
   return { ...webListing, ...(store ? { agencyInfo: store } : {}), attributes };
 });
 

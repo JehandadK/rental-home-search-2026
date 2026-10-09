@@ -149,11 +149,12 @@ export function areaOptions(
 /** Filter key for a whole brand, one agency (company) or one store. */
 export const agencyKey = (kind: "brand" | "agency" | "store", name: string): string => `${kind}:${name}`;
 
-function storeFields(listing: EnrichedListing): Pick<ListingAgency, "name" | "brand" | "company" | "branch" | "address"> | null {
+function storeFields(listing: EnrichedListing): Pick<ListingAgency, "name" | "brand" | "company" | "branch" | "address" | "inferred"> | null {
   const name = listing.agencyInfo?.name ?? listing.agency;
   if (!name) return null;
   const info = listing.agencyInfo;
-  return { name, brand: info?.brand ?? null, company: info?.company ?? null, branch: info?.branch ?? null, address: info?.address ?? null };
+  return { name, brand: info?.brand ?? null, company: info?.company ?? null, branch: info?.branch ?? null, address: info?.address ?? null,
+    ...(info?.inferred ? { inferred: true as const } : {}) };
 }
 
 /** The agency keys a listing matches: its store, its company and its brand, when known. */
@@ -161,7 +162,8 @@ export function listingAgencyKeys(listing: EnrichedListing): string[] {
   const store = storeFields(listing);
   if (!store) return [];
   const { agency, groupKey } = agencyOf(store);
-  return [agencyKey("store", store.name), agencyKey("agency", groupKey),
+  // An inferred advertiser names a company, never one of its stores.
+  return [...(store.inferred ? [] : [agencyKey("store", store.name)]), agencyKey("agency", groupKey),
     ...(store.brand && store.brand !== agency ? [agencyKey("brand", store.brand)] : [])];
 }
 
@@ -213,6 +215,7 @@ export function agencyOptions(listings: readonly EnrichedListing[], gazetteer: A
     let agency = brand.agencies.find((option) => option.key === key);
     if (!agency) brand.agencies.push(agency = { key, agency: identity.agency, agencyEn: identity.agencyEn, count: 0, stores: [] });
     agency.count++;
+    if (store.inferred) continue;
     let option = agency.stores.find((candidate) => candidate.name === store.name);
     if (!option) agency.stores.push(option = { key: agencyKey("store", store.name), name: store.name, branch: identity.branch,
       place: identity.place?.name ?? null, city: identity.city, count: 0 });

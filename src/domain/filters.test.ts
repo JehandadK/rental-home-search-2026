@@ -11,7 +11,7 @@ import {
   matchesListing,
   type ListingFilters,
 } from "./filters";
-import { buildAgencyGazetteer } from "./agencyNames";
+import { buildAgencyGazetteer, inferredAgency } from "./agencyNames";
 import type { EnrichedListing } from "./types";
 
 const make = (over: Partial<EnrichedListing>): EnrichedListing => ({
@@ -196,6 +196,22 @@ describe("agency filter", () => {
   it("excludes them while keeping listings with no known agency", () => {
     expect(shown({ agencies: [agencyKey("agency", "クイックホーム")], agencyMode: "exclude" })).toEqual(["c", "d", "e"]);
     expect(shown({ agencyMode: "exclude" })).toEqual(["a", "b", "c", "d", "e"]);
+  });
+
+  it("counts an unread RoomSpot ad under 中央ビル管理, never under one of its offices", () => {
+    const read = make({ id: "r1", source: "roomspot", agencyInfo: info("株式会社中央ビル管理 越谷営業所", "中央ビル管理", "株式会社中央ビル管理", "越谷営業所", null) });
+    const unread = make({ id: "r2", source: "roomspot" });
+    const web = make({ id: "r2", source: "roomspot", agencyInfo: inferredAgency(unread)! });
+    expect(web.agencyInfo).toMatchObject({ company: "株式会社中央ビル管理", branch: null, inferred: true });
+    const both = [read, web];
+    const pick = (key: string) => both.filter((listing) => matchesListing(listing, { ...EMPTY_FILTERS, agencies: [key] })).map((listing) => listing.id);
+    expect(pick(agencyKey("agency", "中央ビル管理"))).toEqual(["r1", "r2"]);
+    expect(pick(agencyKey("store", "株式会社中央ビル管理"))).toEqual([]);
+    expect(agencyOptions(both, gazetteer)[0].agencies[0]).toMatchObject({ count: 2, stores: [expect.objectContaining({ name: "株式会社中央ビル管理 越谷営業所", count: 1 })] });
+    // A store a page named, or an ad on another portal, is never replaced by a guess.
+    expect(inferredAgency(read)).toBeNull();
+    expect(inferredAgency(make({ source: "suumo" }))).toBeNull();
+    expect(inferredAgency(make({ source: "suumo", sourceListings: [{ source: "roomspot", id: "x", url: "https://www.roomspot.net/rent/1" }] }))).toMatchObject({ inferred: true });
   });
 
   it("lists chains with their agencies and where each store is, then independent agencies", () => {

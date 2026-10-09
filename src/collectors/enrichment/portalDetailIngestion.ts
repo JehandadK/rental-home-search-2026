@@ -12,7 +12,8 @@ import { classifyAdVisit } from "../availability/classify";
 import { parseRoomspotAgency } from "../roomspot/roomspot";
 
 /** Bump when a parser reads more from the same capture, so a cached capture is a new batch, not a replay conflict. */
-export const PORTAL_DETAIL_PARSER_VERSION = "1";
+// 2: branch names with a katakana ノ/ケ/ツ between kanji (竹ノ塚営業所, 鎌ケ谷店).
+export const PORTAL_DETAIL_PARSER_VERSION = "2";
 
 interface PortalDetailSite {
   host: string;

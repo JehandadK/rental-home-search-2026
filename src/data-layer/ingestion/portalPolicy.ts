@@ -116,7 +116,7 @@ export const athomeSourcePolicy: SourcePolicy = {
   host: "www.athome.co.jp",
   listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
   // Detail pages (掲載不動産会社) only add the agency store the list pages leave out.
-  detailPatches: { producer: "athome-detail", parserVersions: ["1"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
+  detailPatches: { producer: "athome-detail", parserVersions: ["1", "2"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
   portalDiscovery: {
     keys: (row) => portalDiscoveryKeys("athome", row),
     provenanceCity: (city) => new URL(city.url).pathname.split("/")[3],
@@ -129,7 +129,7 @@ export const roomspotSourcePolicy: SourcePolicy = {
   host: "www.roomspot.net",
   listings: { prepare: preparePortalBatch, exactUrlDiscovery: false },
   // Detail pages (広告主情報) only add the agency store the list pages leave out.
-  detailPatches: { producer: "roomspot-detail", parserVersions: ["1"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
+  detailPatches: { producer: "roomspot-detail", parserVersions: ["1", "2"], validate: validateAgencyDetailPatch, prepare: preparePortalDetailBatch },
   portalDiscovery: {
     keys: (row) => portalDiscoveryKeys("roomspot", row),
     provenanceCity: (city) => city.label,
