@@ -7,7 +7,13 @@ import { ListingIngestionService } from "../../data-layer/ingestion/service";
 import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
 import { atomicWriteJson, JsonSourceStore } from "../../storage/json/dataStore";
 import { captureKey } from "../shared/captureStore";
-import { runDetailEnrichment, type DetailEnrichmentDependencies } from "./detailEnrichmentRunner";
+import { enrichDetailsCli, runDetailEnrichment, type DetailEnrichmentDependencies } from "./detailEnrichmentRunner";
+
+// The CLI loads pages through the headed browser; offline, it gets the test's fetch.
+const browser = vi.hoisted(() => ({ fetch: undefined as unknown as typeof fetch }));
+vi.mock("../shared/browserFetch", () => ({
+  createBrowserFetch: () => ({ fetch: (...args: Parameters<typeof fetch>) => browser.fetch(...args), close: async () => {} }),
+}));
 
 const now = "2026-09-25T00:00:00.000Z", capturedAt = "2026-09-24T00:00:00.000Z";
 const html = '<table><tr><th>駐車場</th><td>敷地内6600円</td></tr><tr><th>契約期間</th><td>普通借家2年</td></tr></table><ul class="inline_list"><li>都市ガス</li></ul>';
@@ -56,12 +62,40 @@ describe("detail enrichment collector (offline)", () => {
     expect(JSON.parse(await readFile(pathFor(rows[0].url!), "utf8"))).toMatchObject({ html, capturedAt: now });
   });
 
-  it("reports an ended ad (404), keeps going, and waits a week before retrying it", async () => {
+  it("reports an ended ad (404) as an observation, not a failure, keeps going, and waits a week before retrying it", async () => {
     const rows = [row("a"), row("b")]; await seed(rows);
     fetchMock.mockResolvedValueOnce(new Response("moved", { status: 404 })).mockResolvedValueOnce(new Response(html));
     const result = await runDetailEnrichment(["--limit", "10"], dependencies);
-    expect(result).toMatchObject({ requests: 2, applied: 1, failed: 1, ended: [{ url: rows[0].url, checkedAt: now }] });
+    expect(result).toMatchObject({ requests: 2, applied: 1, failed: 0, ended: [{ url: rows[0].url, checkedAt: now }] });
     expect((await queue())[0]).toMatchObject({ error: "HTTP 404", retryAfter: new Date(Date.parse(now) + 7 * 86400000).toISOString() });
+  });
+
+  describe("CLI exit code", () => {
+    let exitCode: typeof process.exitCode;
+    beforeEach(() => { exitCode = process.exitCode; process.exitCode = undefined; browser.fetch = fetchMock; vi.useFakeTimers({ toFake: ["Date"], now: new Date(now) }); });
+    afterEach(() => { process.exitCode = exitCode; vi.useRealTimers(); });
+    const cli = async (onEnded = vi.fn(async () => {})) => {
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await enrichDetailsCli(["--limit", "10"], { dataDir: root, client }, onEnded);
+      return { onEnded, summary: log.mock.calls.map((call) => String(call[0])).find((line) => line.startsWith("Details:")) };
+    };
+
+    it("succeeds when the only unsuccessful pages are ended ads, recording them and naming them in the summary", async () => {
+      const rows = [row("a"), row("b")]; await seed(rows); await cache(rows[1].url!);
+      fetchMock.mockResolvedValueOnce(new Response("moved", { status: 404 }));
+      const { onEnded, summary } = await cli();
+      expect(onEnded).toHaveBeenCalledWith([{ url: rows[0].url, checkedAt: now }]);
+      expect(summary).toBe("Details: 1/10 requests; 1 cache replays; 1 applied; 0 failures; 1 ended ads; queue retained (2 URLs).");
+      expect(process.exitCode).toBeUndefined();
+    });
+
+    it("exits 2 on a real failure (throttle) even alongside ended ads", async () => {
+      await seed([row("a"), row("b"), row("c")]);
+      fetchMock.mockResolvedValueOnce(new Response("moved", { status: 404 })).mockResolvedValueOnce(new Response("throttled", { status: 429 }));
+      const { summary } = await cli();
+      expect(summary).toContain("1 failures; 1 ended ads;");
+      expect(process.exitCode).toBe(2);
+    });
   });
 
   it("retains a valid capture/checkpoint when a later response trips the circuit breaker", async () => {

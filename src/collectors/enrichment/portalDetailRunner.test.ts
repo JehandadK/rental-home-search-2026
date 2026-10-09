@@ -8,7 +8,7 @@ import { JsonListingRepository } from "../../storage/json/jsonListingRepository"
 import { JsonSourceStore } from "../../storage/json/dataStore";
 import { trackingKey } from "../../domain/listingIdentity";
 import { BrowserUnavailableError } from "../shared/browserErrors";
-import { loadDetailsAfterList, portalDetailCapturePath, portalDetailQueuePath, runPortalDetails, type PortalDetailDependencies } from "./portalDetailRunner";
+import { loadDetailsAfterList, portalDetailCapturePath, portalDetailsCli, portalDetailQueuePath, runPortalDetails, type PortalDetailDependencies } from "./portalDetailRunner";
 import { classifyPortalDetailPage, portalDetailBatch, type PortalDetailCapture, type PortalDetailPage } from "./portalDetailIngestion";
 
 const now = "2026-10-08T00:00:00.000Z", listedAt = "2026-10-01T00:00:00.000Z";
@@ -129,6 +129,23 @@ describe("AtHome / RoomSpot detail loading (offline)", () => {
     load.mockReset();
     expect(await runPortalDetails(["--limit", "10"], dependencies)).toMatchObject({ requests: 0, reused: 0, applied: 0 });
     expect(load).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["only ended ads", [page(urlOf("1"), "<p>この物件は掲載終了しました</p>", { status: 404, title: "掲載終了" })], undefined, "0 failures; 1 ended ads;"],
+    ["a verification page", [page(urlOf("1"), "<p>?</p>", { title: "認証" })], 2, "1 failures; 0 ended ads;"],
+  ])("detail:<source> exits 2 only for real failures, not ended ads: %s", async (_, pages, code, counts) => {
+    await seed([row("1")]);
+    for (const loaded of pages) load.mockResolvedValueOnce(loaded);
+    const exitCode = process.exitCode; process.exitCode = undefined;
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    // The CLI waits between pages with the real clock; offline there is nothing to wait for.
+    vi.spyOn(globalThis, "setTimeout").mockImplementation(((resolve: () => void) => { resolve(); return 0; }) as unknown as typeof setTimeout);
+    try {
+      await portalDetailsCli(["--limit", "10"], { ...dependencies, onEnded: vi.fn(async () => {}) });
+      expect(process.exitCode).toBe(code);
+    } finally { process.exitCode = exitCode; }
+    expect(log).toHaveBeenCalledWith(expect.stringContaining(counts));
   });
 
   it("backs off a page that failed to load, and stops after repeated load errors", async () => {
