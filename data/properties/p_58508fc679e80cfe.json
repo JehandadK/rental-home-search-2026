@@ -4,7 +4,9 @@
   "createdAt": "2026-10-10T02:40:53.271Z",
   "aliases": [
     "ad:athome|1073213997",
+    "ad:athome|1110508820",
     "ad:roomspot|1139288674810000291788",
+    "ad:suumo|jnc_000110372978|bc_100475433844",
     "ad:suumo|jnc_000110372978|bc_100531105738",
     "key:サンリリオ|埼玉県越谷市越ヶ谷5|39.1",
     "room:suumo|jnc_000110372978|2K|39.10"
@@ -19,9 +21,23 @@
         "https://www.athome.co.jp/chintai/1073213997/"
       ],
       "sightings": [
-        "2026-10-10T02:38:20.643Z"
+        "2026-10-10T02:38:20.643Z",
+        "2026-10-10T11:30:27.397Z"
       ],
       "firstRecordedAt": "2026-10-10T02:40:53.271Z"
+    },
+    "athome|1110508820": {
+      "source": "athome",
+      "ids": [
+        "athome-1110508820"
+      ],
+      "urls": [
+        "https://www.athome.co.jp/chintai/1110508820/"
+      ],
+      "sightings": [
+        "2026-10-10T11:30:27.397Z"
+      ],
+      "firstRecordedAt": "2026-10-10T11:34:15.535Z"
     },
     "roomspot|1139288674810000291788": {
       "source": "roomspot",
@@ -33,9 +49,23 @@
       ],
       "sightings": [
         "2026-10-10T02:38:02.287Z",
-        "2026-10-10T02:42:05.552Z"
+        "2026-10-10T02:42:05.552Z",
+        "2026-10-10T11:29:41.935Z"
       ],
       "firstRecordedAt": "2026-10-10T02:42:45.081Z"
+    },
+    "suumo|jnc_000110372978|bc_100475433844": {
+      "source": "suumo",
+      "ids": [
+        "suumo-サンリリオ-2K-95000"
+      ],
+      "urls": [
+        "https://suumo.jp/chintai/jnc_000110372978/?bc=100475433844"
+      ],
+      "sightings": [
+        "2026-10-10T11:30:01.248Z"
+      ],
+      "firstRecordedAt": "2026-10-10T11:34:15.535Z"
     },
     "suumo|jnc_000110372978|bc_100531105738": {
       "source": "suumo",
@@ -53,38 +83,43 @@
   },
   "facts": {
     "address": {
-      "chosen": "埼玉県越谷市越ヶ谷５丁目4-61",
+      "chosen": "埼玉県越谷市越ヶ谷５丁目",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": "埼玉県越谷市越ヶ谷５丁目",
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": "埼玉県越谷市越ヶ谷５",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "埼玉県越谷市越ヶ谷５丁目4-61",
@@ -93,7 +128,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -102,38 +137,43 @@
       ]
     },
     "advertisedStation": {
-      "chosen": "東武スカイツリーライン越谷駅",
+      "chosen": "越谷駅",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": "越谷駅",
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": "越谷駅",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "東武スカイツリーライン越谷駅",
@@ -142,7 +182,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -155,7 +195,7 @@
       "chosenFrom": {
         "source": "roomspot",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:29:41.935Z"
       },
       "values": [
         {
@@ -165,7 +205,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -188,7 +228,7 @@
       "chosenFrom": {
         "source": "roomspot",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:29:41.935Z"
       },
       "values": [
         {
@@ -208,7 +248,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -219,23 +259,26 @@
     "building.floor": {
       "chosen": "3階",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:01.248Z"
       },
       "values": [
         {
           "value": "3階",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "3階",
@@ -244,7 +287,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -257,20 +300,22 @@
       "chosenFrom": {
         "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:20.643Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 3,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         }
       ]
@@ -278,36 +323,41 @@
     "builtYear": {
       "chosen": 2020,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 2020,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": 2019,
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 2020,
@@ -316,7 +366,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -327,36 +377,41 @@
     "city": {
       "chosen": "Koshigaya",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": "Koshigaya",
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": "Koshigaya",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "Koshigaya",
@@ -365,7 +420,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -376,36 +431,41 @@
     "costs.adminFeeYen": {
       "chosen": 6000,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 6000,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": 6000,
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 6000,
@@ -414,7 +474,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -425,22 +485,24 @@
     "costs.depositYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 0,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
@@ -450,7 +512,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -461,22 +523,24 @@
     "costs.keyMoneyYen": {
       "chosen": 95000,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 95000,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
@@ -486,7 +550,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -497,36 +561,41 @@
     "depositYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 0,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": 0,
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 0,
@@ -535,7 +604,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -546,36 +615,41 @@
     "keyMoneyYen": {
       "chosen": 95000,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 95000,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": 95000,
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 95000,
@@ -584,7 +658,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -595,36 +669,41 @@
     "layout": {
       "chosen": "2K",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": "2K",
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": "2K",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "2K",
@@ -633,7 +712,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -642,38 +721,43 @@
       ]
     },
     "name": {
-      "chosen": "サンリリオ 3階",
+      "chosen": "サンリリオ",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": "サンリリオ",
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": "サンリリオ",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "サンリリオ 3階",
@@ -682,7 +766,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -691,38 +775,43 @@
       ]
     },
     "notes": {
-      "chosen": "2020年9月（築6年）・3階・管理費6,000円",
+      "chosen": "賃貸アパート 3階建2020年9月(築6年2ヶ月)・管理費6,000円",
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": "賃貸アパート 3階建2020年9月(築6年2ヶ月)・管理費6,000円",
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": "築7年・3階・管理費込",
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": "2020年9月（築6年）・3階・管理費6,000円",
@@ -731,7 +820,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -742,20 +831,25 @@
     "photos": {
       "chosen": [
         {
-          "kind": "exterior",
-          "source": "roomspot",
-          "url": "https://property.es-img.jp/rent/img/1139288674810000291788/0000000001139288674810000291788_10.jpg?iid=661264322"
+          "kind": "photo",
+          "source": "athome",
+          "url": "https://www.athome.co.jp/image_files/path/sbAT3fuLsG9H7epFjhKmmQ=="
         },
         {
-          "kind": "floorPlan",
-          "source": "roomspot",
-          "url": "https://property.es-img.jp/rent/img/1139288674810000291788/0000000001139288674810000291788_1.jpg?iid=4205188981"
+          "kind": "photo",
+          "source": "athome",
+          "url": "https://www.athome.co.jp/image_files/path/hUwy-qj-QbyuFAqpS7-XBg=="
+        },
+        {
+          "kind": "photo",
+          "source": "athome",
+          "url": "https://www.athome.co.jp/image_files/path/sbAT3fuLsG_saFcky07-wA=="
         }
       ],
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
@@ -781,7 +875,7 @@
             "athome|1073213997"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
             "athome|1073213997": "2026-10-10T02:40:53.271Z"
@@ -805,7 +899,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -816,36 +910,41 @@
     "rent": {
       "chosen": 101000,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 101000,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": 101000,
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 101000,
@@ -854,7 +953,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -865,36 +964,41 @@
     "sizeM2": {
       "chosen": 39.1,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 39.1,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
           "value": 39.1,
           "source": "suumo",
           "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844",
             "suumo|jnc_000110372978|bc_100531105738"
           ],
           "firstObservedAt": "2026-10-10T02:38:15.313Z",
-          "lastObservedAt": "2026-10-10T02:38:15.313Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+            "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z",
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 39.1,
@@ -903,7 +1007,7 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
@@ -914,22 +1018,24 @@
     "stationWalkMin": {
       "chosen": 10,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-10T02:38:02.287Z"
+        "observedAt": "2026-10-10T11:30:27.397Z"
       },
       "values": [
         {
           "value": 10,
           "source": "athome",
           "adKeys": [
-            "athome|1073213997"
+            "athome|1073213997",
+            "athome|1110508820"
           ],
           "firstObservedAt": "2026-10-10T02:38:20.643Z",
-          "lastObservedAt": "2026-10-10T02:38:20.643Z",
+          "lastObservedAt": "2026-10-10T11:30:27.397Z",
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
-            "athome|1073213997": "2026-10-10T02:40:53.271Z"
+            "athome|1073213997": "2026-10-10T02:40:53.271Z",
+            "athome|1110508820": "2026-10-10T11:34:15.535Z"
           }
         },
         {
@@ -943,7 +1049,8 @@
           "firstRecordedAt": "2026-10-10T02:40:53.271Z",
           "reportedAt": {
             "suumo|jnc_000110372978|bc_100531105738": "2026-10-10T02:40:53.271Z"
-          }
+          },
+          "observedBefore": "2026-10-10T11:31:44.396Z"
         },
         {
           "value": 10,
@@ -952,17 +1059,31 @@
             "roomspot|1139288674810000291788"
           ],
           "firstObservedAt": "2026-10-10T02:38:02.287Z",
-          "lastObservedAt": "2026-10-10T02:38:02.287Z",
+          "lastObservedAt": "2026-10-10T11:29:41.935Z",
           "firstRecordedAt": "2026-10-10T02:42:45.081Z",
           "reportedAt": {
             "roomspot|1139288674810000291788": "2026-10-10T02:42:45.081Z"
+          }
+        },
+        {
+          "value": 10,
+          "source": "suumo",
+          "adKeys": [
+            "suumo|jnc_000110372978|bc_100475433844"
+          ],
+          "firstObservedAt": "2026-10-10T11:30:01.248Z",
+          "lastObservedAt": "2026-10-10T11:30:01.248Z",
+          "firstRecordedAt": "2026-10-10T11:34:15.535Z",
+          "reportedAt": {
+            "suumo|jnc_000110372978|bc_100475433844": "2026-10-10T11:34:15.535Z"
           }
         }
       ]
     }
   },
   "seenByBuilds": [
-    "2026-10-10T02:38:20.643Z"
+    "2026-10-10T02:38:20.643Z",
+    "2026-10-10T11:30:27.397Z"
   ],
   "events": [
     {
@@ -987,6 +1108,18 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110372978|bc_100531105738|2026-10-10T11:31:44.396Z",
+      "type": "ad.superseded",
+      "at": "2026-10-10T11:31:44.396Z",
+      "recordedAt": "2026-10-10T11:34:15.535Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110372978|bc_100531105738",
+      "url": "https://suumo.jp/chintai/jnc_000110372978/?bc=100531105738",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -995,8 +1128,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "roomspot|1139288674810000291788",
     "firstSeenUrl": "https://www.roomspot.net/rent/1139288674810000291788",
-    "lastSeenAt": "2026-10-10T02:42:05.552Z",
-    "lastListedAt": "2026-10-10T02:42:05.552Z",
+    "lastSeenAt": "2026-10-10T11:30:27.397Z",
+    "lastListedAt": "2026-10-10T11:30:27.397Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -1017,16 +1150,32 @@
       "athome|1073213997": {
         "source": "athome",
         "firstSeenAt": "2026-10-10T02:38:20.643Z",
-        "lastSeenAt": "2026-10-10T02:38:20.643Z",
-        "lastListedAt": "2026-10-10T02:38:20.643Z",
+        "lastSeenAt": "2026-10-10T11:30:27.397Z",
+        "lastListedAt": "2026-10-10T11:30:27.397Z",
+        "goneSince": null,
+        "relistCount": 0
+      },
+      "athome|1110508820": {
+        "source": "athome",
+        "firstSeenAt": "2026-10-10T11:30:27.397Z",
+        "lastSeenAt": "2026-10-10T11:30:27.397Z",
+        "lastListedAt": "2026-10-10T11:30:27.397Z",
         "goneSince": null,
         "relistCount": 0
       },
       "roomspot|1139288674810000291788": {
         "source": "roomspot",
         "firstSeenAt": "2026-10-10T02:38:02.287Z",
-        "lastSeenAt": "2026-10-10T02:42:05.552Z",
-        "lastListedAt": "2026-10-10T02:42:05.552Z",
+        "lastSeenAt": "2026-10-10T11:29:41.935Z",
+        "lastListedAt": "2026-10-10T11:29:41.935Z",
+        "goneSince": null,
+        "relistCount": 0
+      },
+      "suumo|jnc_000110372978|bc_100475433844": {
+        "source": "suumo",
+        "firstSeenAt": "2026-10-10T11:30:01.248Z",
+        "lastSeenAt": "2026-10-10T11:30:01.248Z",
+        "lastListedAt": "2026-10-10T11:30:01.248Z",
         "goneSince": null,
         "relistCount": 0
       },

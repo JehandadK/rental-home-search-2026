@@ -514,6 +514,17 @@ removed, and every collector now uses the headed Playwright browser.
   all geocoded; none SOLD.
 - **944 tests and typecheck pass.**
 
+## 2026-10-10 evening recent-listing refresh (Playwright)
+
+- Run `2026-10-10T11-29-26-315Z-a637c994`, nine hours after the morning one.
+  AtHome showed its verification page once; it was passed by hand. Source
+  additions: SUUMO **36**, AtHome **56**, Nifty **6** (2/2/1/1), RoomSpot **4**
+  (Soka 3, Koshigaya 1); 10 RoomSpot agency stores added.
+- RoomSpot Katsushika failed on page 2 a third time; re-ran per city as before.
+- **35 newly tracked properties** (Soka 6, Koshigaya 12, Katsushika 17); 7 ≥70㎡,
+  19 at ≤¥150,000 and ≥50㎡. **5320** archival rows, all geocoded; none SOLD.
+- **944 tests and typecheck pass.**
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
