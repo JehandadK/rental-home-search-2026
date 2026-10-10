@@ -1549,6 +1549,20 @@
           "nifty|detail_7a56a3be64c63a3f9c1c03e2c76905a0"
         ]
       }
+    },
+    {
+      "id": "ad.checked|ur|50_4020-000030303|2026-10-10T02:38:37.681Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-10T02:38:37.681Z",
+      "recordedAt": "2026-10-10T02:40:53.271Z",
+      "source": "ur",
+      "adKey": "ur|50_4020-000030303",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_4020_room.html?JKSS=000030303",
+      "data": {
+        "state": "gone",
+        "evidence": "UR detail_room returned no room (no longer advertised)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1559,11 +1573,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/kawaguchishi_ct/detail_7a56a3be64c63a3f9c1c03e2c76905a0/",
     "lastSeenAt": "2026-10-09T06:25:32.078Z",
     "lastListedAt": "2026-10-09T06:25:32.078Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-09T06:25:32.078Z",
+      "before": "2026-10-10T02:38:37.681Z"
+    },
+    "daysOnMarket": {
+      "min": 18.8,
+      "max": 19.6
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-23T05:41:20.846Z",
@@ -1597,7 +1617,7 @@
         "firstSeenAt": "2026-10-09T06:02:38.953Z",
         "lastSeenAt": "2026-10-09T06:25:32.078Z",
         "lastListedAt": "2026-10-09T06:25:32.078Z",
-        "goneSince": null,
+        "goneSince": "2026-10-10T02:38:37.681Z",
         "relistCount": 0
       }
     },
