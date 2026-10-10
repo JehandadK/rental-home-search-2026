@@ -66,6 +66,15 @@ export class StagedSuumoDiscovery implements SuumoDiscoverySession {
     } catch (error) { this.closed = true; throw error; }
   }
 
+  endOfResults(city: string): void {
+    const state = this.cities.get(city);
+    if (this.closed || !state || state.done || state.pages < 1) {
+      this.closed = true;
+      throw new InvalidScrapeBatchError("End of results needs an open SUUMO city with at least one staged page");
+    }
+    state.done = true;
+  }
+
   commit(options: { allowShrink?: boolean } = {}): Promise<ScrapeIngestionReceipt> {
     if (this.committing) return this.committing;
     if (this.closed) return Promise.reject(new InvalidScrapeBatchError("SUUMO discovery session is closed"));

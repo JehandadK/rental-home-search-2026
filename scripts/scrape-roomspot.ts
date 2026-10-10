@@ -1,7 +1,7 @@
 /**
  * Incremental newest-first RoomSpot collector for every target city's 2K+ rooms (see targetCities.ts).
  * Browser navigation and the capture cache stay here; the application layer
- * stages parsed observations and commits once after every city finishes.
+ * stages parsed observations and commits each city once its pages are staged.
  */
 import { pathToFileURL } from "node:url";
 import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";

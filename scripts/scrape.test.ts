@@ -6,7 +6,8 @@ import { JsonSourceStore, ShrinkGuardError, atomicWriteJson } from "../src/stora
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { RevisionConflictError } from "../src/data-layer/errors";
-import { runSuumoScrape, parsePage, suumoCaptureBatch, type SuumoScrapeDependencies } from "./scrape";
+import { fetchPage, runSuumoScrape, parsePage, suumoCaptureBatch, type SuumoScrapeDependencies } from "./scrape";
+import { EndOfResultsError } from "../src/collectors/shared/resultPages";
 import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RawListing } from "../src/domain/types";
 
@@ -46,12 +47,12 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
   const seed = (listings: RawListing[] = rows()) => store.writeSource({ source: "suumo", scrapedAt: oldAt, completeSnapshot: false,
     listings, provenance: { fixture: "retained" } }, { expectedRevision: null });
 
-  it("stops after two all-known pages per city, preserves log counters, and commits only once", async () => {
+  it("stops after two all-known pages per city, preserves log counters, and commits each city once", async () => {
     await seed();
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "reconcileSource");
     const result = await runSuumoScrape(["--max-pages", "5"], dependencies);
     expect(dependencies.page).toHaveBeenCalledTimes(8);
-    expect(read).toHaveBeenCalledTimes(1); expect(write).toHaveBeenCalledTimes(1);
+    expect(read).toHaveBeenCalledTimes(4); expect(write).toHaveBeenCalledTimes(4);
     expect(result).toMatchObject({ added: 0, updated: 4, retired: 0, currentCount: 4 });
     expect(dependencies.log).toHaveBeenCalledWith("  page 1: 1 properties (0 new, 1 known, 0 duplicate)");
     expect(dependencies.log).toHaveBeenCalledWith("  page 2: 1 properties (0 new, 0 known, 1 duplicate)");
@@ -59,8 +60,9 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 4 overlapping; retired 0 superseded source ad(s); fetched 8 pages.");
     const saved = (await store.readSource("suumo"))!;
     expect(saved.scrapedAt).toBe(at); expect(saved.completeSnapshot).toBe(false);
-    expect(saved.provenance).toMatchObject({ capturedBy: "scripts/scrape.ts", mode: "incremental newest-first", pagesFetched: 8, fixture: "retained",
-      cities: cities.map((city) => `${city.label} (${city.code}, emergency ceiling 5p)`), layoutCodes: layoutCodes.join(",") });
+    // Each commit's provenance describes its own city.
+    expect(saved.provenance).toMatchObject({ capturedBy: "scripts/scrape.ts", mode: "incremental newest-first", pagesFetched: 2, fixture: "retained",
+      cities: ["Katsushika (sc_katsushika, emergency ceiling 5p)"], layoutCodes: layoutCodes.join(",") });
     const bytes = await readFile(store.sourcePath("suumo"), "utf8"), backups = await readdir(store.backupDir);
     vi.mocked(dependencies.log).mockClear();
     expect(await runSuumoScrape(["--max-pages", "5"], dependencies)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: saved.revision });
@@ -75,7 +77,7 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     expect(dependencies.page).toHaveBeenCalledTimes(12);
     expect(dependencies.log).not.toHaveBeenCalledWith("  stopped: 2 consecutive pages were entirely known");
     expect(dependencies.sleep).toHaveBeenCalledTimes(12);
-    expect((await store.readSource("suumo"))!.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 12 });
+    expect((await store.readSource("suumo"))!.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 3 });
     expect((await store.readSource("suumo"))!.completeSnapshot).toBe(false);
   });
 
@@ -108,8 +110,8 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     expect(dependencies.page).not.toHaveBeenCalled(); expect(await store.listSources()).toEqual([]);
   });
 
-  it.each(["fetch", "parser", "identity"])("retains captures but never commits partial source progress after a %s failure", async (failure) => {
-    await seed(); const bytes = await readFile(store.sourcePath("suumo"), "utf8");
+  it.each(["fetch", "parser", "identity"])("retains captures and keeps the cities committed before a %s failure", async (failure) => {
+    await seed();
     const write = vi.spyOn(repository, "reconcileSource");
     dependencies.page = vi.fn(async (meta) => {
       if (meta.city === "Koshigaya" && failure === "fetch") throw new Error("fixture network failure");
@@ -120,8 +122,59 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
       return page;
     });
     await expect(runSuumoScrape(["--max-pages", "1"], dependencies)).rejects.toThrow();
-    expect(write).not.toHaveBeenCalled(); expect(await readFile(store.sourcePath("suumo"), "utf8")).toBe(bytes);
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(dependencies.page).mock.calls.map(([meta]) => meta.city)).toEqual(["Soka", "Koshigaya"]);
+    expect(dependencies.log).toHaveBeenCalledWith("\nKept the Soka commit(s); Koshigaya failed and the run stopped there.");
+    expect((await store.readSource("suumo"))!.provenance).toMatchObject({ cities: ["Soka (sc_soka, emergency ceiling 1p)"] });
     expect(JSON.parse(await readFile(join(root, "captures", "Soka-1.json"), "utf8"))).toMatchObject({ html: capture().html });
+  });
+
+  it("stops on the last page SUUMO's page 1 numbers, and treats a 404 past page 1 as the end of results", async () => {
+    await seed([]);
+    const pagination = (last: number) => `<ol class="pagination-parts"><li class="pagination-current">1</li><li>&nbsp;</li>` +
+      Array.from({ length: last - 1 }, (_, index) => `<li><a href="?page=${index + 2}">${index + 2}</a></li>`).join("") + "</ol>";
+    const page = dependencies.page;
+    dependencies.page = vi.fn(async (meta) => {
+      const captured = await page(meta);
+      if (meta.city === "Soka" && meta.page === 1) captured.html += pagination(3);
+      if (meta.city === "Koshigaya" && meta.page === 2) throw new EndOfResultsError("SUUMO has no results page 2");
+      return captured;
+    });
+    const result = await runSuumoScrape(["--deep", "--max-pages", "5"], dependencies);
+    const calls = vi.mocked(dependencies.page).mock.calls.map(([meta]) => `${meta.city}-${meta.page}`);
+    expect(calls.filter((call) => /^(Soka|Koshigaya)/.test(call))).toEqual(["Soka-1", "Soka-2", "Soka-3", "Koshigaya-1", "Koshigaya-2"]);
+    expect(calls).toHaveLength(15);
+    expect(dependencies.log).toHaveBeenCalledWith("  stopped: last results page (3)");
+    expect(dependencies.log).toHaveBeenCalledWith("  page 2: no results; end of Koshigaya's results");
+    expect(result).toMatchObject({ added: 4, currentCount: 4 }); // one fixture building per city
+  });
+
+  it("maps only a 404 past page 1 to end of results when loading a list page", async () => {
+    const browser = (status: number) => ({ fetch: vi.fn(async () => new Response("<html></html>", { status })) as unknown as typeof fetch });
+    await expect(fetchPage(browser(404), capture().url, 2)).rejects.toBeInstanceOf(EndOfResultsError);
+    await expect(fetchPage(browser(404), capture().url, 1)).rejects.toThrow("HTTP 404");
+    for (const status of [403, 429, 500]) {
+      await expect(fetchPage(browser(status), capture().url, 2)).rejects.toThrow(`HTTP ${status}`);
+      await expect(fetchPage(browser(status), capture().url, 2)).rejects.not.toBeInstanceOf(EndOfResultsError);
+    }
+    expect(await fetchPage(browser(200), capture().url, 2)).toBe("<html></html>");
+    // browserFetch reports a redirect off the list path as a 404: a verification page there still fails.
+    const verification = { fetch: vi.fn(async () => new Response("<title>認証</title>", { status: 404 })) as unknown as typeof fetch };
+    await expect(fetchPage(verification, capture().url, 2)).rejects.toThrow("verification page");
+    await expect(fetchPage(verification, capture().url, 2)).rejects.not.toBeInstanceOf(EndOfResultsError);
+  });
+
+  it("fails rather than ends a city when a page that page 1 numbered has no results", async () => {
+    await seed([]);
+    const page = dependencies.page;
+    dependencies.page = vi.fn(async (meta) => {
+      if (meta.page === 2) throw new EndOfResultsError("SUUMO has no results page 2");
+      const captured = await page(meta);
+      captured.html += '<ol class="pagination-parts"><li class="pagination-current">1</li><li><a href="?page=2">2</a></li><li><a href="?page=3">3</a></li></ol>';
+      return captured;
+    });
+    await expect(runSuumoScrape(["--deep", "--max-pages", "5"], dependencies)).rejects.toThrow("SUUMO page 2 of 3 for Soka had no results");
+    expect((await store.readSource("suumo"))!.listings).toEqual([]);
   });
 
   it("rejects incomplete sessions and closes a session after invalid page metadata", async () => {
@@ -135,6 +188,20 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     expect(() => invalid.stagePage(page)).toThrow("parserVersion");
     await expect(invalid.commit()).rejects.toThrow("closed");
     expect(await readFile(store.sourcePath("suumo"), "utf8")).toBe(bytes);
+  });
+
+  it("ends a city only after a staged page, so its session can commit", async () => {
+    await seed();
+    const options = { cities: [cities[0]], deep: false, maxPages: 5, layoutCodes };
+    const early = await client.beginSuumoDiscovery(options);
+    expect(() => early.endOfResults("Soka")).toThrow("at least one staged page");
+    await expect(early.commit()).rejects.toThrow("closed");
+    const session = await client.beginSuumoDiscovery(options);
+    expect(() => session.endOfResults("Adachi")).toThrow("at least one staged page");
+    const ended = await client.beginSuumoDiscovery(options);
+    ended.stagePage(await suumoCaptureBatch(capture()));
+    ended.endOfResults("Soka");
+    expect(await ended.commit()).toMatchObject({ updated: 1 });
   });
 
   it("commits a completed session only once and refuses additional pages", async () => {

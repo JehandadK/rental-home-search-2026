@@ -7,6 +7,7 @@
  */
 import { createBridge } from "../shared/browserBridge";
 import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
+import { EndOfResultsError } from "../shared/resultPages";
 import { athomeDownloadedCapture } from "./athomeCapture";
 
 interface BrowserTab {
@@ -19,6 +20,8 @@ interface BrowserTab {
 
 /** Returned by the legacy AJAX capture when the page is the modern `.property-card` template instead. */
 const MODERN_TEMPLATE = "__athome_modern_template__";
+/** Returned by the legacy AJAX capture when AtHome has no results page this far. */
+const END_OF_RESULTS = "__athome_end_of_results__";
 const HOMEPAGE_URL = "https://www.athome.co.jp/";
 const NAVIGATION_TIMEOUT_MS = 30_000;
 // Leave time for the browser to return its navigation timeout/error.
@@ -141,6 +144,12 @@ export class AthomeBrowser {
         signal: AbortSignal.timeout(20000),
       });
       const html = await response.text();
+      // Past the last page AtHome answers 404 or with a results fragment holding no
+      // property. A verification page or a whole document (block, error) is not that,
+      // and page 1 never may be: an empty first page is not an empty market.
+      const pastFirst = ${page > 1};
+      const verification = /認証/.test(html);
+      if (response.status === 404 && pastFirst && !verification) return ${JSON.stringify(END_OF_RESULTS)};
       if (!response.ok) throw new Error('AtHome AJAX HTTP ' + response.status);
 
       // Runtime.evaluate responses are bounded. Compact the very large portal
@@ -148,6 +157,7 @@ export class AthomeBrowser {
       // rooms before crossing the Bridge. This keeps every relevant room from
       // all 30 buildings without response truncation.
       const doc = new DOMParser().parseFromString(html, 'text/html');
+      if (pastFirst && !verification && !doc.querySelector('.p-property, .property-card') && !/<html|<title/i.test(html)) return ${JSON.stringify(END_OF_RESULTS)};
       const esc = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
       })[char]);
@@ -213,6 +223,11 @@ export class AthomeBrowser {
       throw new Error(`AtHome capture stopped: ${message.split("\n")[0].slice(0, 300)}`);
     }
     const html = result.result?.result?.value;
+    if (html === END_OF_RESULTS) {
+      // The AJAX call left the results document as it was.
+      this.searchReady = true;
+      throw new EndOfResultsError(`AtHome has no results page ${page}`);
+    }
     if (html === MODERN_TEMPLATE) {
       this.modernTemplate = true;
       return this.fetchModernPage(page, sort);
@@ -236,6 +251,17 @@ export class AthomeBrowser {
     target.pathname = target.pathname.replace(/list\/(?:page\d+\/)?$/, page > 1 ? `list/page${page}/` : "list/");
     target.searchParams.set("sort", sort);
     if (target.href !== current.href) await this.navigate(target.href);
+    // A page past the last one is a 404, unless AtHome is showing its verification page.
+    if (page > 1 && this.lastStatus === 404) {
+      this.searchReady = false;
+      const title = await this.bridge.request<EvaluateResult>("evaluate", {
+        tabId: this.tab!.id, tabFence: this.tab!.tabFence, incarnation: this.tab!.incarnation, sessionId: this.sessionId,
+        expression: "document.title", awaitPromise: true,
+      }, REQUEST_TIMEOUT_MS);
+      const text = title.result?.result?.value;
+      if (typeof text !== "string" || /認証/.test(text)) throw new Error(`AtHome capture stopped: HTTP 404 page ${page} is a verification or unreadable page: ${text ?? ""}`);
+      throw new EndOfResultsError(`AtHome has no results page ${page} (HTTP 404)`);
+    }
     this.searchReady = false;
     const result = await this.bridge.request<{
       result?: { result?: { value?: string }; exceptionDetails?: { text?: string; exception?: { description?: string } } };
@@ -260,6 +286,10 @@ export class AthomeBrowser {
     }
     const document = result.result?.result?.value;
     if (!document) throw new Error("AtHome browser capture returned no document");
+    // Sent back to another results page (one that has property cards): there is no page this far.
+    if (page > 1 && new URL(this.tab!.url).pathname !== target.pathname) {
+      throw new EndOfResultsError(`AtHome redirected page ${page} to ${new URL(this.tab!.url).pathname}`);
+    }
     const html = athomeDownloadedCapture(document, target.href, new Date().toISOString()).html;
     if (!html.includes("p-property")) throw new Error("AtHome browser capture returned no property HTML");
     this.searchReady = true;
