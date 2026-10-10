@@ -1,5 +1,7 @@
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AthomeBrowser } from "./athomeBrowser";
+import { EndOfResultsError } from "../shared/resultPages";
 
 const bridge = vi.hoisted(() => ({ connect: vi.fn(), request: vi.fn(), close: vi.fn() }));
 vi.mock("../shared/browserBridge", () => ({
@@ -153,6 +155,60 @@ describe("AtHome homepage-first collection", () => {
   });
 });
 
+describe("AtHome end of results (legacy AJAX)", () => {
+  const property = '<div class="p-property"><h2 class="p-property__title--building">テストハイツ</h2></div>';
+  let respond: () => Response;
+
+  beforeEach(() => {
+    bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+      if (method === "new_tab") return { tab: homeTab };
+      if (method === "navigate") return { tab: { ...homeTab, url: params.url } };
+      if (method !== "evaluate") return {};
+      // The adapter's in-page script, run against a results document as the Playwright bridge reports it.
+      document.body.innerHTML = '<form id="search-parameter"><input name="PREF" value="11"></form>';
+      try {
+        const run = new Function("fetch", `return ${String(params.expression)}`);
+        return { result: { result: { value: await run(async () => respond()) } } };
+      } catch (error) {
+        return { result: { exceptionDetails: { exception: { description: `Error: ${(error as Error).message}` } } } };
+      }
+    });
+  });
+
+  async function connected() {
+    const browser = new AthomeBrowser();
+    await browser.connect(SEARCH);
+    return browser;
+  }
+
+  it.each([
+    ["an empty results fragment", () => new Response("")],
+    ["a fragment without properties", () => new Response('<div class="p-result">該当する物件はありません</div>')],
+    ["an HTTP 404", () => new Response("Not Found", { status: 404 })],
+  ])("treats %s past page 1 as the end of results and keeps the tab ready", async (_, response) => {
+    const browser = await connected();
+    respond = response;
+    await expect(browser.fetchPage(2)).rejects.toBeInstanceOf(EndOfResultsError);
+    respond = () => new Response(property);
+    expect(await browser.fetchPage(1)).toContain("テストハイツ");
+  });
+
+  it.each([
+    ["an empty page 1", 1, () => new Response("")],
+    ["a whole error document", 2, () => new Response("<html><head><title>エラー</title></head><body>システムエラー</body></html>")],
+    ["a verification fragment", 2, () => new Response("<div>認証にご協力ください</div>")],
+    ["a verification 404", 2, () => new Response("<div>認証にご協力ください</div>", { status: 404 })],
+    ["a block", 2, () => new Response("Forbidden", { status: 403 })],
+    ["a modern-template fragment", 2, () => new Response('<div class="property-card">テストホーム</div>')],
+  ])("still fails on %s", async (_, page, response) => {
+    const browser = await connected();
+    respond = response;
+    const failure = browser.fetchPage(page);
+    await expect(failure).rejects.toThrow(/AtHome (capture stopped|browser capture returned no property HTML)/);
+    await expect(failure).rejects.not.toBeInstanceOf(EndOfResultsError);
+  });
+});
+
 describe("AtHome modern template", () => {
   const CITY = "https://www.athome.co.jp/chintai/saitama/soka-city/list/";
   const modernDocument = `<html><body><select name="SORT"><option value="33" selected>新着順</option></select>
@@ -192,6 +248,35 @@ describe("AtHome modern template", () => {
     // After detection the legacy AJAX probe is skipped: one evaluate per modern page.
     const evaluations = bridge.request.mock.calls.filter(([method]) => method === "evaluate");
     expect(evaluations.map(([, params]) => String(params.expression).includes("outerHTML"))).toEqual([false, true, true]);
+  });
+
+  it("treats a 404 or a redirect to another results page past page 1 as the end of results", async () => {
+    const browser = new AthomeBrowser();
+    await browser.connect(CITY);
+    await browser.fetchPage(1);
+    let title = "お探しのページが見つかりません";
+    bridge.request.mockImplementation(async (method: string, params: Record<string, unknown>) => {
+      if (method === "navigate" && /page[24]\//.test(String(params.url))) return { tab: { ...homeTab, url: String(params.url) }, httpStatus: 404 };
+      if (method === "navigate") return { tab: { ...homeTab, url: `${CITY}?sort=33` }, httpStatus: 200 };
+      if (method === "evaluate" && params.expression === "document.title") return { result: { result: { value: title } } };
+      if (method === "evaluate") return { result: { result: { value: modernDocument } } };
+      return {};
+    });
+    await expect(browser.fetchPage(2)).rejects.toBeInstanceOf(EndOfResultsError);
+    // Only the 404's title is read, for a verification page; never its results.
+    expect(bridge.request.mock.calls.at(-1)![1].expression).toBe("document.title");
+
+    // A 404 verification page still fails.
+    title = "認証にご協力ください。";
+    await browser.navigate(CITY);
+    const verification = browser.fetchPage(4);
+    await expect(verification).rejects.toThrow("verification or unreadable page");
+    await expect(verification).rejects.not.toBeInstanceOf(EndOfResultsError);
+
+    await browser.navigate(CITY);
+    const redirected = browser.fetchPage(3);
+    await expect(redirected).rejects.toThrow("AtHome redirected page 3 to /chintai/saitama/soka-city/list/");
+    await expect(redirected).rejects.toBeInstanceOf(EndOfResultsError);
   });
 
   it("reports a verification page instead of retrying, and needs navigation before another capture", async () => {

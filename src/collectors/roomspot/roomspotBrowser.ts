@@ -1,6 +1,10 @@
 /** Headed-browser public RoomSpot search collector. */
 import { createBridge } from "../shared/browserBridge";
 import { detailPageFrom, readDetailPageExpression, type EvaluateResult } from "../shared/detailPage";
+import { EndOfResultsError, RESULT_PAGE_SIZE } from "../shared/resultPages";
+
+/** Returned in-page when RoomSpot answers a page past page 1 with no results. */
+const END_OF_RESULTS = "__roomspot_end_of_results__";
 
 interface BrowserTab { id: number; tabFence?: string; incarnation?: string }
 
@@ -54,17 +58,31 @@ export class RoomspotBrowser {
         await new Promise(r => setTimeout(r, 200));
       }
       const params = structuredClone(window.localize.searchParams);
-      params.sort = 'new_arrival'; params.item_per_page = 30; params.page_num = ${page};
+      params.sort = 'new_arrival'; params.item_per_page = ${RESULT_PAGE_SIZE.roomspot}; params.page_num = ${page};
       const pairs = Object.entries(params).flatMap(([key, value]) =>
         Array.isArray(value) ? value.map(item => [key + '[]', item]) : [[key, value ?? '']]);
       const response = await fetch(window.localize.restRoute + '?' + new URLSearchParams(pairs).toString(), {
         credentials: 'include',
       });
-      const json = await response.json();
-      if (!response.ok || !json.html) throw new Error('RoomSpot REST HTTP ' + response.status);
+      // Past the last page RoomSpot answers with no cards, no HTML or a 404. Page 1
+      // never may: an empty first page is not evidence of an empty market.
+      const pastFirst = ${page > 1};
+      if (response.status === 404 && pastFirst) return ${JSON.stringify(END_OF_RESULTS)};
+      const body = await response.text();
+      let json;
+      try { json = JSON.parse(body); } catch { throw new Error('RoomSpot REST HTTP ' + response.status + ' returned no JSON (blocked or unrecognised page)'); }
+      if (!response.ok) throw new Error('RoomSpot REST HTTP ' + response.status);
+      if (typeof json?.html !== 'string' || !json.html.trim()) {
+        // A REST error object ({ code, message }) is not an empty results page.
+        if (pastFirst && json && typeof json === 'object' && !('code' in json) && !('message' in json)) return ${JSON.stringify(END_OF_RESULTS)};
+        throw new Error('RoomSpot REST returned no results HTML');
+      }
       const doc = new DOMParser().parseFromString(json.html, 'text/html');
       const cards = [...doc.querySelectorAll('article.data')];
-      if (!cards.length) throw new Error('RoomSpot returned no property cards; not verified exhaustion');
+      if (!cards.length) {
+        if (pastFirst) return ${JSON.stringify(END_OF_RESULTS)};
+        throw new Error('RoomSpot returned no property cards; not verified exhaustion');
+      }
       for (const card of cards) {
         card.querySelectorAll('script,style,svg,input,button,iframe').forEach(e => e.remove());
         // Keep the lazy-loaded photos (exterior, floor plans) as data-src + alt; drop icons.
@@ -76,15 +94,20 @@ export class RoomspotBrowser {
       }
       return cards.map(c => c.outerHTML).join('').replace(/>\\s+</g, '><');
     })()`;
-    const response = await this.bridge.request<{ result?: { result?: { value?: string } } }>(
+    const response = await this.bridge.request<EvaluateResult>(
       "evaluate",
       { tabId: this.tab.id, tabFence: this.tab.tabFence, incarnation: this.tab.incarnation,
         sessionId: this.sessionId, expression, awaitPromise: true },
       120_000,
     );
+    // The bridge reports an in-page throw as exceptionDetails, with no value.
+    const exception = response.result?.exceptionDetails;
+    if (exception) {
+      const message = exception.exception?.description ?? exception.text ?? "page evaluation failed";
+      throw new Error(`RoomSpot capture stopped on page ${page}: ${message.split("\n")[0].slice(0, 300)}`);
+    }
     const html = response.result?.result?.value;
-    // An exhausted page is a valid end-of-results response, not a crawl
-    // failure. Return its HTML so the parser yields [] and the caller stops.
+    if (html === END_OF_RESULTS) throw new EndOfResultsError(`RoomSpot has no results page ${page}`);
     if (html == null) throw new Error("RoomSpot returned no response HTML");
     return html;
   }

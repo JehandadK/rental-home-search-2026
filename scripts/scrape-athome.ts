@@ -10,8 +10,9 @@
  * build date, station walk time and amenity flags, so no detail-page crawl is
  * needed. The browser opens the AtHome homepage before navigating to results.
  * Blocked/uncertain navigation is not retried automatically. The application
- * layer stages parsed observations and commits once after every city finishes,
- * so a failed crawl never overwrites the last good source snapshot.
+ * layer stages parsed observations and commits each city once its pages are
+ * staged, so a failed city keeps the cities committed before it and never
+ * overwrites the last good snapshot with a partial city.
  */
 import { pathToFileURL } from "node:url";
 import { BACKUP_DIR, DATA_DIR, JsonSourceStore, ShrinkGuardError, SOURCES_DIR } from "../src/storage/json/dataStore";

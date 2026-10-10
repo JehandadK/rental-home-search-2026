@@ -94,6 +94,12 @@ export interface SuumoDiscoveryPageResult {
 
 export interface SuumoDiscoverySession {
   stagePage(batch: ScrapeBatch): SuumoDiscoveryPageResult;
+  /**
+   * The portal has no results page after the last one staged for `city`. Ends
+   * that city like a stop reason; at least one page must be staged first. Bounded
+   * newest-first results are never evidence of market exhaustion or SOLD.
+   */
+  endOfResults(city: string): void;
   commit(options?: { allowShrink?: boolean }): Promise<ScrapeIngestionReceipt>;
 }
 

@@ -11,6 +11,7 @@ import { sourceRowKey, sourceRowLocator } from "../src/data-layer/sourceRowIdent
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { ATHOME_COLLECTOR, runAthomeScrape } from "./scrape-athome";
 import type { PortalCollectorDependencies } from "../src/collectors/shared/portalCollector";
+import { EndOfResultsError } from "../src/collectors/shared/resultPages";
 import { parseAthomePage } from "../src/collectors/athome/athome";
 import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
 import { listCaptureBatch } from "../src/collectors/shared/listCaptureBatch";
@@ -34,7 +35,9 @@ function room(id: number, { rent = "6.9", layout = "2DK", parking = true } = {})
  <a href="/chintai/${id}/?DOWN=1">詳細を見る</a>
 </div></div>`;
 }
-function capture(city: number, page: number, html = room(idFor(city, page)), capturedAt = at): PageCapture {
+/** AtHome serves 30 properties per page; a shorter page is the city's last, so pad with one-room (out-of-scope) properties. */
+const fullPage = (html: string) => html + Array.from({ length: 29 }, (_, index) => room(900_000 + index, { layout: "1K" })).join("");
+function capture(city: number, page: number, html = fullPage(room(idFor(city, page))), capturedAt = at): PageCapture {
   return { schemaVersion: 1, source: "athome", city: cities[city].city, page, capturedAt, httpStatus: 200,
     url: portalPageUrl("athome", cities[city].url, page), html };
 }
@@ -57,29 +60,30 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
   const seed = (listings: RawListing[] = rows(), provenance: Record<string, unknown> = { listTemplate: "retained" }) =>
     store.writeSource({ source: "athome", scrapedAt: oldAt, completeSnapshot: false, listings, provenance }, { expectedRevision: null });
 
-  it("bootstraps a missing source with a deep crawl and a single create-only commit", async () => {
+  it("bootstraps a missing source with a deep crawl and one commit per city", async () => {
     const write = vi.spyOn(repository, "reconcileSource");
     const result = await runAthomeScrape(["--max-pages", "2"], dependencies);
     expect(dependencies.log).toHaveBeenCalledWith("No AtHome snapshot yet; automatically bootstrapping a deep discovery crawl.");
     expect(dependencies.log).toHaveBeenCalledWith("AtHome deep newest-first bootstrap");
-    expect(dependencies.page).toHaveBeenCalledTimes(8); expect(write).toHaveBeenCalledTimes(1);
+    expect(dependencies.page).toHaveBeenCalledTimes(8); expect(write).toHaveBeenCalledTimes(4);
     expect(dependencies.close).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject({ added: 8, updated: 0, retired: 0, previousCount: 0, currentCount: 8 });
     const saved = (await store.readSource("athome"))!;
     expect(saved.listings).toEqual(rows());
     expect(saved.completeSnapshot).toBe(false); expect(saved.scrapedAt).toBe(at);
-    expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 8, newListings: 8, capturedBy: "scripts/scrape-athome.ts",
-      cities: ["soka-city", "koshigaya-city", "kawaguchi-city", "katsushika-city"], newListingIds: rows().map((row) => row.id) });
+    // Each commit's provenance describes its own city; the bootstrap stays deep after the first commit.
+    expect(saved.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 2, newListings: 2, capturedBy: "scripts/scrape-athome.ts",
+      cities: ["katsushika-city"], newListingIds: rows().filter((row) => row.city === "Katsushika").map((row) => row.id) });
     expect(dependencies.log).toHaveBeenCalledWith("\nWrote 8 AtHome listings (was 0)");
     expect(dependencies.log).toHaveBeenCalledWith("Next: npm run data:build && npm run enrich && npm run find:new");
   });
 
-  it("stops after two all-known pages per city, commits once, and replays without rewriting", async () => {
+  it("stops after two all-known pages per city, commits each city, and replays without rewriting", async () => {
     await seed();
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "reconcileSource");
     const result = await runAthomeScrape(["--max-pages", "5"], dependencies);
     expect(dependencies.page).toHaveBeenCalledTimes(8);
-    expect(read).toHaveBeenCalledTimes(1); expect(write).toHaveBeenCalledTimes(1);
+    expect(read).toHaveBeenCalledTimes(4); expect(write).toHaveBeenCalledTimes(4);
     expect(result).toMatchObject({ added: 0, updated: 8, retired: 0, currentCount: 8 });
     expect(dependencies.log).toHaveBeenCalledWith("AtHome incremental newest-first discovery");
     expect(dependencies.log).toHaveBeenCalledWith("\n=== Soka (soka-city) ===");
@@ -88,7 +92,7 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 8 overlaps; retired 0 superseded source ad(s); fetched 8 pages.");
     expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("No AtHome snapshot"));
     const saved = (await store.readSource("athome"))!;
-    expect(saved.provenance).toMatchObject({ mode: "incremental newest-first", pagesFetched: 8, listTemplate: "retained", newListingIds: [] });
+    expect(saved.provenance).toMatchObject({ mode: "incremental newest-first", pagesFetched: 2, listTemplate: "retained", newListingIds: [] });
     const bytes = await readFile(store.sourcePath("athome"), "utf8"), backups = await readdir(store.backupDir);
     expect(await runAthomeScrape(["--max-pages", "5"], dependencies)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: saved.revision });
     // The replay reports the journaled original effect for the refresh ledger.
@@ -100,12 +104,12 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
   it("does not count or log an empty non-family page as known, and honors the page budget", async () => {
     await seed(rows([2, 3]));
     dependencies.page = vi.fn(async (meta) => meta.page === 1
-      ? capture(cityIndex(meta.city), 1, room(idFor(cityIndex(meta.city), 1), { layout: "1LDK" })) : capture(cityIndex(meta.city), meta.page));
+      ? capture(cityIndex(meta.city), 1, fullPage(room(idFor(cityIndex(meta.city), 1), { layout: "1LDK" }))) : capture(cityIndex(meta.city), meta.page));
     await runAthomeScrape(["--max-pages", "5"], dependencies);
     expect(dependencies.page).toHaveBeenCalledTimes(12);
     expect(dependencies.log).not.toHaveBeenCalledWith(expect.stringContaining("page 1:"));
     expect(dependencies.sleep).toHaveBeenCalledTimes(4);
-    expect((await store.readSource("athome"))!.provenance).toMatchObject({ pagesFetched: 12 });
+    expect((await store.readSource("athome"))!.provenance).toMatchObject({ pagesFetched: 3 });
 
     await rm(join(root, "sources"), { recursive: true }); await seed([]);
     vi.mocked(dependencies.page).mockClear(); vi.mocked(dependencies.sleep).mockClear();
@@ -127,8 +131,28 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     expect(await store.listSources()).toEqual([]);
   });
 
-  it.each(["fetch", "parser", "identity"])("retains captures but never commits partial progress after a %s failure", async (failure) => {
-    await seed(); const bytes = await readFile(store.sourcePath("athome"), "utf8");
+  it("ends a city on a short last page or on no results past page 1, never on page 1", async () => {
+    await seed([]);
+    const page = dependencies.page;
+    dependencies.page = vi.fn(async (meta) => {
+      if (meta.city === "Soka" && meta.page === 2) return capture(0, 2, room(idFor(0, 2)));
+      if (meta.city === "Koshigaya" && meta.page === 3) throw new EndOfResultsError("AtHome has no results page 3");
+      return page(meta);
+    });
+    const result = await runAthomeScrape(["--deep", "--max-pages", "3"], dependencies);
+    const calls = vi.mocked(dependencies.page).mock.calls.map(([meta]) => `${meta.city}-${meta.page}`);
+    expect(calls).toEqual(["Soka-1", "Soka-2", "Koshigaya-1", "Koshigaya-2", "Koshigaya-3", "Kawaguchi-1", "Kawaguchi-2", "Kawaguchi-3",
+      "Katsushika-1", "Katsushika-2", "Katsushika-3"]);
+    expect(dependencies.log).toHaveBeenCalledWith("  stopped: last results page (2)");
+    expect(dependencies.log).toHaveBeenCalledWith("  page 3: no results; end of Koshigaya's results");
+    expect(result).toMatchObject({ added: 10, currentCount: 10 });
+
+    dependencies.page = vi.fn(async () => { throw new EndOfResultsError("AtHome has no results page 1"); });
+    await expect(runAthomeScrape(["--max-pages", "3"], dependencies)).rejects.toThrow("no results page 1");
+  });
+
+  it.each(["fetch", "parser", "identity"])("retains captures and keeps the cities committed before a %s failure", async (failure) => {
+    await seed();
     const write = vi.spyOn(repository, "reconcileSource");
     dependencies.page = vi.fn(async (meta) => {
       if (meta.city === "Koshigaya" && failure === "fetch") throw new Error("fixture network failure");
@@ -139,8 +163,9 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
       return page;
     });
     await expect(runAthomeScrape(["--max-pages", "1"], dependencies)).rejects.toThrow();
-    expect(write).not.toHaveBeenCalled(); expect(dependencies.close).toHaveBeenCalledTimes(1);
-    expect(await readFile(store.sourcePath("athome"), "utf8")).toBe(bytes);
+    expect(write).toHaveBeenCalledTimes(1); expect(dependencies.close).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(dependencies.page).mock.calls.map(([meta]) => meta.city)).toEqual(["Soka", "Koshigaya"]);
+    expect((await store.readSource("athome"))!.provenance).toMatchObject({ cities: ["soka-city"] });
     expect(JSON.parse(await readFile(join(root, "captures", "Soka-1.json"), "utf8"))).toMatchObject({ html: capture(0, 1).html });
   });
 

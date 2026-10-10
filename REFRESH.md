@@ -18,6 +18,20 @@
   pages. It no longer stops after a tiny fixed three-page window. A 100-page
   emergency ceiling guards broken pagination; explicit `--max-pages` is an
   operator/diagnostic hard cap, not the normal stopping policy.
+- A city also stops at its last results page (`src/collectors/shared/resultPages.ts`):
+  SUUMO's page 1 numbers the last page; a RoomSpot or AtHome page with fewer
+  than 30 cards is the last. A page past page 1 that comes back empty, without
+  cards, or as a 404 ends that city too (`EndOfResultsError`). Blocks (403/429),
+  verification pages (認証, including a 404 one), REST error objects, whole
+  error documents, any empty page 1, and a missing SUUMO page that page 1
+  numbered still fail.
+- SUUMO, AtHome and RoomSpot commit **per city**. A failure keeps the cities
+  committed before it, stops the run (no further cities are requested) and
+  fails the stage; a re-run re-stages the committed cities from the 6-hour
+  capture cache (a replay, or an update that changes nothing). The one
+  "Discovered N new" summary line totals every city. Source provenance
+  (`cities`, `pagesFetched`, `newListingIds`) now describes the last city
+  committed, and each city's commit takes a backup (10 kept per source).
 - Capture list fields once, including fees, amenities and parking flags when
   present. Nifty now parses list cards instead of fetching each detail page.
 - Refresh always tries detail pages, bounded by `--detail-limit` (default 10 per
@@ -391,10 +405,9 @@ removed, and every collector now uses the headed Playwright browser.
   page; not bypassed). Photo-less active rows: **1235 → 803**. The deep passes
   also found ads the incremental pass never reached: **3968 archival / 3964
   dashboard rows**, all geocoded (18 queries, 0 unresolved). None SOLD.
-- Gotcha: `--deep` AtHome/RoomSpot runs off the end of a city's results and
-  then throws, and they commit only after every city, so nothing is saved.
-  Cap with `--max-pages` at the smallest city's depth, or import the cached
-  pages (6h) page by page with `capture:import` (what this run did for AtHome).
+- Gotcha (fixed 2026-10-10): `--deep` AtHome/RoomSpot ran off the end of a
+  city's results and threw, and they committed only after every city, so
+  nothing was saved. They now stop at the last page and commit per city.
 - **697 tests, typecheck and production build pass.**
 
 ## 2026-10-04 Katsushika-ku (Tokyo) first load (Playwright)
@@ -407,10 +420,11 @@ removed, and every collector now uses the headed Playwright browser.
   (572 rooms), AtHome **81** (1121), Nifty **110** (page 111 is a 404; one
   transient HTTP 405 on page 59 was resumed from cache with `--deep`), RoomSpot
   **2** (21). AtHome showed its verification page once; it was passed by hand.
-- Gotcha: each collector's last page is far below the 100-page ceiling, and
-  AtHome/RoomSpot/SUUMO throw on the page after it, so nothing commits. Re-run
-  with `--city <label> --max-pages <last page>`: the pages come from the
-  6-hour capture cache with zero requests.
+- Gotcha (fixed 2026-10-10): each collector's last page is far below the
+  100-page ceiling, and AtHome/RoomSpot/SUUMO threw on the page after it, so
+  nothing committed; the workaround was re-running with `--city <label>
+  --max-pages <last page>`. Collectors now stop on the last page (or on a
+  "no results" page past it) and commit each city, so no re-run is needed.
 - RoomSpot dropped whole-man rents (`<strong>12</strong>万円`): the parser read
   only `<strong>`. Fixed; Saitama ads with such rents were affected too and
   reappear as refreshes revisit them.
@@ -499,6 +513,19 @@ removed, and every collector now uses the headed Playwright browser.
 - **13 newly tracked properties**, 5195 → **5208** archival rows; all geocoded
   (2 queries, 0 unresolved); none SOLD. 10 agency stores added from RoomSpot.
 - **902 tests and typecheck pass.**
+
+## 2026-10-10 RoomSpot end-of-results fix
+
+- `npm run refresh` failed the RoomSpot stage on 2026-10-09 and 2026-10-10:
+  the request for the page after Katsushika's last results page failed with
+  "RoomSpot returned no response HTML" (on 10-10 Katsushika had one page, 22
+  family rooms), and the single end-of-run commit dropped Soka, Koshigaya and
+  Kawaguchi too. The Playwright bridge reports an
+  in-page throw as `exceptionDetails` with no value, so the real reason was
+  hidden; RoomSpot and AtHome now surface it ("capture stopped on page N: …").
+- Fixed in the collectors (see Current policy): last-page stop, end-of-results
+  past page 1, per-city commits, for SUUMO, AtHome and RoomSpot. Tests use
+  mocked pages only; no portal was contacted for this change.
 
 ## Entry points
 
