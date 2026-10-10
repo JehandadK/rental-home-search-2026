@@ -1136,9 +1136,9 @@
     "rent": {
       "chosen": 176500,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-07T14:13:43.934Z"
+        "observedAt": "2026-10-07T14:00:37.442Z"
       },
       "values": [
         {
@@ -1202,7 +1202,8 @@
           "firstRecordedAt": "2026-10-07T14:04:06.059Z",
           "reportedAt": {
             "suumo|jnc_000110287941|bc_100530067072": "2026-10-07T14:04:06.059Z"
-          }
+          },
+          "observedBefore": "2026-10-10T02:40:00.257Z"
         },
         {
           "value": 176500,
@@ -1361,7 +1362,8 @@
     "2026-10-05T08:14:48.359Z",
     "2026-10-07T13:54:05.296Z",
     "2026-10-07T14:00:37.442Z",
-    "2026-10-07T14:13:43.934Z"
+    "2026-10-07T14:13:43.934Z",
+    "2026-10-10T02:39:41.743Z"
   ],
   "events": [
     {
@@ -1470,6 +1472,18 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110287941|bc_100530067072|2026-10-10T02:40:00.257Z",
+      "type": "ad.superseded",
+      "at": "2026-10-10T02:40:00.257Z",
+      "recordedAt": "2026-10-10T02:40:53.271Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110287941|bc_100530067072",
+      "url": "https://suumo.jp/chintai/jnc_000110287941/?bc=100530067072",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -1478,8 +1492,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "suumo|jnc_000109850933|bc_100529760110",
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000109850933/?bc=100529760110",
-    "lastSeenAt": "2026-10-07T14:13:43.934Z",
-    "lastListedAt": "2026-10-07T14:13:43.934Z",
+    "lastSeenAt": "2026-10-10T02:39:41.743Z",
+    "lastListedAt": "2026-10-10T02:39:41.743Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
