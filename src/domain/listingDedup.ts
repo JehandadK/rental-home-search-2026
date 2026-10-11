@@ -84,6 +84,11 @@ const normArea = (value: string): string => {
   return area.replace(/([0-9]+)丁目/g, "$1");
 };
 
+/** The building name as cross-portal matching compares it. */
+export const comparableName = normName;
+/** The 町名 + 丁目 part of an address, as cross-portal matching compares it. */
+export const comparableArea = normArea;
+
 /** Prefer an exact lot address over a portal's town/chome-only spelling. */
 function chooseAddress(primary: string, secondary: string): string {
   if (normArea(primary) !== normArea(secondary)) return primary;

@@ -6,6 +6,7 @@ import {
   decodeAvailabilityMarks,
   decodeCompare,
   decodeCustomListings,
+  decodeDuplicateDecisions,
   decodeFilters,
   decodeHiddenColumns,
   decodeLegacyPlaceSelection,
@@ -170,5 +171,24 @@ describe("decodeWeightPresets", () => {
     expect(preset.featurePreferences!.elevator).toBe("avoid");
     expect(preset.featurePreferences!.cityGas).toBe(DEFAULT_CONFIG.featurePreferences.cityGas);
     expect(decodeWeightPresets({ not: "a list" })).toEqual([]);
+  });
+});
+
+describe("decodeDuplicateDecisions", () => {
+  const same = { verdict: "same", a: ["athome|1"], b: ["nifty|detail_2"], decidedAt: "2026-10-11T05:00:00.000Z" };
+
+  it("keeps well-formed answers as saved", () => {
+    expect(decodeDuplicateDecisions({ k: same })).toEqual({ k: same });
+  });
+
+  it("drops answers without a verdict, both sides' ads, or a time", () => {
+    expect(decodeDuplicateDecisions({
+      k: same,
+      verdict: { ...same, verdict: "maybe" },
+      empty: { ...same, a: [] },
+      numbers: { ...same, b: [1] },
+      untimed: { ...same, decidedAt: 3 },
+    })).toEqual({ k: same });
+    for (const value of CORRUPT) expect(decodeDuplicateDecisions(value)).toEqual({});
   });
 });

@@ -8,6 +8,15 @@ import { lifecycleCounts } from "../domain/lifecycle";
 import { isUrListing } from "../domain/ur";
 import { urVacancies as countUrVacancies } from "../domain/urEstates";
 import { withAvailability } from "../domain/availability";
+import {
+  applySameDecisions,
+  carryToLeads,
+  findPossibleDuplicates,
+    isPendingPair,
+  resolveDecisions,
+  shownKey,
+  type PossibleDuplicate,
+} from "../domain/possibleDuplicates";
 import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
 import { ProximityIndex } from "../domain/proximityIndex";
@@ -24,6 +33,7 @@ import { useMarks } from "./hooks/useMarks";
 import { useAvailabilityMarks } from "./hooks/useAvailabilityMarks";
 import { useNotes } from "./hooks/useNotes";
 import { useCompare } from "./hooks/useCompare";
+import { useDuplicateDecisions } from "./hooks/useDuplicateDecisions";
 import { useMapAreas } from "./hooks/useMapAreas";
 import { useWeightPresets } from "./hooks/useWeightPresets";
 import { useRankMovement } from "./hooks/useRankMovement";
@@ -31,6 +41,7 @@ import { toCsv, toMarkdown } from "./lib/export";
 import type { ScoredRow } from "../domain/scoring";
 import { AddListingForm } from "./components/AddListingForm";
 import { ComparePanel } from "./components/ComparePanel";
+import { DuplicateReview } from "./components/DuplicateReview";
 import { FilterPanel } from "./components/FilterPanel";
 import { buildAgencyGazetteer } from "../domain/agencyNames";
 import { ListingTable } from "./components/ListingTable";
@@ -59,11 +70,58 @@ export function App({ data }: { data: WebData }) {
   const { presets, savePreset, deletePreset } = useWeightPresets();
   const { listings, addListing, removeListing } = useListings(data.listings);
   const { filters, update: updateFilters, reset: resetFilters } = useFilters();
-  const { marks, setMark, clearMarks } = useMarks();
+  const { marks: savedMarks, setMark: saveMark, clearMarks } = useMarks();
   const { availabilityMarks, markAd } = useAvailabilityMarks();
-  const { notes, setNote } = useNotes();
-  const { compare, toggleCompare, clearCompare, retainCompare } = useCompare();
+  const { notes: savedNotes, setNote: saveNote } = useNotes();
+  const { compare: savedCompare, toggleCompare: toggleSavedCompare, clearCompare, retainCompare: retainSavedCompare } = useCompare();
   const { selection, setPlaces, togglePlace, reset: resetPlaces } = usePlaceSelection(catalog);
+  const { decisions: duplicateDecisions, decide: decideDuplicate, undo: undoDuplicate } = useDuplicateDecisions();
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+
+  /** Each duplicate answer's listings today, and the homes the "same" answers form. */
+  const resolvedDuplicates = useMemo(() => resolveDecisions(listings, duplicateDecisions), [listings, duplicateDecisions]);
+  /**
+   * The confirmed groups, changing identity only when the groups do: a
+   * "Different" answer or an undo that merges nothing re-scores nothing.
+   */
+  const groupSignature = useMemo(
+    () => [...resolvedDuplicates.leadOf].map(([member, lead]) => `${member}>${lead}`).sort().join("|"),
+    [resolvedDuplicates.leadOf],
+  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const leadOf = useMemo(() => resolvedDuplicates.leadOf, [groupSignature]);
+
+  /**
+   * Marks, notes and the compare list are saved per listing key. A merged
+   * home shows what was saved on any of its listings; changing it on the
+   * merged home clears the absorbed listings' copies so they cannot reappear.
+   */
+  const marks = useMemo(() => carryToLeads(savedMarks, leadOf), [savedMarks, leadOf]);
+  const notes = useMemo(() => carryToLeads(savedNotes, leadOf), [savedNotes, leadOf]);
+  const membersOf = useCallback(
+    (key: string) => [...leadOf].filter(([member, lead]) => lead === key && member !== key).map(([member]) => member),
+    [leadOf],
+  );
+  const setMark = useCallback((key: string, mark: Parameters<typeof saveMark>[1]) => {
+    saveMark(key, mark);
+    for (const member of membersOf(key)) saveMark(member, null);
+  }, [saveMark, membersOf]);
+  const setNote = useCallback((key: string, draft: Parameters<typeof saveNote>[1]) => {
+    saveNote(key, draft);
+    for (const member of membersOf(key)) saveNote(member, { text: "", viewingAt: null });
+  }, [saveNote, membersOf]);
+  const compare = useMemo(
+    () => [...new Set(savedCompare.map((key) => shownKey({ leadOf }, key)))],
+    [savedCompare, leadOf],
+  );
+  const toggleCompare = useCallback(
+    (key: string) => toggleSavedCompare(savedCompare.find((saved) => shownKey({ leadOf }, saved) === key) ?? key),
+    [toggleSavedCompare, savedCompare, leadOf],
+  );
+  const retainCompare = useCallback(
+    (known: { has(key: string): boolean }) => retainSavedCompare({ has: (key) => known.has(shownKey({ leadOf }, key)) }),
+    [retainSavedCompare, leadOf],
+  );
 
   /**
    * Full listing × place distance matrix, built once per listing set. Every
@@ -109,9 +167,32 @@ export function App({ data }: { data: WebData }) {
    * proximity work so toggling one ad never rebuilds the distance matrix, and
    * untouched rows keep their identity.
    */
-  const available = useMemo(
+  const withMarks = useMemo(
     () => Object.keys(availabilityMarks).length ? resolved.map((listing) => withAvailability(listing, availabilityMarks)) : resolved,
     [resolved, availabilityMarks],
+  );
+
+  /**
+   * Show pairs the user confirmed as one home as one listing. Everything
+   * downstream (filters, scores, map, table) sees the merged set.
+   */
+  const available = useMemo(() => applySameDecisions(withMarks, { leadOf }), [withMarks, leadOf]);
+
+  /**
+   * Pairs that may be one home, for the review panel. Found after the first
+   * paint, so loading the dashboard never waits for it.
+   */
+  const [duplicatePairs, setDuplicatePairs] = useState<PossibleDuplicate[] | null>(null);
+  useEffect(() => {
+    const timer = setTimeout(() => setDuplicatePairs(findPossibleDuplicates(listings)), 0);
+    return () => clearTimeout(timer);
+  }, [listings]);
+  /** Every listing by key before any "same" merge: the review panel shows both sides. */
+  const unmergedByKey = useMemo(() => new Map(listings.map((listing) => [listingKey(listing), listing])), [listings]);
+  /** Pairs still to review: unanswered, and not already one home through other answers. */
+  const pendingDuplicates = useMemo(
+    () => duplicatePairs?.filter((pair) => isPendingPair(pair, resolvedDuplicates)).length ?? null,
+    [duplicatePairs, resolvedDuplicates],
   );
 
   /**
@@ -301,6 +382,10 @@ export function App({ data }: { data: WebData }) {
     request: number;
   } | null>(null);
 
+  /** Keys of the listings the filters currently show, for the review panel's "matching" toggle. */
+  const visibleKeys = useMemo(() => new Set(filtered.map(({ listing }) => listingKey(listing))), [filtered]);
+  const closeDuplicates = useCallback(() => setDuplicatesOpen(false), []);
+
   const centerMapOn = useCallback((key: string, lat: number, lon: number) => {
     setSelected(key);
     setMapCenterTarget((current) => ({
@@ -311,6 +396,13 @@ export function App({ data }: { data: WebData }) {
     }));
   }, []);
 
+  /** A listing merged by a "same" answer is shown as the listing it joined. */
+  const locateReviewed = useCallback((key: string, lat: number, lon: number) => {
+    const shown = listingsByKey.get(shownKey({ leadOf }, key));
+    if (shown?.lat != null && shown.lon != null) centerMapOn(listingKey(shown), shown.lat, shown.lon);
+    else centerMapOn(key, lat, lon);
+  }, [centerMapOn, listingsByKey, leadOf]);
+
   return (
     <>
       <header className={styles.header}>
@@ -319,7 +411,7 @@ export function App({ data }: { data: WebData }) {
           草加市・越谷市・川口市・葛飾区 — weighted 0–100 scoring · nearest private school &amp; nearest mosque
         </span>
         <span className={styles.subtitle}>
-          {filtered.length} / {listings.length} listings
+          {filtered.length} / {available.length} listings
           {newCount > 0 && ` · ${newCount} new`}
           {soldCount > 0 && ` · ${soldCount} sold`}
           {rentedOutCount > 0 && ` · ${rentedOutCount} rented out${filters.rentedOut === "hide" ? " (hidden)" : ""}`}
@@ -327,6 +419,15 @@ export function App({ data }: { data: WebData }) {
           {markSummary.candidates > 0 && ` · ★${markSummary.candidates} shortlisted`}
           {markSummary.ruledOut > 0 && ` · ✕${markSummary.ruledOut} ruled out`}
         </span>
+        <button
+          type="button"
+          className={`secondary ${styles.headerButton}`}
+          onClick={() => setDuplicatesOpen((open) => !open)}
+          aria-expanded={duplicatesOpen}
+          title="Listings that may be the same home on two portals: check and mark them"
+        >
+          ⧉ Possible duplicates{pendingDuplicates != null && ` · ${pendingDuplicates}`}
+        </button>
       </header>
       <main className={styles.layout}>
         <aside className={styles.sidebar}>
@@ -433,6 +534,19 @@ export function App({ data }: { data: WebData }) {
           )}
         </section>
       </main>
+      {duplicatesOpen && (
+        <DuplicateReview
+          pairs={duplicatePairs}
+          listingsByKey={unmergedByKey}
+          decisions={duplicateDecisions}
+          resolved={resolvedDuplicates}
+          visibleKeys={visibleKeys}
+          onDecide={decideDuplicate}
+          onUndo={undoDuplicate}
+          onLocate={locateReviewed}
+          onClose={closeDuplicates}
+        />
+      )}
     </>
   );
 }

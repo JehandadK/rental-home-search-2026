@@ -20,6 +20,7 @@ import {
 import type { WeightPreset } from "../../domain/weightPresets";
 import type { AvailabilityMap } from "../../domain/availability";
 import type { EnrichedListing } from "../../domain/types";
+import type { DuplicateDecision } from "../../domain/possibleDuplicates";
 
 type PlainObject = Record<string, unknown>;
 
@@ -193,4 +194,16 @@ export function decodeMapAreas(raw: unknown): string[] | null {
 /** Place-name language; Japanese unless English was chosen. */
 export function decodeNameLanguage(raw: unknown): "en" | "ja" {
   return raw === "en" ? "en" : "ja";
+}
+
+/** Duplicate-pair decisions: a verdict, both sides' ad keys and a time; anything else is dropped. */
+export function decodeDuplicateDecisions(raw: unknown): Record<string, DuplicateDecision> {
+  if (!isPlainObject(raw)) return {};
+  const strings = (value: unknown) => Array.isArray(value) && value.length > 0 && value.every((item) => typeof item === "string");
+  return Object.fromEntries(Object.entries(raw).filter(([, decision]) =>
+    isPlainObject(decision)
+    && (decision.verdict === "same" || decision.verdict === "different")
+    && strings(decision.a) && strings(decision.b)
+    && typeof decision.decidedAt === "string",
+  )) as Record<string, DuplicateDecision>;
 }

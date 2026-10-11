@@ -1,7 +1,7 @@
 /**
  * Browser-local user state (M6): preferences, filters, place selection,
  * decision marks, notes, the compare list, saved weight presets, custom
- * listings, and hidden columns.
+ * listings, hidden columns, and duplicate-pair decisions.
  *
  * `UserStateStore` is the only way the app reads or writes that state. The
  * browser adapter below is the only code that touches `localStorage` (the
@@ -38,6 +38,7 @@ export const USER_STATE_KEYS = {
   weightPresets: "soka-scorer-weight-presets-v1",
   mapAreas: "rental-search-map-areas-v1",
   nameLanguage: "rental-search-name-language-v1",
+  duplicateDecisions: "rental-search-duplicate-decisions-v1",
 } as const;
 
 /**

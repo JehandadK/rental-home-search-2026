@@ -57,8 +57,8 @@ root.
 - **Data** stays in Git: refresh, commit `data/`, and rebuild. The page
   revalidates its JSON on every load, so a redeploy shows up without cache
   busting.
-- **Your marks, notes, compare list, presets and custom listings** stay in the
-  visitor's browser (`localStorage`). They are never uploaded, and they do not
+- **Your marks, notes, compare list, presets, custom listings and duplicate
+  answers** stay in the visitor's browser (`localStorage`). They are never uploaded, and they do not
   follow you to another browser or device.
 - **Theme**: `index.html` links `themes/default.css` separately from the app.
   To match a host site, replace that file, or define the same `--rs-*`
@@ -102,7 +102,10 @@ comfort, kitchen, connectivity, security, storage, building and tenancy
 features (e.g. free internet, city gas, pets, parcel box, fixed-term lease).
 Each is bilingual, can prefer Yes/No, and defaults to weight 0 so existing scores
 do not change until the user opts in. Unmapped portal details are still stored
-under **Other source details**. A **保育園 toggle** optionally counts daycares
+under **Other source details**. The header's **⧉ Possible duplicates** panel lists pairs
+that look like one home but differ in a detail (a ¥2,000 rent gap, a 0.3 ㎡
+area gap, a missing building name), so the automatic matcher kept them apart;
+mark each **Same home** (shown as one listing from then on) or **Different**. A **保育園 toggle** optionally counts daycares
 towards kindergarten. Settings persist in `localStorage`.
 
 ### Parking (駐車場)
