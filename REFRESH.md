@@ -552,6 +552,19 @@ removed, and every collector now uses the headed Playwright browser.
   past page 1, per-city commits, for SUUMO, AtHome and RoomSpot. Tests use
   mocked pages only; no portal was contacted for this change.
 
+## 2026-10-11 recent-listing refresh (Playwright)
+
+- Run `2026-10-11T04-15-02-073Z-745d1ff2`: **SUCCESS**, the first since the
+  end-of-results fix; RoomSpot read every city in one stage with no per-city
+  re-run. AtHome showed its verification page once; it was passed by hand.
+  Source additions: SUUMO **46**, AtHome **63**, Nifty **77** (5/22/40/10),
+  RoomSpot **5**.
+- **63 newly tracked properties**; 5320 → **5390** archival rows, all geocoded;
+  none SOLD.
+- Possible duplicates: 750 pairs the automatic matcher keeps apart now appear in
+  the dashboard's review panel (`src/domain/possibleDuplicates.ts`) for a person
+  to mark same or different; the matcher itself is unchanged.
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.
