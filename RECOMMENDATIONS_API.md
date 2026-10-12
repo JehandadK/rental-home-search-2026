@@ -45,7 +45,9 @@ src/domain/recommend/          pure, no I/O (domain layer)
   criteriaSchema.ts            ONE descriptor for every criterion → validation, /criteria, JSON Schema
   request.ts                   decode + validate a request; resolve preset/defaults → full ScoringConfig etc.
   explain.ts                   per-listing reasons, contributions, gaps, cost summary
-  describe.ts                  the self-describing catalogue (criteria, presets, cities, layouts, places)
+  describe.ts                  the self-describing catalogue, findPlaces, and the `scoring` summary
+  rankHomes.ts                 context per snapshot; rankHomes, explainHome, compareHomes (response bodies)
+  jsonSchema.ts                the request JSON Schema, generated from criteriaSchema
 
 src/api/                       new "api" layer (Node; may use domain, data-layer, storage, node)
   snapshot.ts                  load published listings + reference, build the ProximityIndex once, hot-swap on change
@@ -119,7 +121,7 @@ POST /v1/recommendations
     "minScore": 60,                              // cut on the weighted total
     "minPartScores": { "station": 50, "poi1": 40 } // cut on one criterion's 0–100 score
   },
-  "page":   { "limit": 10, "cursor": null },     // limit ≤ 100
+  "page":   { "limit": 10, "offset": 0 },        // limit ≤ 100; offset = nextOffset of the previous page
   "view":   "summary"                            // "summary" | "full"
 }
 ```
@@ -172,15 +174,15 @@ exactly the same errors.
               "builtYear": 2009, "rent": 98000, "monthlyTotal": 104000, "status": "active", "isNew": true,
               "urls": ["https://…"], "photo": "https://…" },
     "reasons": [                                  // strongest contributions first
-      "6 min walk to Al Sanad School Japan (weight 15)",
-      "¥1,571/㎡ — better value than 78% of matches"
+      "6 min walk to Al Sanad School Japan, the nearest private school (scores 49/100, weight 15)",
+      "¥1,571 per ㎡ per month (scores 89/100, weight 10)"
     ],
     "concerns": ["Station is a 17 min walk (scores 15/100)"],
     "breakdown": [ { "key": "poi1", "label": "Nearest private school", "value": 6.1, "unit": "min",
                      "score": 49, "weight": 15, "contribution": 12.2, "detail": "Al Sanad School Japan" } ],
     "gaps": ["moveInCost"]                        // criteria skipped for missing data (weight redistributed)
   }],
-  "nextCursor": "…",
+  "nextOffset": 10,                               // null on the last page
   "relaxationHints": [],                          // when results is empty: "relaxing max rent would give 14"
   "warnings": []
 }
@@ -279,6 +281,9 @@ be reverted on its own.
    minimums, the `scoring` block (every criterion present, `source` correct, resending
    `request` reproduces the ranking), explanation wording, and **parity** (UI pipeline
    vs `recommend()` give the same order and scores for fixture criteria).
+   **Done 2026-10-12**, after two review rounds (query-string prototype pollution, hint
+   counts, the state echo and merged-home lookup among the fixes; the query decoder was
+   fuzzed with 5,000 hostile inputs).
 3. **HTTP API**: snapshot loader with non-blocking reload, router, problem+json,
    `GET /v1/rankings` + `POST /v1/recommendations`, generated OpenAPI with examples,
    Swagger UI at `/v1/docs`, `npm run api`, `api` layer rules. Tests: in-process
@@ -298,7 +303,9 @@ be reverted on its own.
   re-post can change it, and a caller's `excludeKeys` or `marks` would go stale.
   Consider exposing the property document id (`data/properties/`), which is stable
   across portals and re-posts, as the API's primary key, with `listingKey` as an
-  alias.
+  alias. Seen 2026-10-12: SUUMO ids are built from content, so the top home's key
+  `suumo-エステートナカムラ-3DK-70000` still says ¥70,000 after its rent moved to
+  ¥72,000. The key held, but a re-scrape after a rent change can mint a new one.
 - **New dependencies** (libraries, not services; allowed only in the `api` layer):
   `@modelcontextprotocol/sdk` for MCP, and `swagger-ui-dist` for the docs page. The
   MCP alternative is a hand-written stdio JSON-RPC (~150 lines). Loading Swagger UI

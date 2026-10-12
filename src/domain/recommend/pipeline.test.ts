@@ -161,7 +161,7 @@ describe("recommend", () => {
  */
 function inlinePipeline(
   listings: readonly EnrichedListing[],
-  catalog: PlaceCatalog,
+  index: ProximityIndex,
   config: ScoringConfig,
   filters: ListingFilters,
   selection: PlaceSelection,
@@ -171,7 +171,6 @@ function inlinePipeline(
 ) {
   const { leadOf } = resolveDecisions(listings, decisions);
   const marks = carryToLeads(savedMarks, leadOf);
-  const index = new ProximityIndex(listings, catalog, SCORED_CATEGORIES);
   const allowedSets = selectionAllowedSets(selection);
   const resolved = listings.map((listing, i) => applySelection(listing, i, index, selection, allowedSets));
   const withMarks = Object.keys(availabilityMarks).length
@@ -196,13 +195,19 @@ function inlinePipeline(
   return { ranked, hints };
 }
 
+/** Enough real listings to cover their shapes, without slowing the suite (the full index takes ~2 s). */
+const PUBLISHED_SAMPLE = 2_000;
+
 describe("recommend on the published listings", () => {
   let listings: EnrichedListing[];
   let index: ProximityIndex;
+  /** Built as App.tsx built it before the stages moved, shared by every scenario. */
+  let inlineIndex: ProximityIndex;
   beforeAll(async () => {
     const payload = JSON.parse(await readFile(join(process.cwd(), "public/data/listings.json"), "utf-8")) as WebPayload;
-    listings = unpackListings(payload);
+    listings = unpackListings(payload).slice(0, PUBLISHED_SAMPLE);
     index = buildProximityIndex(listings, CATALOG);
+    inlineIndex = new ProximityIndex(listings, CATALOG, SCORED_CATEGORIES);
   });
 
   const commuter = applyPreset(DEFAULT_CONFIG, BUILT_IN_PRESETS.find((preset) => preset.id === "commuter")!);
@@ -257,7 +262,7 @@ describe("recommend on the published listings", () => {
       marks = { [listingKey(member)]: "not-interested" };
     }
 
-    const expected = inlinePipeline(listings, CATALOG, config, filters, selection, marks, availabilityMarks, duplicateDecisions);
+    const expected = inlinePipeline(listings, inlineIndex, config, filters, selection, marks, availabilityMarks, duplicateDecisions);
     const actual = recommend({ listings, index, config, filters, selection, marks, duplicateDecisions, availabilityMarks });
     if (userState) {
       expect(expected.hints.map((hint) => hint.id)).toContain("minScore");

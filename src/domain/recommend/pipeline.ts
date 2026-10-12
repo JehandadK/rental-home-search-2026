@@ -155,8 +155,11 @@ export interface Recommendation {
   relaxationHints: RelaxationHint[];
 }
 
-/** Run the whole pipeline once, as the dashboard does across its memoised stages. */
-export function recommend(input: RecommendationInput): Recommendation {
+/**
+ * Run the whole pipeline once, as the dashboard does across its memoised stages.
+ * `hints: false` skips the relaxation hints, for callers only counting homes.
+ */
+export function recommend(input: RecommendationInput, options: { hints?: boolean } = {}): Recommendation {
   const { listings, index, config, filters, selection } = input;
   const { leadOf } = resolveDecisions(listings, input.duplicateDecisions ?? {});
   const marks = carryToLeads(input.marks ?? {}, leadOf);
@@ -167,7 +170,7 @@ export function recommend(input: RecommendationInput): Recommendation {
   const candidates = filterCandidates(available, filters, marks);
   const scored = scoreCandidates(candidates, config);
   const ranked = [...meetsMinScore(scored, filters.minScore)].sort(byScoreDesc);
-  const hints = ranked.length > 0 || available.length === 0
+  const hints = ranked.length > 0 || available.length === 0 || options.hints === false
     ? []
     : emptyResultHints(available, filters, marks, config);
   return { available, scored, ranked, relaxationHints: hints };
