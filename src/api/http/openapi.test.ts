@@ -8,7 +8,7 @@ import { unpackListings, type WebPayload } from "../../domain/webPayload";
 import { loadCurrentReferenceModel } from "../../storage/json/currentReference.contract";
 import { createApiService } from "../service";
 import { staticSnapshotSource, type Snapshot } from "../snapshot";
-import { openApiDocument, REQUEST_EXAMPLES } from "./openapi";
+import { EXPLAIN_EXAMPLE, openApiDocument, REQUEST_EXAMPLES } from "./openapi";
 
 type Schema = Record<string, any>;
 const doc = openApiDocument({ auth: false }) as Schema;
@@ -89,6 +89,16 @@ describe("the OpenAPI document", () => {
       expect(decoded.ok, name).toBe(name !== "invalid");
       expect(check(components.RecommendationRequest, value), name).toEqual(name === "invalid" ? ["$.weights.staton: not in the schema"] : []);
     }
+  });
+
+  it("gives every request body an example, so Swagger UI never samples one with all weights at 0", () => {
+    for (const [path, item] of Object.entries(doc.paths as Record<string, Record<string, Schema>>)) {
+      for (const [method, operation] of Object.entries(item)) {
+        const content = operation.requestBody?.content?.["application/json"];
+        if (content) expect(content.example ?? content.examples, `${method} ${path}`).toBeDefined();
+      }
+    }
+    expect(decodeRequest(EXPLAIN_EXAMPLE, snapshot.context.decode).ok).toBe(true);
   });
 
   it("asks for a bearer token only when the server has tokens", () => {

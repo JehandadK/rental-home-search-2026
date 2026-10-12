@@ -117,7 +117,11 @@ function schemas(): Record<string, JsonSchema> {
     }),
     Scoring: object({
       parameters: { type: "array", items: ref("ScoringParameter") },
-      features: { type: "array", items: ref("ScoringFeature") },
+      features: { type: "array", items: ref("ScoringFeature"), description: "The weighted features (every feature with view \"full\")" },
+      unweightedFeatures: object({
+        keys: { ...strings, description: "Features at weight 0: they show on homes but do not count" },
+        set: str, setPrefer: str, describe: str,
+      }, [], "The features at weight 0, by key, with the path pattern that turns one on"),
       travel: object({ mode: { type: "string", enum: ["walk", "bicycle"] }, speedMPerMin: num, detourFactor: num, includeParking: bool, includeHoikuen: bool }),
       moveIn: openObject("The move-in assumptions used"),
       preset: nullable(str),
@@ -201,6 +205,9 @@ export const REQUEST_EXAMPLES: Record<string, { summary: string; value: Record<s
     value: { weights: { staton: 5 } },
   },
 };
+
+/** The criteria Swagger UI fills in for explain; the tests decode it too. */
+export const EXPLAIN_EXAMPLE = { preset: "commuter", filters: { layouts: ["3"] } };
 
 const problem = (description: string) => ({
   description,
@@ -317,7 +324,8 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
           summary: "One home in full under your criteria",
           description: "Scores and explains the home even when your filters would hide it, and says whether (and where) it ranks.",
           parameters: [{ name: "key", in: "path", required: true, schema: { type: "string" }, description: "results[].key from a ranking" }],
-          requestBody: { required: false, content: { "application/json": { schema: ref("RecommendationRequest") } } },
+          // Without an example Swagger UI samples the schema, which sets every weight to 0.
+          requestBody: { required: false, content: { "application/json": { schema: ref("RecommendationRequest"), example: EXPLAIN_EXAMPLE } } },
           responses: { "200": json("The home explained", "HomeExplanationResult"), "404": problem("No home has this key"), ...DATA_ERRORS },
         }),
       },

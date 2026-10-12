@@ -78,7 +78,7 @@ const NODE_BUILTINS = new Set(builtinModules);
 const PACKAGES: Partial<Record<Layer, string[]>> = {
   web: ["react", "react-dom"],
   collectors: ["cheerio", "domhandler"],
-  api: ["swagger-ui-dist"],
+  api: ["swagger-ui-dist", "@modelcontextprotocol/sdk"],
 };
 
 function packageName(specifier: string): string {

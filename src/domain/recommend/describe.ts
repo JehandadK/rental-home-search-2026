@@ -161,7 +161,10 @@ export function findPlaces(catalog: PlaceCatalog, query: PlaceQuery): FoundPlace
 /**
  * The scoring a response used: per criterion its weight, its share of all the
  * weight, where the value came from, and the request path that changes it.
- * Weight-0 criteria are included, so the caller sees what it could turn on.
+ * Every numeric criterion is listed, weight 0 included. Of the 31 yes/no
+ * features, the summary view details only the weighted ones and names the
+ * rest in `unweightedFeatures` (most are 0, and listing each in full would
+ * be over a quarter of a response); the full view details all of them.
  */
 export function scoringSummary(decoded: DecodedRequest, catalog: PlaceCatalog) {
   const { criteria, sources } = decoded;
@@ -205,7 +208,7 @@ export function scoringSummary(decoded: DecodedRequest, catalog: PlaceCatalog) {
         } : {}),
       };
     }),
-    features: FEATURE_PARAMETERS.map((meta) => {
+    features: FEATURE_PARAMETERS.filter((meta) => criteria.view === "full" || config.featureWeights[meta.key] > 0).map((meta) => {
       const set = `features.${meta.key}.weight`;
       return {
         key: meta.key,
@@ -220,6 +223,12 @@ export function scoringSummary(decoded: DecodedRequest, catalog: PlaceCatalog) {
         setPrefer: `features.${meta.key}.prefer`,
       };
     }),
+    unweightedFeatures: {
+      keys: FEATURE_PARAMETERS.filter((meta) => config.featureWeights[meta.key] === 0).map((meta) => meta.key),
+      set: "features.<key>.weight",
+      setPrefer: "features.<key>.prefer",
+      describe: "describe_criteria (GET criteria) has each one's label, category and default",
+    },
     travel: {
       mode: config.travelMode,
       speedMPerMin: travelSpeed(config),

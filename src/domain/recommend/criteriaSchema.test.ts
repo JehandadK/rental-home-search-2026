@@ -94,7 +94,12 @@ describe("request JSON Schema", () => {
   });
 
   it("carries each field's range, choices and default", () => {
-    expect(at("weights.station")).toMatchObject({ type: "number", minimum: 0, maximum: 20, default: DEFAULT_CONFIG.weights.station });
+    expect(at("weights.station")).toMatchObject({ type: "number", minimum: 0, maximum: 20 });
+    // Presets replace weights, so the schema states the default in words rather than as `default`.
+    expect(at("weights.station")).not.toHaveProperty("default");
+    expect(at("weights.station")?.description).toContain(`Default ${DEFAULT_CONFIG.weights.station}, or the preset's value`);
+    expect(at("features.cityGas.weight")).not.toHaveProperty("default");
+    expect(at("anchors.walkZeroMinutes.station")).toMatchObject({ default: DEFAULT_CONFIG.walkZeroMinutes.station });
     expect(at("filters.rentMax")).toMatchObject({ type: ["number", "null"], default: null });
     expect(at("travel.mode")).toMatchObject({ type: "string", enum: ["walk", "bicycle"] });
     expect(at("page.limit")).toMatchObject({ type: "integer", maximum: 100 });

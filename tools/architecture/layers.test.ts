@@ -80,6 +80,8 @@ describe("layer rules", () => {
     expect(pkg("src/storage/json/dataStore.ts", "@scope/db/client")).toMatch(/may not use package @scope\/db/);
     expect(pkg("src/api/http/docs.ts", "swagger-ui-dist")).toBeNull();
     expect(pkg("src/web/App.tsx", "swagger-ui-dist")).toMatch(/may not use package swagger-ui-dist/);
+    expect(pkg("src/api/mcp/server.ts", "@modelcontextprotocol/sdk/server/index.js")).toBeNull();
+    expect(pkg("src/domain/scoring.ts", "@modelcontextprotocol/sdk/server/index.js")).toMatch(/may not use package @modelcontextprotocol\/sdk/);
   });
 
   it("lets the API read through the domain and data-layer, never storage, collectors or the web app", () => {

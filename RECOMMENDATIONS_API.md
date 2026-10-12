@@ -59,7 +59,7 @@ src/api/                       new "api" layer (Node; may use domain, data-layer
   mcp/server.ts                MCP tools over the same service (stdio now, streamable HTTP later)
 
 scripts/serve-api.ts           npm run api   → http://127.0.0.1:8787/v1
-scripts/mcp.ts                 npm run mcp   → stdio MCP server
+scripts/mcp.ts                 npx tsx scripts/mcp.ts (or npm run --silent mcp) → stdio MCP server
 ```
 
 `tools/architecture/layers.ts` gets an `api` layer:
@@ -250,11 +250,61 @@ Errors are RFC 9457 `application/problem+json`, with
 
 `describe_criteria`, `list_presets`, `find_places`, `rank_homes`, `explain_home`,
 `compare_homes`. `rank_homes` returns the same `scoring` and `request` blocks, so an
-agent can tweak and re-rank in a loop. Each tool description says when to use it;
-`rank_homes` says to call `describe_criteria` first. A `rental://criteria` resource exposes the catalogue
-too. The transport is stdio now (an example `.mcp.json` entry for Claude
-Code/Desktop). Later the same tools mount at `/mcp` on the HTTP server as
-streamable HTTP.
+agent can tweak and re-rank in a loop. Each tool description says when to use it,
+and the server's `instructions` give the workflow (describe → find places → rank →
+tweak `request` → rank again). `rental://criteria` and `rental://presets` expose the
+catalogue and presets as resources.
+
+- Built on the SDK's low-level `Server` (1.31.0): `McpServer` only takes zod schemas,
+  and ours are the generated JSON Schema, so `rank_homes`'s input schema *is*
+  `requestJsonSchema()`. All tools are annotated read-only and closed-world.
+- Each result is both `structuredContent` and JSON text. A bad request or data still
+  loading comes back as an `isError` result with the same field errors as HTTP (the
+  agent can fix and retry); an unknown tool is a protocol error; internal failures
+  say only "see the server log".
+- Every log line goes to stderr; stdout is the protocol. The server answers at once
+  and loads data in the background (about 2 s).
+- To keep responses affordable for agents, the summary view details only the
+  *weighted* yes/no features in `scoring.features` and names the rest in
+  `unweightedFeatures` (with the path pattern that turns one on); `view: "full"`
+  details all 31. That cut a three-home response from 25 KB to 19 KB. A weight-0
+  feature's `prefer` setting then shows only in the `request` echo. This changed the
+  v1 HTTP response before anything consumed it; from now on v1 changes are additive.
+- Tool inputs describe the full request schema once, on `rank_homes`; `explain_home`
+  and `compare_homes` take `criteria` as "the same object", which keeps `tools/list`
+  about 37 KB instead of 100 KB (most of it is `rank_homes` describing all 139 fields). Weights and features carry no schema `default`
+  (a preset replaces them, so a client filling in defaults would override it); the
+  default is stated in each description instead.
+- Launch it as `npx tsx scripts/mcp.ts` or `npm run --silent mcp`: plain
+  `npm run mcp` prints npm's banner on stdout, which is not protocol.
+- Streamable HTTP at `/mcp` on the HTTP server is left for later.
+
+#### Connecting an agent
+
+Claude Code, in this repository (`.mcp.json` at the repo root, or
+`claude mcp add rental-recommendations -- npx tsx scripts/mcp.ts`):
+
+```json
+{
+  "mcpServers": {
+    "rental-recommendations": { "command": "npx", "args": ["tsx", "scripts/mcp.ts"] }
+  }
+}
+```
+
+Any other MCP client (Claude Desktop, other agents), with absolute paths because the
+client's working directory is unknown:
+
+```json
+{
+  "mcpServers": {
+    "rental-recommendations": {
+      "command": "<repo>/node_modules/.bin/tsx",
+      "args": ["<repo>/scripts/mcp.ts", "--data", "<repo>/public/data"]
+    }
+  }
+}
+```
 
 ## Local now, deployable later
 
@@ -306,9 +356,14 @@ be reverted on its own.
    (DNS rebinding via the Host header, load errors leaking local paths, a rate limit
    keyed by a client-chosen header, a lockout of token holders through the limiter cap,
    malformed targets, slow-header timeouts).
-4. **MCP server**: tools over `service.ts`, `npm run mcp`, `.mcp.json` example.
+4. **MCP server**: tools over `service.ts`, `npm run --silent mcp`, `.mcp.json` example.
    Tests: tool list and schemas, and a `rank_homes` round trip over in-memory
-   transport.
+   transport. **Done 2026-10-12.** Also checked over real stdio with the SDK's own
+   client: connect, wait for data, describe, rank, tweak one path, re-rank, a typo,
+   explain, places, resources and an unknown tool. The SDK is pinned at 1.31.0, the
+   first release without the OAuth-client credential advisory affecting < 1.31.0
+   (13 days old; its dependencies match 1.30.1). None of its 91 packages has an
+   install script.
 5. **Docs and hardening**: README section with curl and MCP examples; auth, CORS,
    limits and rate limiting, the URL data source, and a startup guard for
    non-loopback hosts.

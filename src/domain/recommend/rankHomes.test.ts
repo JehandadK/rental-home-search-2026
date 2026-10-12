@@ -172,7 +172,15 @@ describe("rankHomes", () => {
     });
     expect(scoring.parameters.find((parameter) => parameter.key === "rent")!.source).toBe("preset:commuter");
     expect(scoring.parameters).toHaveLength(11);
-    expect(scoring.features).toHaveLength(31);
+    // The summary details only weighted features and names the rest; the full view details every one.
+    expect(scoring.features).toEqual([]);
+    expect(scoring.unweightedFeatures).toMatchObject({ set: "features.<key>.weight" });
+    expect(scoring.unweightedFeatures.keys).toHaveLength(31);
+    const withGas = rank({ features: { cityGas: { weight: 4 } } }).scoring;
+    expect(withGas.features.map((feature) => feature.key)).toEqual(["cityGas"]);
+    expect(withGas.features[0]).toMatchObject({ weight: 4, source: "request", set: "features.cityGas.weight" });
+    expect(withGas.unweightedFeatures.keys).toHaveLength(30);
+    expect(rank({ view: "full" }).scoring.features).toHaveLength(31);
     const shares = [...scoring.parameters, ...scoring.features].reduce((sum, item) => sum + item.share, 0);
     expect(shares).toBeCloseTo(1, 2);
     expect(scoring.preset).toBe("commuter");

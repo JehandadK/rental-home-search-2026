@@ -87,11 +87,16 @@ export function requestJsonSchema(): JsonSchema {
       };
     });
     const unit = spec.unit ? ` [${spec.unit}]` : "";
+    // A preset replaces weights (and may replace features), so a schema `default` there would be wrong
+    // whenever a preset is set, and a client that fills in defaults would silently override the preset.
+    const presetOwned = spec.group === "weights" || spec.group === "features";
     (node.properties as Record<string, JsonSchema>)[parts[parts.length - 1]] = {
       ...fieldJsonSchema(spec.type),
       title: spec.labelJa ? `${spec.label} · ${spec.labelJa}` : spec.label,
-      description: `${spec.description}${unit}`,
-      ...(spec.group !== "state" && spec.path !== "preset" ? { default: spec.read(defaults) } : {}),
+      description: presetOwned
+        ? `${spec.description}${unit}. Default ${JSON.stringify(spec.read(defaults))}, or the preset's value`
+        : `${spec.description}${unit}`,
+      ...(spec.group !== "state" && spec.path !== "preset" && !presetOwned ? { default: spec.read(defaults) } : {}),
     };
   }
   return root;

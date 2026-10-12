@@ -44,6 +44,7 @@
     "test": "vitest run",
     "rank": "tsx scripts/rank.ts",
     "api": "tsx scripts/serve-api.ts",
+    "mcp": "tsx scripts/mcp.ts",
     "find:new": "tsx scripts/find-new.ts",
     "data:journal:compact": "tsx scripts/compact-journal.ts",
     "data:backfill": "tsx scripts/backfill-suumo.ts",
@@ -51,6 +52,7 @@
     "backfill:parking": "tsx scripts/backfill-parking.ts --quiet"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.31.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "swagger-ui-dist": "5.33.0"
