@@ -32,6 +32,19 @@
   "Discovered N new" summary line totals every city. Source provenance
   (`cities`, `pagesFetched`, `newListingIds`) now describes the last city
   committed, and each city's commit takes a backup (10 kept per source).
+- **Minimum floor area per source** lives in `collectors.config.json`
+  (`sources.<source>.minAreaM2`; 60 for every portal since 2026-10-12, `null` =
+  any). `--min-area N` on a collector or on `npm run refresh` overrides it for
+  one run (`0` = any) and is saved in the run ledger, so `--resume` keeps it.
+  Each collector logs its `Area filter:` line. SUUMO (`mb=…&mt=9999999`), Nifty
+  (`r10=…`) and RoomSpot (`occupied_area_from=….0`) send the portal's own
+  search parameter, read from each search form in the headed browser and
+  rounded down to the portal's nearest step (`src/collectors/shared/searchFilters.ts`).
+  AtHome keeps search conditions in the browser session, not the URL, so the
+  AtHome/RoomSpot collector drops each page's rooms below the exact minimum.
+  UR ignores it: one API sweep per city sees every room, and a room it skipped
+  would be recorded gone. Rooms with no stated area are always kept. A filtered
+  search is still newest-first, so the two-all-known-pages stop applies to it.
 - Capture list fields once, including fees, amenities and parking flags when
   present. Nifty now parses list cards instead of fetching each detail page.
 - Refresh always tries detail pages, bounded by `--detail-limit` (default 10 per
@@ -564,6 +577,25 @@ removed, and every collector now uses the headed Playwright browser.
 - Possible duplicates: 750 pairs the automatic matcher keeps apart now appear in
   the dashboard's review panel (`src/domain/possibleDuplicates.ts`) for a person
   to mark same or different; the matcher itself is unchanged.
+
+## 2026-10-12 first refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-10-12T11-27-36-793Z-6f74705d`: **SUCCESS** after one resume. Every
+  portal searched ≥60㎡ (`collectors.config.json`); every source/city stopped
+  on two all-known pages or its last page. Nifty Koshigaya, Kawaguchi and
+  Katsushika failed page 1 with a transient HTTP 404 (Soka had just read 4
+  filtered pages); a lone Koshigaya retry and then `--resume` succeeded.
+- Before the run, each portal's area parameter was read from its own search
+  form in the headed browser (SUUMO `mb`, Nifty `r10`, RoomSpot
+  `occupied_area_from`). AtHome's list page has no condition form (it keeps
+  conditions in the session) and showed its verification page once to the
+  probe; it was passed by hand.
+- Source additions: SUUMO **65**, AtHome **25**, RoomSpot **8**, Nifty **1**
+  (Soka). Every source row added this run is ≥60㎡ (SUUMO 331, AtHome 40,
+  RoomSpot 10, Nifty 373 rows checked; none smaller, none without an area).
+- **95 newly tracked properties** (Soka 5, Koshigaya 14, Kawaguchi 65,
+  Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
+  all geocoded; none SOLD.
 
 ## Entry points
 

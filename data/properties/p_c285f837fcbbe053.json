@@ -15,7 +15,8 @@
         "https://myhome.nifty.com/rent/tokyo/katsushikaku_ct/detail_8d57d4951a84346aace5b1edacc8f879/"
       ],
       "sightings": [
-        "2026-10-04T11:20:11.765Z"
+        "2026-10-04T11:20:11.765Z",
+        "2026-10-12T11:30:24.637Z"
       ],
       "firstRecordedAt": "2026-10-04T12:12:33.152Z"
     }
@@ -67,12 +68,13 @@
       "chosen": [
         "駐輪場あり",
         "バス・トイレ別",
-        "フローリング"
+        "フローリング",
+        "オートロック"
       ],
       "chosenFrom": {
         "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-04T11:22:57.890Z"
+        "observedAt": "2026-10-12T11:30:31.454Z"
       },
       "values": [
         {
@@ -89,6 +91,22 @@
           "lastObservedAt": null,
           "observedBefore": "2026-10-04T11:22:57.890Z",
           "firstRecordedAt": "2026-10-04T12:12:33.152Z"
+        },
+        {
+          "value": [
+            "駐輪場あり",
+            "バス・トイレ別",
+            "フローリング",
+            "オートロック"
+          ],
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_8d57d4951a84346aace5b1edacc8f879"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "observedBefore": "2026-10-12T11:30:31.454Z",
+          "firstRecordedAt": "2026-10-12T11:31:29.781Z"
         }
       ]
     },
@@ -464,6 +482,18 @@
       "data": {
         "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.superseded|nifty|detail_8d57d4951a84346aace5b1edacc8f879|2026-10-12T11:30:31.454Z",
+      "type": "ad.superseded",
+      "at": "2026-10-12T11:30:31.454Z",
+      "recordedAt": "2026-10-12T11:31:29.781Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_8d57d4951a84346aace5b1edacc8f879",
+      "url": "https://myhome.nifty.com/rent/tokyo/katsushikaku_ct/detail_8d57d4951a84346aace5b1edacc8f879/",
+      "data": {
+        "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -472,8 +502,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "nifty|detail_8d57d4951a84346aace5b1edacc8f879",
     "firstSeenUrl": "https://myhome.nifty.com/rent/tokyo/katsushikaku_ct/detail_8d57d4951a84346aace5b1edacc8f879/",
-    "lastSeenAt": "2026-10-04T11:20:11.765Z",
-    "lastListedAt": "2026-10-04T11:20:11.765Z",
+    "lastSeenAt": "2026-10-12T11:30:24.637Z",
+    "lastListedAt": "2026-10-12T11:30:24.637Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -488,12 +518,14 @@
       "nifty|detail_8d57d4951a84346aace5b1edacc8f879": {
         "source": "nifty",
         "firstSeenAt": "2026-10-04T11:20:11.765Z",
-        "lastSeenAt": "2026-10-04T11:20:11.765Z",
-        "lastListedAt": "2026-10-04T11:20:11.765Z",
+        "lastSeenAt": "2026-10-12T11:30:24.637Z",
+        "lastListedAt": "2026-10-12T11:30:24.637Z",
         "goneSince": null,
         "relistCount": 0
       }
     },
-    "conflicts": []
+    "conflicts": [
+      "building.features"
+    ]
   }
 }
