@@ -2,14 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { SCORE_PARAMETERS, travelSpeed, type ScoringConfig } from "../domain/scoringConfig";
 import { scoreListing } from "../domain/scoring";
 import { diagnoseAll } from "../domain/diagnostics";
-import { activeFilterCount, matchesListing, type ListingFilters } from "../domain/filters";
-import { relaxationHints, type RelaxationHint } from "../domain/filterRelaxation";
+import { activeFilterCount } from "../domain/filters";
+import type { RelaxationHint } from "../domain/filterRelaxation";
 import { lifecycleCounts } from "../domain/lifecycle";
 import { isUrListing } from "../domain/ur";
 import { urVacancies as countUrVacancies } from "../domain/urEstates";
-import { withAvailability } from "../domain/availability";
 import {
-  applySameDecisions,
   carryToLeads,
   findPossibleDuplicates,
     isPendingPair,
@@ -17,11 +15,20 @@ import {
   shownKey,
   type PossibleDuplicate,
 } from "../domain/possibleDuplicates";
-import { matchesMarkFilter, summarizeMarks } from "../domain/marks";
+import { summarizeMarks } from "../domain/marks";
 import { listingKey } from "../domain/listingKey";
-import { ProximityIndex } from "../domain/proximityIndex";
-import { SCORED_CATEGORIES } from "../domain/places";
-import { applySelection, selectionAllowedSets } from "../domain/placeSelection";
+import {
+  buildProximityIndex,
+  byScoreDesc,
+  emptyResultHints,
+  filterCandidates,
+  meetsMinScore,
+  mergeConfirmedDuplicates,
+  overlayAvailability,
+  rankOf,
+  resolvePlaces,
+  scoreCandidates,
+} from "../domain/recommend/pipeline";
 import type { WebData } from "./data/useWebData";
 import { usePlaceSelection } from "./hooks/usePlaceSelection";
 import { PlacePanel } from "./components/PlacePanel";
@@ -128,7 +135,7 @@ export function App({ data }: { data: WebData }) {
    * reference place is measured, so changing which places count is a cheap
    * in-memory reduction rather than a pipeline re-run.
    */
-  const index = useMemo(() => new ProximityIndex(listings, catalog, SCORED_CATEGORIES), [listings, catalog]);
+  const index = useMemo(() => buildProximityIndex(listings, catalog), [listings, catalog]);
 
   /**
    * The private schools the poi1 score takes the nearest of, marked on the
@@ -157,26 +164,20 @@ export function App({ data }: { data: WebData }) {
   );
 
   /** Listings with proximities resolved against the current place selection. */
-  const resolved = useMemo(() => {
-    const allowedSets = selectionAllowedSets(selection);
-    return listings.map((listing, i) => applySelection(listing, i, index, selection, allowedSets));
-  }, [listings, index, selection]);
+  const resolved = useMemo(() => resolvePlaces(listings, index, selection), [listings, index, selection]);
 
   /**
    * Overlay the user's hand-made availability marks. Applied after the
    * proximity work so toggling one ad never rebuilds the distance matrix, and
    * untouched rows keep their identity.
    */
-  const withMarks = useMemo(
-    () => Object.keys(availabilityMarks).length ? resolved.map((listing) => withAvailability(listing, availabilityMarks)) : resolved,
-    [resolved, availabilityMarks],
-  );
+  const withMarks = useMemo(() => overlayAvailability(resolved, availabilityMarks), [resolved, availabilityMarks]);
 
   /**
    * Show pairs the user confirmed as one home as one listing. Everything
    * downstream (filters, scores, map, table) sees the merged set.
    */
-  const available = useMemo(() => applySameDecisions(withMarks, { leadOf }), [withMarks, leadOf]);
+  const available = useMemo(() => mergeConfirmedDuplicates(withMarks, leadOf), [withMarks, leadOf]);
 
   /**
    * Pairs that may be one home, for the review panel. Found after the first
@@ -203,12 +204,7 @@ export function App({ data }: { data: WebData }) {
    * state kept outside the listing data.
    */
   const candidates = useMemo(
-    () =>
-      available.filter(
-        (listing) =>
-          matchesListing(listing, filters) &&
-          matchesMarkFilter(marks[listingKey(listing)], filters.markFilter),
-      ),
+    () => filterCandidates(available, filters, marks),
     // Marks only affect candidates when the decision filter is active. Without
     // this split, changing one row's mark rescored the entire visible market.
     [available, filters, filters.markFilter === "all" ? null : marks],
@@ -220,17 +216,9 @@ export function App({ data }: { data: WebData }) {
     .map((station) => ({ name: station.name, cityId: typeof station.attributes?.cityId === "string" ? station.attributes.cityId : undefined }))),
   [reference]);
 
-  const scored: ScoredRow[] = useMemo(
-    () => candidates.map((listing) => ({ listing, score: scoreListing(listing, config) })),
-    [candidates, config],
-  );
+  const scored: ScoredRow[] = useMemo(() => scoreCandidates(candidates, config), [candidates, config]);
 
-  const filtered: ScoredRow[] = useMemo(
-    () => filters.minScore > 0
-      ? scored.filter(({ score }) => (score.total ?? -1) >= filters.minScore)
-      : scored,
-    [scored, filters.minScore],
-  );
+  const filtered: ScoredRow[] = useMemo(() => meetsMinScore(scored, filters.minScore), [scored, filters.minScore]);
 
   /**
    * How far each home moved in the ranking after the last change to the
@@ -245,17 +233,7 @@ export function App({ data }: { data: WebData }) {
    */
   const relaxHints = useMemo(() => {
     if (filtered.length > 0 || available.length === 0) return NO_HINTS;
-    const totals = new Map<(typeof available)[number], number>();
-    const totalOf = (listing: (typeof available)[number]) => {
-      if (!totals.has(listing)) totals.set(listing, scoreListing(listing, config).total ?? -1);
-      return totals.get(listing)!;
-    };
-    const countMatching = (relaxed: ListingFilters) => available.filter((listing) =>
-      matchesListing(listing, relaxed)
-      && matchesMarkFilter(marks[listingKey(listing)], relaxed.markFilter)
-      && (relaxed.minScore <= 0 || totalOf(listing) >= relaxed.minScore),
-    ).length;
-    return relaxationHints(filters, countMatching);
+    return emptyResultHints(available, filters, marks, config);
   }, [filtered.length, available, filters, marks, config]);
 
   // Memoised: a fresh element would re-render the memoised table on every hover.
@@ -307,8 +285,7 @@ export function App({ data }: { data: WebData }) {
     for (const key of compare) {
       const row = filtered.find(({ listing }) => listingKey(listing) === key);
       if (!row) continue;
-      const total = row.score.total ?? -1;
-      ranks.set(key, 1 + filtered.filter(({ score }) => (score.total ?? -1) > total).length);
+      ranks.set(key, rankOf(filtered, row.score.total));
     }
     return ranks;
   }, [compare, filtered]);
@@ -334,7 +311,7 @@ export function App({ data }: { data: WebData }) {
     (format: typeof toCsv) => {
       // Export sorting is deferred until the user actually requests it. Keeping
       // a permanently sorted duplicate of 1,600 rows added work to each score change.
-      const ranked = [...filtered].sort((a, b) => (b.score.total ?? -1) - (a.score.total ?? -1));
+      const ranked = [...filtered].sort(byScoreDesc);
       return navigator.clipboard.writeText(format(ranked, marks, notes));
     },
     [filtered, marks, notes],
