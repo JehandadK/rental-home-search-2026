@@ -8,8 +8,11 @@ export function niftyCaptureExpression(url: string): string {
     let doc=document;
     if(new URL(location.href).href!==url){
       const res=await fetch(url,{credentials:'include',signal:AbortSignal.timeout(20000)});
+      const text=await res.text();
+      // Nifty's own not-found page is what it serves past a city's last result page.
+      if(res.status===404&&/ページが見つかりません/.test(text))throw Error('Nifty not found (HTTP 404)');
       if(!res.ok)throw Error('Nifty HTTP '+res.status);
-      doc=new DOMParser().parseFromString(await res.text(),'text/html');
+      doc=new DOMParser().parseFromString(text,'text/html');
     }
     if(doc.querySelector('select[name="sort"]')?.value!=='regDate-desc')throw Error('Newest-first sort not confirmed');
     const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
