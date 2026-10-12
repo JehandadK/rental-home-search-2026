@@ -28,6 +28,7 @@ import type { CityBoundaryRecord } from "../src/data-layer/contracts";
 import { withFileLock } from "../src/node/jsonFile";
 import { adKey } from "../src/domain/availability";
 import { UR_SOURCE } from "../src/domain/ur";
+import { describeSettings } from "../src/collectors/shared/searchFilters";
 import { addressKey, type GeocodeCache } from "../src/collectors/enrichment/geocodeCache";
 import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
 import { UR_ORIGIN, roomUrl, type UrCityQuery } from "../src/collectors/ur/urApi";
@@ -86,6 +87,8 @@ async function main(): Promise<void> {
   const known = await readAvailability();
 
   const first = cities[0];
+  // UR has no area filter: one sweep sees every room, and a room it skipped would be recorded gone.
+  console.log(describeSettings("ur", { minAreaM2: null }));
   const browser = new UrBrowser();
   let sweep: UrSweep;
   try {

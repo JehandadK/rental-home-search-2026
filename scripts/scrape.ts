@@ -26,6 +26,7 @@ import { TARGET_CITIES, selectCities } from "../src/collectors/shared/targetCiti
 import { createBrowserFetch, type BrowserFetch } from "../src/collectors/shared/browserFetch";
 import { EndOfResultsError, lastResultsPage } from "../src/collectors/shared/resultPages";
 import { logCommittedCities } from "../src/collectors/shared/portalCollector";
+import { collectorSettings, describeSettings, withMinArea, type CollectorSettings } from "../src/collectors/shared/searchFilters";
 
 /** 2K / 2DK / 2LDK / 3K / 3DK / 3LDK / 4K / 4DK / 4LDK / 5K+ */
 const LAYOUT_CODES = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];
@@ -34,9 +35,9 @@ const MD_QUERY = LAYOUT_CODES.map((c) => `md=${c}`).join("&");
 const NEWEST_FIRST = "po1=09";
 const CITIES = TARGET_CITIES.map((city) => ({ sc: city.suumo, label: city.label, prefecture: city.prefectureSlug }));
 
-const cityUrl = (city: (typeof CITIES)[number], page: number, newestFirst: boolean) => {
+const cityUrl = (city: (typeof CITIES)[number], page: number, newestFirst: boolean, minAreaM2: number | null = null) => {
   const params = `${MD_QUERY}${newestFirst ? `&${NEWEST_FIRST}` : ""}${page > 1 ? `&page=${page}` : ""}`;
-  return `https://suumo.jp/chintai/${city.prefecture}/${city.sc}/?${params}`;
+  return withMinArea("suumo", `https://suumo.jp/chintai/${city.prefecture}/${city.sc}/?${params}`, minAreaM2);
 };
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -59,7 +60,7 @@ export async function fetchPage(browser: Pick<BrowserFetch, "fetch">, url: strin
 export { parsePage };
 
 /** The adapter submits all parsed observations; identity and deduplication belong to the data layer. */
-export async function suumoCaptureBatch(capture: PageCapture): Promise<ScrapeBatch> {
+export async function suumoCaptureBatch(capture: PageCapture, minAreaM2: number | null = null): Promise<ScrapeBatch> {
   if (capture.source !== "suumo") throw new Error("Expected a SUUMO capture");
   validateCapture(capture);
   const parsed = parsePage(capture.html, new Date(capture.capturedAt).getFullYear()).map((listing) => ({ ...listing, city: capture.city }));
@@ -68,7 +69,7 @@ export async function suumoCaptureBatch(capture: PageCapture): Promise<ScrapeBat
     capturedAt: capture.capturedAt, html: capture.html });
   return { schemaVersion: 1, source: "suumo", scraper: { name: "suumo-list", version: "1", parserVersion: "1" },
     runId: `suumo-page:${capture.capturedAt}`, batchId: captureId, mode: "discovery", capturedAt: capture.capturedAt,
-    scope: { urls: [capture.url], cities: [capture.city], filters: { page: capture.page, sort: "newest", layoutCodes: LAYOUT_CODES.join(",") } },
+    scope: { urls: [capture.url], cities: [capture.city], filters: { page: capture.page, sort: "newest", layoutCodes: LAYOUT_CODES.join(","), ...(minAreaM2 != null ? { minAreaM2 } : {}) } },
     observations: parsed.map((listing) => ({ sourceListingId: listing.url!, observedAt: capture.capturedAt,
       evidence: { url: capture.url, captureId }, listing })),
   };
@@ -79,6 +80,8 @@ export interface SuumoScrapeDependencies {
   page(meta: Pick<PageCapture, "source" | "city" | "url" | "page">): Promise<PageCapture>;
   sleep(ms: number): Promise<void>;
   log(message: string): void;
+  /** This run's search filters; read from collectors.config.json and `--min-area` when absent. */
+  settings?: CollectorSettings;
 }
 
 export async function runSuumoScrape(args: readonly string[], dependencies: SuumoScrapeDependencies) {
@@ -87,9 +90,11 @@ export async function runSuumoScrape(args: readonly string[], dependencies: Suum
   const flag = args.indexOf("--max-pages");
   const maxPages = flag >= 0 ? Math.max(1, Math.floor(Number(args[flag + 1]) || 1)) : DEFAULT_INCREMENTAL_PAGE_CEILING;
   const cities = selectCities(args, CITIES, (city) => city.label);
+  const { minAreaM2 } = dependencies.settings ?? collectorSettings("suumo", args);
   let pagesFetched = 0;
   const receipts: ScrapeIngestionReceipt[] = [];
   dependencies.log(deep ? "Deep newest-first discovery (no deletions)" : "Incremental newest-first discovery (no deletions)");
+  dependencies.log(describeSettings("suumo", { minAreaM2 }));
   // Each city commits on its own: a failure keeps the cities committed before it, then stops the run.
   try {
     for (const city of cities) {
@@ -98,7 +103,7 @@ export async function runSuumoScrape(args: readonly string[], dependencies: Suum
       dependencies.log(`\n=== ${city.label} (${city.sc}) ===`);
       let lastPage: number | undefined;
       for (let page = 1; page <= maxPages; page++) {
-        const meta = { source: "suumo" as const, city: city.label, url: cityUrl(city, page, true), page };
+        const meta = { source: "suumo" as const, city: city.label, url: cityUrl(city, page, true, minAreaM2), page };
         let capture: PageCapture;
         try { capture = await dependencies.page(meta); }
         catch (error) {
@@ -110,7 +115,7 @@ export async function runSuumoScrape(args: readonly string[], dependencies: Suum
           break;
         }
         if (capture.url !== meta.url || capture.city !== meta.city || capture.page !== page) throw new Error("SUUMO capture identity mismatch");
-        const result = session.stagePage(await suumoCaptureBatch(capture));
+        const result = session.stagePage(await suumoCaptureBatch(capture, minAreaM2));
         pagesFetched++;
         // Page 1 links every page up to the last one.
         if (page === 1) lastPage = lastResultsPage(capture);

@@ -5,6 +5,7 @@ import { listCaptureBatch } from "./listCaptureBatch";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING } from "./pageBudget";
 import { EndOfResultsError, lastResultsPage } from "./resultPages";
 import { selectCities } from "./targetCities";
+import { collectorSettings, describeSettings, keepsArea, withMinArea, type CollectorSettings } from "./searchFilters";
 
 export interface PortalCollectorConfig {
   source: "athome" | "roomspot";
@@ -25,6 +26,8 @@ export interface PortalCollectorDependencies {
   log(message: string): void;
   /** Called once, after the last city's commit or after a failure. */
   close?(): Promise<void>;
+  /** This run's search filters; read from collectors.config.json and `--min-area` when absent. */
+  settings?: CollectorSettings;
 }
 
 export function portalPageBudget(args: readonly string[]): number {
@@ -63,7 +66,9 @@ export async function runPortalScrape(config: PortalCollectorConfig, args: reado
     throw new Error("--full requires verified per-city exhaustion. Use --deep; capped discovery never authorizes SOLD detection.");
   }
   const maxPages = portalPageBudget(args);
-  const cities = selectCities(args, config.cities, (city) => city.city);
+  const settings = dependencies.settings ?? collectorSettings(config.source, args);
+  const cities = selectCities(args, config.cities, (city) => city.city)
+    .map((city) => ({ ...city, url: withMinArea(config.source, city.url, settings.minAreaM2) }));
   let deep = args.includes("--deep");
   let pagesFetched = 0;
   const receipts: ScrapeIngestionReceipt[] = [];
@@ -76,6 +81,7 @@ export async function runPortalScrape(config: PortalCollectorConfig, args: reado
       if (index === 0) {
         if (session.bootstrap) dependencies.log(`No ${config.label} snapshot yet; automatically bootstrapping a deep discovery crawl.`);
         dependencies.log(session.deep ? `${config.label} deep newest-first bootstrap` : `${config.label} incremental newest-first discovery`);
+        dependencies.log(describeSettings(config.source, settings));
       }
       // A bootstrap stays deep for every city, although the first commit creates the snapshot.
       deep = session.deep;
@@ -94,7 +100,13 @@ export async function runPortalScrape(config: PortalCollectorConfig, args: reado
         if (capture.source !== meta.source || capture.url !== meta.url || capture.city !== meta.city || capture.page !== page) {
           throw new Error(`${config.label} capture identity mismatch`);
         }
-        const result = session.stagePage(await listCaptureBatch(capture));
+        const batch = await listCaptureBatch(capture);
+        // Rooms below the minimum area are not collected (AtHome's search cannot exclude them).
+        const result = session.stagePage(settings.minAreaM2 == null ? batch : {
+          ...batch,
+          scope: { ...batch.scope, filters: { ...batch.scope.filters, minAreaM2: settings.minAreaM2 } },
+          observations: batch.observations.filter((observation) => keepsArea(observation.listing.sizeM2, settings.minAreaM2)),
+        });
         pagesFetched++;
         parsed += result.parsedCount;
         const last = lastResultsPage(capture);

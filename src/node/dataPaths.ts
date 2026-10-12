@@ -15,3 +15,6 @@ export const DATA_DIR = join(REPO_ROOT, "data");
  * sources, captures, or backups.
  */
 export const WEB_PUBLISH_DIR = join(REPO_ROOT, "public", "data");
+
+/** Per-source collector settings (search filters), edited by hand. */
+export const COLLECTOR_CONFIG_PATH = join(REPO_ROOT, "collectors.config.json");

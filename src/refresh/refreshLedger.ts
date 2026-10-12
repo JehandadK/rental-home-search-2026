@@ -45,7 +45,8 @@ export interface RefreshRunRecord {
   skipNifty: boolean;
   /** Skip collection only; preserve the existing RoomSpot source in builds. */
   skipRoomspot?: boolean;
-  limits?: { pagesPerCity: number; detailRequests: number };
+  /** `minAreaM2` is the run's `--min-area` override, kept for resumes; absent = collectors.config.json. */
+  limits?: { pagesPerCity: number; detailRequests: number; minAreaM2?: number };
   invocations: Array<{ startedAt: string; resume: boolean }>;
   beforeTotal: number;
   afterTotal?: number;

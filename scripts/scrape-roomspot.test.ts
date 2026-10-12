@@ -47,7 +47,7 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
     root = await mkdtemp(join(tmpdir(), "roomspot-collector-"));
     store = new JsonSourceStore(join(root, "sources"), join(root, "backups"));
     repository = new JsonListingRepository(store); client = new ListingIngestionService(repository);
-    dependencies = { client, sleep: vi.fn(async () => {}), log: vi.fn(), close: vi.fn(async () => {}), page: vi.fn(async (meta) => {
+    dependencies = { client, settings: { minAreaM2: null }, sleep: vi.fn(async () => {}), log: vi.fn(), close: vi.fn(async () => {}), page: vi.fn(async (meta) => {
       const captured = capture(cityIndex(meta.city), meta.page);
       await atomicWriteJson(join(root, "captures", `${meta.city}-${meta.page}.json`), captured);
       return captured;
@@ -56,6 +56,20 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
   afterEach(async () => { vi.restoreAllMocks(); await rm(root, { recursive: true, force: true }); });
   const seed = (listings: RawListing[] = rows(), provenance: Record<string, unknown> = { captureRunId: "earlier-native-run", fixture: "retained" }) =>
     store.writeSource({ source: "roomspot", scrapedAt: oldAt, completeSnapshot: false, listings, provenance }, { expectedRevision: null });
+
+  it("searches with RoomSpot's own area filter and drops rooms under the exact minimum", async () => {
+    dependencies.settings = { minAreaM2: 62 };
+    const big = (id: number) => room(id).replace("55.2㎡", "72.5㎡");
+    dependencies.page = vi.fn(async (meta) => {
+      const city = cityIndex(meta.city);
+      return { ...capture(city, meta.page, room(idFor(city, meta.page)) + big(idFor(city, meta.page) + 500)), url: meta.url };
+    });
+    await runRoomspotScrape(["--max-pages", "1"], dependencies);
+    const urls = vi.mocked(dependencies.page).mock.calls.map(([meta]) => meta.url);
+    expect(urls.every((url) => url.includes("&occupied_area_from=60.0"))).toBe(true);
+    expect((await store.readSource("roomspot"))!.listings.map((listing) => listing.sizeM2)).toEqual([72.5, 72.5, 72.5, 72.5]);
+    expect(dependencies.log).toHaveBeenCalledWith("Area filter: ≥62㎡ (portal search ≥60㎡, then each page's rooms)");
+  });
 
   it("keeps the legacy URLs, page sequence, and delay", () => {
     expect(portalPageUrl("roomspot", cities[0].url, 2)).toBe("https://www.roomspot.net/rent/search/area/pref_11/city_221/?address[]=%E5%9F%BC%E7%8E%89%E7%9C%8C%E8%8D%89%E5%8A%A0%E5%B8%82&ftlsflg=1&sort=new_arrival&item_per_page=30&page_num=2");

@@ -50,7 +50,7 @@ describe("AtHome collector through staged public ingestion (offline)", () => {
     root = await mkdtemp(join(tmpdir(), "athome-collector-"));
     store = new JsonSourceStore(join(root, "sources"), join(root, "backups"));
     repository = new JsonListingRepository(store); client = new ListingIngestionService(repository);
-    dependencies = { client, sleep: vi.fn(async () => {}), log: vi.fn(), close: vi.fn(async () => {}), page: vi.fn(async (meta) => {
+    dependencies = { client, settings: { minAreaM2: null }, sleep: vi.fn(async () => {}), log: vi.fn(), close: vi.fn(async () => {}), page: vi.fn(async (meta) => {
       const captured = capture(cityIndex(meta.city), meta.page);
       await atomicWriteJson(join(root, "captures", `${meta.city}-${meta.page}.json`), captured);
       return captured;

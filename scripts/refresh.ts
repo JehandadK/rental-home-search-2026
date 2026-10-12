@@ -49,6 +49,10 @@ let pageBudget = positiveInteger(flag("--max-pages"), requestedDeep ? 100 : DEFA
 // Detail pages are always tried (bounded); `--detail-limit 0` turns them off. A
 // detail failure never touches the list data its collector already committed.
 let detailBudget = positiveInteger(flag("--detail-limit"), 10, 0);
+// `--min-area N` overrides collectors.config.json for every collector this run (0 = any).
+let minArea: number | undefined = flag("--min-area") === undefined ? undefined : Number(flag("--min-area"));
+if (minArea !== undefined && !(Number.isFinite(minArea) && minArea >= 0)) throw new Error(`--min-area needs a number of square metres (0 = any), not ${flag("--min-area")}`);
+const areaArgs = () => (minArea === undefined ? [] : ["--min-area", String(minArea)]);
 // Collectors run concurrently by default; `--concurrency 1` restores one-at-a-time order.
 const concurrency = positiveInteger(flag("--concurrency"), 4);
 
@@ -68,16 +72,16 @@ function definitions(deep: boolean, skipNifty: boolean, skipRoomspot = false): S
   const crawlArgs = (city?: string) => [
     "run", "crawl:nifty", "--",
     ...(city ? ["--city", city] : []),
-    "--pages", String(pageBudget), "--merge",
+    "--pages", String(pageBudget), "--merge", ...areaArgs(),
     ...(deep ? ["--deep"] : []),
   ];
   return [
-    { id: "suumo", label: "SUUMO", args: ["run", "scrape", "--", "--max-pages", String(pageBudget), ...(deep ? ["--deep"] : [])], recoverable: true },
+    { id: "suumo", label: "SUUMO", args: ["run", "scrape", "--", "--max-pages", String(pageBudget), ...areaArgs(), ...(deep ? ["--deep"] : [])], recoverable: true },
     // Retained only for compatibility with old checkpoints. Detail enrichment
     // now runs after all list collectors and selects cross-source unique units.
     { id: "suumo-parking", label: "Legacy parking pass", args: [], skipped: true },
-    { id: "athome", label: "AtHome", args: ["run", "scrape:athome", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...(deep ? ["--deep"] : [])], recoverable: true },
-    { id: "roomspot", label: "RoomSpot", args: ["run", "scrape:roomspot", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...(deep ? ["--deep"] : [])], recoverable: true, skipped: skipRoomspot },
+    { id: "athome", label: "AtHome", args: ["run", "scrape:athome", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...areaArgs(), ...(deep ? ["--deep"] : [])], recoverable: true },
+    { id: "roomspot", label: "RoomSpot", args: ["run", "scrape:roomspot", "--", "--max-pages", String(pageBudget), "--detail-limit", String(detailBudget), ...areaArgs(), ...(deep ? ["--deep"] : [])], recoverable: true, skipped: skipRoomspot },
     // UR estates and vacancies: one city page, then UR's own API (scrape:ur); also updates the urDanchi places.
     { id: "ur", label: "UR", args: ["run", "scrape:ur"], recoverable: true },
     ...TARGET_CITIES.map((city) => ({ id: niftyStageId(city.label), label: `Nifty ${city.label}`, args: crawlArgs(city.nifty),
@@ -110,7 +114,7 @@ function freshRun(defs: StageDefinition[], beforeTotal: number): RefreshRunRecor
     mode: requestedDeep ? "deep" : "incremental",
     skipNifty: requestedSkipNifty,
     skipRoomspot: requestedSkipRoomspot,
-    limits: { pagesPerCity: pageBudget, detailRequests: detailBudget },
+    limits: { pagesPerCity: pageBudget, detailRequests: detailBudget, ...(minArea !== undefined ? { minAreaM2: minArea } : {}) },
     invocations: [{ startedAt: now, resume: false }],
     beforeTotal,
     stages: defs.map((stage) => ({
@@ -242,6 +246,7 @@ if (planOnly) {
   if (resume && !checkpoint) throw new Error("There is no incomplete refresh run to resume.");
   if (checkpoint?.limits && !flag("--max-pages")) pageBudget = checkpoint.limits.pagesPerCity;
   if (checkpoint?.limits && !flag("--detail-limit")) detailBudget = checkpoint.limits.detailRequests;
+  if (checkpoint?.limits?.minAreaM2 !== undefined && flag("--min-area") === undefined) minArea = checkpoint.limits.minAreaM2;
   const defs = definitions(checkpoint?.mode === "deep" || requestedDeep, checkpoint?.skipNifty ?? requestedSkipNifty, checkpoint ? checkpoint.skipRoomspot ?? false : requestedSkipRoomspot);
   const stages = defs.map((d) => checkpoint?.stages.find((s) => s.id === d.id) ?? {
     id: d.id, label: d.label, status: d.skipped ? "skipped" as const : "pending" as const, attempts: [],
@@ -288,6 +293,7 @@ try {
     activeRun = checkpoint;
     if (checkpoint.limits && !flag("--max-pages")) pageBudget = checkpoint.limits.pagesPerCity;
     if (checkpoint.limits && !flag("--detail-limit")) detailBudget = checkpoint.limits.detailRequests;
+    if (checkpoint.limits?.minAreaM2 !== undefined && flag("--min-area") === undefined) minArea = checkpoint.limits.minAreaM2;
     const now = new Date().toISOString();
     activeRun.invocations.push({ startedAt: now, resume: true });
     activeRun.updatedAt = now;

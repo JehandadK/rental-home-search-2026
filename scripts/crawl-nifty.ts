@@ -8,6 +8,7 @@ import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import { ingestNiftyListPage } from "../src/collectors/nifty/niftyIngestion";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
+import { collectorSettings, describeSettings, withMinArea } from "../src/collectors/shared/searchFilters";
 
 const args = process.argv.slice(2);
 const arg = (name: string) => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
@@ -16,17 +17,19 @@ const city = TARGET_CITIES.find((candidate) => candidate.nifty === slug);
 if (!city) throw new Error("Unknown Nifty city");
 const limit = positiveInteger(arg("--pages"), DEFAULT_INCREMENTAL_PAGE_CEILING);
 const deep = args.includes("--deep");
-const urlFor = (page: number) => `https://myhome.nifty.com/rent/${city.prefectureSlug}/${slug}/${page > 1 ? page + "/" : ""}?sort=regDate-desc`;
+const { minAreaM2 } = collectorSettings("nifty", args);
+const urlFor = (page: number) => withMinArea("nifty", `https://myhome.nifty.com/rent/${city.prefectureSlug}/${slug}/${page > 1 ? page + "/" : ""}?sort=regDate-desc`, minAreaM2);
 const browser = new NiftyBrowser();
 const ingestion = new ListingIngestionService(new JsonListingRepository(new JsonSourceStore(SOURCES_DIR, BACKUP_DIR)));
 let connected = false, knownPages = 0, totalAdded = 0, pages = 0;
+console.log(describeSettings("nifty", { minAreaM2 }));
 try {
   for (let page = 1; page <= limit; page++) {
     const capture = await cachedPage({ source: "nifty", city: city.label, url: urlFor(page), page }, async () => {
       if (!connected) { await browser.connect(urlFor(page)); connected = true; }
       return browser.evaluate<string>(niftyCaptureExpression(urlFor(page)));
     });
-    const result = await ingestNiftyListPage(ingestion, capture);
+    const result = await ingestNiftyListPage(ingestion, capture, minAreaM2);
     totalAdded += result.added; pages++;
     knownPages = result.parsedCount > 0 && result.novel === 0 ? knownPages + 1 : 0;
     if (!deep && knownPages >= 2) break;

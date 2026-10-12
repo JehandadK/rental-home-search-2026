@@ -1,0 +1,10 @@
+{
+  "$comment": "Per-source collector settings. minAreaM2: collect only homes with at least this floor area (null = any). SUUMO, Nifty and RoomSpot apply it as the portal's own search filter, rounded down to the portal's nearest step; AtHome keeps its search conditions in the browser session, so its collector drops smaller rooms after reading each page. UR ignores it (one API sweep per city, and filtering would mark the skipped rooms gone). `--min-area N` on a collector or on `npm run refresh` overrides this for one run; `--min-area 0` turns it off.",
+  "sources": {
+    "suumo": { "minAreaM2": 60 },
+    "athome": { "minAreaM2": 60 },
+    "roomspot": { "minAreaM2": 60 },
+    "nifty": { "minAreaM2": 60 },
+    "ur": { "minAreaM2": null }
+  }
+}

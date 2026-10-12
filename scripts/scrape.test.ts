@@ -37,7 +37,7 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     root = await mkdtemp(join(tmpdir(), "suumo-collector-"));
     store = new JsonSourceStore(join(root, "sources"), join(root, "backups"));
     repository = new JsonListingRepository(store); client = new ListingIngestionService(repository);
-    dependencies = { client, sleep: vi.fn(async () => {}), log: vi.fn(), page: vi.fn(async (meta) => {
+    dependencies = { client, settings: { minAreaM2: null }, sleep: vi.fn(async () => {}), log: vi.fn(), page: vi.fn(async (meta) => {
       const captured = capture(cities.find((city) => city.label === meta.city)!, meta.page);
       await atomicWriteJson(join(root, "captures", `${meta.city}-${meta.page}.json`), captured);
       return captured;
@@ -69,6 +69,17 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     // The replay logs the journaled original counts, not zeros, and says nothing changed.
     expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 4 overlapping; retired 0 superseded source ad(s); fetched 8 pages. (already committed; no source change)");
     expect(await readFile(store.sourcePath("suumo"), "utf8")).toBe(bytes); expect(await readdir(store.backupDir)).toEqual(backups);
+  });
+
+  it("searches with SUUMO's own minimum-area parameter and records it in each page's scope", async () => {
+    await seed();
+    dependencies.settings = { minAreaM2: 60 };
+    dependencies.page = vi.fn(async (meta) => ({ ...capture(cities.find((city) => city.label === meta.city)!, meta.page), url: meta.url }));
+    const stage = vi.spyOn(client, "beginSuumoDiscovery");
+    await runSuumoScrape(["--city", "Soka", "--max-pages", "1"], dependencies);
+    expect(vi.mocked(dependencies.page).mock.calls[0][0].url).toMatch(/&po1=09&mb=60&mt=9999999$/);
+    expect(stage).toHaveBeenCalledTimes(1);
+    expect(dependencies.log).toHaveBeenCalledWith("Area filter: ≥60㎡ (portal search ≥60㎡)");
   });
 
   it("honors deep/page budgets without interpreting the window as complete", async () => {
