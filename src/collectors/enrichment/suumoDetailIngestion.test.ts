@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RawListing } from "../../domain/types";
@@ -228,11 +228,15 @@ describe("SUUMO detail data-layer policy", () => {
     expect(await service.planDetailEnrichment({ ...options, force: true })).toEqual([complete.url, wanted.url]);
   });
 
+  // Deliberately runs on a copy of the full checked-in SUUMO source (tens of MB); under CPU load
+  // alongside the other full-data suites this can exceed the default 5 s timeout.
   it("matches the legacy detail overlay on an isolated copy of the entire checked-in SUUMO source", async () => {
     const path = join(DATA_DIR, "sources", "suumo.json");
-    const bytes = await readFile(path, "utf8");
-    const previous = JSON.parse(bytes) as SourceFile;
-    await store.writeSource(previous, { expectedRevision: null });
+    const bytes = await readFile(path);
+    const previous = JSON.parse(bytes.toString("utf8")) as SourceFile;
+    // Seed with a byte-identical copy rather than re-serialising the whole source through writeSource.
+    await mkdir(store.sourcesDir, { recursive: true });
+    await copyFile(path, store.sourcePath("suumo"));
     const target = previous.listings.find((listing) => listing.url?.startsWith("https://suumo.jp/"))!;
     const priorTimes = (previous.provenance?.detailObservedAtByUrl ?? {}) as Record<string, string>;
     const newerAt = new Date(Math.max(Date.parse(previous.scrapedAt), Date.parse(priorTimes[target.url!] ?? previous.scrapedAt)) + 1000).toISOString();
@@ -253,8 +257,8 @@ describe("SUUMO detail data-layer policy", () => {
     const { ingestionJournal: _journal, detailObservedAtByUrl: _times, ...captureProvenance } = previous.provenance ?? {};
     expect(saved.provenance).toMatchObject(captureProvenance);
     expect(await service.ingestScrape(request)).toMatchObject({ replayed: true, revision: saved.revision });
-    expect(await readFile(path, "utf8")).toBe(bytes);
-  });
+    expect((await readFile(path)).equals(bytes)).toBe(true);
+  }, 20_000);
 
   it("leaves source data/journal unchanged on a failed commit and permits explicit replay", async () => {
     await seed(); const input = await batch();

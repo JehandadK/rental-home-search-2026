@@ -2,7 +2,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { RevisionConflictError } from "../../data-layer/errors";
 import type { ReferenceCatalogManifest, ReferencePlaceRecord, VersionedDataset } from "../../data-layer/contracts";
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
@@ -11,20 +11,37 @@ import { legacyCatalogRevision } from "./referenceCatalog";
 
 const roots: string[] = [];
 const projectRoot = fileURLToPath(new URL("../../../", import.meta.url));
+const checkedInCatalog = join(projectRoot, "data", "reference", "v1");
+// The checked-in catalog after its explicit upgrade, made once so each test only copies it.
+let upgradedCatalog: string;
+let templateRoot: string;
+
+beforeAll(async () => {
+  templateRoot = await mkdtemp(join(tmpdir(), "reference-repository-template-"));
+  upgradedCatalog = join(templateRoot, "catalog");
+  await cp(checkedInCatalog, upgradedCatalog, { recursive: true });
+  await new JsonReferenceDataRepository(upgradedCatalog).upgradePersistedSchemas();
+});
+
+afterAll(async () => {
+  await rm(templateRoot, { recursive: true, force: true });
+});
 
 async function makeRepository(upgrade = true): Promise<{ repo: JsonReferenceDataRepository; directory: string }> {
   const root = await mkdtemp(join(tmpdir(), "reference-repository-test-"));
   roots.push(root);
   const directory = join(root, "catalog");
-  await cp(join(projectRoot, "data", "reference", "v1"), directory, { recursive: true });
-  const repo = new JsonReferenceDataRepository(directory);
-  if (upgrade) await repo.upgradePersistedSchemas();
-  return { repo, directory };
+  await cp(upgrade ? upgradedCatalog : checkedInCatalog, directory, { recursive: true });
+  return { repo: new JsonReferenceDataRepository(directory), directory };
 }
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
+
+// Every test runs on a copy of the full checked-in reference catalog (~17 MB, read and checksummed
+// on each load); under CPU load alongside the other full-data suites a test can exceed the default 5 s.
+const FULL_CATALOG_TIMEOUT_MS = 20_000;
 
 const writeOptions = (expectedRevision: string) => ({
   expectedRevision,
@@ -44,7 +61,7 @@ function newPoi(id: string) {
   };
 }
 
-describe("JSON reference-data repository", () => {
+describe("JSON reference-data repository", { timeout: FULL_CATALOG_TIMEOUT_MS }, () => {
   it("upgrades the catalog revision format with a retained manifest checkpoint", async () => {
     const { repo, directory } = await makeRepository(false);
     const manifestPath = join(directory, "manifest.json");
