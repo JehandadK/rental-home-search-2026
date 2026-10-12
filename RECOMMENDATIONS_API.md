@@ -50,10 +50,12 @@ src/domain/recommend/          pure, no I/O (domain layer)
   jsonSchema.ts                the request JSON Schema, generated from criteriaSchema
 
 src/api/                       new "api" layer (Node; may use domain, data-layer, storage, node)
+  config.ts                    flags/env; refuses non-loopback hosts without tokens
   snapshot.ts                  load published listings + reference, build the ProximityIndex once, hot-swap on change
   service.ts                   transport-agnostic handlers: describe, findPlaces, recommend, explain, compare
-  http/server.ts               node:http router, problem+json errors, limits, auth hook
-  http/openapi.ts              OpenAPI 3.1 generated from criteriaSchema
+  http/server.ts               socket-free handler (routes, problems, auth, CORS, limits) + a node:http adapter
+  http/openapi.ts              OpenAPI 3.1: requests generated from criteriaSchema, responses checked by tests
+  http/docs.ts                 Swagger UI page and a fixed allowlist of swagger-ui-dist assets
   mcp/server.ts                MCP tools over the same service (stdio now, streamable HTTP later)
 
 scripts/serve-api.ts           npm run api   → http://127.0.0.1:8787/v1
@@ -218,15 +220,15 @@ Errors are RFC 9457 `application/problem+json`, with
 |---|---|
 | `GET /v1` | Entry point: what this API is, links to everything below, data revision |
 | `GET /v1/docs` | **Swagger UI**: browse and try every endpoint in the browser |
-| `GET /v1/openapi.json` | OpenAPI 3.1, generated (also `openapi.yaml`) |
+| `GET /v1/openapi.json` | OpenAPI 3.1, generated |
 | `GET /v1/rankings?…` | Ranked homes from query-string criteria (same response as below) |
 | `GET /v1/criteria` | The self-describing catalogue: every weight, feature, anchor, filter and travel option, with EN/JA labels, units, defaults and live allowed values |
 | `GET /v1/presets` | Built-in presets with descriptions and weights |
 | `GET /v1/places?category=&q=&near=lat,lon&limit=` | Look up place ids for `places` (mosques, schools, stations, …) |
 | `POST /v1/recommendations` | Ranked, explained results with the scoring used (above) |
-| `POST /v1/listings/{key}/explain` | One home in full under the given criteria, even if a filter would hide it |
-| `POST /v1/compare` | 2–6 keys side by side, with `sharedGaps` |
-| `GET /healthz` | Liveness + snapshot age |
+| `POST /v1/homes/{key}/explain` | One home in full under the given criteria, even if a filter would hide it |
+| `POST /v1/homes/compare` | `{keys: [1–6 keys], criteria: {…}}` side by side, with `sharedGaps` |
+| `GET /v1/health` (and `/healthz`) | Loaded data revision, load time, last load error; 503 until loaded |
 
 ### Swagger / OpenAPI
 
@@ -236,9 +238,11 @@ Errors are RFC 9457 `application/problem+json`, with
   a bicycle + parking request, an empty result with relaxation hints, and a
   validation error.
 - `/v1/docs` serves Swagger UI with "Try it out" pointed at the local server.
-- Swagger UI's assets are served from the `swagger-ui-dist` npm package, not a CDN, so
-  the docs work offline and the page makes no outside requests. That's one more
-  dependency, allowed only in the `api` layer.
+- Swagger UI's assets are served from the `swagger-ui-dist` npm package (5.33.0, pinned),
+  not a CDN, so the docs work offline and the page makes no outside requests. Only the
+  `api` layer may use it. It depends on `@scarf/scarf`, whose install script reports
+  installs to Scarf's analytics service; `package.json` turns that off
+  (`"scarfSettings": {"enabled": false}`), and it was installed with `--ignore-scripts`.
 - A test checks the spec is valid OpenAPI 3.1, and that every example in it passes
   the real decoder and matches the real response shape.
 
@@ -262,6 +266,13 @@ streamable HTTP.
   each request.
 - Stateless and read-only, so it scales horizontally and caches safely. A deployment
   is just "run `npm run api` with env + the published data".
+- Without tokens, only requests whose Host names this machine are answered (421
+  otherwise), so a web page cannot reach the local API by rebinding its own domain.
+- The rate limit keys token holders by token and everyone else by IPv4 address or
+  IPv6 /64; anonymous clients share a capped table that can never crowd out tokens.
+- Accepted trade-off: at most 256 connections, so 256 slow clients can hold every slot
+  for ~10 s at a time. A public deployment should sit behind a proxy that limits
+  connections per address.
 - Deploying it to a hosting provider, or exposing it to other teams, may need an
   internal **External Service Review** first. Nothing in v1 calls an outside service.
 
@@ -289,6 +300,12 @@ be reverted on its own.
    Swagger UI at `/v1/docs`, `npm run api`, `api` layer rules. Tests: in-process
    server tests on fixtures (no live data, no network), GET and POST give identical
    results, OpenAPI validity, and every spec example passes the decoder.
+   Built: the handler is socket-free (tests need no port), real responses from every
+   endpoint are validated against the documented schemas, and Swagger UI's "Try it
+   out" was checked in a browser. **Done 2026-10-12**, after two security review rounds
+   (DNS rebinding via the Host header, load errors leaking local paths, a rate limit
+   keyed by a client-chosen header, a lockout of token holders through the limiter cap,
+   malformed targets, slow-header timeouts).
 4. **MCP server**: tools over `service.ts`, `npm run mcp`, `.mcp.json` example.
    Tests: tool list and schemas, and a `rank_homes` round trip over in-memory
    transport.
@@ -307,7 +324,8 @@ be reverted on its own.
   `suumo-エステートナカムラ-3DK-70000` still says ¥70,000 after its rent moved to
   ¥72,000. The key held, but a re-scrape after a rent change can mint a new one.
 - **New dependencies** (libraries, not services; allowed only in the `api` layer):
-  `@modelcontextprotocol/sdk` for MCP, and `swagger-ui-dist` for the docs page. The
+  `@modelcontextprotocol/sdk` for MCP, and `swagger-ui-dist` for the docs page (added
+  in Phase 3, with Scarf install telemetry off). The
   MCP alternative is a hand-written stdio JSON-RPC (~150 lines). Loading Swagger UI
   from a CDN would avoid the package, but the docs would need the internet and the
   page would make outside requests.
