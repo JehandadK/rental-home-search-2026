@@ -50,7 +50,7 @@ src/domain/recommend/          pure, no I/O (domain layer)
   jsonSchema.ts                the request JSON Schema, generated from criteriaSchema
 
 src/api/                       new "api" layer (Node; may use domain, data-layer, storage, node)
-  config.ts                    flags/env; refuses non-loopback hosts without tokens
+  config.ts                    flags/env; refuses non-loopback hosts (no auth layer yet)
   snapshot.ts                  load published listings + reference, build the ProximityIndex once, hot-swap on change
   service.ts                   transport-agnostic handlers: describe, findPlaces, recommend, explain, compare
   http/server.ts               socket-free handler (routes, problems, auth, CORS, limits) + a node:http adapter
@@ -280,7 +280,7 @@ catalogue and presets as resources.
   HTTP with the SDK's web-standard transport, so it fits the socket-free handler.
   Stateless: each request gets its own MCP server over the shared snapshot and a JSON
   answer, with no session id and no SSE stream (GET and DELETE answer 405). It is a
-  data endpoint, so the token check, rate limit, 64 kB body cap and loopback Host
+  data endpoint, so the rate limit, 64 kB body cap and loopback Host
   check apply. One JSON-RPC message per request: batches (dropped from MCP in
   2025-06-18) let one rate-limited request ask for ~100× the work, and a batch holding
   a request and its own cancel never answered, holding the connection; they get a
@@ -302,7 +302,7 @@ claude mcp add --transport http rental-recommendations http://localhost:5173/api
 { "mcpServers": { "rental-recommendations": { "type": "http", "url": "http://127.0.0.1:8787/v1/mcp" } } }
 ```
 
-With `API_TOKENS` set, the client sends `Authorization: Bearer <token>`.
+There is no auth yet, so this works from this machine only.
 
 ## Local now, deployable later
 
@@ -314,18 +314,22 @@ With `API_TOKENS` set, the client sends `Authorization: Bearer <token>`.
   background; bad `API_*` settings leave the site running and log why the API is not
   mounted. The handler takes a `mountPath`, so links and redirects include `/api`.
   The built `dist/` stays static and has no API. `npm run api` still runs it alone.
-- Defaults: bind to `127.0.0.1:8787`, no auth, read-only.
-- Config by env: `API_HOST`, `API_PORT`, `API_DATA` (a directory or an http(s) URL), `API_TOKENS`,
-  `API_CORS_ORIGINS`.
-- **Refuses to start on a non-loopback host without `API_TOKENS`** (bearer auth).
-- Request body cap (64 kB), `limit` ≤ 100, a per-token rate limit, and a timeout on
+- **No auth layer yet (decided 2026-10-13).** The API is hosted locally for testing.
+  Bearer tokens (`API_TOKENS`) were built and then removed, so that auth can be
+  designed collectively later as one layer. Until then the API is localhost-only:
+  it refuses to start on any non-loopback host, and answers only requests whose Host
+  names this machine. Anything that reaches it from elsewhere, or a deployment, waits
+  for that layer.
+- Defaults: bind to `127.0.0.1:8787`, read-only.
+- Config by env: `API_HOST` (loopback only), `API_PORT`, `API_DATA` (a directory or an
+  http(s) URL), `API_CORS_ORIGINS`, `API_RATE_LIMIT`.
+- Request body cap (64 kB), `limit` ≤ 100, a per-address rate limit, and a timeout on
   each request.
 - Stateless and read-only, so it scales horizontally and caches safely. A deployment
   is just "run `npm run api` with env + the published data".
-- Without tokens, only requests whose Host names this machine are answered (421
-  otherwise), so a web page cannot reach the local API by rebinding its own domain.
-- The rate limit keys token holders by token and everyone else by IPv4 address or
-  IPv6 /64; anonymous clients share a capped table that can never crowd out tokens.
+- Only requests whose Host names this machine are answered (421 otherwise), so a web
+  page cannot reach the local API by rebinding its own domain.
+- The rate limit keys clients by IPv4 address or IPv6 /64, in a capped table.
 - Accepted trade-off: at most 256 connections, so 256 slow clients can hold every slot
   for ~10 s at a time. A public deployment should sit behind a proxy that limits
   connections per address.

@@ -1,13 +1,12 @@
 /**
- * Server settings from flags and the environment. Local by default; anything
- * reachable from another machine must have bearer tokens.
+ * Server settings from flags and the environment. The API is for this machine
+ * only: it has no auth layer yet, so it refuses any host but loopback.
  */
 export interface ApiConfig {
   host: string;
   port: number;
   /** Directory with the published listings.json and reference.json, or an http(s) URL of one. */
   dataDir: string;
-  tokens: string[];
   corsOrigins: string[];
   rateLimitPerMinute: number;
 }
@@ -38,15 +37,11 @@ export function parseApiConfig(argv: readonly string[], env: Record<string, stri
   const dataFlag = flag("data");
   const port = Number(flag("port") ?? env.API_PORT ?? DEFAULT_PORT);
   const rateLimitPerMinute = Number(env.API_RATE_LIMIT ?? 120);
-  const tokens = list(env.API_TOKENS);
   if (missing.length) return { ok: false, error: `${missing.join(", ")} needs a value` };
   if (!Number.isInteger(port) || port < 0 || port > 65_535) return { ok: false, error: `Invalid port ${port}` };
   if (!Number.isInteger(rateLimitPerMinute) || rateLimitPerMinute < 0) return { ok: false, error: "API_RATE_LIMIT must be a whole number ≥ 0" };
-  if (tokens.some((token) => token.length < 16 || new Set(token).size < 8 || /\s/.test(token))) {
-    return { ok: false, error: "Every API_TOKENS entry must be at least 16 characters, with at least 8 different ones and no spaces (e.g. openssl rand -hex 24)" };
-  }
-  if (!isLoopback(host) && tokens.length === 0) {
-    return { ok: false, error: `Refusing to listen on ${host} without API_TOKENS: only loopback hosts may run without auth` };
+  if (!isLoopback(host)) {
+    return { ok: false, error: `Refusing to listen on ${host}: the API has no auth layer yet, so it serves this machine only (use a loopback host)` };
   }
   const dataDir = dataFlag ?? env.API_DATA ?? defaultDataDir;
   // Anything with a scheme (two or more letters, so "C:" stays a path) is a URL and must be a plain http(s) one.
@@ -65,6 +60,6 @@ export function parseApiConfig(argv: readonly string[], env: Record<string, stri
   }
   return {
     ok: true,
-    config: { host, port, dataDir, tokens, corsOrigins: list(env.API_CORS_ORIGINS), rateLimitPerMinute },
+    config: { host, port, dataDir, corsOrigins: list(env.API_CORS_ORIGINS), rateLimitPerMinute },
   };
 }

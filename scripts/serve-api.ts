@@ -4,8 +4,8 @@
  *   npm run api                         http://127.0.0.1:8787/v1 (docs at /v1/docs)
  *   npm run api -- --port 9000 --data public/data
  *
- * Env: API_HOST, API_PORT, API_DATA, API_TOKENS (comma-separated; required off
- * loopback), API_CORS_ORIGINS (comma-separated, or *), API_RATE_LIMIT (per minute).
+ * Env: API_HOST (loopback only), API_PORT, API_DATA, API_CORS_ORIGINS
+ * (comma-separated, or *), API_RATE_LIMIT (per minute).
  */
 import { parseApiConfig } from "../src/api/config";
 import { loadDocsAssets } from "../src/api/http/docs";
@@ -26,7 +26,6 @@ const source = publishedSnapshotSource({ from: config.dataDir, log });
 const server = createApiServer({
   service: createApiService(source),
   docs: await loadDocsAssets(),
-  tokens: config.tokens,
   corsOrigins: config.corsOrigins,
   rateLimitPerMinute: config.rateLimitPerMinute,
   log,
@@ -43,7 +42,6 @@ server.listen(config.port, config.host, () => {
   const port = typeof address === "object" && address ? address.port : config.port;
   const host = config.host.includes(":") ? `[${config.host}]` : config.host;
   log(`recommendations API on http://${host}:${port}${BASE} (docs: ${BASE}/docs) — loading data from ${config.dataDir}`);
-  if (config.tokens.length) log(`bearer auth on (${config.tokens.length} token${config.tokens.length === 1 ? "" : "s"})`);
 });
 
 const stop = () => {

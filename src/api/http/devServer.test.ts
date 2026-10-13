@@ -11,9 +11,9 @@ describe("the API in the website's dev server", () => {
 
   it("stays out of the way when its settings are wrong, so the site still starts", async () => {
     const lines: string[] = [];
-    const api = await createDevApi({ dataDir: "/nowhere", env: { API_TOKENS: "short" }, log: (line) => lines.push(line) });
+    const api = await createDevApi({ dataDir: "/nowhere", env: { API_RATE_LIMIT: "-1" }, log: (line) => lines.push(line) });
     expect(api).toBeNull();
-    expect(lines[0]).toMatch(/not mounted: .*API_TOKENS/);
+    expect(lines[0]).toMatch(/not mounted: .*API_RATE_LIMIT/);
   });
 
   it("starts without waiting for the data, which loads in the background", async () => {

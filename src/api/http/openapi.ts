@@ -245,14 +245,7 @@ function rankingParameters(): JsonSchema[] {
   });
 }
 
-export interface OpenApiOptions {
-  /** True when the server requires a bearer token for data endpoints. */
-  auth: boolean;
-}
-
-export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
-  const security = auth ? [{ bearer: [] }] : [];
-  const op = (operation: JsonSchema) => ({ ...operation, security });
+export function openApiDocument(): JsonSchema {
   return {
     openapi: "3.1.0",
     info: {
@@ -273,18 +266,18 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
     paths: {
       "/": { get: { operationId: "index", summary: "What this API is, with links", tags: ["discover"], responses: { "200": json("The API index", "ApiIndex") } } },
       "/criteria": {
-        get: op({
+        get: {
           operationId: "describeCriteria", tags: ["discover"],
           summary: "Every field a request can set",
           description: "Grouped fields with EN/JA labels, units, ranges, defaults and, for data-backed fields (cities, layouts, areas), the values the data allows.",
           responses: { "200": json("The criteria catalogue", "CriteriaCatalogue"), "503": DATA_ERRORS["503"] },
-        }),
+        },
       },
       "/presets": {
-        get: op({ operationId: "listPresets", tags: ["discover"], summary: "Named starting weights", responses: { "200": json("Presets", "PresetsResult"), "503": DATA_ERRORS["503"] } }),
+        get: { operationId: "listPresets", tags: ["discover"], summary: "Named starting weights", responses: { "200": json("Presets", "PresetsResult"), "503": DATA_ERRORS["503"] } },
       },
       "/places": {
-        get: op({
+        get: {
           operationId: "findPlaces", tags: ["discover"],
           summary: "Look up place ids for places.*",
           description: "Find the schools, mosques, stations, bus stops, kindergartens and elementary schools a distance criterion can measure to.",
@@ -295,19 +288,19 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
             { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 200, default: 20 } },
           ],
           responses: { "200": json("Matching places", "PlacesResult"), ...DATA_ERRORS },
-        }),
+        },
       },
       "/rankings": {
-        get: op({
+        get: {
           operationId: "rankHomesByQuery", tags: ["rank"],
           summary: "Rank homes (query string)",
           description: "The same as POST /recommendations, with each field as a dotted query key: `?preset=commuter&weights.station=14&filters.layouts=3,4`.",
           parameters: rankingParameters(),
           responses: { "200": json("Ranked, explained homes with the scoring used", "RankingResult"), ...DATA_ERRORS },
-        }),
+        },
       },
       "/recommendations": {
-        post: op({
+        post: {
           operationId: "rankHomes", tags: ["rank"],
           summary: "Rank homes (JSON body)",
           description: `Every field is optional. Page with page.limit (≤ ${MAX_PAGE_LIMIT}) and page.offset = the previous nextOffset.`,
@@ -316,10 +309,10 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
             content: { "application/json": { schema: ref("RecommendationRequest"), examples: REQUEST_EXAMPLES } },
           },
           responses: { "200": json("Ranked, explained homes with the scoring used", "RankingResult"), "413": problem("The body is over 64 kB"), "415": problem("The body is not JSON"), ...DATA_ERRORS },
-        }),
+        },
       },
       "/homes/{key}/explain": {
-        post: op({
+        post: {
           operationId: "explainHome", tags: ["explain"],
           summary: "One home in full under your criteria",
           description: "Scores and explains the home even when your filters would hide it, and says whether (and where) it ranks.",
@@ -327,10 +320,10 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
           // Without an example Swagger UI samples the schema, which sets every weight to 0.
           requestBody: { required: false, content: { "application/json": { schema: ref("RecommendationRequest"), example: EXPLAIN_EXAMPLE } } },
           responses: { "200": json("The home explained", "HomeExplanationResult"), "404": problem("No home has this key"), ...DATA_ERRORS },
-        }),
+        },
       },
       "/homes/compare": {
-        post: op({
+        post: {
           operationId: "compareHomes", tags: ["explain"],
           summary: `Up to ${MAX_COMPARE_HOMES} homes side by side`,
           requestBody: {
@@ -338,10 +331,10 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
             content: { "application/json": { schema: ref("CompareRequest"), example: { keys: ["athome-1173156536"], criteria: { preset: "commuter" } } } },
           },
           responses: { "200": json("Each home explained, and the data gaps they share", "HomeComparison"), ...DATA_ERRORS },
-        }),
+        },
       },
       "/mcp": {
-        post: op({
+        post: {
           operationId: "mcp", tags: ["agents"],
           summary: "The same tools for agents, over MCP (Streamable HTTP)",
           description:
@@ -358,7 +351,7 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
             "406": { description: "The Accept header must list application/json and text/event-stream" },
             ...DATA_ERRORS,
           },
-        }),
+        },
       },
       "/health": {
         get: { operationId: "health", tags: ["discover"], summary: "Whether data is loaded, and which", responses: { "200": json("Ready", "Health"), "503": json("Loading or failed", "Health") } },
@@ -366,7 +359,6 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
     },
     components: {
       schemas: schemas(),
-      ...(auth ? { securitySchemes: { bearer: { type: "http", scheme: "bearer", description: "A token from API_TOKENS" } } } : {}),
     },
     tags: [
       { name: "discover", description: "What you can ask for" },

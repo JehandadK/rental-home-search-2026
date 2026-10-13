@@ -86,13 +86,6 @@ describe("MCP over HTTP at /v1/mcp", () => {
     expect(result.isError).toBe(true);
   });
 
-  it("needs a bearer token when the server has tokens", async () => {
-    const token = "test-token-0123456789";
-    await expect(connect(inMemoryFetch({ tokens: [token] }))).rejects.toThrow();
-    const client = await connect(inMemoryFetch({ tokens: [token] }), { Authorization: `Bearer ${token}` });
-    expect((await client.listTools()).tools).toHaveLength(6);
-  });
-
   it("speaks plain HTTP correctly: stateless, JSON, and guarded like the rest of the API", async () => {
     const fetchImpl = inMemoryFetch();
     const post = (body: unknown, headers: Record<string, string> = {}) => fetchImpl(`${BASE}/v1/mcp`, {

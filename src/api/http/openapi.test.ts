@@ -11,7 +11,7 @@ import { staticSnapshotSource, type Snapshot } from "../snapshot";
 import { EXPLAIN_EXAMPLE, openApiDocument, REQUEST_EXAMPLES } from "./openapi";
 
 type Schema = Record<string, any>;
-const doc = openApiDocument({ auth: false }) as Schema;
+const doc = openApiDocument() as Schema;
 const components = doc.components.schemas as Record<string, Schema>;
 
 /**
@@ -101,11 +101,9 @@ describe("the OpenAPI document", () => {
     expect(decodeRequest(EXPLAIN_EXAMPLE, snapshot.context.decode).ok).toBe(true);
   });
 
-  it("asks for a bearer token only when the server has tokens", () => {
-    expect(doc.paths["/rankings"].get.security).toEqual([]);
-    const withAuth = openApiDocument({ auth: true }) as Schema;
-    expect(withAuth.paths["/rankings"].get.security).toEqual([{ bearer: [] }]);
-    expect(withAuth.paths["/docs"]).toBeUndefined();
+  it("documents no security scheme: the API has no auth layer yet", () => {
+    expect(doc.components.securitySchemes).toBeUndefined();
+    expect(JSON.stringify(doc.paths)).not.toContain('"security"');
   });
 });
 

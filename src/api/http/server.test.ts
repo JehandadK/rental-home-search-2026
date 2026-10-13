@@ -192,13 +192,13 @@ describe("errors", () => {
       current: () => null,
       status: () => ({ state: "failed", dataRevision: null, loadedAt: null, error: "ENOENT: no such file, stat '/Users/someone/secret/listings.json'" }),
     };
-    const handle = handler({ source: failed, tokens: ["test-token-0123456789"] });
+    const handle = handler({ source: failed });
     for (const path of ["/v1/health", "/healthz"]) {
       const health = await send(handle, "GET", path);
       expect(health.json()).toMatchObject({ state: "failed", error: "data load failed; see the server log" });
       expect(health.text).not.toContain("/Users");
     }
-    const data = await send(handle, "GET", "/v1/presets", { headers: { Authorization: "Bearer test-token-0123456789" } });
+    const data = await send(handle, "GET", "/v1/presets");
     expect(data.status).toBe(503);
     expect(data.text).not.toContain("/Users");
   });
@@ -215,27 +215,13 @@ describe("errors", () => {
 });
 
 describe("guards", () => {
-  const token = "test-token-0123456789";
-
-  it("requires a bearer token on data endpoints when tokens are set, but keeps docs and health open", async () => {
-    const handle = handler({ tokens: [token] });
-    const denied = await send(handle, "GET", "/v1/rankings");
-    expect(denied.status).toBe(401);
-    expect(denied.headers["WWW-Authenticate"]).toBe("Bearer");
-    expect((await send(handle, "GET", "/v1/rankings", { headers: { Authorization: "Bearer wrong-token-0123456789" } })).status).toBe(401);
-    expect((await send(handle, "GET", "/v1/rankings", { headers: { Authorization: `Bearer ${token}` } })).status).toBe(200);
-    for (const open of ["/v1", "/v1/docs", "/v1/openapi.json", "/v1/health"]) expect((await send(handle, "GET", open)).status, open).toBe(200);
-    expect((await send(handle, "GET", "/v1/openapi.json")).json().components.securitySchemes.bearer.scheme).toBe("bearer");
+  it("has no auth layer yet: it asks for no credentials and documents none", async () => {
+    const handle = handler();
+    expect((await send(handle, "GET", "/v1/rankings")).status).toBe(200);
+    expect((await send(handle, "GET", "/v1/openapi.json")).json().components.securitySchemes).toBeUndefined();
   });
 
-  it("accepts the Bearer scheme in any case", async () => {
-    const handle = handler({ tokens: [token] });
-    for (const header of [`bearer ${token}`, `BEARER  ${token}`, `Bearer ${token} `]) {
-      expect((await send(handle, "GET", "/v1/presets", { headers: { Authorization: header } })).status, header).toBe(200);
-    }
-  });
-
-  it("without tokens, answers only requests addressed to this machine (no DNS rebinding)", async () => {
+  it("answers only requests addressed to this machine (no DNS rebinding)", async () => {
     const handle = handler();
     for (const host of ["127.0.0.1:8787", "localhost:8787", "LOCALHOST", "[::1]:8787", "127.0.0.1", "localhost.:8787",
       "app.localhost:8787", "[0:0:0:0:0:0:0:1]:8787", "[::ffff:127.0.0.1]:8787", "127.000.000.001:8787"]) {
@@ -245,32 +231,23 @@ describe("guards", () => {
       "localhost:8787, evil", "localhost:99999", "evil@localhost", "localhost/x", "[::2]:8787", "[::ffff:10.0.0.1]"]) {
       expect((await send(handle, "GET", "/v1/presets", { headers: { host } })).status, host).toBe(421);
     }
-    // With tokens the server may sit behind any name; the token is the guard.
-    const shared = handler({ tokens: [token] });
-    expect((await send(shared, "GET", "/v1/presets", { headers: { host: "api.example.com", Authorization: `Bearer ${token}` } })).status).toBe(200);
   });
 
-  it("rate-limits by address, so made-up Authorization headers do not reset it, and counts failed tokens too", async () => {
+  it("rate-limits by address, so made-up headers do not reset it", async () => {
     const open = handler({ rateLimitPerMinute: 2 });
     const codes = [];
     for (let i = 0; i < 4; i++) codes.push((await send(open, "GET", "/v1/presets", { headers: { Authorization: `junk${i}` } })).status);
     expect(codes).toEqual([200, 200, 429, 429]);
-    const guarded = handler({ rateLimitPerMinute: 2, tokens: [token] });
-    const guesses = [];
-    for (let i = 0; i < 3; i++) guesses.push((await send(guarded, "GET", "/v1/presets", { headers: { Authorization: `Bearer guess-${i}-0123456789` } })).status);
-    expect(guesses).toEqual([401, 401, 429]);
   });
 
-  it("keeps the address table bounded, sweeping windows once they expire, without ever locking out token holders", () => {
+  it("keeps the rate-limit table bounded, sweeping windows once they expire", () => {
     let now = 0;
     const limit = rateLimiter(5, () => now);
-    for (let i = 0; i < MAX_RATE_LIMIT_CLIENTS; i++) expect(limit.address(`client-${i}`)).toBe(0);
-    expect(limit.address("one-too-many")).toBe(60);
-    expect(limit.address("client-0")).toBe(0);
-    // A full address table is the attacker's problem, not the token holder's.
-    expect(limit.token("a-real-token")).toBe(0);
+    for (let i = 0; i < MAX_RATE_LIMIT_CLIENTS; i++) expect(limit(`client-${i}`)).toBe(0);
+    expect(limit("one-too-many")).toBe(60);
+    expect(limit("client-0")).toBe(0);
     now = 61_000;
-    expect(limit.address("one-too-many")).toBe(0);
+    expect(limit("one-too-many")).toBe(0);
   });
 
   it("groups IPv6 clients by /64 and unwraps IPv4-mapped addresses", () => {
@@ -281,16 +258,6 @@ describe("guards", () => {
     expect(addressKey("192.0.2.7")).toBe("192.0.2.7");
     expect(addressKey("fe80::1%en0")).toBe("fe80:0:0:0::/64");
     expect(addressKey(undefined)).toBe("unknown");
-  });
-
-  it("lets a token holder in while anonymous addresses have filled their table", async () => {
-    const handle = handler({ rateLimitPerMinute: 5, tokens: [token] });
-    for (let i = 0; i < MAX_RATE_LIMIT_CLIENTS; i++) {
-      await send(handle, "GET", "/v1/presets", { remoteAddress: `10.${(i >> 16) & 255}.${(i >> 8) & 255}.${i & 255}` });
-    }
-    expect((await send(handle, "GET", "/v1/presets", { remoteAddress: "192.0.2.1" })).status).toBe(429);
-    const holder = await send(handle, "GET", "/v1/presets", { remoteAddress: "198.51.100.9", headers: { Authorization: `Bearer ${token}` } });
-    expect(holder.status).toBe(200);
   });
 
   it("recognises loopback Host headers in their normalised forms", () => {
@@ -305,7 +272,7 @@ describe("guards", () => {
     expect((await send(handle, "GET", "/v1/presets", { headers: { Origin: "https://other.example" } })).headers["Access-Control-Allow-Origin"]).toBeUndefined();
     const preflight = await send(handle, "OPTIONS", "/v1/recommendations", { headers: { Origin: "https://agent.example" } });
     expect(preflight.status).toBe(204);
-    expect(preflight.headers["Access-Control-Allow-Headers"]).toContain("Authorization");
+    expect(preflight.headers["Access-Control-Allow-Headers"]).toBe("Content-Type");
   });
 
   it("limits requests per client per minute", async () => {

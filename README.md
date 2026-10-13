@@ -114,20 +114,17 @@ stateless, guarded like the rest of the API). Point any MCP client at
 claude mcp add --transport http rental-recommendations http://localhost:5173/api/v1/mcp
 ```
 
-With `API_TOKENS` set, MCP clients send `Authorization: Bearer <token>` like any other caller.
-
 | Setting | Default | |
 |---|---|---|
-| `--host` / `API_HOST` | `127.0.0.1` | Any other host requires `API_TOKENS` |
+| `--host` / `API_HOST` | `127.0.0.1` | Loopback only (there is no auth layer yet) |
 | `--port` / `API_PORT` | `8787` | |
 | `--data` / `API_DATA` | `public/data` | A directory, or an `http(s)://…/data/` URL such as the deployed site's (re-checked every minute by ETag) |
-| `API_TOKENS` | none | Comma-separated bearer tokens (16+ characters, e.g. `openssl rand -hex 24`) |
 | `API_CORS_ORIGINS` | none | Browser origins allowed to call it, or `*` |
 | `API_RATE_LIMIT` | `120` | Data requests per client per minute |
 
-Without tokens the server answers only requests addressed to this machine, so
-other devices reaching `npm run dev` over the network see the site but get 421 from
-the API unless `API_TOKENS` is set.
+The API is for testing on this machine: it has no auth layer yet, so it answers only
+requests addressed to localhost. Other devices reaching `npm run dev` over the
+network see the site but get 421 from the API.
 Deploying it, or opening it to other teams, may need Mercari's internal External
 Service Review first; it calls no outside service itself.
 

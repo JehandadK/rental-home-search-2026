@@ -5,8 +5,8 @@
  *
  * It ranks the files the site itself serves (public/data), loading them in
  * the background so the site never waits for it; until then the API answers
- * 503. Settings come from the same API_* variables as `npm run api` (tokens,
- * CORS, rate limit, data); the host and port are the dev server's.
+ * 503. Settings come from the same API_* variables as `npm run api` (CORS,
+ * rate limit, data); the host and port are the dev server's.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { parseApiConfig } from "../config";
@@ -32,7 +32,7 @@ export async function createDevApi(options: {
   const { env, log } = options;
   // Only the API's own settings: the dev server owns the host and port.
   const parsed = parseApiConfig([], {
-    API_TOKENS: env.API_TOKENS, API_CORS_ORIGINS: env.API_CORS_ORIGINS, API_RATE_LIMIT: env.API_RATE_LIMIT, API_DATA: env.API_DATA,
+    API_CORS_ORIGINS: env.API_CORS_ORIGINS, API_RATE_LIMIT: env.API_RATE_LIMIT, API_DATA: env.API_DATA,
   }, options.dataDir);
   if (!parsed.ok) {
     log(`recommendations API not mounted: ${parsed.error}`);
@@ -43,7 +43,6 @@ export async function createDevApi(options: {
   const listener = createNodeListener({
     service: createApiService(source),
     docs: await loadDocsAssets(),
-    tokens: config.tokens,
     corsOrigins: config.corsOrigins,
     rateLimitPerMinute: config.rateLimitPerMinute,
     mountPath: DEV_MOUNT_PATH,

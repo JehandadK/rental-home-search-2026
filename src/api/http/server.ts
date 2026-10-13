@@ -1,7 +1,7 @@
 /**
  * The HTTP transport: routes, JSON bodies, RFC 9457 problems, docs, and the
- * guards a server reachable from elsewhere needs (bearer tokens, CORS, body
- * limits, a rate limit, timeouts). Read-only: every handler is in service.ts.
+ * guards a server needs (localhost only, CORS, body limits, a rate limit,
+ * timeouts). There is no auth layer yet, so it answers this machine only. Read-only: every handler is in service.ts.
  *
  *   GET  /v1                        index with links
  *   GET  /v1/docs                   Swagger UI        GET /v1/openapi.json
@@ -11,7 +11,6 @@
  *   POST /v1/mcp                    the MCP tools over Streamable HTTP (stateless, JSON)
  *   GET  /v1/health  (and /healthz)
  */
-import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { handleMcpHttp } from "../mcp/http";
 import { ApiError, badRequest, type ApiService } from "../service";
@@ -25,8 +24,6 @@ export const DEFAULT_RATE_LIMIT_PER_MINUTE = 120;
 export interface ServerConfig {
   service: ApiService;
   docs: ReadonlyMap<string, DocsAsset>;
-  /** Bearer tokens accepted on data endpoints; empty = no auth (loopback only, enforced by the CLI). */
-  tokens?: readonly string[];
   /** Origins allowed to call from a browser; "*" for any. Empty = same-origin only. */
   corsOrigins?: readonly string[];
   maxBodyBytes?: number;
@@ -77,7 +74,7 @@ export interface ApiResponse {
 interface Route {
   method: "GET" | "POST";
   pattern: RegExp;
-  /** Data endpoints need a token when tokens are set, and count against the rate limit. */
+  /** Data endpoints count against the rate limit. */
   data: boolean;
   handle(context: RequestContext): Reply | Promise<Reply>;
 }
@@ -87,11 +84,10 @@ const ok = (body: unknown): Reply => ({ status: 200, body });
 /** Every route and guard, as a function from request to response. */
 export function createApiHandler(config: ServerConfig): (request: ApiRequest) => Promise<ApiResponse> {
   const { service, docs, log = () => {} } = config;
-  const tokens = (config.tokens ?? []).map((token) => Buffer.from(token));
   const corsOrigins = new Set(config.corsOrigins ?? []);
   const maxBodyBytes = config.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
   const limiter = rateLimiter(config.rateLimitPerMinute ?? DEFAULT_RATE_LIMIT_PER_MINUTE);
-  const openApi = JSON.stringify(openApiDocument({ auth: tokens.length > 0 }));
+  const openApi = JSON.stringify(openApiDocument());
   /** The API's public base path, e.g. "/v1", or "/api/v1" in the dev server. */
   const base = `${config.mountPath ?? ""}${BASE}`;
 
@@ -140,15 +136,6 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
     },
   ];
 
-  /** The configured token the request presents, if any (the scheme is case-insensitive, RFC 9110). */
-  const presentedToken = (request: ApiRequest): string | null => {
-    const match = /^bearer +(\S+)\s*$/i.exec(request.headers.authorization ?? "");
-    if (!match) return null;
-    const given = Buffer.from(match[1]);
-    const token = tokens.find((candidate) => candidate.length === given.length && timingSafeEqual(candidate, given));
-    return token ? token.toString() : null;
-  };
-
   const corsHeaders = (request: ApiRequest): Record<string, string> => {
     const origin = request.headers.origin;
     if (!origin || !(corsOrigins.has("*") || corsOrigins.has(origin))) return {};
@@ -166,13 +153,13 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
       } catch {
         throw badRequest("Malformed request target");
       }
-      // Without tokens the API is for this machine only; a foreign Host is a DNS-rebinding page.
-      if (!tokens.length && !isLoopbackHost(request.headers.host)) {
+      // The API is for this machine only (no auth layer yet); a foreign Host is a DNS-rebinding page.
+      if (!isLoopbackHost(request.headers.host)) {
         throw new ApiError(421, "Misdirected request", "This API only answers requests addressed to localhost");
       }
       if (request.method === "OPTIONS") {
         reply = cors["Access-Control-Allow-Origin"]
-          ? { status: 204, headers: { "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Max-Age": "600" } }
+          ? { status: 204, headers: { "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "600" } }
           : { status: 204 };
       } else {
         const matching = routes.filter((route) => route.pattern.test(url.pathname));
@@ -185,13 +172,8 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
           throw new ApiError(405, "Method not allowed", `${url.pathname} accepts ${allow}`, undefined, { Allow: allow });
         }
         if (route.data) {
-          // Keyed by the matched token, never by anything else the client chooses; failed attempts count too.
-          const token = tokens.length ? presentedToken(request) : null;
-          const wait = token ? limiter.token(token) : limiter.address(addressKey(request.remoteAddress));
+          const wait = limiter(addressKey(request.remoteAddress));
           if (wait > 0) throw new ApiError(429, "Too many requests", `Try again in ${wait} s`, undefined, { "Retry-After": String(wait) });
-          if (tokens.length && !token) {
-            throw new ApiError(401, "Unauthorized", "Send Authorization: Bearer <token>", undefined, { "WWW-Authenticate": "Bearer" });
-          }
         }
         const params = route.pattern.exec(url.pathname)!.slice(1);
         reply = await route.handle({ url, headers: request.headers, params, body: async () => parseJsonBody(await request.body(maxBodyBytes), request.headers["content-type"]) });
@@ -264,7 +246,7 @@ export function isLoopbackHost(host: string | undefined): boolean {
 }
 
 /**
- * The rate-limit key for a client without a token: its IPv4 address, or its
+ * The rate-limit key for a client: its IPv4 address, or its
  * IPv6 /64 (one subscriber's whole allocation), so rotating addresses inside
  * a /64 does not buy a fresh window.
  */
@@ -306,40 +288,30 @@ export const tooLarge = (maxBytes: number) => new ApiError(413, "Body too large"
 
 export const MAX_RATE_LIMIT_CLIENTS = 10_000;
 
-export interface RateLimiter {
-  /** A request presenting a valid token. Bounded by the configured tokens, so never refused for space. */
-  token(token: string): number;
-  /** A request without a valid token, by addressKey. A full table turns new addresses away rather than growing. */
-  address(key: string): number;
-}
-
 /**
- * A fixed one-minute window per client; each call returns seconds to wait,
- * or 0. Token holders and anonymous addresses keep separate tables, so
- * addresses filling theirs can never lock a token holder out. Expired windows
- * are swept at most every 10 s.
+ * A fixed one-minute window per client (by addressKey); returns seconds to
+ * wait, or 0. Expired windows are swept at most every 10 s, and a full table
+ * turns new clients away rather than growing.
  */
-export function rateLimiter(perMinute: number, clock: () => number = Date.now): RateLimiter {
-  const tokens = new Map<string, { start: number; count: number }>();
-  const addresses = new Map<string, { start: number; count: number }>();
+export function rateLimiter(perMinute: number, clock: () => number = Date.now): (key: string) => number {
+  const windows = new Map<string, { start: number; count: number }>();
   let lastSweep = 0;
-  const hit = (windows: typeof tokens, key: string, capped: boolean) => {
+  return (key) => {
     if (perMinute <= 0) return 0;
     const now = clock();
     if (now - lastSweep >= 10_000) {
       lastSweep = now;
-      for (const table of [tokens, addresses]) for (const [k, w] of table) if (now - w.start >= 60_000) table.delete(k);
+      for (const [k, w] of windows) if (now - w.start >= 60_000) windows.delete(k);
     }
     const window = windows.get(key);
     if (!window || now - window.start >= 60_000) {
-      if (!window && capped && windows.size >= MAX_RATE_LIMIT_CLIENTS) return 60;
+      if (!window && windows.size >= MAX_RATE_LIMIT_CLIENTS) return 60;
       windows.set(key, { start: now, count: 1 });
       return 0;
     }
     window.count++;
     return window.count > perMinute ? Math.ceil((window.start + 60_000 - now) / 1000) : 0;
   };
-  return { token: (token) => hit(tokens, token, false), address: (key) => hit(addresses, key, true) };
 }
 
 function parseJsonBody(bytes: Buffer, contentType: string | undefined): unknown {

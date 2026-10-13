@@ -5,7 +5,7 @@
  * Stateless: every request gets its own MCP server and transport over the
  * shared, already-loaded data, and answers with JSON (no SSE stream, no
  * sessions). Each request is independent, as REST requests are. The HTTP
- * server's guards (token, rate limit, body cap) apply before this runs.
+ * server's guards (localhost only, rate limit, body cap) apply before this runs.
  *
  * One JSON-RPC message per request: batches (dropped from MCP in 2025-06-18)
  * would multiply the work a rate-limited request can ask for, and a batch
