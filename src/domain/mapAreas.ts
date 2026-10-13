@@ -1,7 +1,7 @@
 /**
  * Which areas (cities) the map shows, and how their names read.
  *
- * The map can cover all of Kanto, but drawing ~350 municipalities and ~2,000
+ * The map can cover Kanto and the prefectures around it, but drawing ~550 municipalities and ~2,700
  * stations is slow and mostly noise, so it shows a chosen set of cities: by
  * default the search area, which is every city the listings are in plus a few
  * neighbours for context. Areas are picked city by city or a whole prefecture

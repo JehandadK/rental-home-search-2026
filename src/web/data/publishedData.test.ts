@@ -39,6 +39,19 @@ describe("published web data", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, () => {
     expect(unpinned).toEqual([]);
   });
 
+  it("covers Kanto and the prefectures around it, each with boundaries and rail stations to draw", () => {
+    const { cities, boundaries, places } = published();
+    const prefectures = new Map<string, string>();
+    for (const city of cities.records) if (city.status !== "retired" && city.prefectureEn) prefectures.set(city.id, city.prefectureEn);
+    const withBoundary = new Set(boundaries.records.filter((b) => b.status !== "retired").map((b) => prefectures.get(b.cityId)));
+    const withStations = new Set(places.records
+      .filter((p) => p.category === "railStation" && p.status === "active")
+      .map((p) => prefectures.get(String(p.attributes?.cityId))));
+    const expected = ["Ibaraki", "Tochigi", "Gunma", "Saitama", "Chiba", "Tokyo", "Kanagawa", "Fukushima", "Yamanashi", "Nagano", "Shizuoka"];
+    expect(expected.filter((name) => !withBoundary.has(name))).toEqual([]);
+    expect(expected.filter((name) => !withStations.has(name))).toEqual([]);
+  });
+
   it("loads through the runtime client into a usable reference model", async () => {
     const client = createHttpWebDataClient({ baseUrl: "/data/", fetch: fileFetch });
     const [listings, reference] = await Promise.all([client.queryListings(), client.loadReferenceSnapshot()]);

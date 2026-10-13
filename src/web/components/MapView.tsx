@@ -1,5 +1,5 @@
 /**
- * Canvas map of the Kanto region, centred on the search area (Soka City and
+ * Canvas map of Kanto and the prefectures around it, centred on the search area (Soka City and
  * its neighbours): municipal boundaries with prefecture borders, the region's
  * rail stations, elementary schools, the target POI, mosques, and every
  * geocoded listing coloured by its current score.
@@ -24,7 +24,7 @@
  *   - click a dot            → selects it; the table scrolls that row into view
  *   - scroll wheel           → zoom toward the cursor
  *   - drag                   → pan
- *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / all of Kanto
+ *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / all the chosen areas
  *   - hover a UR estate      → the rooms UR advertises there and their rents
  *   - click a UR estate      → its card stays open, with links to its UR page and Google Maps
  *   - layer chips            → show or hide stations, schools, mosques, UR estates, new rings
@@ -229,7 +229,7 @@ function readMapColors(element: Element): MapColors {
 type LayerKey = "stations" | "schools" | "mosques" | "urEstates" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
-  { key: "stations", label: "Stations", title: "Railway stations across Kanto; the scored stations are larger, and names appear as you zoom in" },
+  { key: "stations", label: "Stations", title: "Railway stations in the chosen areas; the scored stations are larger, and names appear as you zoom in" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
   { key: "urEstates", label: "UR estates", title: "UR賃貸 estates (団地), whatever the filters: filled when UR advertises a family-size room, outlined otherwise. Hover one for its rents" },
