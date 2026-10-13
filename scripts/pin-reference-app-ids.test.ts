@@ -64,6 +64,8 @@ describe("pinning app place ids into the reference catalog", { timeout: CHECKED_
     expect(run(REFERENCE_CATALOG_DIR)).toContain("already pinned");
   });
 
+  // Runs the CLI twice (each a fresh tsx process) against a copy of the full checked-in catalog;
+  // under CPU load alongside the other full-data suites this can exceed the default 5 s timeout.
   it("pins added places as a revisioned update without moving existing pins", async () => {
     const catalog = await catalogCopy();
     const repository = new JsonReferenceDataRepository(catalog);

@@ -583,8 +583,11 @@ removed, and every collector now uses the headed Playwright browser.
 - Run `2026-10-12T11-27-36-793Z-6f74705d`: **SUCCESS** after one resume. Every
   portal searched ≥60㎡ (`collectors.config.json`); every source/city stopped
   on two all-known pages or its last page. Nifty Koshigaya, Kawaguchi and
-  Katsushika failed page 1 with a transient HTTP 404 (Soka had just read 4
-  filtered pages); a lone Koshigaya retry and then `--resume` succeeded.
+  Katsushika "failed" with HTTP 404, but not on page 1 and not transiently:
+  the filtered results were short (7/17/8 pages, all cached), and the crawler
+  asked for the page after the last one, which Nifty answers with 404. Every
+  page read was already checkpointed; the retry and `--resume` only replayed
+  them. Fixed the same evening (next entry).
 - Before the run, each portal's area parameter was read from its own search
   form in the headed browser (SUUMO `mb`, Nifty `r10`, RoomSpot
   `occupied_area_from`). AtHome's list page has no condition form (it keeps
@@ -596,6 +599,32 @@ removed, and every collector now uses the headed Playwright browser.
 - **95 newly tracked properties** (Soka 5, Koshigaya 14, Kawaguchi 65,
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
+
+## 2026-10-12 Nifty site structure and end-of-results fix
+
+Explored in the headed browser (Koshigaya, ≥60㎡), one list page and two
+same-tab fetches:
+- List URL `/rent/<pref>/<city>_ct/[<page>/]?sort=regDate-desc&r10=60` is
+  valid: HTTP 200, the form shows `r10=60`, the sort stays newest-first, and
+  the pager links carry the query. `<link rel=canonical>` drops the query
+  (informational only). 40 rooms per page; 「物件数266件」 = 7 pages.
+- Page 1's pager shows only 2–5 and 「>」, never the last page. The page after
+  the last answers **HTTP 404 「ページが見つかりません」** (page 7: 200, page 8: 404).
+- The search form (GET `/rent/saitama/search/`) also offers `r1`/`r2` rent,
+  `r6` walk minutes, `r10`/`r11` area, `r12` building age
+  (shin, 2–20 years), `r3` layouts (21=2K, 22=2DK, 24=2LDK, 31=3K, 32=3DK,
+  34=3LDK, 41=4K, 42=4DK, 44=4LDK, 52=5DK, 54=5LDK以上; 10–14 are 1R–1LDK),
+  `r14` 管理費込み, `r20` building type (1 マンション, 2 アパート, 3 一戸建て),
+  `struct`, and `ex*` amenity checkboxes. Not adopted yet: `r3` would let
+  Nifty drop 1R–1LDK rooms the parser already discards, after its own check.
+
+Fix: `src/collectors/nifty/niftyCrawl.ts` is the crawl loop, now unit-tested.
+The capture expression reports Nifty's not-found page distinctly; past page
+1 it ends the city ("page N: no results; end of the city's results"), while
+a 404 on page 1 or any other failure still stops the run. The tab now always
+opens on page 1, so a cached page 1 plus a past-the-end page 2 cannot hang.
+Each page is logged. Live check: a `--deep` Koshigaya crawl read its 7 cached
+pages and ended on page 8 with exit 0.
 
 ## Entry points
 

@@ -78,6 +78,21 @@ describe("layer rules", () => {
     expect(pkg("src/data-layer/contracts.ts", "cheerio")).toMatch(/may not use package cheerio/);
     expect(pkg("src/web/App.tsx", "cheerio")).toMatch(/may not use package cheerio/);
     expect(pkg("src/storage/json/dataStore.ts", "@scope/db/client")).toMatch(/may not use package @scope\/db/);
+    expect(pkg("src/api/http/docs.ts", "swagger-ui-dist")).toBeNull();
+    expect(pkg("src/web/App.tsx", "swagger-ui-dist")).toMatch(/may not use package swagger-ui-dist/);
+    expect(pkg("src/api/mcp/server.ts", "@modelcontextprotocol/sdk/server/index.js")).toBeNull();
+    expect(pkg("src/domain/scoring.ts", "@modelcontextprotocol/sdk/server/index.js")).toMatch(/may not use package @modelcontextprotocol\/sdk/);
+  });
+
+  it("lets the API read through the domain and data-layer, never storage, collectors or the web app", () => {
+    expect(classify("src/api/service.ts")).toBe("api");
+    expect(violation(edge("src/api/service.ts", "src/domain/recommend/rankHomes.ts"))).toBeNull();
+    expect(violation(edge("src/api/snapshot.ts", "src/node/dataPaths.ts"))).toBeNull();
+    expect(violation(edge("src/api/snapshot.ts", "node:fs", { external: true }))).toBeNull();
+    expect(violation(edge("src/api/service.ts", "src/storage/json/dataStore.ts"))).toMatch(/api may not import storage/);
+    expect(violation(edge("src/api/service.ts", "src/web/App.tsx"))).toMatch(/api may not import web/);
+    expect(violation(edge("src/domain/scoring.ts", "src/api/service.ts"))).toMatch(/domain may not import api/);
+    expect(violation(edge("scripts/serve-api.ts", "src/api/http/server.ts"))).toBeNull();
   });
 
   it("classifies layer directories and CLI entry points, and rejects unplaced files", () => {

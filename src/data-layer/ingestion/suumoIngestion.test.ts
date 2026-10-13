@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RawListing } from "../../domain/types";
@@ -157,10 +157,14 @@ describe("SUUMO public discovery ingestion", () => {
     expect((await store.readSource("suumo"))!.archivedListings).toHaveLength(5);
   });
 
+  // Deliberately ingests into a copy of the full checked-in SUUMO source (tens of MB); under CPU
+  // load alongside the other full-data suites this can exceed the default 5 s timeout.
   it("verifies every current SUUMO row is either retained or explicitly archived, without rewriting production data", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
-    const path = join(DATA_DIR, "sources", "suumo.json"), bytes = await readFile(path, "utf8");
-    const previous = JSON.parse(bytes) as SourceFile;
-    await store.writeSource(previous, { expectedRevision: null });
+    const path = join(DATA_DIR, "sources", "suumo.json"), bytes = await readFile(path);
+    const previous = JSON.parse(bytes.toString("utf8")) as SourceFile;
+    // Seed with a byte-identical copy rather than re-serialising the whole source through writeSource.
+    await mkdir(store.sourcesDir, { recursive: true });
+    await copyFile(path, store.sourcePath("suumo"));
     const target = previous.listings[0];
     const { status: _status, firstSeenAt: _first, lastSeenAt: _last, soldAt: _sold, sourceListings: _links, ...fields } = target;
     const fresh = { ...fields, id: `${target.id}-fixture`, rent: target.rent + 1000 };
@@ -188,6 +192,6 @@ describe("SUUMO public discovery ingestion", () => {
     expect(current.get(key(fresh))).toMatchObject({ id: fresh.id, url: fresh.url, rent: fresh.rent });
     expect(result).toMatchObject({ added: 0, updated: 1, retired: archived.length });
     expect(await service.ingestScrape(input)).toMatchObject({ replayed: true, revision: saved.revision });
-    expect(await readFile(path, "utf8")).toBe(bytes);
+    expect((await readFile(path)).equals(bytes)).toBe(true);
   });
 });

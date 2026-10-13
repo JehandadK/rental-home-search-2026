@@ -10,6 +10,7 @@ export type Layer =
   | "storage"
   | "collectors"
   | "refresh"
+  | "api"
   | "web"
   | "cli"
   | "node"
@@ -25,6 +26,7 @@ const TARGET_DIRS: [prefix: string, layer: Layer][] = [
   ["src/storage/", "storage"],
   ["src/collectors/", "collectors"],
   ["src/refresh/", "refresh"],
+  ["src/api/", "api"],
   ["src/node/", "node"],
   ["src/integrations/", "integrations"],
   ["data/", "persisted-data"],
@@ -62,6 +64,8 @@ const ALLOWED: Record<Exclude<Layer, "test" | "cli" | "persisted-data">, Layer[]
   storage: ["storage", "data-layer", "domain", "node"],
   collectors: ["collectors", "domain", "integrations", "node"],
   refresh: ["refresh", "collectors", "data-layer", "storage", "domain", "node"],
+  // The recommendations API serves published data over the domain core; it never writes.
+  api: ["api", "domain", "data-layer", "node"],
   web: ["web", "domain", "integrations"],
   node: ["node"],
   integrations: ["integrations", "domain"],
@@ -74,6 +78,7 @@ const NODE_BUILTINS = new Set(builtinModules);
 const PACKAGES: Partial<Record<Layer, string[]>> = {
   web: ["react", "react-dom"],
   collectors: ["cheerio", "domhandler"],
+  api: ["swagger-ui-dist", "@modelcontextprotocol/sdk"],
 };
 
 function packageName(specifier: string): string {

@@ -2,7 +2,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { RevisionConflictError } from "../../data-layer/errors";
 import type { ReferenceCatalogManifest, ReferencePlaceRecord, VersionedDataset } from "../../data-layer/contracts";
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
@@ -12,15 +12,28 @@ import { CHECKED_IN_DATA_TIMEOUT_MS } from "./checkedInData.contract";
 
 const roots: string[] = [];
 const projectRoot = fileURLToPath(new URL("../../../", import.meta.url));
+const checkedInCatalog = join(projectRoot, "data", "reference", "v1");
+// The checked-in catalog after its explicit upgrade, made once so each test only copies it.
+let upgradedCatalog: string;
+let templateRoot: string;
+
+beforeAll(async () => {
+  templateRoot = await mkdtemp(join(tmpdir(), "reference-repository-template-"));
+  upgradedCatalog = join(templateRoot, "catalog");
+  await cp(checkedInCatalog, upgradedCatalog, { recursive: true });
+  await new JsonReferenceDataRepository(upgradedCatalog).upgradePersistedSchemas();
+}, CHECKED_IN_DATA_TIMEOUT_MS);
+
+afterAll(async () => {
+  await rm(templateRoot, { recursive: true, force: true });
+});
 
 async function makeRepository(upgrade = true): Promise<{ repo: JsonReferenceDataRepository; directory: string }> {
   const root = await mkdtemp(join(tmpdir(), "reference-repository-test-"));
   roots.push(root);
   const directory = join(root, "catalog");
-  await cp(join(projectRoot, "data", "reference", "v1"), directory, { recursive: true });
-  const repo = new JsonReferenceDataRepository(directory);
-  if (upgrade) await repo.upgradePersistedSchemas();
-  return { repo, directory };
+  await cp(upgrade ? upgradedCatalog : checkedInCatalog, directory, { recursive: true });
+  return { repo: new JsonReferenceDataRepository(directory), directory };
 }
 
 afterEach(async () => {
