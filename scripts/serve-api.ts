@@ -11,7 +11,7 @@ import { parseApiConfig } from "../src/api/config";
 import { loadDocsAssets } from "../src/api/http/docs";
 import { BASE, createApiServer } from "../src/api/http/server";
 import { createApiService } from "../src/api/service";
-import { fileSnapshotSource } from "../src/api/snapshot";
+import { publishedSnapshotSource } from "../src/api/snapshot";
 import { WEB_PUBLISH_DIR } from "../src/node/dataPaths";
 
 const parsed = parseApiConfig(process.argv.slice(2), process.env, WEB_PUBLISH_DIR);
@@ -22,7 +22,7 @@ if (!parsed.ok) {
 const { config } = parsed;
 const log = (line: string) => console.log(`${new Date().toISOString()} ${line}`);
 
-const source = fileSnapshotSource({ dir: config.dataDir, log });
+const source = publishedSnapshotSource({ from: config.dataDir, log });
 const server = createApiServer({
   service: createApiService(source),
   docs: await loadDocsAssets(),

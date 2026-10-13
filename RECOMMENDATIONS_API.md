@@ -309,7 +309,7 @@ client's working directory is unknown:
 ## Local now, deployable later
 
 - Defaults: bind to `127.0.0.1:8787`, no auth, read-only.
-- Config by env: `API_HOST`, `API_PORT`, `API_DATA` (path or URL), `API_TOKENS`,
+- Config by env: `API_HOST`, `API_PORT`, `API_DATA` (a directory or an http(s) URL), `API_TOKENS`,
   `API_CORS_ORIGINS`.
 - **Refuses to start on a non-loopback host without `API_TOKENS`** (bearer auth).
 - Request body cap (64 kB), `limit` ≤ 100, a per-token rate limit, and a timeout on
@@ -366,7 +366,17 @@ be reverted on its own.
    install script.
 5. **Docs and hardening**: README section with curl and MCP examples; auth, CORS,
    limits and rate limiting, the URL data source, and a startup guard for
-   non-loopback hosts.
+   non-loopback hosts. **Done 2026-10-13.** Auth, CORS, limits and the loopback
+   guard landed in Phase 3. `API_DATA` / `--data` also takes an `http(s)://…/data/`
+   URL (e.g. the deployed static site): HEAD with ETag / Last-Modified finds changes,
+   so unchanged files are not downloaded again; without validators the files are read
+   and compared before the distance index is rebuilt (always, so a touched file or a
+   CDN node's own ETag costs a download but no rebuild); a server refusing HEAD falls
+   back to the same; a failed fetch is retried on the next check, while bad content
+   waits for the files to change; 60 s timeout and a 100 MB cap per file; no
+   credentials or query strings in the URL. Checked against the built site served locally: the same data revision as
+   reading `public/data` from disk. A repository `.mcp.json` registers the MCP server
+   for Claude Code (which asks before starting it).
 
 ## Risks and open points
 

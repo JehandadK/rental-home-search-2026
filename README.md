@@ -16,6 +16,9 @@ and can prefer either Yes or No. Unknown is never silently treated as No.
 
 Built with **React 19 + TypeScript + Vite**. No backend — reference data and
 listings are static JSON, geocoding and enrichment happen offline via scripts.
+Other systems and agents can rank the same data by their own criteria through an
+optional, read-only [recommendations API](#recommendations-api-for-other-systems-and-agents)
+(HTTP and MCP).
 
 **Refresh operations:** see [REFRESH.md](REFRESH.md) for the current bounded,
 checkpointed workflow and the latest recovery results. Numeric examples below
@@ -73,6 +76,54 @@ root.
   with this page rather than its whole stylesheet.
 - **Outside requests**: listing photos load straight from the portals, and the
   map links open Google Maps. Nothing else leaves the page.
+
+## Recommendations API (for other systems and agents)
+
+Ranks the published homes by a caller's own criteria and explains every score, over
+HTTP (with Swagger UI) or MCP. It reads the same `public/data/` files the dashboard
+loads, so the same criteria give the same ranking as the UI. Nothing a caller sends
+is stored. Design notes: [RECOMMENDATIONS_API.md](RECOMMENDATIONS_API.md).
+
+```bash
+npm run api        # http://127.0.0.1:8787/v1 — Swagger UI at /v1/docs
+```
+
+```bash
+curl -s 'http://127.0.0.1:8787/v1/criteria'                       # every field you can set
+curl -s 'http://127.0.0.1:8787/v1/rankings?preset=commuter&weights.station=14&filters.layouts=3&page.limit=5'
+curl -s http://127.0.0.1:8787/v1/recommendations -H 'content-type: application/json' \
+  -d '{"travel":{"mode":"bicycle","includeParking":true},"filters":{"parking":"required"},"ranking":{"minPartScores":{"poi2":40}}}'
+```
+
+Every ranking returns `scoring` (each criterion's weight, share, anchors and places,
+where each value came from, and `set`, the request path that changes it) and
+`request`, the fully resolved request: resend it, or change one path to tweak. Errors
+are RFC 9457 problems that name each field to fix, with a "did you mean".
+
+**Agents (MCP).** Tools `describe_criteria`, `list_presets`, `find_places`,
+`rank_homes`, `explain_home` and `compare_homes`, over stdio. Claude Code picks the
+server up from this repository's `.mcp.json` (it asks before starting it); elsewhere:
+
+```bash
+claude mcp add rental-recommendations -- npx tsx scripts/mcp.ts
+```
+
+Other clients: run `<repo>/node_modules/.bin/tsx <repo>/scripts/mcp.ts --data <repo>/public/data`.
+Use `npx tsx scripts/mcp.ts` or `npm run --silent mcp`; plain `npm run mcp` prints
+npm's banner on stdout, which breaks the protocol.
+
+| Setting | Default | |
+|---|---|---|
+| `--host` / `API_HOST` | `127.0.0.1` | Any other host requires `API_TOKENS` |
+| `--port` / `API_PORT` | `8787` | |
+| `--data` / `API_DATA` | `public/data` | A directory, or an `http(s)://…/data/` URL such as the deployed site's (re-checked every minute by ETag) |
+| `API_TOKENS` | none | Comma-separated bearer tokens (16+ characters, e.g. `openssl rand -hex 24`) |
+| `API_CORS_ORIGINS` | none | Browser origins allowed to call it, or `*` |
+| `API_RATE_LIMIT` | `120` | Data requests per client per minute |
+
+Without tokens the server answers only requests addressed to this machine.
+Deploying it, or opening it to other teams, may need Mercari's internal External
+Service Review first; it calls no outside service itself.
 
 ## Numeric and qualitative scoring parameters
 
@@ -497,10 +548,14 @@ src/
     placeSelection.ts     · applies "which places count" to a listing
     diagnostics.ts        · finds criteria that decide nothing
     filters.ts            · area/city/rent/size/layout predicates
+    recommend/            · ranking pipeline, criteria schema, request decoding, explanations
   collectors/           ← fetch, parse and submit observations (suumo/, athome/, roomspot/, nifty/, ur/, enrichment/, shared/)
   data-layer/           ← contracts, ingestion/correction/bootstrap services, per-source policies, lifecycle
   storage/json/         ← JSON-file implementation of the data-layer repositories
   refresh/              ← refresh plan and run ledger
+  api/                  ← recommendations API over published data (read-only)
+    service.ts            · transport-free handlers; snapshot.ts loads data (directory or URL)
+    http/                 · HTTP handler, OpenAPI, Swagger UI      mcp/ · MCP tools
   node/                 ← locks, atomic writes, data root path
   integrations/         ← GSI geocoding client
 data/                   ← the persisted datasets above
@@ -512,6 +567,8 @@ scripts/                ← CLI entry points only (npm run …)
   scrape-ur.ts          ← UR賃貸住宅 estates and vacancies through UR's own API, in the headed browser
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
+  serve-api.ts          ← recommendations API over HTTP (`npm run api`)
+  mcp.ts                ← recommendations API as an MCP server on stdio
 tools/architecture/     ← test enforcing the layer rules in DATA_ARCHITECTURE.md
 ```
 

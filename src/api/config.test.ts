@@ -21,6 +21,27 @@ describe("parseApiConfig", () => {
     expect(parseApiConfig(["--host", "0.0.0.0"], { API_TOKENS: TOKEN }, "/data")).toMatchObject({ ok: true, config: { tokens: [TOKEN] } });
   });
 
+  it("rejects a flag given without a value instead of silently using a default", () => {
+    for (const argv of [["--data"], ["--data="], ["--data", "--port", "9000"], ["--port"]]) {
+      expect(parseApiConfig(argv, {}, "/data"), argv.join(" ")).toMatchObject({ ok: false, error: expect.stringContaining("needs a value") });
+    }
+  });
+
+  it("refuses data URLs that are malformed or carry secrets, without echoing them", () => {
+    for (const url of ["http:/x/data", "https://u:secret@x.example/data/", "https://x.example/data/?sig=secret"]) {
+      const result = parseApiConfig(["--data", url], {}, "/data");
+      expect(result.ok, url).toBe(false);
+      if (!result.ok) expect(result.error).not.toContain("secret");
+    }
+    expect(parseApiConfig(["--data", "C:/rentals/data"], {}, "/data").ok).toBe(true);
+  });
+
+  it("takes the data from a directory or an http(s) URL, and nothing else", () => {
+    expect(parseApiConfig(["--data", "https://example.com/rentals/data/"], {}, "/data")).toMatchObject({ ok: true, config: { dataDir: "https://example.com/rentals/data/" } });
+    expect(parseApiConfig([], { API_DATA: "ftp://example.com/data/" }, "/data")).toMatchObject({ ok: false, error: expect.stringContaining("ftp:") });
+    expect(parseApiConfig([], { API_DATA: "https://exa mple.com/" }, "/data")).toMatchObject({ ok: false, error: expect.stringContaining("not a valid URL") });
+  });
+
   it("reads --name=value flags too", () => {
     expect(parseApiConfig(["--host=0.0.0.0"], {}, "/data")).toMatchObject({ ok: false, error: expect.stringContaining("0.0.0.0") });
     expect(parseApiConfig(["--port=9001"], {}, "/data")).toMatchObject({ ok: true, config: { port: 9001 } });
