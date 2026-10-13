@@ -26,6 +26,7 @@
  *   - drag                   → pan
  *   - +/−/◎/⤢ buttons        → zoom in / out / fit the shown listings / all of Kanto
  *   - hover a UR estate      → the rooms UR advertises there and their rents
+ *   - click a UR estate      → its card stays open, with links to its UR page and Google Maps
  *   - layer chips            → show or hide stations, schools, mosques, UR estates, new rings
  *
  * The base projection is an equirectangular fit to the combined extent of all
@@ -331,6 +332,8 @@ export const MapView = memo(function MapView({
   const estatesRef = useRef<ProjectedEstate[]>([]);
   /** The UR estate under the pointer, when no listing is. */
   const [hoveredEstate, setHoveredEstate] = useState<UrEstate | null>(null);
+  /** The clicked UR estate's place id: its card stays open, with links to UR and Google Maps. */
+  const [pinnedEstateId, setPinnedEstateId] = useState<string | null>(null);
   const [view, setView] = useState<View>(IDENTITY);
   /** The canvas width in canvas units: HEIGHT × its rendered aspect ratio. */
   const [canvasWidth, setCanvasWidth] = useState(WIDTH);
@@ -449,6 +452,11 @@ export const MapView = memo(function MapView({
     .filter((estate) => (estate.cityId != null ? areas.has(estate.cityId) : inAreas(estate.place)))
     // Vacant estates last, so they are drawn on top; most vacancies first for the labels.
     .sort((a, b) => (a.vacancy?.count ?? 0) - (b.vacancy?.count ?? 0)), [reference, areas, inAreas, urVacancies]);
+  const pinnedEstate = pinnedEstateId ? urEstates.find((estate) => estate.place.id === pinnedEstateId) ?? null : null;
+  // Selecting a home (on the map or in the table) closes the estate card.
+  useEffect(() => {
+    if (selected) setPinnedEstateId(null);
+  }, [selected]);
   // The scored schools and the travel rings drawn around places are limited to the chosen areas too.
   const shownScoredPois = useMemo(() => scoredPois.filter(inAreas), [scoredPois, inAreas]);
   const shownRingCenters = useMemo(() => ringCenters.filter(inAreas), [ringCenters, inAreas]);
@@ -1096,6 +1104,8 @@ export const MapView = memo(function MapView({
       setSelectionCluster(keys);
       if (keys.length === 0) {
         onSelect(null);
+        // An estate, vacant or not, opens its card with links to its pages.
+        setPinnedEstateId(estateAt(mx, my)?.place.id ?? null);
       } else {
         // Clicking the same stack again advances to its next property.
         const current = selected ? keys.indexOf(selected) : -1;
@@ -1134,9 +1144,20 @@ export const MapView = memo(function MapView({
     : null;
   const hoverVisible = hoverPoint && hoverPoint.x >= 0 && hoverPoint.x <= canvasWidth && hoverPoint.y >= 0 && hoverPoint.y <= HEIGHT;
   // The hovered UR estate's card sits above its tile; the layer chip can hide both.
-  const estatePoint = hoveredEstate && layers.urEstates && !dragging && !hoveredRow
+  const estatePoint = hoveredEstate && hoveredEstate.place.id !== pinnedEstateId && layers.urEstates && !dragging && !hoveredRow
     ? toScreen(hoveredEstate.place.lat, hoveredEstate.place.lon)
     : null;
+  const pinnedEstatePoint = pinnedEstate && layers.urEstates && !selectedRow
+    ? toScreen(pinnedEstate.place.lat, pinnedEstate.place.lon)
+    : null;
+  const pinnedEstateVisible = pinnedEstatePoint && pinnedEstatePoint.x >= 0 && pinnedEstatePoint.x <= canvasWidth
+    && pinnedEstatePoint.y >= 0 && pinnedEstatePoint.y <= HEIGHT;
+  const estateCardStyle = (point: { x: number; y: number }): React.CSSProperties => ({
+    left: `clamp(4px, calc(${(point.x / canvasWidth) * 100}% - ${ESTATE_CARD_WIDTH / 2}px), calc(100% - ${ESTATE_CARD_WIDTH + 4}px))`,
+    top: `${(point.y / HEIGHT) * 100}%`,
+    width: ESTATE_CARD_WIDTH,
+    transform: point.y < HEIGHT * 0.25 ? "translateY(14px)" : "translateY(calc(-100% - 22px))",
+  });
 
   return (
     <section className={appStyles.card}>
@@ -1212,19 +1233,31 @@ export const MapView = memo(function MapView({
           />
         )}
         {estatePoint && hoveredEstate && (
-          <div
-            className={styles.estateCard}
-            aria-hidden="true"
-            style={{
-              left: `clamp(4px, calc(${(estatePoint.x / canvasWidth) * 100}% - ${ESTATE_CARD_WIDTH / 2}px), calc(100% - ${ESTATE_CARD_WIDTH + 4}px))`,
-              top: `${(estatePoint.y / HEIGHT) * 100}%`,
-              width: ESTATE_CARD_WIDTH,
-              transform: estatePoint.y < HEIGHT * 0.25 ? "translateY(14px)" : "translateY(calc(-100% - 22px))",
-            }}
-          >
+          <div className={styles.estateCard} aria-hidden="true" style={estateCardStyle(estatePoint)}>
             <strong>{urEstateName(hoveredEstate)}</strong>
             {urEstateDetails(hoveredEstate).map((line) => <small key={line}>{line}</small>)}
           </div>
+        )}
+        {pinnedEstatePoint && pinnedEstateVisible && pinnedEstate && (
+          <aside
+            className={`${styles.estateCard} ${styles.estatePinned}`}
+            aria-label={urEstateName(pinnedEstate)}
+            style={estateCardStyle(pinnedEstatePoint)}
+          >
+            <button className={styles.estateClose} onClick={() => setPinnedEstateId(null)} aria-label="Close UR estate">×</button>
+            <strong>{urEstateName(pinnedEstate)}</strong>
+            {urEstateDetails(pinnedEstate).map((line) => <small key={line}>{line}</small>)}
+            <div className={styles.popupActions}>
+              {pinnedEstate.url && (
+                <a href={pinnedEstate.url} target="_blank" rel="noreferrer">
+                  View on UR ↗
+                </a>
+              )}
+              <a href={`https://www.google.com/maps?q=${pinnedEstate.place.lat},${pinnedEstate.place.lon}`} target="_blank" rel="noreferrer">
+                Google Maps ↗
+              </a>
+            </div>
+          </aside>
         )}
         {selectedRow && (
           <MapListingCard
@@ -1316,7 +1349,7 @@ export const MapView = memo(function MapView({
       </div>
       <div className={styles.info}>
         {hoveredEstate && !hoveredRow && !selectedRow && layers.urEstates
-          ? `${urEstateLabel(hoveredEstate)} — ${urEstateDetails(hoveredEstate).join(" · ")}`
+          ? `${urEstateLabel(hoveredEstate)} — ${urEstateDetails(hoveredEstate).join(" · ")} · click for its UR page and Google Maps`
           : hoveredRow && !selectedRow
           ? `${hoveredRow.listing.name} — score ${
               hoveredRow.score.total?.toFixed(0) ?? "—"
