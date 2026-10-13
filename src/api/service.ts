@@ -82,6 +82,7 @@ export function createApiService(source: SnapshotSource, options: ServiceOptions
           recommendations: "recommendations",
           explain: "homes/{key}/explain",
           compare: "homes/compare",
+          mcp: "mcp",
           health: "health",
         }).map(([name, path]) => [name, `${base}/${path}`])),
       };

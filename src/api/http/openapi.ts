@@ -340,6 +340,26 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
           responses: { "200": json("Each home explained, and the data gaps they share", "HomeComparison"), ...DATA_ERRORS },
         }),
       },
+      "/mcp": {
+        post: op({
+          operationId: "mcp", tags: ["agents"],
+          summary: "The same tools for agents, over MCP (Streamable HTTP)",
+          description:
+            "Point an MCP client at this URL. Stateless JSON responses: no session or SSE stream, so GET and DELETE answer 405. " +
+            "Tools: describe_criteria, list_presets, find_places, rank_homes, explain_home, compare_homes. " +
+            "The body is a JSON-RPC 2.0 message; send `Accept: application/json, text/event-stream`.",
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { type: "object", description: "A JSON-RPC 2.0 request or notification" }, example: { jsonrpc: "2.0", id: 1, method: "tools/list" } } },
+          },
+          responses: {
+            "200": { description: "The JSON-RPC response", content: { "application/json": { schema: { type: "object" } } } },
+            "202": { description: "A notification was accepted" },
+            "406": { description: "The Accept header must list application/json and text/event-stream" },
+            ...DATA_ERRORS,
+          },
+        }),
+      },
       "/health": {
         get: { operationId: "health", tags: ["discover"], summary: "Whether data is loaded, and which", responses: { "200": json("Ready", "Health"), "503": json("Loading or failed", "Health") } },
       },
@@ -352,6 +372,7 @@ export function openApiDocument({ auth }: OpenApiOptions): JsonSchema {
       { name: "discover", description: "What you can ask for" },
       { name: "rank", description: "Ranked homes for your criteria" },
       { name: "explain", description: "One home, or a few side by side" },
+      { name: "agents", description: "The same tools as MCP, for agents" },
     ],
   };
 }

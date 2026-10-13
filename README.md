@@ -101,8 +101,16 @@ where each value came from, and `set`, the request path that changes it) and
 are RFC 9457 problems that name each field to fix, with a "did you mean".
 
 **Agents (MCP).** Tools `describe_criteria`, `list_presets`, `find_places`,
-`rank_homes`, `explain_home` and `compare_homes`, over stdio. Claude Code picks the
-server up from this repository's `.mcp.json` (it asks before starting it); elsewhere:
+`rank_homes`, `explain_home` and `compare_homes`. Over HTTP, while `npm run api` is
+running, point any MCP client at `http://127.0.0.1:8787/v1/mcp` (Streamable HTTP,
+stateless, guarded like the rest of the API):
+
+```bash
+claude mcp add --transport http rental-recommendations http://127.0.0.1:8787/v1/mcp
+```
+
+Or over stdio, with no server running: Claude Code picks it up from this repository's
+`.mcp.json` (it asks before starting it); elsewhere:
 
 ```bash
 claude mcp add rental-recommendations -- npx tsx scripts/mcp.ts

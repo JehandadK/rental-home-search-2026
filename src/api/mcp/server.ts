@@ -130,6 +130,10 @@ function tools(): Tool[] {
   ];
 }
 
+/** Built once: an HTTP request makes a fresh server, and the tool list never changes. */
+let cachedTools: Tool[] | undefined;
+const toolsOnce = (): Tool[] => (cachedTools ??= tools());
+
 type Args = Record<string, unknown>;
 
 function noOtherArgs(args: Args, allowed: readonly string[]): void {
@@ -196,7 +200,7 @@ export function createMcpServer(service: ApiService, options: { version?: string
     { name: MCP_SERVER_NAME, title: "Rental home recommendations", version: options.version ?? "1.0.0" },
     { capabilities: { tools: {}, resources: {} }, instructions: INSTRUCTIONS },
   );
-  const toolList = tools();
+  const toolList = toolsOnce();
 
   server.setRequestHandler(ListToolsRequestSchema, () => ({ tools: toolList }));
 

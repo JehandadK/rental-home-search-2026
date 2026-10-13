@@ -228,6 +228,7 @@ Errors are RFC 9457 `application/problem+json`, with
 | `POST /v1/recommendations` | Ranked, explained results with the scoring used (above) |
 | `POST /v1/homes/{key}/explain` | One home in full under the given criteria, even if a filter would hide it |
 | `POST /v1/homes/compare` | `{keys: [1–6 keys], criteria: {…}}` side by side, with `sharedGaps` |
+| `POST /v1/mcp` | The MCP tools over Streamable HTTP, for clients that connect to a URL |
 | `GET /v1/health` (and `/healthz`) | Loaded data revision, load time, last load error; 503 until loaded |
 
 ### Swagger / OpenAPI
@@ -277,7 +278,16 @@ catalogue and presets as resources.
   default is stated in each description instead.
 - Launch it as `npx tsx scripts/mcp.ts` or `npm run --silent mcp`: plain
   `npm run mcp` prints npm's banner on stdout, which is not protocol.
-- Streamable HTTP at `/mcp` on the HTTP server is left for later.
+- **Over HTTP (2026-10-13):** `POST /v1/mcp` on the HTTP server speaks Streamable
+  HTTP with the SDK's web-standard transport, so it fits the socket-free handler.
+  Stateless: each request gets its own MCP server over the shared snapshot and a JSON
+  answer, with no session id and no SSE stream (GET and DELETE answer 405). It is a
+  data endpoint, so the token check, rate limit, 64 kB body cap and loopback Host
+  check apply. One JSON-RPC message per request: batches (dropped from MCP in
+  2025-06-18) let one rate-limited request ask for ~100× the work, and a batch holding
+  a request and its own cancel never answered, holding the connection; they get a
+  JSON-RPC -32600. Every request also has a 10 s limit (504). Tested with the SDK's
+  HTTP client both in memory and against the live server.
 
 #### Connecting an agent
 

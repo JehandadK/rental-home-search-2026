@@ -8,10 +8,12 @@
  *   GET  /v1/criteria  /v1/presets  /v1/places
  *   GET  /v1/rankings?…             POST /v1/recommendations
  *   POST /v1/homes/{key}/explain    POST /v1/homes/compare
+ *   POST /v1/mcp                    the MCP tools over Streamable HTTP (stateless, JSON)
  *   GET  /v1/health  (and /healthz)
  */
 import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type Server } from "node:http";
+import { handleMcpHttp } from "../mcp/http";
 import { ApiError, badRequest, type ApiService } from "../service";
 import { DOCS_CSP, DOCS_PAGE, type DocsAsset } from "./docs";
 import { openApiDocument } from "./openapi";
@@ -45,6 +47,7 @@ interface Reply {
 
 interface RequestContext {
   url: URL;
+  headers: ApiRequest["headers"];
   params: string[];
   body(): Promise<unknown>;
 }
@@ -116,6 +119,18 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
       method: "POST", pattern: /^\/v1\/homes\/([^/]+)\/explain$/, data: true,
       handle: async ({ params: [key], body }) => ok(service.explain(decodeSegment(key), await body())),
     },
+    {
+      method: "POST", pattern: /^\/v1\/mcp$/, data: true,
+      handle: async ({ url, headers, body }) => {
+        const answer = await handleMcpHttp(service, { url: url.pathname + url.search, headers, body: await body() }, { log });
+        const { "content-type": contentType, ...rest } = answer.headers;
+        return {
+          status: answer.status,
+          headers: rest,
+          ...(answer.body ? { raw: { contentType: contentType ?? "application/json", body: answer.body } } : {}),
+        };
+      },
+    },
   ];
 
   /** The configured token the request presents, if any (the scheme is case-insensitive, RFC 9110). */
@@ -172,7 +187,7 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
           }
         }
         const params = route.pattern.exec(url.pathname)!.slice(1);
-        reply = await route.handle({ url, params, body: async () => parseJsonBody(await request.body(maxBodyBytes), request.headers["content-type"]) });
+        reply = await route.handle({ url, headers: request.headers, params, body: async () => parseJsonBody(await request.body(maxBodyBytes), request.headers["content-type"]) });
       }
     } catch (error) {
       reply = problemReply(error, url.pathname, log);
