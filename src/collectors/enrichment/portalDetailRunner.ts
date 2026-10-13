@@ -182,14 +182,24 @@ async function runLocked(args: readonly string[], dependencies: PortalDetailDepe
   return { source, requests, limit, reused, applied, failed, queued: queue.items.length, ended, ...(blocked ? { blocked } : {}) };
 }
 
+/** The CLI entry points: the real clock and pacing unless a test injects its own. */
+export type PortalDetailCliDependencies = Pick<PortalDetailDependencies, "source" | "dataDir" | "client" | "loader" | "onEnded">
+  & Partial<Pick<PortalDetailDependencies, "now" | "sleep">>;
+
+function withRealClock(dependencies: PortalDetailCliDependencies): PortalDetailDependencies {
+  return {
+    ...dependencies,
+    now: dependencies.now ?? (() => new Date()),
+    sleep: dependencies.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))),
+  };
+}
+
 /** `detail:<source>`: pages load in the headed browser only, with the real clock. */
 export async function portalDetailsCli(
   args: readonly string[],
-  dependencies: Pick<PortalDetailDependencies, "source" | "dataDir" | "client" | "loader" | "onEnded">,
+  dependencies: PortalDetailCliDependencies,
 ): Promise<void> {
-  const result = await runPortalDetails(args, {
-    ...dependencies, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-  }).finally(() => dependencies.loader.close());
+  const result = await runPortalDetails(args, withRealClock(dependencies)).finally(() => dependencies.loader.close());
   console.log(`${result.source} details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} stores added; `
     + `${result.failed} failures; ${result.ended.length} ended ads; queue retained (${result.queued} URLs).`);
   if (result.blocked) console.log(`  paused until ${result.blocked.until}: ${result.blocked.reason}`);
@@ -203,7 +213,7 @@ export async function portalDetailsCli(
  */
 export async function loadDetailsAfterList(
   args: readonly string[],
-  dependencies: Pick<PortalDetailDependencies, "source" | "dataDir" | "client" | "loader" | "onEnded">,
+  dependencies: PortalDetailCliDependencies,
   log: (message: string) => void = console.log,
 ): Promise<PortalDetailResult | null> {
   try {
@@ -211,9 +221,8 @@ export async function loadDetailsAfterList(
     const limit = positiveInteger(flag >= 0 ? args[flag + 1] : undefined, 10, 0);
     if (limit === 0) return null;
     log(`\nLoading up to ${limit} ${dependencies.source} detail pages for the agency store…`);
-    const result = await runPortalDetails(["--limit", String(limit)], {
-      ...dependencies, now: () => new Date(), sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-    }).finally(() => dependencies.loader.close());
+    const result = await runPortalDetails(["--limit", String(limit)], withRealClock(dependencies))
+      .finally(() => dependencies.loader.close());
     log(`${result.source} details: ${result.requests}/${result.limit} requests; ${result.reused} cache replays; ${result.applied} stores added; `
       + `${result.failed} failures; ${result.ended.length} ended ads.`);
     if (result.blocked) log(`  details paused until ${result.blocked.until}: ${result.blocked.reason}`);

@@ -139,8 +139,6 @@ describe("AtHome / RoomSpot detail loading (offline)", () => {
     for (const loaded of pages) load.mockResolvedValueOnce(loaded);
     const exitCode = process.exitCode; process.exitCode = undefined;
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    // The CLI waits between pages with the real clock; offline there is nothing to wait for.
-    vi.spyOn(globalThis, "setTimeout").mockImplementation(((resolve: () => void) => { resolve(); return 0; }) as unknown as typeof setTimeout);
     try {
       await portalDetailsCli(["--limit", "10"], { ...dependencies, onEnded: vi.fn(async () => {}) });
       expect(process.exitCode).toBe(code);
@@ -218,6 +216,7 @@ describe("AtHome / RoomSpot detail loading (offline)", () => {
     expect(dependencies.loader.close).toHaveBeenCalled();
     load.mockResolvedValue(page(urlOf("1"), "<p>?</p>", { title: "認証" }));
     expect(await loadDetailsAfterList([], dependencies, log)).toMatchObject({ requests: 1, failed: 1, blocked: {} });
+    expect(dependencies.sleep).toHaveBeenCalledWith(3000);
     expect(await readFile(sources.sourcePath("roomspot"), "utf8")).toBe(bytes);
     load.mockClear();
     expect(await loadDetailsAfterList(["--detail-limit", "0"], dependencies, log)).toBeNull();
