@@ -109,16 +109,7 @@ stateless, guarded like the rest of the API):
 claude mcp add --transport http rental-recommendations http://127.0.0.1:8787/v1/mcp
 ```
 
-Or over stdio, with no server running: Claude Code picks it up from this repository's
-`.mcp.json` (it asks before starting it); elsewhere:
-
-```bash
-claude mcp add rental-recommendations -- npx tsx scripts/mcp.ts
-```
-
-Other clients: run `<repo>/node_modules/.bin/tsx <repo>/scripts/mcp.ts --data <repo>/public/data`.
-Use `npx tsx scripts/mcp.ts` or `npm run --silent mcp`; plain `npm run mcp` prints
-npm's banner on stdout, which breaks the protocol.
+With `API_TOKENS` set, MCP clients send `Authorization: Bearer <token>` like any other caller.
 
 | Setting | Default | |
 |---|---|---|
@@ -575,8 +566,7 @@ scripts/                ← CLI entry points only (npm run …)
   scrape-ur.ts          ← UR賃貸住宅 estates and vacancies through UR's own API, in the headed browser
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
-  serve-api.ts          ← recommendations API over HTTP (`npm run api`)
-  mcp.ts                ← recommendations API as an MCP server on stdio
+  serve-api.ts          ← recommendations API: REST, Swagger UI and MCP (`npm run api`)
 tools/architecture/     ← test enforcing the layer rules in DATA_ARCHITECTURE.md
 ```
 

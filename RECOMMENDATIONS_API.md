@@ -56,10 +56,10 @@ src/api/                       new "api" layer (Node; may use domain, data-layer
   http/server.ts               socket-free handler (routes, problems, auth, CORS, limits) + a node:http adapter
   http/openapi.ts              OpenAPI 3.1: requests generated from criteriaSchema, responses checked by tests
   http/docs.ts                 Swagger UI page and a fixed allowlist of swagger-ui-dist assets
-  mcp/server.ts                MCP tools over the same service (stdio now, streamable HTTP later)
+  mcp/server.ts                the MCP tools over the same service
+  mcp/http.ts                  MCP over Streamable HTTP at POST /v1/mcp (stateless)
 
-scripts/serve-api.ts           npm run api   → http://127.0.0.1:8787/v1
-scripts/mcp.ts                 npx tsx scripts/mcp.ts (or npm run --silent mcp) → stdio MCP server
+scripts/serve-api.ts           npm run api   → http://127.0.0.1:8787/v1 (REST, Swagger, MCP)
 ```
 
 `tools/architecture/layers.ts` gets an `api` layer:
@@ -263,8 +263,8 @@ catalogue and presets as resources.
   loading comes back as an `isError` result with the same field errors as HTTP (the
   agent can fix and retry); an unknown tool is a protocol error; internal failures
   say only "see the server log".
-- Every log line goes to stderr; stdout is the protocol. The server answers at once
-  and loads data in the background (about 2 s).
+- The server answers at once and loads data in the background (about 2 s); until
+  then tools say "still loading".
 - To keep responses affordable for agents, the summary view details only the
   *weighted* yes/no features in `scoring.features` and names the rest in
   `unweightedFeatures` (with the path pattern that turns one on); `view: "full"`
@@ -276,9 +276,7 @@ catalogue and presets as resources.
   about 37 KB instead of 100 KB (most of it is `rank_homes` describing all 139 fields). Weights and features carry no schema `default`
   (a preset replaces them, so a client filling in defaults would override it); the
   default is stated in each description instead.
-- Launch it as `npx tsx scripts/mcp.ts` or `npm run --silent mcp`: plain
-  `npm run mcp` prints npm's banner on stdout, which is not protocol.
-- **Over HTTP (2026-10-13):** `POST /v1/mcp` on the HTTP server speaks Streamable
+- **One transport (2026-10-13):** `POST /v1/mcp` on the HTTP server speaks Streamable
   HTTP with the SDK's web-standard transport, so it fits the socket-free handler.
   Stateless: each request gets its own MCP server over the shared snapshot and a JSON
   answer, with no session id and no SSE stream (GET and DELETE answer 405). It is a
@@ -287,34 +285,23 @@ catalogue and presets as resources.
   2025-06-18) let one rate-limited request ask for ~100× the work, and a batch holding
   a request and its own cancel never answered, holding the connection; they get a
   JSON-RPC -32600. Every request also has a 10 s limit (504). Tested with the SDK's
-  HTTP client both in memory and against the live server.
+  HTTP client both in memory and against the live server. The stdio server
+  (`scripts/mcp.ts`, `.mcp.json`) and a `dist/mcp/` package were removed: HTTP is
+  the one way in, so an agent needs `npm run api` running.
 
 #### Connecting an agent
 
-Claude Code, in this repository (`.mcp.json` at the repo root, or
-`claude mcp add rental-recommendations -- npx tsx scripts/mcp.ts`):
+With `npm run api` running, point any MCP client at `http://127.0.0.1:8787/v1/mcp`:
 
-```json
-{
-  "mcpServers": {
-    "rental-recommendations": { "command": "npx", "args": ["tsx", "scripts/mcp.ts"] }
-  }
-}
+```bash
+claude mcp add --transport http rental-recommendations http://127.0.0.1:8787/v1/mcp
 ```
 
-Any other MCP client (Claude Desktop, other agents), with absolute paths because the
-client's working directory is unknown:
-
 ```json
-{
-  "mcpServers": {
-    "rental-recommendations": {
-      "command": "<repo>/node_modules/.bin/tsx",
-      "args": ["<repo>/scripts/mcp.ts", "--data", "<repo>/public/data"]
-    }
-  }
-}
+{ "mcpServers": { "rental-recommendations": { "type": "http", "url": "http://127.0.0.1:8787/v1/mcp" } } }
 ```
+
+With `API_TOKENS` set, the client sends `Authorization: Bearer <token>`.
 
 ## Local now, deployable later
 
@@ -366,7 +353,7 @@ be reverted on its own.
    (DNS rebinding via the Host header, load errors leaking local paths, a rate limit
    keyed by a client-chosen header, a lockout of token holders through the limiter cap,
    malformed targets, slow-header timeouts).
-4. **MCP server**: tools over `service.ts`, `npm run --silent mcp`, `.mcp.json` example.
+4. **MCP server**: tools over `service.ts` (first on stdio, now HTTP only at `/v1/mcp`).
    Tests: tool list and schemas, and a `rank_homes` round trip over in-memory
    transport. **Done 2026-10-12.** Also checked over real stdio with the SDK's own
    client: connect, wait for data, describe, rank, tweak one path, re-rank, a typo,
@@ -385,8 +372,8 @@ be reverted on its own.
    back to the same; a failed fetch is retried on the next check, while bad content
    waits for the files to change; 60 s timeout and a 100 MB cap per file; no
    credentials or query strings in the URL. Checked against the built site served locally: the same data revision as
-   reading `public/data` from disk. A repository `.mcp.json` registers the MCP server
-   for Claude Code (which asks before starting it).
+   reading `public/data` from disk. (A repository `.mcp.json` for the
+   stdio server was added here and removed on 2026-10-13 with stdio.)
 
 ## Risks and open points
 
