@@ -16,6 +16,7 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { reconcileLifecycle } from "../src/data-layer/lifecycle";
 import { restoreObservedLifecycle } from "../src/storage/json/observations";
 import { runSourceMigration } from "./migrate-sources";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../src/storage/json/checkedInData.contract";
 
 const importedAt = "2026-09-25T00:00:00.000Z", oldAt = "2026-08-01T00:00:00.000Z";
 const row = (id = "one", source = "suumo", changes: Partial<RawListing> = {}): RawListing => ({ id, source, name: id,
@@ -216,7 +217,7 @@ describe("audited historical source bootstrap", () => {
     expect(sourceSnapshotCaptureTime({ scrapedAt: oldAt })).toBe(oldAt);
   });
 
-  it("matches the original split for every checked-in canonical row, without altering the input", async () => {
+  it("matches the original split for every checked-in canonical row, without altering the input", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
     const path = join(DATA_DIR, "listings_raw.json"), bytes = await readFile(path, "utf8");
     const records = JSON.parse(bytes) as LegacyListing[];
     const results = await service.bootstrapSources(request(records));

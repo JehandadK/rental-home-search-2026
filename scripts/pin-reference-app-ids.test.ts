@@ -9,6 +9,7 @@ import { planPlacePins } from "../src/data-layer/referencePins";
 import { buildReferenceModel } from "../src/domain/referenceData";
 import { REFERENCE_CATALOG_DIR } from "../src/storage/json/dataStore";
 import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../src/storage/json/checkedInData.contract";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const script = join(root, "scripts", "pin-reference-app-ids.ts");
@@ -58,7 +59,7 @@ describe("planPlacePins", () => {
   });
 });
 
-describe("pinning app place ids into the reference catalog", () => {
+describe("pinning app place ids into the reference catalog", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, () => {
   it("has every place pinned in the checked-in catalog", () => {
     expect(run(REFERENCE_CATALOG_DIR)).toContain("already pinned");
   });

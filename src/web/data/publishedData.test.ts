@@ -12,6 +12,7 @@ import { buildReferenceModel } from "../../domain/referenceData";
 import { REFERENCE_CATALOG_DIR } from "../../storage/json/dataStore";
 import { JsonReferenceDataRepository } from "../../storage/json/jsonReferenceDataRepository";
 import { createHttpWebDataClient } from "./httpClient";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../../storage/json/checkedInData.contract";
 
 /** Serve public/data/ the way Vite does. */
 const fileFetch: typeof fetch = async (input) => {
@@ -25,7 +26,7 @@ const fileFetch: typeof fetch = async (input) => {
 
 const published = () => JSON.parse(readFileSync(join(WEB_PUBLISH_DIR, "reference.json"), "utf8")) as ReferenceDataSnapshot;
 
-describe("published web data", () => {
+describe("published web data", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, () => {
   it("publishes the current managed reference catalog (re-run `npm run data:web` if this fails)", async () => {
     const current = await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot();
     expect(published()).toEqual(JSON.parse(JSON.stringify(current)));

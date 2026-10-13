@@ -17,6 +17,7 @@ import { portalDiscoveryKeys } from "../src/data-layer/ingestion/portalPolicy";
 import { trackingKey } from "../src/data-layer/lifecycle";
 import type { PageCapture } from "../src/collectors/shared/captureStore";
 import type { RawListing } from "../src/domain/types";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../src/storage/json/checkedInData.contract";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
 const cities = ROOMSPOT_COLLECTOR.cities;
@@ -245,7 +246,7 @@ describe("RoomSpot collector through staged public ingestion (offline)", () => {
       building: { floor: "2階", conditions: ["ペット相談"] }, tenancy: { leaseType: "regular" } });
   });
 
-  it("updates a current RoomSpot ad in place and supersedes only its alias duplicates, without rewriting production data", async () => {
+  it("updates a current RoomSpot ad in place and supersedes only its alias duplicates, without rewriting production data", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
     const path = join(DATA_DIR, "sources", "roomspot.json"), bytes = await readFile(path, "utf8");
     const previous = JSON.parse(bytes) as SourceFile;
     await store.writeSource(previous, { expectedRevision: null });

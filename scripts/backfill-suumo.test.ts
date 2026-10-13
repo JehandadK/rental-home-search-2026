@@ -10,6 +10,7 @@ import { RevisionConflictError } from "../src/data-layer/errors";
 import { DATA_DIR, JsonSourceStore, type SourceFile } from "../src/storage/json/dataStore";
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { runSuumoBackfill } from "./backfill-suumo";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../src/storage/json/checkedInData.contract";
 
 const sourceAt = "2026-09-24T00:00:00.000Z", appliedAt = "2026-09-25T00:00:00.000Z";
 const row = (id = "one", changes: Partial<RawListing> = {}): RawListing => ({ id, source: "suumo", name: id,
@@ -226,7 +227,7 @@ describe("audited SUUMO source correction", () => {
     expect(((await read("suumo"))!.provenance!.correctionJournal as SourceCorrectionJournal).operations).toHaveLength(1);
   });
 
-  it("matches the old backfill on an isolated copy of every checked-in SUUMO row", async () => {
+  it("matches the old backfill on an isolated copy of every checked-in SUUMO row", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
     const path = join(DATA_DIR, "sources", "suumo.json"), bytes = await readFile(path, "utf8");
     const previous = JSON.parse(bytes) as SourceFile;
     await store.writeSource(previous, { expectedRevision: null });

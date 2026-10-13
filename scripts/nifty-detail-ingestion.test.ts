@@ -9,6 +9,7 @@ import { JsonListingRepository } from "../src/storage/json/jsonListingRepository
 import { mergeNiftyIncremental, niftyMatchKeys } from "../src/data-layer/ingestion/niftyPolicy";
 import { trackingKey } from "../src/data-layer/lifecycle";
 import { NIFTY_DETAIL_PARSER_VERSION, parseAgencyInfo, prepareNiftyDetailImport, toRawListing, type NiftyDetail, type NiftyDump } from "./merge-nifty";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../src/storage/json/checkedInData.contract";
 
 const before = "2026-09-24T00:00:00.000Z", now = "2026-09-25T00:00:00.000Z";
 function detail(id = "aabbcc", changes: Partial<NiftyDetail> = {}): NiftyDetail {
@@ -190,7 +191,7 @@ describe("Nifty detail import through the public data layer", () => {
     expect((await store.readSource("nifty"))!.archivedListings).toHaveLength(3);
   });
 
-  it("matches the full checked-in dump/source without touching production files", async () => {
+  it("matches the full checked-in dump/source without touching production files", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
     const sourcePath = join(DATA_DIR, "sources", "nifty.json"), inputPath = join(DATA_DIR, "nifty_detail_raw.json");
     const sourceBytes = await readFile(sourcePath, "utf8"), inputBytes = await readFile(inputPath, "utf8");
     const previous = JSON.parse(sourceBytes) as SourceFile, input = JSON.parse(inputBytes) as NiftyDump;

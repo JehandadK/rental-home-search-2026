@@ -10,6 +10,7 @@ import { DATA_DIR, JsonSourceStore, ShrinkGuardError, type SourceFile } from "..
 import { JsonListingRepository } from "../../storage/json/jsonListingRepository";
 import { suumoDiscoveryMatchKeys } from "./suumoIdentity";
 import { trackingKey } from "../lifecycle";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../../storage/json/checkedInData.contract";
 
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
 const row = (id = "display-id", bc = "1", changes: Partial<RawListing> = {}): RawListing => ({ id, source: "suumo", name: `House ${bc}`,
@@ -156,7 +157,7 @@ describe("SUUMO public discovery ingestion", () => {
     expect((await store.readSource("suumo"))!.archivedListings).toHaveLength(5);
   });
 
-  it("verifies every current SUUMO row is either retained or explicitly archived, without rewriting production data", async () => {
+  it("verifies every current SUUMO row is either retained or explicitly archived, without rewriting production data", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
     const path = join(DATA_DIR, "sources", "suumo.json"), bytes = await readFile(path, "utf8");
     const previous = JSON.parse(bytes) as SourceFile;
     await store.writeSource(previous, { expectedRevision: null });

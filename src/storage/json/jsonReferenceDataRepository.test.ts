@@ -8,6 +8,7 @@ import type { ReferenceCatalogManifest, ReferencePlaceRecord, VersionedDataset }
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
 import { DatasetMigrationRegistry } from "../../data-layer/migrations/registry";
 import { legacyCatalogRevision } from "./referenceCatalog";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "./checkedInData.contract";
 
 const roots: string[] = [];
 const projectRoot = fileURLToPath(new URL("../../../", import.meta.url));
@@ -44,7 +45,7 @@ function newPoi(id: string) {
   };
 }
 
-describe("JSON reference-data repository", () => {
+describe("JSON reference-data repository", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, () => {
   it("upgrades the catalog revision format with a retained manifest checkpoint", async () => {
     const { repo, directory } = await makeRepository(false);
     const manifestPath = join(directory, "manifest.json");

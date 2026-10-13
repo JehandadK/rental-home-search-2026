@@ -11,6 +11,7 @@ import { JsonListingRepository } from "../../storage/json/jsonListingRepository"
 import { detailCaptureBatch } from "./suumoDetailIngestion";
 import { parseDetail } from "./detailEnrichment";
 import { trackingKey } from "../../data-layer/lifecycle";
+import { CHECKED_IN_DATA_TIMEOUT_MS } from "../../storage/json/checkedInData.contract";
 
 const capturedAt = "2026-09-24T00:00:00.000Z", sourceAt = "2026-09-25T00:00:00.000Z";
 const html = '<table><tr><th>駐車場</th><td>敷地内6600円</td></tr><tr><th>契約期間</th><td>定期借家2年</td></tr><tr><th>保証会社</th><td>必加入</td></tr></table><ul class="inline_list"><li>都市ガス</li></ul>';
@@ -228,7 +229,7 @@ describe("SUUMO detail data-layer policy", () => {
     expect(await service.planDetailEnrichment({ ...options, force: true })).toEqual([complete.url, wanted.url]);
   });
 
-  it("matches the legacy detail overlay on an isolated copy of the entire checked-in SUUMO source", async () => {
+  it("matches the legacy detail overlay on an isolated copy of the entire checked-in SUUMO source", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {
     const path = join(DATA_DIR, "sources", "suumo.json");
     const bytes = await readFile(path, "utf8");
     const previous = JSON.parse(bytes) as SourceFile;
