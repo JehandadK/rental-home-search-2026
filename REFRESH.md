@@ -600,6 +600,19 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-13 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-10-13T13-22-24-921Z-526e721c`: **SUCCESS** after one resume.
+  Run from a worktree, AtHome got a fresh browser profile and was shown its
+  verification page; the resume pointed `PLAYWRIGHT_USER_DATA_DIR` at the main
+  checkout's `.context/athome-profile` (with `ATHOME_VERIFY_WAIT_SECONDS=300`)
+  and passed without a prompt. Every source/city stopped on two all-known pages
+  or its last page.
+- Source additions: SUUMO **21**, AtHome **17**, RoomSpot **6**, Nifty **37**.
+- **24 newly tracked properties** (Soka 3, Koshigaya 5, Kawaguchi 10,
+  Katsushika 6), all ≥60㎡ (60.02–146.24㎡), 11 ≥70㎡, 11 at ≤¥150,000, all
+  geocoded. **5527** archival rows; none SOLD.
+
 ## 2026-10-12 Nifty site structure and end-of-results fix
 
 Explored in the headed browser (Koshigaya, ≥60㎡), one list page and two
