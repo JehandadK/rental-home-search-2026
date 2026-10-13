@@ -28,7 +28,7 @@ include historical dataset snapshots, not live inventory guarantees.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173, with the API at /api/v1 (Swagger: /api/v1/docs)
 ```
 
 ```bash
@@ -84,6 +84,10 @@ HTTP (with Swagger UI) or MCP. It reads the same `public/data/` files the dashbo
 loads, so the same criteria give the same ranking as the UI. Nothing a caller sends
 is stored. Design notes: [RECOMMENDATIONS_API.md](RECOMMENDATIONS_API.md).
 
+`npm run dev` (and `npm run preview`) serve it beside the site, at
+`http://localhost:5173/api/v1`: Swagger UI at `/api/v1/docs`, MCP at `/api/v1/mcp`.
+To run it on its own:
+
 ```bash
 npm run api        # http://127.0.0.1:8787/v1 — Swagger UI at /v1/docs
 ```
@@ -101,12 +105,13 @@ where each value came from, and `set`, the request path that changes it) and
 are RFC 9457 problems that name each field to fix, with a "did you mean".
 
 **Agents (MCP).** Tools `describe_criteria`, `list_presets`, `find_places`,
-`rank_homes`, `explain_home` and `compare_homes`. Over HTTP, while `npm run api` is
-running, point any MCP client at `http://127.0.0.1:8787/v1/mcp` (Streamable HTTP,
-stateless, guarded like the rest of the API):
+`rank_homes`, `explain_home` and `compare_homes`, over HTTP (Streamable HTTP,
+stateless, guarded like the rest of the API). Point any MCP client at
+`http://localhost:5173/api/v1/mcp` while `npm run dev` runs, or at
+`http://127.0.0.1:8787/v1/mcp` with `npm run api`:
 
 ```bash
-claude mcp add --transport http rental-recommendations http://127.0.0.1:8787/v1/mcp
+claude mcp add --transport http rental-recommendations http://localhost:5173/api/v1/mcp
 ```
 
 With `API_TOKENS` set, MCP clients send `Authorization: Bearer <token>` like any other caller.
@@ -120,7 +125,9 @@ With `API_TOKENS` set, MCP clients send `Authorization: Bearer <token>` like any
 | `API_CORS_ORIGINS` | none | Browser origins allowed to call it, or `*` |
 | `API_RATE_LIMIT` | `120` | Data requests per client per minute |
 
-Without tokens the server answers only requests addressed to this machine.
+Without tokens the server answers only requests addressed to this machine, so
+other devices reaching `npm run dev` over the network see the site but get 421 from
+the API unless `API_TOKENS` is set.
 Deploying it, or opening it to other teams, may need Mercari's internal External
 Service Review first; it calls no outside service itself.
 

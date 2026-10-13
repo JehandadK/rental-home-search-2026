@@ -12,7 +12,7 @@
  *   GET  /v1/health  (and /healthz)
  */
 import { timingSafeEqual } from "node:crypto";
-import { createServer, type IncomingMessage, type Server } from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { handleMcpHttp } from "../mcp/http";
 import { ApiError, badRequest, type ApiService } from "../service";
 import { DOCS_CSP, DOCS_PAGE, type DocsAsset } from "./docs";
@@ -32,6 +32,11 @@ export interface ServerConfig {
   maxBodyBytes?: number;
   /** Data requests per client per minute; 0 = unlimited. */
   rateLimitPerMinute?: number;
+  /**
+   * Where the API is mounted when another server strips a prefix before handing
+   * requests over (the dev server mounts it at "/api"). Links and redirects include it.
+   */
+  mountPath?: string;
   log?: (line: string) => void;
 }
 
@@ -87,6 +92,8 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
   const maxBodyBytes = config.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
   const limiter = rateLimiter(config.rateLimitPerMinute ?? DEFAULT_RATE_LIMIT_PER_MINUTE);
   const openApi = JSON.stringify(openApiDocument({ auth: tokens.length > 0 }));
+  /** The API's public base path, e.g. "/v1", or "/api/v1" in the dev server. */
+  const base = `${config.mountPath ?? ""}${BASE}`;
 
   const health = (): Reply => {
     const body = service.health();
@@ -94,12 +101,12 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
   };
 
   const routes: Route[] = [
-    { method: "GET", pattern: /^\/$/, data: false, handle: () => ({ status: 302, headers: { Location: BASE } }) },
-    { method: "GET", pattern: /^\/v1\/?$/, data: false, handle: () => ok(service.index(BASE)) },
+    { method: "GET", pattern: /^\/$/, data: false, handle: () => ({ status: 302, headers: { Location: base } }) },
+    { method: "GET", pattern: /^\/v1\/?$/, data: false, handle: () => ok(service.index(base)) },
     { method: "GET", pattern: /^\/v1\/openapi\.json$/, data: false, handle: () => ({ status: 200, raw: { contentType: "application/json; charset=utf-8", body: openApi } }) },
     { method: "GET", pattern: /^\/v1\/docs$/, data: false, handle: () => ({ status: 200, raw: { contentType: "text/html; charset=utf-8", body: DOCS_PAGE }, headers: { "Content-Security-Policy": DOCS_CSP } }) },
     // The page's relative links only resolve from /v1/docs.
-    { method: "GET", pattern: /^\/v1\/docs\/$/, data: false, handle: () => ({ status: 301, headers: { Location: `${BASE}/docs` } }) },
+    { method: "GET", pattern: /^\/v1\/docs\/$/, data: false, handle: () => ({ status: 301, headers: { Location: `${base}/docs` } }) },
     {
       method: "GET", pattern: /^\/v1\/docs\/([^/]+)$/, data: false,
       handle: ({ params: [name] }) => {
@@ -169,7 +176,7 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
           : { status: 204 };
       } else {
         const matching = routes.filter((route) => route.pattern.test(url.pathname));
-        if (!matching.length) throw new ApiError(404, "Not found", `Nothing at ${url.pathname}; the API lives under ${BASE}`);
+        if (!matching.length) throw new ApiError(404, "Not found", `Nothing at ${url.pathname}; the API lives under ${base}`);
         // HEAD is GET without the body.
         const method = request.method === "HEAD" ? "GET" : request.method;
         const route = matching.find((candidate) => candidate.method === method);
@@ -198,12 +205,11 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
   };
 }
 
-/** The handler on a node:http server. */
-export function createApiServer(config: ServerConfig): Server {
+/** The handler as a node:http request listener, for this module's server and for the dev server's middleware. */
+export function createNodeListener(config: ServerConfig): (request: IncomingMessage, response: ServerResponse) => void {
   const handle = createApiHandler(config);
   const log = config.log ?? (() => {});
-  // Check slow connections every 2 s, so the header and request timeouts bite on time.
-  const server = createServer({ connectionsCheckingInterval: 2_000, headersTimeout: 10_000, requestTimeout: 15_000 }, (request, response) => {
+  return (request, response) => {
     handle(fromNode(request))
       .catch((error: unknown): ApiResponse => {
         log(`unhandled: ${error instanceof Error ? error.stack : String(error)}`);
@@ -213,7 +219,13 @@ export function createApiServer(config: ServerConfig): Server {
         response.writeHead(status, headers);
         response.end(body);
       });
-  });
+  };
+}
+
+/** The handler on its own node:http server. */
+export function createApiServer(config: ServerConfig): Server {
+  // Check slow connections every 2 s, so the header and request timeouts bite on time.
+  const server = createServer({ connectionsCheckingInterval: 2_000, headersTimeout: 10_000, requestTimeout: 15_000 }, createNodeListener(config));
   server.keepAliveTimeout = 5_000;
   server.maxConnections = MAX_CONNECTIONS;
   return server;

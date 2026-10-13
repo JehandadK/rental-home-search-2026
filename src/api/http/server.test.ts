@@ -66,6 +66,14 @@ describe("routes", () => {
     expect(index.dataRevision).toBe("test.0001");
   });
 
+  it("puts its mount path into links and redirects when another server mounts it (the dev server's /api)", async () => {
+    const handle = handler({ mountPath: "/api" });
+    expect((await send(handle, "GET", "/")).headers.Location).toBe("/api/v1");
+    expect((await send(handle, "GET", "/v1/docs/")).headers.Location).toBe("/api/v1/docs");
+    expect((await send(handle, "GET", "/v1")).json().links).toMatchObject({ docs: "/api/v1/docs", mcp: "/api/v1/mcp" });
+    expect((await send(handle, "GET", "/v2")).json().detail).toContain("/api/v1");
+  });
+
   it("ranks the same from the query string and the JSON body, inside the data envelope", async () => {
     const handle = handler();
     const get = (await send(handle, "GET", "/v1/rankings?preset=commuter&weights.station=14&page.limit=2")).json();

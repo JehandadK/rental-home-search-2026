@@ -291,10 +291,11 @@ catalogue and presets as resources.
 
 #### Connecting an agent
 
-With `npm run api` running, point any MCP client at `http://127.0.0.1:8787/v1/mcp`:
+With `npm run dev` running, point any MCP client at `http://localhost:5173/api/v1/mcp`
+(or `http://127.0.0.1:8787/v1/mcp` with `npm run api`):
 
 ```bash
-claude mcp add --transport http rental-recommendations http://127.0.0.1:8787/v1/mcp
+claude mcp add --transport http rental-recommendations http://localhost:5173/api/v1/mcp
 ```
 
 ```json
@@ -305,6 +306,14 @@ With `API_TOKENS` set, the client sends `Authorization: Bearer <token>`.
 
 ## Local now, deployable later
 
+- **In the dev server (2026-10-13):** a Vite plugin (`vite.config.ts`,
+  `src/api/http/devServer.ts`) mounts the same handler at `/api` in `npm run dev` and
+  `npm run preview`, so one command serves the site and the API on one origin:
+  `/api/v1` (REST), `/api/v1/docs`, `/api/v1/mcp`. It ranks the data that server
+  serves (`public/data`, or `dist/data` for the preview), loading it in the
+  background; bad `API_*` settings leave the site running and log why the API is not
+  mounted. The handler takes a `mountPath`, so links and redirects include `/api`.
+  The built `dist/` stays static and has no API. `npm run api` still runs it alone.
 - Defaults: bind to `127.0.0.1:8787`, no auth, read-only.
 - Config by env: `API_HOST`, `API_PORT`, `API_DATA` (a directory or an http(s) URL), `API_TOKENS`,
   `API_CORS_ORIGINS`.
