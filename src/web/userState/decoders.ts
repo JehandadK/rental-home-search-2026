@@ -21,6 +21,7 @@ import type { WeightPreset } from "../../domain/weightPresets";
 import type { AvailabilityMap } from "../../domain/availability";
 import type { EnrichedListing } from "../../domain/types";
 import type { DuplicateDecision } from "../../domain/possibleDuplicates";
+import { DEFAULT_UR_ROOMS_FILTERS, type UrRoomsFilters, type UrRoomsSort } from "../../domain/urRoomsView";
 
 type PlainObject = Record<string, unknown>;
 
@@ -206,4 +207,29 @@ export function decodeDuplicateDecisions(raw: unknown): Record<string, Duplicate
     && strings(decision.a) && strings(decision.b)
     && typeof decision.decidedAt === "string",
   )) as Record<string, DuplicateDecision>;
+}
+
+/** UR rooms being waited for: distinct room ids. */
+export function decodeUrRoomWatch(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.filter((id): id is string => typeof id === "string" && id !== ""))];
+}
+
+const UR_ROOMS_SORTS: readonly UrRoomsSort[] = ["watched", "often", "recent", "rent", "size"];
+
+/** The UR rooms page's filters, field by field over the defaults. */
+export function decodeUrRoomsFilters(raw: unknown): UrRoomsFilters {
+  if (!isPlainObject(raw)) return DEFAULT_UR_ROOMS_FILTERS;
+  const text = (value: unknown) => (typeof value === "string" ? value : "");
+  const positive = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null);
+  return {
+    city: text(raw.city),
+    estate: text(raw.estate),
+    status: raw.status === "open" || raw.status === "closed" ? raw.status : "all",
+    minRooms: typeof raw.minRooms === "number" && [0, 1, 2, 3, 4].includes(raw.minRooms) ? raw.minRooms : 0,
+    minSizeM2: positive(raw.minSizeM2),
+    maxRent: positive(raw.maxRent),
+    watchedOnly: raw.watchedOnly === true,
+    sort: UR_ROOMS_SORTS.includes(raw.sort as UrRoomsSort) ? (raw.sort as UrRoomsSort) : "watched",
+  };
 }

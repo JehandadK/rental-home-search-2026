@@ -4,7 +4,7 @@
  *   index.html          the page; every URL in it is relative
  *   assets/             the app bundle (hashed .js/.css), with no theme in it
  *   themes/default.css  the theme, linked from index.html, never bundled
- *   data/               listings.json and reference.json, loadable by the app
+ *   data/               listings.json, reference.json and ur-rooms.json, loadable by the app
  *
  * Anything else in dist/ (source maps, stray files) fails the check, so the
  * upload is exactly the app, its theme, and its data. No server is needed:
@@ -16,13 +16,14 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createHttpWebDataClient, LISTINGS_ASSET, REFERENCE_ASSET } from "../src/web/data/httpClient";
+import { parseUrRoomsPayload, UR_ROOMS_ASSET } from "../src/web/data/urRoomsClient";
 
 export const THEME_FILE = "themes/default.css";
 const ALLOWED: readonly ((file: string) => boolean)[] = [
   (file) => file === "index.html",
   (file) => /^assets\/[\w-]+\.(js|css)$/.test(file),
   (file) => /^themes\/[\w-]+\.css$/.test(file),
-  (file) => file === `data/${LISTINGS_ASSET}` || file === `data/${REFERENCE_ASSET}`,
+  (file) => file === `data/${LISTINGS_ASSET}` || file === `data/${REFERENCE_ASSET}` || file === `data/${UR_ROOMS_ASSET}`,
 ];
 
 /** Problems with the release in `dir`; empty when it is ready to upload. */
@@ -66,6 +67,12 @@ export async function checkRelease(dir: string): Promise<string[]> {
     (error: Error) => problems.push(`data/${LISTINGS_ASSET}: ${error.message}`),
   );
   await client.loadReferenceSnapshot().catch((error: Error) => problems.push(`data/${REFERENCE_ASSET}: ${error.message}`));
+  // Optional: the UR rooms page says so when it is missing. When present it must parse.
+  if (files.includes(`data/${UR_ROOMS_ASSET}`)) {
+    await readFile(join(dir, "data", UR_ROOMS_ASSET), "utf8")
+      .then((text) => parseUrRoomsPayload(JSON.parse(text)))
+      .catch((error: Error) => problems.push(`data/${UR_ROOMS_ASSET}: ${error.message}`));
+  }
   return problems;
 }
 

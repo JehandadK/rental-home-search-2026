@@ -49,7 +49,7 @@ pass anything else:
 | `index.html` | The page | the app changes |
 | `assets/` | The app bundle (hashed JS and CSS, no theme colours) | the app changes |
 | `themes/default.css` | The theme: the interface and map colours, the page font, the radius | the look changes |
-| `data/` | `listings.json` and `reference.json` | data is committed |
+| `data/` | `listings.json`, `reference.json` and `ur-rooms.json` | data is committed |
 
 Upload `dist/` as-is to any static host. Every URL is relative, so it works
 from a domain root or a sub-path (`https://example.com/rentals/`) with no
@@ -352,6 +352,7 @@ the two files the browser fetches into `public/data/` (below).
 | `sources/athome.json` | AtHome family rentals (2K+), including move-in money and amenity flags | `npm run scrape:athome` |
 | `sources/roomspot.json` | RoomSpot/POLUS family rentals (2K+), including exact addresses and move-in money | `npm run scrape:roomspot` |
 | `sources/ur.json` | UR賃貸住宅 vacant family rooms (2K+) from UR's own site, keyed on UR's estate and room codes | `npm run scrape:ur` |
+| `ur-history.json` | Every UR room seen open, for the UR rooms page: our own UR sweeps, and ラク賃不動産's listing periods per room since 2026-05-29 (additive) | `npm run scrape:ur` (each sweep), `npm run scrape:ur-history` |
 | `sources/nifty.json` | Nifty list-page rentals + cached historical detail enrichment | `npm run crawl:nifty` / `npm run import:nifty` |
 | `sources/yahoo.json` | User-selected Yahoo! Real Estate detail listings, retained across rebuilds | Native-browser detail extraction; no automatic market crawl |
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
@@ -458,6 +459,23 @@ guarantor). A held room UR no longer lists is asked about once: UR answering
 "no such room" is recorded in `data/availability.json` as gone. Estate
 coordinates go into the geocode cache. `--dry-run` sweeps and prints only;
 `--city Soka` limits the sweep. The refresh runs it as the `ur` stage.
+Each sweep is also added to `data/ur-history.json` for the UR rooms page.
+
+**UR rooms page (open and closed).** UR advertises only vacant rooms, so every
+site lists open rooms only. The "UR rooms · open & closed" button (or `#ur-rooms`)
+lists every UR room in the target cities seen open at any time, including the
+ones let since, so a closed room can be ☆ watched and waited for: a watched room
+that opens is listed first. A room's status is its newest evidence from either
+source (`src/domain/urRooms.ts`); "closed" means it left UR's vacancy list, not a
+confirmed contract. Watched rooms and the page's filters stay in the browser.
+`npm run scrape:ur-history` fills in the history before our own sweeps began: it
+loads each estate's page on ラク賃不動産 (www.ur-s.jp, mapped in
+`research/ur-sites/ur-s-rakuchin.md`) in the headed browser, 8–14 s apart (about
+8 minutes for the 44 estates), and adds its rooms and listing periods
+(`--estate 50_4090` for one, `--dry-run` to print only). Run it now and then;
+our own daily sweeps keep the page current in between. ラク賃 is a service the
+project did not use before, so relying on it may need Mercari's internal
+External Service Review. `npm run data:web` publishes the page's `ur-rooms.json`.
 
 AtHome's public pages use browser verification, so its collector reads the
 public search-result HTML in a headed Playwright browser and through the
@@ -568,6 +586,7 @@ scripts/                ← CLI entry points only (npm run …)
   scrape-athome.ts      ← headed-browser incremental AtHome collector
   scrape-roomspot.ts    ← headed-browser incremental RoomSpot/POLUS collector
   scrape-ur.ts          ← UR賃貸住宅 estates and vacancies through UR's own API, in the headed browser
+  scrape-ur-history.ts  ← every UR room's past listing periods from ラク賃不動産, in the headed browser
   enrich.ts             ← cached batch geocode + enrich
   rank.ts               ← terminal top-N (`--bike` for cycling distances)
   serve-api.ts          ← recommendations API: REST, Swagger UI and MCP (`npm run api`)

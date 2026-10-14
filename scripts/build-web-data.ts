@@ -4,6 +4,8 @@
  *   listings.json   the compact listing payload
  *   reference.json  the managed reference catalog snapshot (cities,
  *                   boundaries, places), exported through the repository
+ *   ur-rooms.json   every UR room we know of, open or closed, from
+ *                   data/ur-history.json (src/domain/urRooms.ts)
  *
  * `listings.json` remains the complete archival/enrichment artifact for CLI
  * analysis. The dashboard recomputes all proximity fields through
@@ -25,10 +27,17 @@ import { withAvailability } from "../src/domain/availability";
 import { inferredAgency } from "../src/domain/agencyNames";
 import { readAvailability } from "../src/storage/json/availabilityStore";
 import { toListingAgency } from "../src/collectors/shared/agency";
+import { BACKUP_DIR, JsonSourceStore, SOURCES_DIR } from "../src/storage/json/dataStore";
+import { readUrHistory } from "../src/storage/json/urHistoryStore";
+import { deriveUrRooms } from "../src/domain/urRooms";
+import { UR_SOURCE } from "../src/domain/ur";
+import { heldUrRooms, urEstateInputs } from "../src/data-layer/urRoomHistory";
+import { UR_ROOMS_ASSET } from "../src/web/data/urRoomsClient";
 
 const INPUT = join(DATA_DIR, "listings.json");
 const OUTPUT = join(WEB_PUBLISH_DIR, "listings.json");
 const REFERENCE_OUTPUT = join(WEB_PUBLISH_DIR, "reference.json");
+const UR_ROOMS_OUTPUT = join(WEB_PUBLISH_DIR, UR_ROOMS_ASSET);
 
 const listings = JSON.parse(await readFile(INPUT, "utf8")) as EnrichedListing[];
 // Keep the browser payload clean even when listings.json came from an older
@@ -86,3 +95,20 @@ console.log(
   `Wrote ${REFERENCE_OUTPUT}: reference catalog ${reference.revision.slice(0, 12)} ` +
     `(${reference.cities.records.length} cities, ${reference.boundaries.records.length} boundaries, ${reference.places.records.length} places)`,
 );
+
+// The UR rooms page is optional: a bad history file skips it and leaves the files above published.
+try {
+  const urRooms = deriveUrRooms({
+    history: await readUrHistory(),
+    estates: urEstateInputs(reference),
+    heldRooms: heldUrRooms(await new JsonSourceStore(SOURCES_DIR, BACKUP_DIR).readSource(UR_SOURCE)),
+    now: new Date().toISOString(),
+  });
+  await atomicWriteJson(UR_ROOMS_OUTPUT, urRooms, { compact: true });
+  console.log(
+    `Wrote ${UR_ROOMS_OUTPUT}: ${urRooms.rooms.length} UR rooms (${urRooms.rooms.filter((room) => room.status === "open").length} open) ` +
+      `in ${urRooms.estates.length} estates, history from ${urRooms.historyFrom ?? "nothing yet"}`,
+  );
+} catch (error) {
+  console.error(`Skipped ${UR_ROOMS_OUTPUT}: ${(error as Error).message}`);
+}

@@ -39,6 +39,8 @@ export const USER_STATE_KEYS = {
   mapAreas: "rental-search-map-areas-v1",
   nameLanguage: "rental-search-name-language-v1",
   duplicateDecisions: "rental-search-duplicate-decisions-v1",
+  urRoomWatch: "rental-search-ur-room-watch-v1",
+  urRoomsFilters: "rental-search-ur-rooms-filters-v1",
 } as const;
 
 /**

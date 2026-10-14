@@ -21,6 +21,8 @@ import { BACKUP_DIR, DATA_DIR, JsonSourceStore, REFERENCE_CATALOG_DIR, SOURCES_D
 import { JsonListingRepository } from "../src/storage/json/jsonListingRepository";
 import { JsonReferenceDataRepository } from "../src/storage/json/jsonReferenceDataRepository";
 import { readAvailability, recordAvailability, type AvailabilityEntry } from "../src/storage/json/availabilityStore";
+import { recordUrHistory } from "../src/storage/json/urHistoryStore";
+import { urSweepRecord } from "../src/data-layer/urRoomHistory";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { planUrEstateImport } from "../src/data-layer/urEstateImport";
@@ -117,6 +119,8 @@ async function main(): Promise<void> {
     const receipt = await new ListingIngestionService(new JsonListingRepository(store)).ingestScrape(batch);
     console.log(`ur source: +${receipt.added} new, ${receipt.updated} updated, ${receipt.currentCount} rooms held`);
   }
+  // The rooms page's history: this sweep, empty or not (an empty sweep is evidence every room is let).
+  await recordUrHistory({ sweeps: [urSweepRecord(batch)] });
 
   // Availability: UR's "no such room" is positive evidence; a room seen again after one clears it.
   const cityOf = new Map(cities.map((city) => [city.code, city]));

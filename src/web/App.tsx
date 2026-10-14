@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SCORE_PARAMETERS, travelSpeed, type ScoringConfig } from "../domain/scoringConfig";
 import { scoreListing } from "../domain/scoring";
 import { diagnoseAll } from "../domain/diagnostics";
@@ -55,6 +55,7 @@ import { ListingTable } from "./components/ListingTable";
 import { MapView } from "./components/MapView";
 import { NoMatches } from "./components/NoMatches";
 import { WeightPanel } from "./components/WeightPanel";
+import { UrRoomsPage } from "./components/UrRoomsPage";
 import styles from "./App.module.css";
 
 const NO_HINTS: RelaxationHint[] = [];
@@ -84,6 +85,7 @@ export function App({ data }: { data: WebData }) {
   const { selection, setPlaces, togglePlace, reset: resetPlaces } = usePlaceSelection(catalog);
   const { decisions: duplicateDecisions, decide: decideDuplicate, undo: undoDuplicate } = useDuplicateDecisions();
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const { urRoomsOpen, setUrRoomsOpen } = useUrRoomsView();
 
   /** Each duplicate answer's listings today, and the homes the "same" answers form. */
   const resolvedDuplicates = useMemo(() => resolveDecisions(listings, duplicateDecisions), [listings, duplicateDecisions]);
@@ -405,8 +407,18 @@ export function App({ data }: { data: WebData }) {
         >
           ⧉ Possible duplicates{pendingDuplicates != null && ` · ${pendingDuplicates}`}
         </button>
+        <button
+          type="button"
+          className={`secondary ${styles.headerButton}`}
+          onClick={() => setUrRoomsOpen(!urRoomsOpen)}
+          aria-pressed={urRoomsOpen}
+          title="Every UR room seen open, including the ones let since: watch them and wait"
+        >
+          UR rooms · open &amp; closed
+        </button>
       </header>
-      <main className={styles.layout}>
+      {urRoomsOpen && <UrRoomsPage onBack={() => setUrRoomsOpen(false)} />}
+      <main className={styles.layout} hidden={urRoomsOpen}>
         <aside className={styles.sidebar}>
           <FilterPanel
             listings={listings}
@@ -526,6 +538,49 @@ export function App({ data }: { data: WebData }) {
       )}
     </>
   );
+}
+
+const UR_ROOMS_HASH = "#ur-rooms";
+
+/**
+ * The UR rooms page is open while the address ends in #ur-rooms, so it can be
+ * linked and the browser's Back button closes it. Closing it returns to the
+ * listings where they were scrolled to.
+ */
+function useUrRoomsView() {
+  const read = () => typeof window !== "undefined" && window.location.hash === UR_ROOMS_HASH;
+  const [urRoomsOpen, setOpen] = useState(read);
+  /** Whether opening pushed a history entry, so closing should go back to it. */
+  const pushed = useRef(false);
+  const listingsScroll = useRef(0);
+  useEffect(() => {
+    const sync = () => {
+      const open = read();
+      if (!open) pushed.current = false;
+      setOpen(open);
+    };
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  useEffect(() => {
+    window.scrollTo(0, urRoomsOpen ? 0 : listingsScroll.current);
+  }, [urRoomsOpen]);
+  const setUrRoomsOpen = useCallback((open: boolean) => {
+    if (open) {
+      listingsScroll.current = window.scrollY;
+      pushed.current = true;
+      window.location.hash = UR_ROOMS_HASH;
+      setOpen(true);
+    } else if (pushed.current) {
+      // Back to the entry the button pushed; hashchange then closes the page.
+      window.history.back();
+    } else {
+      // Opened from a link: there is no listings entry behind it to go back to.
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+      setOpen(false);
+    }
+  }, []);
+  return { urRoomsOpen, setUrRoomsOpen };
 }
 
 type WalkParameterKey = keyof ScoringConfig["walkZeroMinutes"];
