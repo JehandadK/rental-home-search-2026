@@ -10,7 +10,9 @@ interface BrowserTab { id: number }
 type EvaluateResponse = { result?: { result?: { value?: unknown }; exceptionDetails?: { text?: string } } };
 
 /** An API call that failed in the page (HTTP error, timeout), as opposed to an empty answer. */
-export class UrApiError extends Error {}
+export class UrApiError extends Error {
+  constructor(message: string, readonly status?: number) { super(message); }
+}
 
 export interface UrApi {
   call(endpoint: string, params: readonly FormField[]): Promise<unknown>;
@@ -42,7 +44,7 @@ export class UrBrowser implements UrApi {
         .done((data) => resolve({ ok: true, data }))
         .fail((xhr, status) => resolve({ ok: false, status: xhr && xhr.status, error: String(status) }));
     })`) as { ok: boolean; data?: unknown; status?: number; error?: string };
-    if (!value?.ok) throw new UrApiError(`UR API ${endpoint} failed: HTTP ${value?.status ?? "?"} ${value?.error ?? ""}`.trim());
+    if (!value?.ok) throw new UrApiError(`UR API ${endpoint} failed: HTTP ${value?.status ?? "?"} ${value?.error ?? ""}`.trim(), value?.status);
     return value.data ?? null;
   }
 

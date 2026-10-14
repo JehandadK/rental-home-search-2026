@@ -16,7 +16,7 @@ import type { UrEstateObservation } from "../../domain/ur";
 import type { RawListing } from "../../domain/types";
 import { estateListParams, estateObservation, markerParams, parseEstateRows, parseMarkers, parseRoomDetail, parseRoomRows,
   roomDetailParams, roomListParams, roomListing, type UrCityQuery, type UrEstateRow, type UrMarker, type UrRoomRow } from "./urApi";
-import type { UrApi } from "./urBrowser";
+import { UrApiError, type UrApi } from "./urBrowser";
 
 export const ESTATE_PAGE_SIZE = 30;
 /** UR returns 5 rooms per page of `detail_bukken_room`. */
@@ -48,6 +48,8 @@ export interface UrSweep {
   gone: UrRoomGone[];
   /** Earlier rooms UR stopped listing but still answers for (e.g. 申込受付中): left alone. */
   stillAnswering: string[];
+  /** Optional cities (JIS codes) UR failed to answer for, twice: not swept, so nothing is concluded about them. */
+  skippedCities: string[];
   calls: number;
 }
 
@@ -63,16 +65,30 @@ export async function sweepUr(api: UrApi, options: UrSweepOptions): Promise<UrSw
 
   const markers = new Map<string, UrMarker>(parseMarkers(await call("bukken/search/map_marker/", markerParams(options.box)))
     .map((marker) => [marker.code, marker]));
-  const sweep: UrSweep = { capturedAt, rooms: [], estates: [], unplaced: [], gone: [], stillAnswering: [], calls: 0 };
+  const sweep: UrSweep = { capturedAt, rooms: [], estates: [], unplaced: [], gone: [], stillAnswering: [], skippedCities: [], calls: 0 };
   const seen = new Set<string>();
   const estateOf = new Map<string, { city: UrCityQuery; estate: UrEstateRow }>();
 
   for (const city of options.cities) {
     const estates: UrEstateRow[] = [];
-    for (let page = 0; page < MAX_PAGES; page++) {
-      const rows = parseEstateRows(await call("bukken/result/bukken_result/", estateListParams(city, page, ESTATE_PAGE_SIZE)));
-      estates.push(...rows.filter((row) => !estates.some((known) => known.code === row.code)));
-      if (rows.length < ESTATE_PAGE_SIZE || estates.length >= (rows[0]?.estateCount ?? 0)) break;
+    const readEstates = async () => {
+      estates.length = 0;
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const rows = parseEstateRows(await call("bukken/result/bukken_result/", estateListParams(city, page, ESTATE_PAGE_SIZE)));
+        estates.push(...rows.filter((row) => !estates.some((known) => known.code === row.code)));
+        if (rows.length < ESTATE_PAGE_SIZE || estates.length >= (rows[0]?.estateCount ?? 0)) break;
+      }
+    };
+    try {
+      try { await readEstates(); } catch (error) {
+        if (!city.optional || !(error instanceof UrApiError) || error.status !== 500) throw error;
+        await readEstates();
+      }
+    } catch (error) {
+      if (!city.optional || !(error instanceof UrApiError) || error.status !== 500) throw error;
+      sweep.skippedCities.push(city.code);
+      options.log?.(`${city.label}: UR answered HTTP 500 twice; skipped, nothing concluded about it`);
+      continue;
     }
     options.log?.(`${city.label}: ${estates.length} estates, ${estates.reduce((sum, estate) => sum + estate.roomCount, 0)} vacant rooms`);
     for (const estate of estates) {

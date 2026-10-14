@@ -639,6 +639,19 @@ opens on page 1, so a cached page 1 plus a past-the-end page 2 cannot hang.
 Each page is logged. Live check: a `--deep` Koshigaya crawl read its 7 cached
 pages and ended on page 8 with exit 0.
 
+## 2026-10-14 UR in all of Saitama and Noda (Playwright)
+
+- `npm run scrape:ur` now sweeps every target city plus every active catalog
+  municipality of Saitama (72) and Noda, Chiba (`urSweepCities`, scripts/scrape-ur.ts):
+  74 municipalities, 138 estates (44 before; Noda has none), 84 vacant rooms,
+  202 API calls. 76 of the rooms have 2+ rooms and go to the `ur` source
+  (+69 new, 7 updated). A municipality UR answers HTTP 500 for is retried once,
+  then skipped and left out of the sweep's scope, so nothing is concluded about it
+  (one 500 was seen in a dry run, none in the real sweep).
+- `npm run scrape:ur-history` read ラク賃 for the 94 new estates (93 read; 50_4130
+  コンフォール西浦和田島 was HTTP 404). The rooms page lists 1517 rooms (81 open)
+  in 138 estates.
+
 ## Entry points
 
 `refresh.ts`, `lib/refreshPlan.ts`, `lib/refreshLedger.ts`: planning/checkpoints.

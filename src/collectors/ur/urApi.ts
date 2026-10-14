@@ -38,6 +38,12 @@ export interface UrCityQuery {
   block: string;
   prefecture: string;
   prefectureName: string;
+  /**
+   * UR answered HTTP 500 for some municipalities without UR estates (once, in
+   * a dry run; not on the next sweep). After one retry the sweep skips such a
+   * city instead of failing, and concludes nothing about it.
+   */
+  optional?: boolean;
 }
 
 const FILTERS_BLANK: FormField[] = ["rent_low", "rent_high", "floorspace_low", "floorspace_high"].map((name) => ({ name, value: "" }));

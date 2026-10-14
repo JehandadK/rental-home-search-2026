@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FormField } from "./urApi";
-import type { UrApi } from "./urBrowser";
+import { UrApiError, type UrApi } from "./urBrowser";
 import { sweepUr } from "./urCollector";
 import { ESTATES, MARKERS, ROOMS, ROOM_DETAIL, SOKA } from "./urFixtures.contract";
 
@@ -59,5 +59,47 @@ describe("UR sweep", () => {
     const sweep = await sweepUr(api, options());
     expect(sweep.estates.map((estate) => estate.code)).toEqual(["50_4090"]);
     expect(sweep.unplaced).toEqual([{ code: "50_3880", name: "ハーモネスタワー松原" }]);
+  });
+
+  describe("a municipality UR answers HTTP 500 for", () => {
+    const failing = (api: ReturnType<typeof fakeApi>, code: string) => {
+      const original = api.call.bind(api);
+      api.call = async (endpoint, params) => {
+        if (endpoint === "bukken/result/bukken_result/" && field(params, "skcs") === code) throw new UrApiError("UR API bukken/result/bukken_result/ failed: HTTP 500 error", 500);
+        return original(endpoint, params);
+      };
+      return api;
+    };
+    const UNLISTED = { ...SOKA, label: "Kawajima-machi", code: "11346" };
+
+    it("is retried once, then skipped and reported when it is optional; the other cities are still swept", async () => {
+      const sweep = await sweepUr(failing(fakeApi(), "346"), { ...options(), cities: [{ ...UNLISTED, optional: true }, SOKA] });
+      expect(sweep.skippedCities).toEqual(["11346"]);
+      expect(sweep.estates.map((estate) => estate.code)).toEqual(["50_4090", "50_3880"]);
+    });
+
+    it("is read normally when UR's 500 does not repeat", async () => {
+      const api = fakeApi();
+      const original = api.call.bind(api);
+      let failures = 0;
+      api.call = async (endpoint, params) => {
+        if (endpoint === "bukken/result/bukken_result/" && !failures++) throw new UrApiError("UR API failed: HTTP 500 error", 500);
+        return original(endpoint, params);
+      };
+      const sweep = await sweepUr(api, { ...options(), cities: [{ ...SOKA, optional: true }] });
+      expect(sweep.skippedCities).toEqual([]);
+      expect(sweep.estates).toHaveLength(2);
+    });
+
+    it("fails the sweep when it is not optional, or the failure is not UR's 500", async () => {
+      await expect(sweepUr(failing(fakeApi(), "346"), { ...options(), cities: [UNLISTED, SOKA] })).rejects.toThrow("HTTP 500");
+      const api = fakeApi();
+      const original = api.call.bind(api);
+      api.call = async (endpoint, params) => {
+        if (endpoint === "bukken/result/bukken_result/") throw new UrApiError("UR API failed: HTTP 403 error", 403);
+        return original(endpoint, params);
+      };
+      await expect(sweepUr(api, { ...options(), cities: [{ ...UNLISTED, optional: true }] })).rejects.toThrow("HTTP 403");
+    });
   });
 });

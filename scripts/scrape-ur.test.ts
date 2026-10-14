@@ -10,14 +10,14 @@ import { parseEstateRows, parseRoomDetail, parseRoomRows, roomListing } from "..
 import type { UrSweep } from "../src/collectors/ur/urCollector";
 import type { CityBoundaryRecord } from "../src/data-layer/contracts";
 import { ESTATES, ROOMS, ROOM_DETAIL, SOKA } from "../src/collectors/ur/urFixtures.contract";
-import { boundingBox, urBatch, urCities } from "./scrape-ur";
+import { boundingBox, urBatch, urCities, urSweepCities } from "./scrape-ur";
 
 const at = "2026-10-09T05:00:00.000Z";
 const [estate] = parseEstateRows(ESTATES);
 const [room] = parseRoomRows(ROOMS);
 const twoDk = roomListing(SOKA, estate, room, parseRoomDetail(ROOM_DETAIL), at);
 const oneK = roomListing(SOKA, estate, { ...room, jkss: "000010305", layout: "1K", rentYen: 70_000 }, null, at);
-const sweep = (rooms = [twoDk, oneK], capturedAt = at): UrSweep => ({ capturedAt, rooms, estates: [], unplaced: [], gone: [], stillAnswering: [], calls: 4 });
+const sweep = (rooms = [twoDk, oneK], capturedAt = at): UrSweep => ({ capturedAt, rooms, estates: [], unplaced: [], gone: [], stillAnswering: [], skippedCities: [], calls: 4 });
 
 describe("scrape:ur", () => {
   let root: string, service: ListingIngestionService, store: JsonSourceStore;
@@ -33,6 +33,17 @@ describe("scrape:ur", () => {
       { label: "Soka", code: "11221", block: "kanto", prefecture: "saitama", prefectureName: "埼玉県" },
       { label: "Katsushika", code: "13122", block: "kanto", prefecture: "tokyo", prefectureName: "東京都" },
     ]);
+  });
+
+  it("sweeps every active Saitama municipality and Noda besides the target cities", () => {
+    const city = (code: string, name: string, status: "active" | "retired" = "active") => ({ id: `city:${code}`, name, nameLocal: name, prefecture: "x", code, status, updatedAt: at });
+    const catalog = [city("11221", "Soka"), city("11201", "Kawagoe"), city("11107", "Saitama Urawa-ku"), city("11999", "Gone", "retired"),
+      city("12208", "Noda"), city("12203", "Choshi"), city("13101", "Chiyoda"), city("13122", "Katsushika")];
+    expect(urSweepCities([], catalog).map((query) => [query.label, query.code, query.prefecture, query.prefectureName])).toEqual([
+      ["Soka", "11221", "saitama", "埼玉県"], ["Koshigaya", "11222", "saitama", "埼玉県"], ["Kawaguchi", "11203", "saitama", "埼玉県"], ["Katsushika", "13122", "tokyo", "東京都"],
+      ["Saitama Urawa-ku", "11107", "saitama", "埼玉県"], ["Kawagoe", "11201", "saitama", "埼玉県"], ["Noda", "12208", "chiba", "千葉県"],
+    ]);
+    expect(urSweepCities(["Noda", "Soka"], catalog).map((query) => query.label)).toEqual(["Soka", "Noda"]);
   });
 
   it("boxes the cities' boundaries", () => {

@@ -1,8 +1,8 @@
 /**
  * Collect UR賃貸住宅 (UR都市機構) estates and vacant rooms for the target cities.
  *
- *   npm run scrape:ur                     sweep every target city
- *   npm run scrape:ur -- --city Soka      one city (repeatable)
+ *   npm run scrape:ur                     sweep every target city, all of Saitama and Noda
+ *   npm run scrape:ur -- --city Soka      one city (repeatable; a catalog city name such as Noda works too)
  *   npm run scrape:ur -- --dry-run        sweep and print; write nothing
  *
  * One UR city page is loaded in the headed browser and UR's API is called from
@@ -26,7 +26,7 @@ import { urSweepRecord } from "../src/data-layer/urRoomHistory";
 import { ListingIngestionService } from "../src/data-layer/ingestion/service";
 import type { ScrapeBatch } from "../src/data-layer/ingestion/contracts";
 import { planUrEstateImport } from "../src/data-layer/urEstateImport";
-import type { CityBoundaryRecord } from "../src/data-layer/contracts";
+import type { CityBoundaryRecord, CityRecord } from "../src/data-layer/contracts";
 import { withFileLock } from "../src/node/jsonFile";
 import { adKey } from "../src/domain/availability";
 import { UR_SOURCE } from "../src/domain/ur";
@@ -43,6 +43,28 @@ const familyLayout = (layout: string | null) => Number(layout?.normalize("NFKC")
 export const urCities = (labels: readonly string[]): UrCityQuery[] => TARGET_CITIES
   .filter((city) => !labels.length || labels.includes(city.label))
   .map((city) => ({ label: city.label, code: city.code, block: "kanto", prefecture: city.prefectureSlug, prefectureName: city.prefecture }));
+
+/** Beyond the target cities, UR is swept across every municipality of these prefectures (JIS prefecture codes)… */
+const UR_SWEPT_PREFECTURES: Record<string, { slug: string; name: string }> = { "11": { slug: "saitama", name: "埼玉県" } };
+/** …and in these single municipalities (Noda, Chiba). */
+const UR_SWEPT_MUNICIPALITIES: Record<string, { slug: string; name: string }> = { "12208": { slug: "chiba", name: "千葉県" } };
+
+/**
+ * The cities one UR sweep covers: the target cities, plus every active catalog
+ * municipality of Saitama and Noda. A target city keeps its own label.
+ * `labels` narrows it to cities of that label or catalog name.
+ */
+export function urSweepCities(labels: readonly string[], catalogCities: readonly CityRecord[]): UrCityQuery[] {
+  const targets = urCities([]);
+  const known = new Set(targets.map((city) => city.code));
+  const extra = catalogCities.flatMap((city): UrCityQuery[] => {
+    const area = city.code ? UR_SWEPT_MUNICIPALITIES[city.code] ?? UR_SWEPT_PREFECTURES[city.code.slice(0, 2)] : undefined;
+    if (!city.code || !area || city.status !== "active" || known.has(city.code)) return [];
+    return [{ label: city.name, code: city.code, block: "kanto", prefecture: area.slug, prefectureName: area.name, optional: true }];
+  });
+  return [...targets, ...extra.sort((a, b) => a.code.localeCompare(b.code))]
+    .filter((city) => !labels.length || labels.includes(city.label));
+}
 
 /** Bounding box of the cities' boundaries, with a small margin. */
 export function boundingBox(boundaries: readonly CityBoundaryRecord[], cityIds: ReadonlySet<string>) {
@@ -76,11 +98,10 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const dryRun = argv.includes("--dry-run");
   const labels = argv.flatMap((arg, index) => (arg === "--city" && argv[index + 1] ? [argv[index + 1]] : []));
-  const cities = urCities(labels);
-  if (!cities.length) throw new Error(`No target city matches ${labels.join(", ")}`);
-
   const references = new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR);
   const snapshot = await references.loadSnapshot();
+  const cities = urSweepCities(labels, snapshot.cities.records);
+  if (!cities.length) throw new Error(`No UR city matches ${labels.join(", ")}`);
   const cityIds = new Set(snapshot.cities.records.filter((city) => cities.some((query) => query.code === city.code)).map((city) => city.id));
   const box = boundingBox(snapshot.boundaries.records, cityIds);
 
@@ -103,8 +124,10 @@ async function main(): Promise<void> {
     await browser.close();
   }
 
+  // A municipality UR does not list was not swept: nothing is concluded about it.
+  const swept = cities.filter((city) => !sweep.skippedCities.includes(city.code));
   const family = sweep.rooms.filter((room) => familyLayout(room.layout));
-  console.log(`UR sweep ${sweep.capturedAt}: ${sweep.estates.length} estates, ${sweep.rooms.length} vacant rooms (${family.length} with 2+ rooms), ${sweep.calls} API calls`);
+  console.log(`UR sweep ${sweep.capturedAt}: ${sweep.estates.length} estates in ${swept.length} of ${cities.length} municipalities (${sweep.skippedCities.length} skipped after UR errors), ${sweep.rooms.length} vacant rooms (${family.length} with 2+ rooms), ${sweep.calls} API calls`);
   for (const room of family) console.log(`  ${room.name} ${room.notes?.split(" · ")[0]} ${room.layout} ${room.sizeM2}㎡ ¥${room.rent.toLocaleString("ja-JP")}`);
   for (const estate of sweep.unplaced) console.log(`  no coordinates (outside the map box): ${estate.name} ${estate.code}`);
   for (const gone of sweep.gone) console.log(`  gone: ${gone.id}`);
@@ -114,7 +137,7 @@ async function main(): Promise<void> {
   }
 
   // Rooms. An empty sweep (no family vacancies today) has nothing to submit.
-  const batch = urBatch(sweep, cities);
+  const batch = urBatch(sweep, swept);
   if (batch.observations.length) {
     const receipt = await new ListingIngestionService(new JsonListingRepository(store)).ingestScrape(batch);
     console.log(`ur source: +${receipt.added} new, ${receipt.updated} updated, ${receipt.currentCount} rooms held`);
@@ -140,12 +163,12 @@ async function main(): Promise<void> {
   if (records.length) console.log(`availability: ${records.filter((r) => r.state === "gone").length} gone, ${records.filter((r) => r.state === "listed").length} listed again`);
 
   // Estates.
-  const plan = planUrEstateImport(snapshot.places.records, snapshot.cities.records, sweep.estates, cities.map((city) => city.code), sweep.capturedAt);
+  const plan = planUrEstateImport(snapshot.places.records, snapshot.cities.records, sweep.estates, swept.map((city) => city.code), sweep.capturedAt);
   for (const estate of plan.unknownCity) console.log(`  not in the catalog's cities: ${estate.name} (${estate.cityCode})`);
   if (plan.places.upsert.length || plan.places.retire?.length) {
     const updated = await references.updatePlaces(plan.places, {
       expectedRevision: snapshot.places.revision, changedBy: CHANGED_BY,
-      reason: `UR estates and vacancies for ${cities.map((city) => city.label).join(", ")} (${sweep.capturedAt})`,
+      reason: `UR estates and vacancies for ${swept.map((city) => city.label).join(", ")} (${sweep.capturedAt})`,
     });
     console.log(`urDanchi places: ${plan.places.upsert.length} upserted, ${plan.places.retire?.length ?? 0} retired; revision ${snapshot.places.revision.slice(0, 12)} -> ${updated.revision.slice(0, 12)}`);
   } else console.log("urDanchi places: unchanged");
