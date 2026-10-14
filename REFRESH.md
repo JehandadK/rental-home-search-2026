@@ -600,6 +600,19 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-14 refresh with the 60㎡ minimum and the wider UR sweep (Playwright)
+
+- Run `2026-10-14T09-42-37-544Z-c5fdbc8c`: **SUCCESS**, no resume. Started
+  from the worktree with `PLAYWRIGHT_USER_DATA_DIR` set to the main checkout's
+  `.context/athome-profile`, so AtHome passed first time.
+- Source additions: SUUMO **9**, AtHome **18**, RoomSpot **0**, Nifty **2**.
+  The AtHome ads all matched properties already tracked.
+- UR swept 74 of 74 municipalities (none skipped): 138 estates, 84 vacant
+  rooms (76 with 2+ rooms), 202 API calls. The `ur` source still holds 82
+  rooms, none added or gone; the rooms page has 84 open of 1517.
+- **4 newly tracked properties** (Kawaguchi 2, Katsushika 1, Soka 1), all
+  ≥60㎡ (62–109.3㎡) and geocoded. **5597** archival rows.
+
 ## 2026-10-13 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-10-13T13-22-24-921Z-526e721c`: **SUCCESS** after one resume.
