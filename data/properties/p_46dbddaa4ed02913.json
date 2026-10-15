@@ -415,6 +415,20 @@
         "status": "active",
         "via": "backfill:git:bf82b09"
       }
+    },
+    {
+      "id": "ad.checked|roomspot|1139288674810000000231|2026-10-15T05:19:36.423Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-15T05:19:36.423Z",
+      "recordedAt": "2026-10-15T05:28:06.496Z",
+      "source": "roomspot",
+      "adKey": "roomspot|1139288674810000000231",
+      "url": "https://www.roomspot.net/rent/1139288674810000000231",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · ポラスの賃貸なら【RoomSpot】 | 賃貸（マンション・アパート）物件情報・お部屋探しサイト (detail:roomspot)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -425,11 +439,17 @@
     "firstSeenUrl": "https://www.roomspot.net/rent/1139288674810000000231",
     "lastSeenAt": "2026-09-05T03:15:30.872Z",
     "lastListedAt": "2026-09-05T03:15:30.872Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-09-05T03:15:30.872Z",
+      "before": "2026-10-15T05:19:36.423Z"
+    },
+    "daysOnMarket": {
+      "min": 2,
+      "max": 42
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-03T04:19:22.461Z",
@@ -445,7 +465,7 @@
         "firstSeenAt": null,
         "lastSeenAt": null,
         "lastListedAt": null,
-        "goneSince": null,
+        "goneSince": "2026-10-15T05:19:36.423Z",
         "relistCount": 0
       }
     },
