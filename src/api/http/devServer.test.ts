@@ -25,3 +25,14 @@ describe("the API in the website's dev server", () => {
     api!.close();
   });
 });
+
+describe("the website's dev and preview servers", () => {
+  it("listen on the network and compress their responses", () => {
+    expect(config.server?.host).toBe(true);
+    expect(config.preview?.host).toBe(true);
+    const names = (config.plugins ?? []).flat().map((plugin) => (plugin as { name?: string }).name);
+    expect(names).toContain("gzip-responses");
+    // Before the API, so its handler is the one that answers /api.
+    expect(names.indexOf("gzip-responses")).toBeLessThan(names.indexOf("recommendations-api"));
+  });
+});
