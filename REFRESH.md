@@ -600,6 +600,23 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-16 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-10-16T10-10-44-998Z-c1f7d75b`: **SUCCESS** after one resume. A
+  network change mid-run (`net::ERR_NETWORK_CHANGED`) failed AtHome and left
+  Nifty Soka and Koshigaya on "results not ready"; `--resume` re-ran just those
+  three and they passed.
+- Source additions: SUUMO **17**, AtHome **23**, RoomSpot **7**, Nifty **6**.
+- UR swept 74 of 74 municipalities: 138 estates, 108 vacant rooms (95 with 2+
+  rooms), 258 API calls. The `ur` source went 86 → 125 rooms (39 added, none
+  gone, no rent changes); the rooms page has 103 open of 1543.
+- **40 newly tracked properties**: 16 from the portals, all ≥60㎡
+  (62–122.62㎡, 9 ≥70㎡, 10 at ≤¥150,000), and 24 UR rooms (UR is
+  unfiltered, so 15 are under 60㎡). All geocoded. **5667** archival rows.
+- uralert.jp (considered as a per-city vacancy page) answered its first page
+  load with HTTP 429 and a Vercel Security Checkpoint; nothing more was loaded.
+  UR's own API remains the vacancy source.
+
 ## 2026-10-15 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-10-15T05-18-07-677Z-17bce530`: **SUCCESS**, no resume (AtHome

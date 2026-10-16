@@ -4458,11 +4458,11 @@
       ]
     },
     "stationWalkMin": {
-      "chosen": 17,
+      "chosen": 15,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-15T05:18:38.415Z"
+        "observedAt": "2026-10-15T05:18:36.628Z"
       },
       "values": [
         {
@@ -4562,7 +4562,8 @@
           "firstRecordedAt": "2026-10-15T05:28:06.496Z",
           "reportedAt": {
             "suumo|jnc_000110174125|bc_100522525336": "2026-10-15T05:28:06.496Z"
-          }
+          },
+          "observedBefore": "2026-10-16T10:11:07.246Z"
         }
       ]
     },
@@ -4741,7 +4742,8 @@
     "2026-10-13T13:22:44.761Z",
     "2026-10-13T13:23:00.794Z",
     "2026-10-14T09:43:06.159Z",
-    "2026-10-15T05:18:38.415Z"
+    "2026-10-15T05:18:38.415Z",
+    "2026-10-16T10:11:11.734Z"
   ],
   "events": [
     {
@@ -5143,6 +5145,18 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110174125|bc_100522525336|2026-10-16T10:11:07.246Z",
+      "type": "ad.superseded",
+      "at": "2026-10-16T10:11:07.246Z",
+      "recordedAt": "2026-10-16T10:21:38.352Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110174125|bc_100522525336",
+      "url": "https://suumo.jp/chintai/jnc_000110174125/?bc=100522525336",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -5151,8 +5165,8 @@
     "firstSeenBasis": "build",
     "firstSeenAdKey": "athome|1120932727",
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1120932727/",
-    "lastSeenAt": "2026-10-15T05:18:38.415Z",
-    "lastListedAt": "2026-10-15T05:18:38.415Z",
+    "lastSeenAt": "2026-10-16T10:11:11.734Z",
+    "lastListedAt": "2026-10-16T10:11:11.734Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
