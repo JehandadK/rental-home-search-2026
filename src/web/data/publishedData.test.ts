@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
 import { WEB_PUBLISH_DIR } from "../../node/dataPaths";
 import { buildReferenceModel } from "../../domain/referenceData";
+import { packListings, unpackListings, type WebPayload } from "../../domain/webPayload";
 import { REFERENCE_CATALOG_DIR } from "../../storage/json/dataStore";
 import { JsonReferenceDataRepository } from "../../storage/json/jsonReferenceDataRepository";
 import { createHttpWebDataClient } from "./httpClient";
@@ -30,6 +31,15 @@ describe("published web data", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, () => {
   it("publishes the current managed reference catalog (re-run `npm run data:web` if this fails)", async () => {
     const current = await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot();
     expect(published()).toEqual(JSON.parse(JSON.stringify(current)));
+  });
+
+  it("publishes listings in the current payload layout, compact (re-run `npm run data:web` if this fails)", () => {
+    // What `npm run data:web` writes: the layout packListings makes today, with no indentation.
+    // A collector run, or a change to the layout, that leaves the file in another shape fails here.
+    const text = readFileSync(join(WEB_PUBLISH_DIR, "listings.json"), "utf8");
+    const payload = JSON.parse(text) as WebPayload;
+    expect(payload.schemaVersion).toBe(packListings([]).schemaVersion);
+    expect(text.trim()).toBe(JSON.stringify(packListings(unpackListings(payload))));
   });
 
   it("pins an app id on every published place (run `npm run data:reference:app-ids` if this fails)", () => {

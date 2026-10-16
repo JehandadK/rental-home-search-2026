@@ -687,4 +687,4 @@ pages and ended on page 8 with exit 0.
 `lib/observations.ts`: actual source evidence and lifecycle restoration.
 `sync-properties.ts`, `src/data-layer/properties/`: additive per-property documents (`data/properties/`), synced by `data:build` and `check:availability`.
 `enrich.ts`, `lib/geocodeCache.ts`: address caching.
-`build-web-data.ts`, `src/domain/webPayload.ts`: dictionary payload + hydration.
+`build-web-data.ts`, `src/domain/webPayload.ts`: dictionary payload + hydration (layout 3: attributes and their verbatim source texts are each written once; layout 2 is still read; `npm run data:web` writes it compact, and a test fails if the published file is not in that shape).

@@ -9,7 +9,7 @@
 import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
 import type { ReadOptions, ReadResult, WebDataClient } from "../../data-layer/read/contracts";
 import type { EnrichedListing } from "../../domain/types";
-import { unpackListings, type WebPayload } from "../../domain/webPayload";
+import { unpackListings, type WebPayload, type WebPayloadV2 } from "../../domain/webPayload";
 
 export interface HttpClientOptions {
   /** Directory URL of the published assets, ending in "/". */
@@ -40,7 +40,7 @@ export function createHttpWebDataClient({ baseUrl, fetch = globalThis.fetch, cac
     queryListings: async (options) => {
       const payload = await getJson(LISTINGS_ASSET, options);
       if (!payload || typeof payload !== "object") throw new Error(`${LISTINGS_ASSET} is not a listing payload`);
-      const listings: readonly EnrichedListing[] = unpackListings(payload as WebPayload | EnrichedListing[]);
+      const listings: readonly EnrichedListing[] = unpackListings(payload as WebPayload | WebPayloadV2 | EnrichedListing[]);
       return { data: { listings } };
     },
     loadReferenceSnapshot: async (options) => {
