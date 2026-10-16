@@ -28,8 +28,11 @@ export function createHttpWebDataClient({ baseUrl, fetch = globalThis.fetch, cac
     const response = await fetch(url, { cache, signal: options?.signal });
     if (!response.ok) throw new Error(`HTTP ${response.status} loading ${url}`);
     try {
-      return await response.json();
-    } catch {
+      return options?.onProgress && response.body
+        ? JSON.parse(await readWithProgress(response, options.onProgress))
+        : await response.json();
+    } catch (error) {
+      if (options?.signal?.aborted) throw error;
       throw new Error(`${url} is not valid JSON`);
     }
   };
@@ -46,6 +49,35 @@ export function createHttpWebDataClient({ baseUrl, fetch = globalThis.fetch, cac
       return { data: snapshot };
     },
   };
+}
+
+/**
+ * The size the body will have once decoded. A compressed response's
+ * Content-Length counts the compressed bytes, which is not what arrives from
+ * the reader, so the server's own X-Uncompressed-Length is used instead.
+ */
+function decodedLength(response: Response): number | undefined {
+  const header = response.headers.get("x-uncompressed-length")
+    ?? (response.headers.get("content-encoding") ? null : response.headers.get("content-length"));
+  const length = Number(header);
+  return header && Number.isFinite(length) && length > 0 ? length : undefined;
+}
+
+async function readWithProgress(response: Response, onProgress: NonNullable<ReadOptions["onProgress"]>): Promise<string> {
+  const totalBytes = decodedLength(response);
+  const reader = response.body!.getReader();
+  const chunks: Uint8Array[] = [];
+  let loadedBytes = 0;
+  onProgress({ loadedBytes, totalBytes });
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    chunks.push(chunk.value);
+    loadedBytes += chunk.value.byteLength;
+    onProgress({ loadedBytes, totalBytes });
+  }
+  const bytes = new Uint8Array(loadedBytes);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(bytes);
 }
 
 function assertReferenceSnapshot(value: unknown): asserts value is ReferenceDataSnapshot {

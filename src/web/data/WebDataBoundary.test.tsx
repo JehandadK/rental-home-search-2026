@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReferenceDataSnapshot } from "../../data-layer/contracts";
-import type { ListingQueryResult, ReadResult, WebDataClient } from "../../data-layer/read/contracts";
+import type { ListingQueryResult, ReadOptions, ReadResult, WebDataClient } from "../../data-layer/read/contracts";
 import { FIXTURE_LISTINGS, FIXTURE_REFERENCE, snapshot } from "../testing/referenceFixture.contract";
 import { createStaticWebDataClient } from "./staticClient";
 import type { WebData } from "./useWebData";
@@ -73,6 +73,31 @@ describe("WebDataBoundary", () => {
 
     await act(async () => script.references[0].resolve({ data: FIXTURE_REFERENCE }));
     expect(screen.getByText("ready: 2 listings, 4 places")).toBeTruthy();
+  });
+
+  it("shows how much has downloaded, with a bar once both sizes are known", async () => {
+    const reads: ReadOptions[] = [];
+    const never = () => new Promise<never>(() => {});
+    renderBoundary({
+      queryListings: (options) => { reads.push(options!); return never(); },
+      loadReferenceSnapshot: (options) => { reads.push(options!); return never(); },
+    });
+    expect(screen.queryByText(/MB/)).toBeNull();
+
+    await act(async () => reads[0].onProgress!({ loadedBytes: 4_500_000 }));
+    expect(screen.getByRole("status").textContent).toMatch(/4\.5 MB$/);
+    expect(screen.queryByRole("progressbar")).toBeNull();
+
+    // Reports are throttled; wait past the interval for the next one to show.
+    await act(async () => { await new Promise((done) => setTimeout(done, 120)); });
+    await act(async () => {
+      reads[0].onProgress!({ loadedBytes: 10_000_000, totalBytes: 20_000_000 });
+      reads[1].onProgress!({ loadedBytes: 2_000_000, totalBytes: 5_000_000 });
+    });
+    expect(screen.getByRole("status").textContent).toMatch(/12\.0 of 25\.0 MB/);
+    const bar = screen.getByRole("progressbar");
+    expect(bar.getAttribute("max")).toBe("25000000");
+    expect(bar.getAttribute("value")).toBe("12000000");
   });
 
   it("shows an error with a retry, and renders once the retry succeeds", async () => {

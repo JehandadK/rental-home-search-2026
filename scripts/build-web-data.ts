@@ -82,7 +82,8 @@ const compact = uniqueListings.map((listing) => {
 const payload = packListings(compact);
 const reference = await new JsonReferenceDataRepository(REFERENCE_CATALOG_DIR).loadSnapshot();
 await mkdir(WEB_PUBLISH_DIR, { recursive: true });
-await atomicWriteJson(OUTPUT, payload);
+// Compact, like the files beside it: indentation was a fifth of the file.
+await atomicWriteJson(OUTPUT, payload, { compact: true });
 // Compact: the Kanto boundaries are ~100k coordinates, a third the size without indentation.
 await atomicWriteJson(REFERENCE_OUTPUT, reference, { compact: true });
 const before = Buffer.byteLength(JSON.stringify(listings));

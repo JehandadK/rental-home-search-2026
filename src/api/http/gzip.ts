@@ -47,6 +47,8 @@ export function gzipMiddleware(options: { skipPrefix?: string } = {}) {
       gzip.on("drain", () => void response.emit("drain"));
       gzip.on("end", () => void end.call(response));
       response.setHeader("Content-Encoding", "gzip");
+      // The decoded size, for a client showing download progress (Content-Length no longer says it).
+      if (Number.isFinite(length)) response.setHeader("X-Uncompressed-Length", length);
       response.removeHeader("Content-Length");
       const vary = String(response.getHeader("vary") ?? "");
       if (!/\baccept-encoding\b/i.test(vary)) response.setHeader("Vary", vary ? `${vary}, Accept-Encoding` : "Accept-Encoding");

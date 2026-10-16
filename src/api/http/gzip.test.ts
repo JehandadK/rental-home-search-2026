@@ -40,6 +40,7 @@ describe("gzip for the dev and preview servers", () => {
     expect(headers["content-encoding"]).toBe("gzip");
     expect(headers["vary"]).toBe("Accept-Encoding");
     expect(headers["content-length"]).toBeUndefined();
+    expect(headers["x-uncompressed-length"]).toBe(String(BIG.length));
     expect(body.length).toBeLessThan(BIG.length / 5);
     expect(gunzipSync(body).toString()).toBe(BIG);
   });

@@ -51,6 +51,35 @@ describe("createHttpWebDataClient", () => {
     expect(calls[0].signal).toBe(controller.signal);
   });
 
+  it("reports download progress against the decoded size, and still unpacks the data", async () => {
+    const body = JSON.stringify(packListings(FIXTURE_LISTINGS));
+    const bytes = new TextEncoder().encode(body);
+    const half = Math.floor(bytes.length / 2);
+    const streamed = (headers: Record<string, string>) => (async () => new Response(
+      new ReadableStream<Uint8Array>({
+        start(controller) { controller.enqueue(bytes.slice(0, half)); controller.enqueue(bytes.slice(half)); controller.close(); },
+      }),
+      { status: 200, headers },
+    )) as typeof fetch;
+    const read = async (headers: Record<string, string>) => {
+      const seen: Array<[number, number | undefined]> = [];
+      const result = await createHttpWebDataClient({ baseUrl: "/", fetch: streamed(headers) })
+        .queryListings({ onProgress: (progress) => seen.push([progress.loadedBytes, progress.totalBytes]) });
+      expect(result.data.listings).toHaveLength(FIXTURE_LISTINGS.length);
+      return seen;
+    };
+
+    // Uncompressed: Content-Length is the decoded size.
+    expect(await read({ "content-length": String(bytes.length) })).toEqual([
+      [0, bytes.length], [half, bytes.length], [bytes.length, bytes.length],
+    ]);
+    // Compressed: Content-Length counts compressed bytes, so the server's own decoded size is used...
+    expect((await read({ "content-encoding": "gzip", "content-length": "99", "x-uncompressed-length": String(bytes.length) }))[2])
+      .toEqual([bytes.length, bytes.length]);
+    // ...and with neither, only the bytes received are known.
+    expect((await read({ "content-encoding": "gzip", "content-length": "99" }))[2]).toEqual([bytes.length, undefined]);
+  });
+
   it("rejects HTTP errors, invalid JSON, and unexpected shapes", async () => {
     const client = (live: Record<string, unknown>) => createHttpWebDataClient({ baseUrl: "/", fetch: fakeFetch(live).fetch });
     await expect(client({}).queryListings()).rejects.toThrow("HTTP 404 loading /listings.json");

@@ -7,7 +7,7 @@
  * response can never overwrite a newer one.
  */
 import { useCallback, useEffect, useState } from "react";
-import type { WebDataClient } from "../../data-layer/read/contracts";
+import type { ReadProgress, WebDataClient } from "../../data-layer/read/contracts";
 import { buildReferenceModel, type ReferenceModel } from "../../domain/referenceData";
 import type { EnrichedListing } from "../../domain/types";
 
@@ -19,7 +19,7 @@ export interface WebData {
 }
 
 export type WebDataState =
-  | { status: "loading" }
+  | { status: "loading"; progress?: ReadProgress }
   | { status: "error"; message: string }
   | {
       status: "ready";
@@ -29,6 +29,20 @@ export type WebDataState =
       /** Why the last retry from this data failed. */
       retryError?: string;
     };
+
+/** Progress is reported at most this often: a chunk arrives every few KB, a render is not needed for each. */
+const PROGRESS_INTERVAL_MS = 100;
+
+/** The two reads as one: bytes add up, and the total is known only when both totals are. */
+function combine(parts: Map<string, ReadProgress>): ReadProgress {
+  const all = [...parts.values()];
+  const totals = all.map((part) => part.totalBytes);
+  return {
+    loadedBytes: all.reduce((sum, part) => sum + part.loadedBytes, 0),
+    totalBytes: parts.size === 2 && totals.every((total) => total !== undefined)
+      ? totals.reduce((sum, total) => sum! + total!, 0) : undefined,
+  };
+}
 
 export function useWebData(client: WebDataClient): { state: WebDataState; retry: () => void } {
   const [state, setState] = useState<WebDataState>({ status: "loading" });
@@ -41,9 +55,19 @@ export function useWebData(client: WebDataClient): { state: WebDataState; retry:
     setState((current) => (current.status === "ready"
       ? (attempt > 0 ? { ...current, retrying: true, retryError: undefined } : current)
       : { status: "loading" }));
+    const parts = new Map<string, ReadProgress>();
+    let lastReport = 0;
+    const reporter = (name: string) => (progress: ReadProgress) => {
+      parts.set(name, progress);
+      const now = Date.now();
+      if (controller.signal.aborted || now - lastReport < PROGRESS_INTERVAL_MS) return;
+      lastReport = now;
+      // Only while still loading: a retry from ready data keeps its data on screen.
+      setState((current) => (current.status === "loading" ? { status: "loading", progress: combine(parts) } : current));
+    };
     Promise.all([
-      client.queryListings({ signal: controller.signal }),
-      client.loadReferenceSnapshot({ signal: controller.signal }),
+      client.queryListings({ signal: controller.signal, onProgress: reporter("listings") }),
+      client.loadReferenceSnapshot({ signal: controller.signal, onProgress: reporter("reference") }),
     ])
       .then(([listings, reference]): WebData => ({
         listings: listings.data.listings,

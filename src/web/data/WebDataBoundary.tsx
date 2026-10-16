@@ -4,7 +4,7 @@
  * with a retry, and notices for stale or empty data.
  */
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import type { WebDataClient } from "../../data-layer/read/contracts";
+import type { ReadProgress, WebDataClient } from "../../data-layer/read/contracts";
 import { useWebData, type WebData } from "./useWebData";
 import styles from "./WebDataBoundary.module.css";
 
@@ -20,6 +20,7 @@ export function WebDataBoundary({ client, children }: Props) {
     return (
       <div className={styles.state} role="status">
         Loading listings and reference data…
+        {state.progress && <LoadProgress {...state.progress} />}
       </div>
     );
   }
@@ -66,6 +67,21 @@ export function WebDataBoundary({ client, children }: Props) {
       {notices}
       <RenderErrorBoundary>{children(data)}</RenderErrorBoundary>
     </>
+  );
+}
+
+const megabytes = (bytes: number) => (bytes / 1_000_000).toFixed(1);
+
+/** Bytes received so far; a bar too when the server said how many to expect. */
+function LoadProgress({ loadedBytes, totalBytes }: ReadProgress) {
+  if (loadedBytes === 0) return null;
+  return (
+    <p className={styles.progress}>
+      {totalBytes
+        ? <progress value={Math.min(loadedBytes, totalBytes)} max={totalBytes} aria-label="Download progress" />
+        : null}
+      <span>{megabytes(loadedBytes)}{totalBytes ? ` of ${megabytes(totalBytes)}` : ""} MB</span>
+    </p>
   );
 }
 

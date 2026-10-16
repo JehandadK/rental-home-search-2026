@@ -8,8 +8,16 @@
 import type { EnrichedListing } from "../../domain/types";
 import type { ReferenceDataSnapshot } from "../contracts";
 
+/** How much of a read has arrived. `total` is unknown when the server does not say. */
+export interface ReadProgress {
+  loadedBytes: number;
+  totalBytes?: number;
+}
+
 export interface ReadOptions {
   signal?: AbortSignal;
+  /** Called as the response body arrives; only clients that download report it. */
+  onProgress?: (progress: ReadProgress) => void;
 }
 
 export interface ReadResult<T> {
