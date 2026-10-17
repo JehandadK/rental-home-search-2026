@@ -5,8 +5,10 @@
   "aliases": [
     "ad:athome|1168103036",
     "ad:suumo|jnc_000110500121|bc_100532100246",
+    "ad:suumo|jnc_000110526650|bc_100532283370",
     "key:細田5丁目戸建|東京都葛飾区細田5|89.85",
-    "room:suumo|jnc_000110500121|3LDK|89.85"
+    "room:suumo|jnc_000110500121|3LDK|89.85",
+    "room:suumo|jnc_000110526650|3LDK|89.85"
   ],
   "ads": {
     "athome|1168103036": {
@@ -34,29 +36,45 @@
         "2026-10-16T10:11:29.562Z"
       ],
       "firstRecordedAt": "2026-10-16T10:21:38.352Z"
+    },
+    "suumo|jnc_000110526650|bc_100532283370": {
+      "source": "suumo",
+      "ids": [
+        "suumo-細田５丁目戸建-3LDK-168000"
+      ],
+      "urls": [
+        "https://suumo.jp/chintai/jnc_000110526650/?bc=100532283370"
+      ],
+      "sightings": [
+        "2026-10-17T05:37:04.732Z"
+      ],
+      "firstRecordedAt": "2026-10-17T05:47:45.310Z"
     }
   },
   "facts": {
     "address": {
-      "chosen": "東京都葛飾区細田５丁目",
+      "chosen": "東京都葛飾区細田５",
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": "東京都葛飾区細田５",
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": "東京都葛飾区細田５丁目",
@@ -76,23 +94,26 @@
     "advertisedStation": {
       "chosen": "京成小岩駅",
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": "京成小岩駅",
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": "京成小岩駅",
@@ -110,11 +131,11 @@
       ]
     },
     "building.floor": {
-      "chosen": "-",
+      "chosen": "1-2階",
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:11:29.562Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
@@ -128,6 +149,20 @@
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
             "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
+        },
+        {
+          "value": "1-2階",
+          "source": "suumo",
+          "adKeys": [
+            "suumo|jnc_000110526650|bc_100532283370"
+          ],
+          "firstObservedAt": "2026-10-17T05:37:04.732Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
+          "firstRecordedAt": "2026-10-17T05:47:45.310Z",
+          "reportedAt": {
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
           }
         }
       ]
@@ -156,25 +191,28 @@
       ]
     },
     "builtYear": {
-      "chosen": 1977,
+      "chosen": 1976,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 1976,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 1977,
@@ -194,23 +232,26 @@
     "city": {
       "chosen": "Katsushika",
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": "Katsushika",
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": "Katsushika",
@@ -230,23 +271,26 @@
     "costs.adminFeeYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 0,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 0,
@@ -312,23 +356,26 @@
     "depositYen": {
       "chosen": 168000,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 168000,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 168000,
@@ -348,23 +395,26 @@
     "keyMoneyYen": {
       "chosen": 168000,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 168000,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 168000,
@@ -384,23 +434,26 @@
     "layout": {
       "chosen": "3LDK",
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": "3LDK",
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": "3LDK",
@@ -420,23 +473,26 @@
     "name": {
       "chosen": "細田５丁目戸建",
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": "細田５丁目戸建",
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": "細田５丁目戸建",
@@ -454,11 +510,11 @@
       ]
     },
     "notes": {
-      "chosen": "賃貸一戸建て 2階建1977年2月(築49年9ヶ月)・管理費0円",
+      "chosen": "築50年・1-2階・管理費込",
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
@@ -472,7 +528,8 @@
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
             "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": "賃貸一戸建て 2階建1977年2月(築49年9ヶ月)・管理費0円",
@@ -485,6 +542,19 @@
           "firstRecordedAt": "2026-10-16T10:25:27.259Z",
           "reportedAt": {
             "athome|1168103036": "2026-10-16T10:25:27.259Z"
+          }
+        },
+        {
+          "value": "築50年・1-2階・管理費込",
+          "source": "suumo",
+          "adKeys": [
+            "suumo|jnc_000110526650|bc_100532283370"
+          ],
+          "firstObservedAt": "2026-10-17T05:37:04.732Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
+          "firstRecordedAt": "2026-10-17T05:47:45.310Z",
+          "reportedAt": {
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
           }
         }
       ]
@@ -547,23 +617,26 @@
     "rent": {
       "chosen": 168000,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 168000,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 168000,
@@ -583,23 +656,26 @@
     "sizeM2": {
       "chosen": 89.85,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 89.85,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 89.85,
@@ -619,23 +695,26 @@
     "stationWalkMin": {
       "chosen": 13,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-16T10:23:35.580Z"
+        "observedAt": "2026-10-17T05:37:04.732Z"
       },
       "values": [
         {
           "value": 13,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110500121|bc_100532100246"
+            "suumo|jnc_000110500121|bc_100532100246",
+            "suumo|jnc_000110526650|bc_100532283370"
           ],
           "firstObservedAt": "2026-10-16T10:11:29.562Z",
-          "lastObservedAt": "2026-10-16T10:11:29.562Z",
+          "lastObservedAt": "2026-10-17T05:37:04.732Z",
           "firstRecordedAt": "2026-10-16T10:21:38.352Z",
           "reportedAt": {
-            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z"
-          }
+            "suumo|jnc_000110500121|bc_100532100246": "2026-10-16T10:21:38.352Z",
+            "suumo|jnc_000110526650|bc_100532283370": "2026-10-17T05:47:45.310Z"
+          },
+          "observedBefore": "2026-10-17T05:37:12.165Z"
         },
         {
           "value": 13,
@@ -655,7 +734,8 @@
   },
   "seenByBuilds": [
     "2026-10-16T10:11:29.562Z",
-    "2026-10-16T10:23:35.580Z"
+    "2026-10-16T10:23:35.580Z",
+    "2026-10-17T05:37:04.732Z"
   ],
   "events": [
     {
@@ -680,6 +760,18 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110500121|bc_100532100246|2026-10-17T05:37:12.165Z",
+      "type": "ad.superseded",
+      "at": "2026-10-17T05:37:12.165Z",
+      "recordedAt": "2026-10-17T05:47:45.310Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110500121|bc_100532100246",
+      "url": "https://suumo.jp/chintai/jnc_000110500121/?bc=100532100246",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -688,8 +780,8 @@
     "firstSeenBasis": "build",
     "firstSeenAdKey": "suumo|jnc_000110500121|bc_100532100246",
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000110500121/?bc=100532100246",
-    "lastSeenAt": "2026-10-16T10:23:35.580Z",
-    "lastListedAt": "2026-10-16T10:23:35.580Z",
+    "lastSeenAt": "2026-10-17T05:37:04.732Z",
+    "lastListedAt": "2026-10-17T05:37:04.732Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -721,10 +813,19 @@
         "lastListedAt": "2026-10-16T10:11:29.562Z",
         "goneSince": null,
         "relistCount": 0
+      },
+      "suumo|jnc_000110526650|bc_100532283370": {
+        "source": "suumo",
+        "firstSeenAt": "2026-10-17T05:37:04.732Z",
+        "lastSeenAt": "2026-10-17T05:37:04.732Z",
+        "lastListedAt": "2026-10-17T05:37:04.732Z",
+        "goneSince": null,
+        "relistCount": 0
       }
     },
     "conflicts": [
       "address",
+      "building.floor",
       "builtYear",
       "notes"
     ]
