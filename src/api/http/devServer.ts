@@ -46,6 +46,7 @@ export async function createDevApi(options: {
     corsOrigins: config.corsOrigins,
     rateLimitPerMinute: config.rateLimitPerMinute,
     mountPath: DEV_MOUNT_PATH,
+    anyHost: true,
   });
   return { handle: listener, close: () => source.close() };
 }

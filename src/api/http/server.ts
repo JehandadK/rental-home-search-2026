@@ -26,6 +26,8 @@ export interface ServerConfig {
   docs: ReadonlyMap<string, DocsAsset>;
   /** Origins allowed to call from a browser; "*" for any. Empty = same-origin only. */
   corsOrigins?: readonly string[];
+  /** Skip the loopback Host check when mounted in the website's dev/preview server. Default: false. */
+  anyHost?: boolean;
   maxBodyBytes?: number;
   /** Data requests per client per minute; 0 = unlimited. */
   rateLimitPerMinute?: number;
@@ -153,8 +155,8 @@ export function createApiHandler(config: ServerConfig): (request: ApiRequest) =>
       } catch {
         throw badRequest("Malformed request target");
       }
-      // The API is for this machine only (no auth layer yet); a foreign Host is a DNS-rebinding page.
-      if (!isLoopbackHost(request.headers.host)) {
+      // Standalone API: reject foreign Hosts against DNS rebinding; dev/preview opts out.
+      if (!config.anyHost && !isLoopbackHost(request.headers.host)) {
         throw new ApiError(421, "Misdirected request", "This API only answers requests addressed to localhost");
       }
       if (request.method === "OPTIONS") {

@@ -233,6 +233,15 @@ describe("guards", () => {
     }
   });
 
+  it("skips the Host check only when anyHost is enabled", async () => {
+    for (const anyHost of [undefined, false, true]) {
+      const handle = handler({ anyHost });
+      for (const host of ["192.168.1.5:5173", "dev.example:4173", ""]) {
+        expect((await send(handle, "GET", "/v1/presets", { headers: { host } })).status).toBe(anyHost ? 200 : 421);
+      }
+    }
+  });
+
   it("rate-limits by address, so made-up headers do not reset it", async () => {
     const open = handler({ rateLimitPerMinute: 2 });
     const codes = [];
