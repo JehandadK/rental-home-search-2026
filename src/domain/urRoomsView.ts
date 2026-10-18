@@ -1,7 +1,7 @@
 /** Filtering and ordering of the UR rooms page (src/domain/urRooms.ts). */
 import { layoutRooms, type UrRoom } from "./urRooms";
 
-export type UrRoomsSort = "watched" | "often" | "recent" | "rent" | "size";
+export type UrRoomsSort = "watched" | "often" | "recent" | "rent" | "size" | "mosque";
 
 export interface UrRoomsFilters {
   /** Target-city label, or "" for every city. */
@@ -14,12 +14,14 @@ export interface UrRoomsFilters {
   minSizeM2: number | null;
   /** Highest rent including 共益費. */
   maxRent: number | null;
+  /** Farthest the estate's nearest mosque may be, in km; null for any. */
+  maxMosqueKm: number | null;
   watchedOnly: boolean;
   sort: UrRoomsSort;
 }
 
 export const DEFAULT_UR_ROOMS_FILTERS: UrRoomsFilters = {
-  city: "", estate: "", status: "all", minRooms: 0, minSizeM2: null, maxRent: null, watchedOnly: false, sort: "watched",
+  city: "", estate: "", status: "all", minRooms: 0, minSizeM2: null, maxRent: null, maxMosqueKm: null, watchedOnly: false, sort: "watched",
 };
 
 /** Rent including 共益費, the figure to compare; null when unknown. */
@@ -31,7 +33,12 @@ const time = (iso: string) => Date.parse(iso) || 0;
 export function filterUrRooms(
   rooms: readonly UrRoom[],
   filters: UrRoomsFilters,
-  context: { cityOf: (estateCode: string) => string | null; watched: ReadonlySet<string> },
+  context: {
+    cityOf: (estateCode: string) => string | null;
+    /** Metres from the estate to its nearest mosque; null when unknown. */
+    mosqueM?: (estateCode: string) => number | null;
+    watched: ReadonlySet<string>;
+  },
 ): UrRoom[] {
   const matches = rooms.filter((room) => {
     if (filters.city && context.cityOf(room.estateCode) !== filters.city) return false;
@@ -41,10 +48,14 @@ export function filterUrRooms(
     if (filters.minSizeM2 !== null && (room.sizeM2 ?? 0) < filters.minSizeM2) return false;
     const rent = totalRent(room);
     if (filters.maxRent !== null && (rent === null || rent > filters.maxRent)) return false;
+    if (filters.maxMosqueKm !== null) {
+      const mosqueM = context.mosqueM?.(room.estateCode) ?? null;
+      if (mosqueM === null || mosqueM > filters.maxMosqueKm * 1000) return false;
+    }
     if (filters.watchedOnly && !context.watched.has(room.id)) return false;
     return true;
   });
-  return sortUrRooms(matches, filters.sort, context.watched);
+  return sortUrRooms(matches, filters.sort, context.watched, context.mosqueM);
 }
 
 /**
@@ -52,7 +63,10 @@ export function filterUrRooms(
  * other open rooms, then watched closed rooms, then the rest; each group by
  * how often the room has come up. The other orders are plain.
  */
-export function sortUrRooms(rooms: readonly UrRoom[], sort: UrRoomsSort, watched: ReadonlySet<string>): UrRoom[] {
+export function sortUrRooms(
+  rooms: readonly UrRoom[], sort: UrRoomsSort, watched: ReadonlySet<string>,
+  mosqueM: (estateCode: string) => number | null = () => null,
+): UrRoom[] {
   const often = (a: UrRoom, b: UrRoom) => b.periods.length - a.periods.length || time(b.since) - time(a.since);
   const group = (room: UrRoom) => (room.status === "open" ? (watched.has(room.id) ? 0 : 1) : (watched.has(room.id) ? 2 : 3));
   const byNumber = (value: (room: UrRoom) => number | null, direction: 1 | -1) => (a: UrRoom, b: UrRoom) => {
@@ -67,6 +81,7 @@ export function sortUrRooms(rooms: readonly UrRoom[], sort: UrRoomsSort, watched
     recent: (a, b) => time(b.periods.at(-1)?.from ?? b.since) - time(a.periods.at(-1)?.from ?? a.since),
     rent: byNumber(totalRent, 1),
     size: byNumber((room) => room.sizeM2, -1),
+    mosque: (a, b) => byNumber((room) => mosqueM(room.estateCode), 1)(a, b) || group(a) - group(b),
   };
   return [...rooms].sort((a, b) => compare[sort](a, b) || a.id.localeCompare(b.id));
 }

@@ -28,15 +28,19 @@ describe("UR room history inputs", () => {
     expect(heldUrRooms(null)).toEqual([]);
   });
 
-  it("lists the active UR estates with their city", () => {
-    const snapshot = {
-      cities: { records: [{ id: "city:soka", name: "Soka" }] },
-      places: { records: [
-        { category: "urDanchi", name: "コンフォール松原", status: "active", attributes: { urCode: "50_4090", url: "https://u/50_4090.html", cityId: "city:soka" } },
-        { category: "urDanchi", name: "Gone", status: "retired", attributes: { urCode: "50_0000", url: "https://u/50_0000.html" } },
-        { category: "station", name: "草加", attributes: {} },
-      ] },
-    };
-    expect(urEstateInputs(snapshot)).toEqual([{ code: "50_4090", name: "コンフォール松原", url: "https://u/50_4090.html", city: "Soka" }]);
+  it("lists the active UR estates with their city, position and what is near them", () => {
+    const records: Parameters<typeof urEstateInputs>[0]["places"]["records"] = [
+        { id: "u1", category: "urDanchi", name: "コンフォール松原", lat: 35.843, lon: 139.8, address: "埼玉県草加市松原1-4ほか", status: "active" as const,
+          attributes: { urCode: "50_4090", url: "https://u/50_4090.html", cityId: "city:soka" } },
+        { id: "u0", category: "urDanchi", name: "Gone", lat: 35.9, lon: 139.8, status: "retired" as const, attributes: { urCode: "50_0000", url: "https://u/50_0000.html" } },
+        { id: "s1", category: "station", name: "草加", lat: 35.828, lon: 139.803, attributes: { nameEn: "Soka" } },
+        { id: "m1", category: "mosque", name: "Baitul Aman Masjid", lat: 35.85, lon: 139.8, attributes: {} },
+      ];
+    const snapshot = { cities: { records: [{ id: "city:soka", name: "Soka" }] }, places: { records } };
+    const [estate] = urEstateInputs(snapshot);
+    expect(estate).toMatchObject({ code: "50_4090", name: "コンフォール松原", url: "https://u/50_4090.html", city: "Soka", address: "埼玉県草加市松原1-4ほか", lat: 35.843, lon: 139.8 });
+    expect(estate.nearby?.mosque?.name).toBe("Baitul Aman Masjid");
+    expect(estate.nearby?.station).toMatchObject({ name: "草加", nameEn: "Soka" });
+    expect(urEstateInputs(snapshot)).toHaveLength(1);
   });
 });

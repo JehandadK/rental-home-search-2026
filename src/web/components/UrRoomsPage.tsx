@@ -4,7 +4,8 @@
  * is one seen open before (src/domain/urRooms.ts).
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { UrRoom, UrRoomsPayload } from "../../domain/urRooms";
+import type { UrRoom, UrRoomsEstate, UrRoomsPayload } from "../../domain/urRooms";
+import type { UrEstateNearby, UrNearbyPlace } from "../../domain/urEstateNearby";
 import { DEFAULT_UR_ROOMS_FILTERS, filterUrRooms, totalRent, type UrRoomsFilters, type UrRoomsSort } from "../../domain/urRoomsView";
 import { fetchUrRooms } from "../data/urRoomsClient";
 import { decodeUrRoomsFilters, decodeUrRoomWatch } from "../userState/decoders";
@@ -18,12 +19,27 @@ const yen = (value: number) => `¥${value.toLocaleString("ja-JP")}`;
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Tokyo" });
 const days = (value: number) => (value < 1 ? "under a day" : `${value % 1 ? value.toFixed(1) : value} day${value === 1 ? "" : "s"}`);
 
+const km = (distM: number) => `${(distM / 1000).toFixed(1)} km`;
+
+/** The estate's name in English with the Japanese beside it; just the Japanese when no English is known. */
+const estateTitle = (estate: Pick<UrRoomsEstate, "name" | "nameEn"> | undefined, fallback: string) => estate?.nameEn ?? estate?.name ?? fallback;
+
+const NEARBY_ROWS: { key: keyof UrEstateNearby; label: string }[] = [
+  { key: "mosque", label: "Mosque" },
+  { key: "privateSchool", label: "Private school" },
+  { key: "station", label: "Station" },
+  { key: "school", label: "School" },
+  { key: "kindergarten", label: "Kindergarten" },
+  { key: "busStop", label: "Bus stop" },
+];
+
 const SORTS: { value: UrRoomsSort; label: string }[] = [
   { value: "watched", label: "Watched & open first" },
   { value: "often", label: "Most often listed" },
   { value: "recent", label: "Listed most recently" },
   { value: "rent", label: "Rent, low to high" },
   { value: "size", label: "Size, large to small" },
+  { value: "mosque", label: "Nearest mosque" },
 ];
 
 export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBack }: { baseUrl?: string; onBack: () => void }) {
@@ -51,7 +67,11 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
   const estateByCode = useMemo(() => new Map((payload?.estates ?? []).map((estate) => [estate.code, estate])), [payload]);
   const cities = useMemo(() => [...new Set((payload?.estates ?? []).map((estate) => estate.city).filter((city): city is string => !!city))], [payload]);
   const shown = useMemo(
-    () => (payload ? filterUrRooms(payload.rooms, filters, { cityOf: (code) => estateByCode.get(code)?.city ?? null, watched }) : []),
+    () => (payload ? filterUrRooms(payload.rooms, filters, {
+      cityOf: (code) => estateByCode.get(code)?.city ?? null,
+      mosqueM: (code) => estateByCode.get(code)?.nearby?.mosque?.distM ?? null,
+      watched,
+    }) : []),
     [payload, filters, estateByCode, watched],
   );
   const openCount = payload?.rooms.filter((room) => room.status === "open").length ?? 0;
@@ -68,7 +88,8 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
         UR advertises only the rooms that are vacant today, so every site shows open rooms only. This page lists every UR room
         in our area that has been seen open{payload?.historyFrom ? ` since ${day(payload.historyFrom)}` : ""}, including the ones
         let since. A let room comes up again when its tenant moves out: ☆ Watch the ones you want and they rise to the top when
-        they open.
+        they open. Rooms differ in size within an estate, so they are not scored: each estate shows how far the nearest
+        mosque, private school, station, school, kindergarten and bus stop are instead.
       </p>
 
       {load.status === "loading" && <p className={styles.status}>Loading UR rooms…</p>}
@@ -99,7 +120,7 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
                 <option value="">All estates</option>
                 {payload.estates
                   .filter((estate) => estate.roomCount > 0 && (!filters.city || estate.city === filters.city))
-                  .map((estate) => <option key={estate.code} value={estate.code}>{estate.name} ({estate.openCount}/{estate.roomCount})</option>)}
+                  .map((estate) => <option key={estate.code} value={estate.code}>{estateTitle(estate, estate.code)} ({estate.openCount}/{estate.roomCount})</option>)}
               </select>
             </label>
             <label>Status
@@ -125,6 +146,10 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
               <input type="number" min={0} step={5000} value={filters.maxRent ?? ""} placeholder="any"
                 onChange={(event) => update({ maxRent: Number(event.target.value) > 0 ? Number(event.target.value) : null })} />
             </label>
+            <label>Mosque within km
+              <input type="number" min={0} step={0.5} value={filters.maxMosqueKm ?? ""} placeholder="any"
+                onChange={(event) => update({ maxMosqueKm: Number(event.target.value) > 0 ? Number(event.target.value) : null })} />
+            </label>
             <label>Sort
               <select value={filters.sort} onChange={(event) => update({ sort: event.target.value as UrRoomsSort })}>
                 {SORTS.map((sort) => <option key={sort.value} value={sort.value}>{sort.label}</option>)}
@@ -143,8 +168,7 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
           ) : (
             <ul className={styles.grid}>
               {shown.map((room) => (
-                <RoomCard key={room.id} room={room} estateName={estateByCode.get(room.estateCode)?.name ?? room.estateCode}
-                  city={estateByCode.get(room.estateCode)?.city ?? null} estateUrl={estateByCode.get(room.estateCode)?.url ?? null}
+                <RoomCard key={room.id} room={room} estate={estateByCode.get(room.estateCode)}
                   watched={watched.has(room.id)} onToggleWatch={toggleWatch} />
               ))}
             </ul>
@@ -156,8 +180,10 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
               <ul>
                 {quietEstates.map((estate) => (
                   <li key={estate.code}>
-                    <a href={estate.url} target="_blank" rel="noreferrer">{estate.name}</a>
+                    <a href={estate.url} target="_blank" rel="noreferrer">{estateTitle(estate, estate.code)}</a>
+                    {estate.nameEn && <span className={styles.muted}> {estate.name}</span>}
                     {estate.city && ` · ${estate.city}`}{estate.totalUnits ? ` · ${estate.totalUnits.toLocaleString("en")} units` : ""}
+                    {estate.nearby?.mosque && ` · mosque ${km(estate.nearby.mosque.distM)}`}
                   </li>
                 ))}
               </ul>
@@ -174,9 +200,33 @@ export function UrRoomsPage({ baseUrl = `${import.meta.env.BASE_URL}data/`, onBa
   );
 }
 
-function RoomCard({ room, estateName, city, estateUrl, watched, onToggleWatch }: {
-  room: UrRoom; estateName: string; city: string | null; estateUrl: string | null; watched: boolean; onToggleWatch: (id: string) => void;
+function Nearby({ nearby }: { nearby: UrEstateNearby }) {
+  return (
+    <dl className={styles.nearby} aria-label="Nearby">
+      {NEARBY_ROWS.map(({ key, label }) => {
+        const place: UrNearbyPlace | null = nearby[key];
+        return (
+          <div key={key}>
+            <dt>{label}</dt>
+            <dd>
+              {place
+                ? <><strong>{km(place.distM)}</strong> · {Math.round(place.walkMin)} min walk <span className={styles.muted}>{place.nameEn ?? place.name}</span></>
+                : <span className={styles.muted}>none nearby in our data</span>}
+            </dd>
+          </div>
+        );
+      })}
+    </dl>
+  );
+}
+
+function RoomCard({ room, estate, watched, onToggleWatch }: {
+  room: UrRoom; estate: UrRoomsEstate | undefined; watched: boolean; onToggleWatch: (id: string) => void;
 }) {
+  const estateName = estateTitle(estate, room.estateCode);
+  const city = estate?.city ?? null;
+  const estateUrl = estate?.url ?? null;
+  const mapQuery = estate?.lat !== undefined && estate.lon !== undefined ? `${estate.lat},${estate.lon}` : `UR ${estate?.name ?? room.estateCode}`;
   const rent = totalRent(room);
   const open = room.status === "open";
   return (
@@ -195,7 +245,7 @@ function RoomCard({ room, estateName, city, estateUrl, watched, onToggleWatch }:
         <span className={styles.size}>{room.sizeM2 !== null ? `${room.sizeM2}㎡` : ""}{room.floor ? ` · ${room.floor}` : ""}</span>
       </div>
       <div className={styles.name}>{estateName} <span className={styles.room}>{room.label}</span></div>
-      {city && <div className={styles.muted}>{city}</div>}
+      <div className={styles.muted}>{[estate?.nameEn ? estate.name : null, city].filter(Boolean).join(" · ")}</div>
       <div className={styles.rent}>
         {room.rent !== null ? yen(room.rent) : "Rent unknown"}
         {room.commonFee ? <span className={styles.muted}> + {yen(room.commonFee)} 共益費</span> : null}
@@ -205,11 +255,12 @@ function RoomCard({ room, estateName, city, estateUrl, watched, onToggleWatch }:
         Listed {room.periods.length}× since {day(room.firstSeenAt)}
         {room.medianDaysListed !== null && ` · typically open ${days(room.medianDaysListed)}`}
       </div>
+      {estate?.nearby && <Nearby nearby={estate.nearby} />}
       <div className={styles.links}>
         {open
           ? <a href={room.url} target="_blank" rel="noreferrer">View room on UR</a>
           : estateUrl && <a href={estateUrl} target="_blank" rel="noreferrer">Estate on UR</a>}
-        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`UR ${estateName}`)}`} target="_blank" rel="noreferrer">Map</a>
+        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`} target="_blank" rel="noreferrer">Map</a>
       </div>
     </li>
   );

@@ -44,6 +44,8 @@ import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { isRentedOut } from "../../domain/availability";
 import { isUrListing, sourceLabel, UR_PLACE_CATEGORY } from "../../domain/ur";
+import { describeNearby, urEstateNearby } from "../../domain/urEstateNearby";
+import { urEstateNameEn } from "../../domain/urEstateNames";
 import { isVacant, urEstate, urEstateDetails, urEstateLabel, urEstateName, type UrEstate, type UrVacancy } from "../../domain/urEstates";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceCity, ReferenceModel } from "../../domain/referenceData";
@@ -1235,6 +1237,7 @@ export const MapView = memo(function MapView({
         {estatePoint && hoveredEstate && (
           <div className={styles.estateCard} aria-hidden="true" style={estateCardStyle(estatePoint)}>
             <strong>{urEstateName(hoveredEstate)}</strong>
+            {urEstateNameEn(hoveredEstate.code) && <small>{urEstateNameEn(hoveredEstate.code)}</small>}
             {urEstateDetails(hoveredEstate).map((line) => <small key={line}>{line}</small>)}
           </div>
         )}
@@ -1246,7 +1249,9 @@ export const MapView = memo(function MapView({
           >
             <button className={styles.estateClose} onClick={() => setPinnedEstateId(null)} aria-label="Close UR estate">×</button>
             <strong>{urEstateName(pinnedEstate)}</strong>
+            {urEstateNameEn(pinnedEstate.code) && <small>{urEstateNameEn(pinnedEstate.code)}</small>}
             {urEstateDetails(pinnedEstate).map((line) => <small key={line}>{line}</small>)}
+            {describeNearby(urEstateNearby(pinnedEstate.place, reference.catalog)).map((line) => <small key={line}>{line}</small>)}
             <div className={styles.popupActions}>
               {pinnedEstate.url && (
                 <a href={pinnedEstate.url} target="_blank" rel="noreferrer">

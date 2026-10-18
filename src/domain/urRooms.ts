@@ -17,6 +17,9 @@
  */
 
 /** data/ur-history.json */
+import type { UrEstateNearby } from "./urEstateNearby";
+import { urEstateNameEn } from "./urEstateNames";
+
 export interface UrHistoryFile {
   schemaVersion: 1;
   /** Our own UR sweeps, oldest first. */
@@ -120,7 +123,15 @@ export interface UrRoom {
 
 export interface UrRoomsEstate {
   code: string;
+  /** UR's (Japanese) name. */
   name: string;
+  /** Transliterated name; absent when none is known. */
+  nameEn?: string;
+  address?: string | null;
+  lat?: number;
+  lon?: number;
+  /** What is near the estate; the estate is not scored, as its rooms differ. */
+  nearby?: UrEstateNearby;
   /** Target-city label, e.g. "Soka". */
   city: string | null;
   url: string;
@@ -144,6 +155,10 @@ export interface UrRoomsPayload {
 export interface UrEstateInput {
   code: string;
   name: string;
+  address?: string | null;
+  lat?: number;
+  lon?: number;
+  nearby?: UrEstateNearby;
   city: string | null;
   /** UR's estate page, e.g. https://www.ur-net.go.jp/chintai/kanto/saitama/50_4090.html */
   url: string;
@@ -364,7 +379,11 @@ export function deriveUrRooms(input: {
     estates: estates.map((estate) => {
       const own = rooms.filter((room) => room.estateCode === estate.code);
       return {
-        code: estate.code, name: estate.name, city: estate.city, url: estate.url,
+        code: estate.code, name: estate.name, ...(urEstateNameEn(estate.code) ? { nameEn: urEstateNameEn(estate.code)! } : {}),
+        ...(estate.address !== undefined ? { address: estate.address } : {}),
+        ...(estate.lat !== undefined && estate.lon !== undefined ? { lat: estate.lat, lon: estate.lon } : {}),
+        ...(estate.nearby ? { nearby: estate.nearby } : {}),
+        city: estate.city, url: estate.url,
         totalUnits: latestPage.get(estate.code)?.totalUnits ?? null,
         roomCount: own.length,
         openCount: own.filter((room) => room.status === "open").length,

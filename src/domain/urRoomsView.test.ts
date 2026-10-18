@@ -8,8 +8,9 @@ const room = (id: string, over: Partial<UrRoom> = {}): UrRoom => ({
   periods: [{ from: "2026-06-01T00:00:00.000Z", until: "2026-06-03T00:00:00.000Z" }], medianDaysListed: 2, sources: ["ur-s"], url: "u", ...over,
 });
 const cityOf = (code: string) => (code === "50_4090" ? "Soka" : "Kawaguchi");
+const mosqueM = (code: string) => (code === "50_4090" ? 1_200 : code === "50_2220" ? 400 : null);
 const run = (rooms: UrRoom[], filters = {}, watched: string[] = []) =>
-  filterUrRooms(rooms, { ...DEFAULT_UR_ROOMS_FILTERS, ...filters }, { cityOf, watched: new Set(watched) }).map((r) => r.id);
+  filterUrRooms(rooms, { ...DEFAULT_UR_ROOMS_FILTERS, ...filters }, { cityOf, mosqueM, watched: new Set(watched) }).map((r) => r.id);
 
 describe("UR rooms page filters", () => {
   const twice = { periods: [{ from: "2026-06-01T00:00:00.000Z", until: "2026-06-02T00:00:00.000Z" }, { from: "2026-08-01T00:00:00.000Z", until: "2026-08-02T00:00:00.000Z" }] };
@@ -38,5 +39,14 @@ describe("UR rooms page filters", () => {
     expect(totalRent({ rent: 100_000, commonFee: 3_000 })).toBe(103_000);
     expect(totalRent({ rent: null, commonFee: 3_000 })).toBeNull();
     expect(run(rooms, { sort: "rent" })[0]).toBe("small");
+  });
+
+  it("filters and sorts by the distance from the estate to its nearest mosque", () => {
+    expect(run(rooms, { maxMosqueKm: 0.5 })).toEqual(["small"]);
+    expect(run(rooms, { maxMosqueKm: 1.5 })).toHaveLength(5);
+    // An estate whose mosque is unknown never passes a distance limit, and sorts last.
+    expect(run([...rooms, room("far", { estateCode: "50_9999" })], { maxMosqueKm: 5 })).not.toContain("far");
+    expect(run([...rooms, room("far", { estateCode: "50_9999" })], { sort: "mosque" }).at(-1)).toBe("far");
+    expect(run(rooms, { sort: "mosque" })[0]).toBe("small");
   });
 });

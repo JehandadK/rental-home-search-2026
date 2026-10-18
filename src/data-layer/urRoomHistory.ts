@@ -2,24 +2,30 @@
  * The UR room history (src/domain/urRooms.ts) from the stored data: the
  * sweeps it records, and the inputs of the published rooms page.
  */
+import { buildPlaceCatalog } from "../domain/places";
 import type { RawListing } from "../domain/types";
+import { urEstateNearby } from "../domain/urEstateNearby";
 import { UR_PLACE_CATEGORY } from "../domain/ur";
 import type { UrEstateInput, UrHeldRoom, UrSweepRecord } from "../domain/urRooms";
 import type { ScrapeBatch } from "./ingestion/contracts";
 
 interface CatalogLike {
   cities: { records: readonly { id: string; name: string }[] };
-  places: { records: readonly { category: string; name: string; status?: string; attributes?: Record<string, unknown> }[] };
+  places: { records: readonly { id: string; category: string; name: string; lat: number; lon: number; address?: string; status?: "active" | "retired"; subtitle?: string; attributes?: Record<string, string | number | boolean | null> }[] };
 }
 
-/** Every active `urDanchi` place, with its target-city label. */
+/** Every active `urDanchi` place, with its target-city label and what is near it. */
 export function urEstateInputs(snapshot: CatalogLike): UrEstateInput[] {
   const cityName = new Map(snapshot.cities.records.map((city) => [city.id, city.name]));
+  const catalog = buildPlaceCatalog(snapshot.places.records);
   return snapshot.places.records.flatMap((place) => {
     if (place.category !== UR_PLACE_CATEGORY || place.status === "retired") return [];
     const { urCode, url, cityId } = place.attributes ?? {};
     if (typeof urCode !== "string" || typeof url !== "string") return [];
-    return [{ code: urCode, name: place.name, url, city: (typeof cityId === "string" && cityName.get(cityId)) || null }];
+    return [{
+      code: urCode, name: place.name, url, city: (typeof cityId === "string" && cityName.get(cityId)) || null,
+      address: place.address ?? null, lat: place.lat, lon: place.lon, nearby: urEstateNearby(place, catalog),
+    }];
   });
 }
 

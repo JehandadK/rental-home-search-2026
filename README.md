@@ -477,6 +477,16 @@ our own daily sweeps keep the page current in between. ラク賃 is a service th
 project did not use before, so relying on it may need Mercari's internal
 External Service Review. `npm run data:web` publishes the page's `ur-rooms.json`.
 
+Rooms in one estate differ in size, so the page does not score them. Each estate
+shows its English name beside UR's Japanese one (`src/domain/urEstateNames.ts`,
+keyed by UR's estate code; a new estate is shown in Japanese until a name is added)
+and how far its nearest mosque, private school, station, school, kindergarten and
+bus stop are (`src/domain/urEstateNearby.ts`, baked into `ur-rooms.json` by
+`npm run data:web`). Schools, kindergartens and bus stops are collected for the
+target cities only, so one more than 3 km away is left out. The page can sort by
+the nearest mosque and limit rooms to estates within a distance of one. The map's
+estate card and the listing table show the English name too.
+
 AtHome's public pages use browser verification, so its collector reads the
 public search-result HTML in a headed Playwright browser and through the
 site's own list endpoint. It opens **the AtHome homepage first**, waits for it to

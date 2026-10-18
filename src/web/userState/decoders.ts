@@ -215,7 +215,7 @@ export function decodeUrRoomWatch(raw: unknown): string[] {
   return [...new Set(raw.filter((id): id is string => typeof id === "string" && id !== ""))];
 }
 
-const UR_ROOMS_SORTS: readonly UrRoomsSort[] = ["watched", "often", "recent", "rent", "size"];
+const UR_ROOMS_SORTS: readonly UrRoomsSort[] = ["watched", "often", "recent", "rent", "size", "mosque"];
 
 /** The UR rooms page's filters, field by field over the defaults. */
 export function decodeUrRoomsFilters(raw: unknown): UrRoomsFilters {
@@ -229,6 +229,7 @@ export function decodeUrRoomsFilters(raw: unknown): UrRoomsFilters {
     minRooms: typeof raw.minRooms === "number" && [0, 1, 2, 3, 4].includes(raw.minRooms) ? raw.minRooms : 0,
     minSizeM2: positive(raw.minSizeM2),
     maxRent: positive(raw.maxRent),
+    maxMosqueKm: positive(raw.maxMosqueKm),
     watchedOnly: raw.watchedOnly === true,
     sort: UR_ROOMS_SORTS.includes(raw.sort as UrRoomsSort) ? (raw.sort as UrRoomsSort) : "watched",
   };

@@ -180,6 +180,30 @@
   font-weight: 400;
 }
 
+.nearby {
+  margin: 2px 0;
+  padding: 6px 0;
+  border-block: 1px solid var(--rs-chip-border);
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.nearby > div {
+  display: grid;
+  grid-template-columns: 6.5em 1fr;
+  gap: 6px;
+}
+
+.nearby dt {
+  color: var(--rs-muted);
+}
+
+.nearby dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .links {
   display: flex;
   gap: 12px;

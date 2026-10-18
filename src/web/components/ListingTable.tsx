@@ -20,7 +20,8 @@ import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { describeAvailability, isRentedOut } from "../../domain/availability";
-import { isUrListing, sourceLabel } from "../../domain/ur";
+import { isUrListing, sourceLabel, urEstateCodeOf } from "../../domain/ur";
+import { urEstateNameEn } from "../../domain/urEstateNames";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
 import { listingPhotos } from "../../domain/listingPhotos";
 import { describeNote, formatViewing, type NoteDraft, type NoteMap } from "../../domain/notes";
@@ -475,6 +476,7 @@ export const ListingTable = memo(function ListingTable({
                   )}
                   <td className={`${styles.left} ${styles.name}`} title={listing.address}>
                     {listing.name}
+                    {urEstateNameEn(urEstateCodeOf(listing)) && <small className={styles.nameEn}>{urEstateNameEn(urEstateCodeOf(listing))}</small>}
                     {fresh && (
                       <span className={styles.badgeNew} title={`First seen in the last ${newWithinDays} day${newWithinDays === 1 ? "" : "s"}`}>
                         NEW

@@ -16,7 +16,9 @@ const room = (id: string, over: Partial<UrRoom>): UrRoom => ({
 const PAYLOAD: UrRoomsPayload = {
   schemaVersion: 1, generatedAt: "2026-10-14T00:00:00.000Z", historyFrom: "2026-05-29T15:08:33.704Z",
   estates: [
-    { code: "50_4090", name: "コンフォール松原", city: "Soka", url: "https://www.ur-net.go.jp/chintai/kanto/saitama/50_4090.html", totalUnits: 3050, roomCount: 2, openCount: 1 },
+    { code: "50_4090", name: "コンフォール松原", nameEn: "Comfort Matsubara", city: "Soka",
+      nearby: { mosque: { name: "Baitul Aman Masjid", distM: 2898, walkMin: 47.1 }, privateSchool: null, station: { name: "獨協大学前", nameEn: "Dokkyodaigakumae", distM: 98, walkMin: 1.6 },
+        school: null, kindergarten: null, busStop: null }, url: "https://www.ur-net.go.jp/chintai/kanto/saitama/50_4090.html", totalUnits: 3050, roomCount: 2, openCount: 1 },
     { code: "50_1340", name: "草加旭町", city: "Soka", url: "https://www.ur-net.go.jp/chintai/kanto/saitama/50_1340.html", totalUnits: 78, roomCount: 0, openCount: 0 },
   ],
   rooms: [
@@ -54,6 +56,27 @@ describe("UR rooms page", () => {
     expect(within(closed).getByRole("button", { name: /Watching/ }).getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(screen.getByLabelText("Watched only"));
     expect(screen.getAllByRole("listitem").filter((item) => item.textContent?.includes("号室"))).toHaveLength(1);
+  });
+
+  it("names each estate in English and shows how far its mosque, station and the rest are", async () => {
+    renderPage();
+    const closed = (await screen.findByText(/Closed · let/)).closest("li")!;
+    expect(within(closed).getByText(/Comfort Matsubara/)).toBeTruthy();
+    expect(within(closed).getByText(/コンフォール松原/)).toBeTruthy();
+    const nearby = within(closed).getByLabelText("Nearby");
+    expect(within(nearby).getByText("2.9 km")).toBeTruthy();
+    expect(within(nearby).getByText("Baitul Aman Masjid")).toBeTruthy();
+    expect(within(nearby).getByText("Dokkyodaigakumae")).toBeTruthy();
+    expect(within(nearby).getAllByText("none nearby in our data")).toHaveLength(4);
+  });
+
+  it("limits the rooms to estates near a mosque", async () => {
+    renderPage();
+    await screen.findByText(/Closed · let/);
+    fireEvent.change(screen.getByLabelText("Mosque within km"), { target: { value: "1" } });
+    expect(screen.getByText("No room matches these filters.")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Mosque within km"), { target: { value: "3" } });
+    expect(screen.getByText("2 rooms shown")).toBeTruthy();
   });
 
   it("filters by layout", async () => {
