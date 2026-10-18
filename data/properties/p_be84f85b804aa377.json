@@ -19,7 +19,8 @@
         "2026-10-14T05:13:23.156Z",
         "2026-10-14T09:42:39.980Z",
         "2026-10-15T05:18:12.888Z",
-        "2026-10-16T10:10:48.321Z"
+        "2026-10-16T10:10:48.321Z",
+        "2026-10-18T07:49:22.189Z"
       ],
       "firstRecordedAt": "2026-10-14T05:23:40.511Z"
     }
@@ -105,11 +106,11 @@
     "building.features": {
       "chosen": [
         "バス・トイレ別",
-        "敷地内駐車場",
         "エアコン",
         "モニター付きインターホン",
         "追い焚き",
         "リノベしたお部屋",
+        "光配線",
         "ドロップインコンロ",
         "自動お湯張り機能",
         "モニター付インターホン",
@@ -119,7 +120,6 @@
         "BS110CS",
         "VDSL",
         "CATVインターネット",
-        "光配線",
         "洗面所独立",
         "洗濯機置場（室内）",
         "収納（物入）",
@@ -175,6 +175,45 @@
           "firstRecordedAt": "2026-10-14T05:23:40.511Z",
           "reportedAt": {
             "ur|50_2530-000080104": "2026-10-14T05:23:40.511Z"
+          }
+        },
+        {
+          "value": [
+            "バス・トイレ別",
+            "エアコン",
+            "モニター付きインターホン",
+            "追い焚き",
+            "リノベしたお部屋",
+            "光配線",
+            "ドロップインコンロ",
+            "自動お湯張り機能",
+            "モニター付インターホン",
+            "独立キッチン",
+            "プレイロット",
+            "CATV",
+            "BS110CS",
+            "VDSL",
+            "CATVインターネット",
+            "洗面所独立",
+            "洗濯機置場（室内）",
+            "収納（物入）",
+            "バルコニー",
+            "網戸",
+            "最寄りの幼稚園・保育園が徒歩10分以内",
+            "最寄りの小中学校が徒歩10分以内",
+            "敷地内に公園あり",
+            "最寄りの公園が徒歩5分以内",
+            "近くに緑あり"
+          ],
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2530-000080104"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-18T08:00:47.906Z",
+          "reportedAt": {
+            "ur|50_2530-000080104": "2026-10-18T08:00:47.906Z"
           }
         }
       ]
@@ -819,6 +858,20 @@
         "evidence": "UR detail_room returned no room (no longer advertised)",
         "method": "probe"
       }
+    },
+    {
+      "id": "ad.checked|ur|50_2530-000080104|2026-10-18T07:49:22.189Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-10-18T07:49:22.189Z",
+      "recordedAt": "2026-10-18T08:00:47.906Z",
+      "source": "ur",
+      "adKey": "ur|50_2530-000080104",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000080104",
+      "data": {
+        "state": "listed",
+        "evidence": "Advertised again in UR's vacancy list",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -827,25 +880,19 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "ur|50_2530-000080104",
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000080104",
-    "lastSeenAt": "2026-10-16T10:10:48.321Z",
-    "lastListedAt": "2026-10-16T10:10:48.321Z",
-    "offMarket": {
-      "after": "2026-10-16T10:10:48.321Z",
-      "before": "2026-10-17T05:45:58.191Z"
-    },
-    "daysOnMarket": {
-      "min": 2.2,
-      "max": 3
-    },
+    "lastSeenAt": "2026-10-18T07:49:22.189Z",
+    "lastListedAt": "2026-10-18T07:49:22.189Z",
+    "offMarket": null,
+    "daysOnMarket": null,
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "gone",
+    "status": "listed",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-14T05:23:40.091Z",
       "reactivations": 0
     },
-    "relistCount": 0,
+    "relistCount": 1,
     "sources": [
       "ur"
     ],
@@ -853,12 +900,14 @@
       "ur|50_2530-000080104": {
         "source": "ur",
         "firstSeenAt": "2026-10-14T05:13:23.156Z",
-        "lastSeenAt": "2026-10-16T10:10:48.321Z",
-        "lastListedAt": "2026-10-16T10:10:48.321Z",
-        "goneSince": "2026-10-17T05:45:58.191Z",
-        "relistCount": 0
+        "lastSeenAt": "2026-10-18T07:49:22.189Z",
+        "lastListedAt": "2026-10-18T07:49:22.189Z",
+        "goneSince": null,
+        "relistCount": 1
       }
     },
-    "conflicts": []
+    "conflicts": [
+      "building.features"
+    ]
   }
 }

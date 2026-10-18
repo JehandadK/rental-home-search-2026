@@ -886,6 +886,20 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.checked|ur|50_4000-000550515|2026-10-18T07:58:57.965Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-18T07:58:57.965Z",
+      "recordedAt": "2026-10-18T08:00:47.906Z",
+      "source": "ur",
+      "adKey": "ur|50_4000-000550515",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_4000_room.html?JKSS=000550515",
+      "data": {
+        "state": "gone",
+        "evidence": "UR detail_room returned no room (no longer advertised)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -896,11 +910,17 @@
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_4000_room.html?JKSS=000550515",
     "lastSeenAt": "2026-10-17T05:36:22.155Z",
     "lastListedAt": "2026-10-17T05:36:22.155Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-17T05:36:22.155Z",
+      "before": "2026-10-18T07:58:57.965Z"
+    },
+    "daysOnMarket": {
+      "min": 3,
+      "max": 4.1
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-14T05:23:40.091Z",
@@ -916,7 +936,7 @@
         "firstSeenAt": "2026-10-14T05:13:23.156Z",
         "lastSeenAt": "2026-10-17T05:36:22.155Z",
         "lastListedAt": "2026-10-17T05:36:22.155Z",
-        "goneSince": null,
+        "goneSince": "2026-10-18T07:58:57.965Z",
         "relistCount": 0
       }
     },
