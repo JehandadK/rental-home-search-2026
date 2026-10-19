@@ -600,6 +600,18 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-19 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-10-19T09-28-34-402Z-8d1ec726`: **SUCCESS**, no resume.
+- Source additions: SUUMO **14**, AtHome **11**, RoomSpot **8**, Nifty **8**.
+- UR swept 74 of 74 municipalities: 138 estates, 87 vacant rooms (77 with 2+
+  rooms), 266 API calls. The `ur` source went 137 → 141 rooms (4 added, none
+  gone, no rent changes); the rooms page has 85 open of 1552.
+- **13 newly tracked properties**: 11 from the portals, all ≥60㎡
+  (60.56–98.31㎡, 3 ≥70㎡, 7 at ≤¥150,000), and 2 UR rooms. All geocoded.
+  **5725** archival rows. Nifty's 柴又駅 3LDK (75.87㎡, ¥220,000, 新築) looks
+  like the SUUMO 柴又 ad tracked on 2026-10-18 but was kept as its own property.
+
 ## 2026-10-18 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-10-18T07-49-18-993Z-2b471ba8`: **SUCCESS**, no resume.

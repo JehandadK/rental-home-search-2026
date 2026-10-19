@@ -16,7 +16,8 @@
         "https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000020405"
       ],
       "sightings": [
-        "2026-10-17T05:36:22.155Z"
+        "2026-10-17T05:36:22.155Z",
+        "2026-10-19T09:28:37.422Z"
       ],
       "firstRecordedAt": "2026-10-17T05:47:45.310Z"
     }
@@ -99,10 +100,10 @@
       "chosen": [
         "バス・トイレ別",
         "2階以上",
-        "敷地内駐車場",
         "エアコン",
         "モニター付きインターホン",
         "追い焚き",
+        "光配線",
         "自動お湯張り機能",
         "モニター付インターホン",
         "独立キッチン",
@@ -112,7 +113,6 @@
         "BS110CS",
         "VDSL",
         "CATVインターネット",
-        "光配線",
         "洗面所独立",
         "洗濯機置場（室内）",
         "収納（物入）",
@@ -168,6 +168,45 @@
           "firstRecordedAt": "2026-10-17T05:47:45.310Z",
           "reportedAt": {
             "ur|50_2530-000020405": "2026-10-17T05:47:45.310Z"
+          }
+        },
+        {
+          "value": [
+            "バス・トイレ別",
+            "2階以上",
+            "エアコン",
+            "モニター付きインターホン",
+            "追い焚き",
+            "光配線",
+            "自動お湯張り機能",
+            "モニター付インターホン",
+            "独立キッチン",
+            "対面型キッチン",
+            "プレイロット",
+            "CATV",
+            "BS110CS",
+            "VDSL",
+            "CATVインターネット",
+            "洗面所独立",
+            "洗濯機置場（室内）",
+            "収納（物入）",
+            "バルコニー",
+            "網戸",
+            "最寄りの幼稚園・保育園が徒歩10分以内",
+            "最寄りの小中学校が徒歩10分以内",
+            "敷地内に公園あり",
+            "最寄りの公園が徒歩5分以内",
+            "近くに緑あり"
+          ],
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2530-000020405"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-19T09:40:47.383Z",
+          "reportedAt": {
+            "ur|50_2530-000020405": "2026-10-19T09:40:47.383Z"
           }
         }
       ]
@@ -715,7 +754,7 @@
       ]
     },
     "tenancy.availableFrom": {
-      "chosen": "2026年10月19日以降",
+      "chosen": "随時",
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -734,11 +773,24 @@
           "reportedAt": {
             "ur|50_2530-000020405": "2026-10-17T05:47:45.310Z"
           }
+        },
+        {
+          "value": "随時",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2530-000020405"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-19T09:40:47.383Z",
+          "reportedAt": {
+            "ur|50_2530-000020405": "2026-10-19T09:40:47.383Z"
+          }
         }
       ]
     },
     "tenancy.immediateMoveIn": {
-      "chosen": false,
+      "chosen": true,
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -756,6 +808,19 @@
           "firstRecordedAt": "2026-10-17T05:47:45.310Z",
           "reportedAt": {
             "ur|50_2530-000020405": "2026-10-17T05:47:45.310Z"
+          }
+        },
+        {
+          "value": true,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_2530-000020405"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-10-19T09:40:47.383Z",
+          "reportedAt": {
+            "ur|50_2530-000020405": "2026-10-19T09:40:47.383Z"
           }
         }
       ]
@@ -816,8 +881,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "ur|50_2530-000020405",
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000020405",
-    "lastSeenAt": "2026-10-17T05:36:22.155Z",
-    "lastListedAt": "2026-10-17T05:36:22.155Z",
+    "lastSeenAt": "2026-10-19T09:28:37.422Z",
+    "lastListedAt": "2026-10-19T09:28:37.422Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -836,12 +901,16 @@
       "ur|50_2530-000020405": {
         "source": "ur",
         "firstSeenAt": "2026-10-17T05:36:22.155Z",
-        "lastSeenAt": "2026-10-17T05:36:22.155Z",
-        "lastListedAt": "2026-10-17T05:36:22.155Z",
+        "lastSeenAt": "2026-10-19T09:28:37.422Z",
+        "lastListedAt": "2026-10-19T09:28:37.422Z",
         "goneSince": null,
         "relistCount": 0
       }
     },
-    "conflicts": []
+    "conflicts": [
+      "building.features",
+      "tenancy.availableFrom",
+      "tenancy.immediateMoveIn"
+    ]
   }
 }
