@@ -14,7 +14,7 @@ import type { RefreshLedger, RefreshRunRecord } from "../src/refresh/refreshLedg
 
 const at = "2026-09-25T00:00:00.000Z";
 const cityUrls: Record<string, string> = { Soka: "saitama/soka-city", Koshigaya: "saitama/koshigaya-city", Kawaguchi: "saitama/kawaguchi-city",
-  Katsushika: "tokyo/katsushika-city" };
+  Katsushika: "tokyo/katsushika-city", Noda: "chiba/noda-city" };
 function athomeRoom(id: number, rent = "6.9") {
   return `<div class="p-property"><h2 class="p-property__title--building">テストハイツ${id} 2階建</h2>
 <dl><dt><i title="所在地"></i></dt><dd><strong>草加市氷川町${id}</strong></dd></dl>
@@ -162,13 +162,13 @@ describe("native capture import through the public ingestion boundary (offline)"
 
   it("completes finished ledger stages, invalidates downstream work, and reports export errors with exit code 2", async () => {
     ledger.runs = [run()];
-    const pages = ["Soka", "Koshigaya", "Kawaguchi", "Katsushika"].map((city) => athome(city, 1));
+    const pages = ["Soka", "Koshigaya", "Kawaguchi", "Katsushika", "Noda"].map((city) => athome(city, 1));
     expect(await runCaptureImport(["--file", await exportFile(pages, ["roomspot/Soka blocked"]), "--max-pages", "1"], dependencies)).toBe(2);
     expect(dependencies.error).toHaveBeenCalledWith("Capture failed: roomspot/Soka blocked");
     const [saved] = ledger.runs;
     const status = Object.fromEntries(saved.stages.map((stage) => [stage.id, stage.status]));
     expect(status).toEqual({ athome: "success", roomspot: "pending", "detail-enrich": "pending", "data-build": "pending", enrich: "pending", "find-new": "success" });
-    expect(saved.stages[0]).toMatchObject({ discovered: 4, exitCode: 0, detail: expect.stringContaining("no removal claims"), attempts: [expect.objectContaining({ status: "success", discovered: 4 })] });
-    expect((await store.readSource("athome"))!.provenance).toMatchObject({ cities: ["Soka", "Koshigaya", "Kawaguchi", "Katsushika"], pagesFetched: 4, newListings: 4 });
+    expect(saved.stages[0]).toMatchObject({ discovered: 5, exitCode: 0, detail: expect.stringContaining("no removal claims"), attempts: [expect.objectContaining({ status: "success", discovered: 5 })] });
+    expect((await store.readSource("athome"))!.provenance).toMatchObject({ cities: ["Soka", "Koshigaya", "Kawaguchi", "Katsushika", "Noda"], pagesFetched: 5, newListings: 5 });
   });
 });

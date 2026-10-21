@@ -35,13 +35,13 @@ describe("scrape:ur", () => {
     ]);
   });
 
-  it("sweeps every active Saitama municipality and Noda besides the target cities", () => {
+  it("sweeps every active Saitama municipality besides the target cities, Noda being one of those", () => {
     const city = (code: string, name: string, status: "active" | "retired" = "active") => ({ id: `city:${code}`, name, nameLocal: name, prefecture: "x", code, status, updatedAt: at });
     const catalog = [city("11221", "Soka"), city("11201", "Kawagoe"), city("11107", "Saitama Urawa-ku"), city("11999", "Gone", "retired"),
       city("12208", "Noda"), city("12203", "Choshi"), city("13101", "Chiyoda"), city("13122", "Katsushika")];
     expect(urSweepCities([], catalog).map((query) => [query.label, query.code, query.prefecture, query.prefectureName])).toEqual([
       ["Soka", "11221", "saitama", "埼玉県"], ["Koshigaya", "11222", "saitama", "埼玉県"], ["Kawaguchi", "11203", "saitama", "埼玉県"], ["Katsushika", "13122", "tokyo", "東京都"],
-      ["Saitama Urawa-ku", "11107", "saitama", "埼玉県"], ["Kawagoe", "11201", "saitama", "埼玉県"], ["Noda", "12208", "chiba", "千葉県"],
+      ["Noda", "12208", "chiba", "千葉県"], ["Saitama Urawa-ku", "11107", "saitama", "埼玉県"], ["Kawagoe", "11201", "saitama", "埼玉県"],
     ]);
     expect(urSweepCities(["Noda", "Soka"], catalog).map((query) => query.label)).toEqual(["Soka", "Noda"]);
   });

@@ -14,7 +14,7 @@ import type { RawListing } from "../src/domain/types";
 const oldAt = "2026-09-24T00:00:00.000Z", at = "2026-09-25T00:00:00.000Z";
 const layoutCodes = ["05", "06", "07", "08", "09", "10", "11", "12", "13", "14"];
 const cities = [{ code: "sc_soka", label: "Soka" }, { code: "sc_koshigaya", label: "Koshigaya" }, { code: "sc_kawaguchi", label: "Kawaguchi" },
-  { code: "sc_katsushika", label: "Katsushika", prefecture: "tokyo" }];
+  { code: "sc_katsushika", label: "Katsushika", prefecture: "tokyo" }, { code: "sc_noda", label: "Noda", prefecture: "chiba" }];
 function html(city: string, bc: number, rent = "8") {
   return `<div class="cassetteitem"><div class="cassetteitem_content-title">${city} rental</div><div class="cassetteitem_detail-col1">埼玉県${city}町</div>
     <div class="cassetteitem_detail-col2"><div class="cassetteitem_detail-text">東武線/草加駅 歩15分</div></div>
@@ -51,23 +51,23 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     await seed();
     const read = vi.spyOn(repository, "readSource"), write = vi.spyOn(repository, "reconcileSource");
     const result = await runSuumoScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(8);
-    expect(read).toHaveBeenCalledTimes(4); expect(write).toHaveBeenCalledTimes(4);
-    expect(result).toMatchObject({ added: 0, updated: 4, retired: 0, currentCount: 4 });
+    expect(dependencies.page).toHaveBeenCalledTimes(10);
+    expect(read).toHaveBeenCalledTimes(5); expect(write).toHaveBeenCalledTimes(5);
+    expect(result).toMatchObject({ added: 0, updated: 5, retired: 0, currentCount: 5 });
     expect(dependencies.log).toHaveBeenCalledWith("  page 1: 1 properties (0 new, 1 known, 0 duplicate)");
     expect(dependencies.log).toHaveBeenCalledWith("  page 2: 1 properties (0 new, 0 known, 1 duplicate)");
     expect(dependencies.log).toHaveBeenCalledWith("  stopped: 2 consecutive pages were entirely known");
-    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 4 overlapping; retired 0 superseded source ad(s); fetched 8 pages.");
+    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 5 overlapping; retired 0 superseded source ad(s); fetched 10 pages.");
     const saved = (await store.readSource("suumo"))!;
     expect(saved.scrapedAt).toBe(at); expect(saved.completeSnapshot).toBe(false);
     // Each commit's provenance describes its own city.
     expect(saved.provenance).toMatchObject({ capturedBy: "scripts/scrape.ts", mode: "incremental newest-first", pagesFetched: 2, fixture: "retained",
-      cities: ["Katsushika (sc_katsushika, emergency ceiling 5p)"], layoutCodes: layoutCodes.join(",") });
+      cities: ["Noda (sc_noda, emergency ceiling 5p)"], layoutCodes: layoutCodes.join(",") });
     const bytes = await readFile(store.sourcePath("suumo"), "utf8"), backups = await readdir(store.backupDir);
     vi.mocked(dependencies.log).mockClear();
     expect(await runSuumoScrape(["--max-pages", "5"], dependencies)).toMatchObject({ replayed: true, added: 0, updated: 0, revision: saved.revision });
     // The replay logs the journaled original counts, not zeros, and says nothing changed.
-    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 4 overlapping; retired 0 superseded source ad(s); fetched 8 pages. (already committed; no source change)");
+    expect(dependencies.log).toHaveBeenCalledWith("Discovered 0 new; refreshed 5 overlapping; retired 0 superseded source ad(s); fetched 10 pages. (already committed; no source change)");
     expect(await readFile(store.sourcePath("suumo"), "utf8")).toBe(bytes); expect(await readdir(store.backupDir)).toEqual(backups);
   });
 
@@ -84,10 +84,10 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
 
   it("honors deep/page budgets without interpreting the window as complete", async () => {
     await seed();
-    expect(await runSuumoScrape(["--deep", "--max-pages", "3"], dependencies)).toMatchObject({ currentCount: 4 });
-    expect(dependencies.page).toHaveBeenCalledTimes(12);
+    expect(await runSuumoScrape(["--deep", "--max-pages", "3"], dependencies)).toMatchObject({ currentCount: 5 });
+    expect(dependencies.page).toHaveBeenCalledTimes(15);
     expect(dependencies.log).not.toHaveBeenCalledWith("  stopped: 2 consecutive pages were entirely known");
-    expect(dependencies.sleep).toHaveBeenCalledTimes(12);
+    expect(dependencies.sleep).toHaveBeenCalledTimes(15);
     expect((await store.readSource("suumo"))!.provenance).toMatchObject({ mode: "deep newest-first", pagesFetched: 3 });
     expect((await store.readSource("suumo"))!.completeSnapshot).toBe(false);
   });
@@ -95,8 +95,8 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
   it("computes novelty/deduplication in the application, not in the parser adapter", async () => {
     await seed([]);
     const result = await runSuumoScrape(["--max-pages", "5"], dependencies);
-    expect(dependencies.page).toHaveBeenCalledTimes(12);
-    expect(result).toMatchObject({ added: 4, updated: 0, currentCount: 4 });
+    expect(dependencies.page).toHaveBeenCalledTimes(15);
+    expect(result).toMatchObject({ added: 5, updated: 0, currentCount: 5 });
     expect(dependencies.log).toHaveBeenCalledWith("  page 1: 1 properties (1 new, 0 known, 0 duplicate)");
     const input = capture(); input.html += input.html;
     expect((await suumoCaptureBatch(input)).observations).toHaveLength(2); // raw duplicates cross the public boundary
@@ -154,10 +154,10 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     const result = await runSuumoScrape(["--deep", "--max-pages", "5"], dependencies);
     const calls = vi.mocked(dependencies.page).mock.calls.map(([meta]) => `${meta.city}-${meta.page}`);
     expect(calls.filter((call) => /^(Soka|Koshigaya)/.test(call))).toEqual(["Soka-1", "Soka-2", "Soka-3", "Koshigaya-1", "Koshigaya-2"]);
-    expect(calls).toHaveLength(15);
+    expect(calls).toHaveLength(20);
     expect(dependencies.log).toHaveBeenCalledWith("  stopped: last results page (3)");
     expect(dependencies.log).toHaveBeenCalledWith("  page 2: no results; end of Koshigaya's results");
-    expect(result).toMatchObject({ added: 4, currentCount: 4 }); // one fixture building per city
+    expect(result).toMatchObject({ added: 5, currentCount: 5 }); // one fixture building per city
   });
 
   it("maps only a 404 past page 1 to end of results when loading a list page", async () => {
@@ -263,7 +263,7 @@ describe("SUUMO collector through staged public ingestion (offline)", () => {
     const bytes = await readFile(store.sourcePath("suumo"), "utf8");
     await expect(runSuumoScrape(["--max-pages", "1"], dependencies)).rejects.toBeInstanceOf(ShrinkGuardError);
     expect(await readFile(store.sourcePath("suumo"), "utf8")).toBe(bytes);
-    expect(await runSuumoScrape(["--max-pages", "1", "--force"], dependencies)).toMatchObject({ retired: 12, currentCount: 4, replayed: false });
+    expect(await runSuumoScrape(["--max-pages", "1", "--force"], dependencies)).toMatchObject({ retired: 12, currentCount: 5, replayed: false });
     expect((await store.readSource("suumo"))!.archivedListings!.map((entry) => entry.listing)).toEqual(aliases);
   });
 

@@ -8,9 +8,9 @@ export interface TargetCity {
   label: string;
   /** JIS municipality code; the first two digits are the prefecture. */
   code: string;
-  prefecture: "埼玉県" | "東京都";
+  prefecture: "埼玉県" | "東京都" | "千葉県";
   /** Romanised prefecture used in portal paths (`/chintai/saitama/…`). */
-  prefectureSlug: "saitama" | "tokyo";
+  prefectureSlug: "saitama" | "tokyo" | "chiba";
   /** Municipality as printed in addresses, after the prefecture. */
   municipality: string;
   suumo: string;
@@ -30,6 +30,9 @@ export const TARGET_CITIES: readonly TargetCity[] = [
   // Tokyo ward just south of Yashio and Misato.
   { label: "Katsushika", code: "13122", prefecture: "東京都", prefectureSlug: "tokyo", municipality: "葛飾区",
     suumo: "sc_katsushika", athome: "katsushika-city", nifty: "katsushikaku_ct" },
+  // Chiba city across the Edo River from Yoshikawa and Matsubushi.
+  { label: "Noda", code: "12208", prefecture: "千葉県", prefectureSlug: "chiba", municipality: "野田市",
+    suumo: "sc_noda", athome: "noda-city", nifty: "nodashi_ct" },
 ];
 
 export const TARGET_CITY_LABELS: readonly string[] = TARGET_CITIES.map((city) => city.label);

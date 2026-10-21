@@ -6,7 +6,8 @@ describe("target cities", () => {
     for (const key of ["label", "code", "suumo", "athome", "nifty"] as const) {
       expect(new Set(TARGET_CITIES.map((city) => city[key])).size).toBe(TARGET_CITIES.length);
     }
-    expect(TARGET_CITIES.every((city) => city.code.startsWith(city.prefecture === "東京都" ? "13" : "11"))).toBe(true);
+    const prefectureCode = { 埼玉県: "11", 千葉県: "12", 東京都: "13" };
+    expect(TARGET_CITIES.every((city) => city.code.startsWith(prefectureCode[city.prefecture]))).toBe(true);
   });
 
   it("recognises a city from an address with or without its prefecture", () => {
