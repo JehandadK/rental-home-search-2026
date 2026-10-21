@@ -617,6 +617,13 @@ removed, and every collector now uses the headed Playwright browser.
   rent ¥91,000; 77 ≥70㎡; 49 at ≤¥150,000 and ≥70㎡, many of them houses near
   川間駅 and 野田市駅 from ¥48,000.
 - UR already swept Noda (no estates); it is now a target city there too.
+- Same day, reloaded with `--city Noda --min-area 0` (every size, still 2+
+  rooms): SUUMO **128** more ads (14 pages), RoomSpot **14** (1 page), AtHome
+  **151** (14 pages; no verification prompt this time). **269 Noda
+  properties** now (6009 rows): 111 ≥60㎡ and 158 under it (29.75–59.57㎡,
+  mostly 2LDK/2DK, median rent ¥61,400), all geocoded. The refresh still
+  searches Noda at the per-source 60㎡ minimum, so later refreshes find only
+  new ≥60㎡ Noda ads.
 
 ## 2026-10-20 refresh with the 60㎡ minimum (Playwright)
 
