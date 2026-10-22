@@ -277,8 +277,8 @@ describe("scoreCoverage", () => {
   it("counts the weighted criteria a score had data for, and names the rest", () => {
     const listing = makeListing({ sizeM2: null, builtYear: null });
     const coverage = scoreCoverage(scoreListing(listing, DEFAULT_CONFIG));
-    const weightedFeatures = Object.values(DEFAULT_CONFIG.featureWeights).filter((w) => w > 0).length;
-    expect(coverage.weighted).toBe(Object.keys(DEFAULT_CONFIG.weights).length + weightedFeatures);
+    const weighted = (weights: Record<string, number>) => Object.values(weights).filter((w) => w > 0).length;
+    expect(coverage.weighted).toBe(weighted(DEFAULT_CONFIG.weights) + weighted(DEFAULT_CONFIG.featureWeights));
     expect(coverage.missing).toEqual(expect.arrayContaining(["size", "yearBuilt"]));
     expect(coverage.missing).not.toContain("rent");
   });

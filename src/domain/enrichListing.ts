@@ -11,7 +11,8 @@
  * fallback for any consumer that does not build an index.
  *
  * The baked `poi1` is the nearest private school and `poi2` the nearest
- * mosque, as the dashboard measures them by default.
+ * mosque, as the dashboard measures them by default; `carAuction` is the
+ * nearest car auction venue.
  */
 import type { EnrichedListing, GeoPoint, RawListing } from "./types";
 import { nearestPlace, toProximity } from "./geo";
@@ -39,6 +40,7 @@ export function enrichListing(
     geocodeMatched: matched,
     poi1: proximityTo(catalog.inCategory("poi")),
     poi2: proximityTo(catalog.inCategory("mosque")),
+    carAuction: proximityTo(catalog.inCategory("carAuction")),
     station: proximityTo(catalog.inCategory("station")),
     busStop: proximityTo(catalog.inCategory("busStop")),
     school: proximityTo(catalog.inCategory("school")),

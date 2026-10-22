@@ -18,7 +18,7 @@ import {
 } from "./decoders";
 
 const DEFAULT_SELECTION: PlaceSelection = {
-  byParameter: { poi1: null, poi2: null, station: null, busStop: null, kindergarten: null, school: null },
+  byParameter: { poi1: null, poi2: null, carAuction: null, station: null, busStop: null, kindergarten: null, school: null },
 };
 
 /** Values the app itself could have saved before M6. */

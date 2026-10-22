@@ -118,7 +118,7 @@ export const GROUP_DESCRIPTIONS: Record<FieldGroup, string> = {
 };
 
 const LOWER_IS_BETTER = new Set<ScoreParameterKey>([
-  "rent", "rentPerM2", "moveInCost", "yearBuilt", "poi1", "poi2", "station", "busStop", "kindergarten", "school",
+  "rent", "rentPerM2", "moveInCost", "yearBuilt", "poi1", "poi2", "carAuction", "station", "busStop", "kindergarten", "school",
 ]);
 
 /** "lower-is-better" for costs, age and travel times; "higher-is-better" for size. */
@@ -134,6 +134,7 @@ export const PARAMETER_LABELS_JA: Record<ScoreParameterKey, string> = {
   yearBuilt: "築年数",
   poi1: "最寄りの私立学校",
   poi2: "最寄りのモスク",
+  carAuction: "最寄りの自動車オークション会場",
   station: "最寄駅",
   busStop: "最寄りバス停",
   kindergarten: "最寄りの幼稚園",
@@ -151,6 +152,7 @@ export const PARAMETER_ANCHORS: Record<ScoreParameterKey, { full: string | numbe
   // A doorstep scores 100; only the zero end moves.
   poi1: { full: 0, zero: "anchors.walkZeroMinutes.poi1" },
   poi2: { full: 0, zero: "anchors.walkZeroMinutes.poi2" },
+  carAuction: { full: 0, zero: "anchors.walkZeroMinutes.carAuction" },
   station: { full: 0, zero: "anchors.walkZeroMinutes.station" },
   busStop: { full: 0, zero: "anchors.walkZeroMinutes.busStop" },
   kindergarten: { full: 0, zero: "anchors.walkZeroMinutes.kindergarten" },

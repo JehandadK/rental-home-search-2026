@@ -282,7 +282,7 @@ export function openApiDocument(): JsonSchema {
           summary: "Look up place ids for places.*",
           description: "Find the schools, mosques, stations, bus stops, kindergartens and elementary schools a distance criterion can measure to.",
           parameters: [
-            { name: "category", in: "query", schema: { type: "string" }, description: "poi, mosque, station, busStop, childcare, school, …", example: "mosque" },
+            { name: "category", in: "query", schema: { type: "string" }, description: "poi, mosque, carAuction, station, busStop, childcare, school, …", example: "mosque" },
             { name: "q", in: "query", schema: { type: "string" }, description: "Part of the name (case- and width-insensitive)" },
             { name: "near", in: "query", schema: { type: "string" }, description: '"lat,lon": nearest first', example: "35.8282,139.8033" },
             { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 200, default: 20 } },

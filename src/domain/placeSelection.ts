@@ -27,6 +27,7 @@ export function defaultSelection(): PlaceSelection {
     byParameter: {
       poi1: null,
       poi2: null,
+      carAuction: null,
       station: null,
       busStop: null,
       kindergarten: null,
@@ -90,6 +91,9 @@ function assign(
       break;
     case "poi2":
       listing.poi2 = value;
+      break;
+    case "carAuction":
+      listing.carAuction = value;
       break;
     case "station":
       listing.station = value;

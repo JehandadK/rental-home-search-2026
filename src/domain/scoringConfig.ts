@@ -9,6 +9,7 @@
  *   size             5       larger is better
  *   yearBuilt        3       newer is better
  *   poi1 / poi2      8 each  closer is better; ~12 min walk = zero score
+ *   carAuction       0       off by default; closer is better
  *   station          9       heaviest weight; closer is better
  *   busStop          4       moderate weight
  *   kindergarten     6       closer is better
@@ -77,6 +78,7 @@ export interface ScoringConfig {
   walkZeroMinutes: {
     poi1: number;
     poi2: number;
+    carAuction: number;
     station: number;
     busStop: number;
     kindergarten: number;
@@ -136,6 +138,8 @@ export const DEFAULT_CONFIG: ScoringConfig = {
     yearBuilt: 3,
     poi1: 8,
     poi2: 8,
+    // Off by default: only counts once the user gives it a weight.
+    carAuction: 0,
     station: 9,
     busStop: 4,
     kindergarten: 6,
@@ -158,6 +162,8 @@ export const DEFAULT_CONFIG: ScoringConfig = {
   walkZeroMinutes: {
     poi1: 12,
     poi2: 12,
+    // A car auction is a drive away, not a walk: ~7 km as the crow flies.
+    carAuction: 120,
     station: 20,
     busStop: 10,
     kindergarten: 15,
@@ -245,6 +251,7 @@ export const SCORE_PARAMETERS: readonly ParameterMeta<ScoreParameterKey>[] = [
   { key: "yearBuilt", label: "Age", unit: "yrs", description: "Newer is better" },
   { key: "poi1", label: "Nearest private school", unit: "min", description: "Travel time to the nearest selected private school" },
   { key: "poi2", label: "Nearest mosque", unit: "min", description: "Travel time to the nearest selected mosque, masjid or musalla" },
+  { key: "carAuction", label: "Nearest car auction", unit: "min", description: "Travel time to the nearest selected car auction venue" },
   { key: "station", label: "Station", unit: "min", description: "Nearest station walk time" },
   { key: "busStop", label: "Bus stop", unit: "min", description: "Nearest bus stop walk time" },
   { key: "kindergarten", label: "Kindergarten", unit: "min", description: "Nearest kindergarten walk time" },

@@ -171,7 +171,7 @@ describe("rankHomes", () => {
       places: { selection: "nearest of all", set: "places.station", source: "request" },
     });
     expect(scoring.parameters.find((parameter) => parameter.key === "rent")!.source).toBe("preset:commuter");
-    expect(scoring.parameters).toHaveLength(11);
+    expect(scoring.parameters).toHaveLength(12);
     // The summary details only weighted features and names the rest; the full view details every one.
     const weightedByDefault = FEATURE_PARAMETERS.filter((meta) => DEFAULT_CONFIG.featureWeights[meta.key] > 0).map((meta) => meta.key);
     expect(scoring.features.map((feature) => feature.key)).toEqual(weightedByDefault);

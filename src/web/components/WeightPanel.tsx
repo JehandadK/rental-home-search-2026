@@ -40,7 +40,7 @@ interface Props {
 
 /** Parameters measured in walking minutes get a "zero at N min" anchor. */
 const WALK_PARAMETERS = new Set<ScoreParameterKey>([
-  "poi1", "poi2", "station", "busStop", "kindergarten", "school",
+  "poi1", "poi2", "carAuction", "station", "busStop", "kindergarten", "school",
 ]);
 
 const FEATURE_CATEGORIES: ListingAttributeCategory[] = [

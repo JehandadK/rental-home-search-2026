@@ -37,7 +37,7 @@ export const BUILT_IN_PRESETS: readonly WeightPreset[] = [
     description: "Private school, schools and kindergartens close by, with room for the kids",
     weights: {
       rent: 6, rentPerM2: 6, moveInCost: 3, size: 8, yearBuilt: 2,
-      poi1: 15, poi2: 8, station: 4, busStop: 2, kindergarten: 10, school: 10,
+      poi1: 15, poi2: 8, carAuction: 0, station: 4, busStop: 2, kindergarten: 10, school: 10,
     },
   },
   {
@@ -46,7 +46,7 @@ export const BUILT_IN_PRESETS: readonly WeightPreset[] = [
     description: "A short walk to the station and a bus stop",
     weights: {
       rent: 7, rentPerM2: 6, moveInCost: 4, size: 3, yearBuilt: 4,
-      poi1: 3, poi2: 5, station: 16, busStop: 6, kindergarten: 1, school: 1,
+      poi1: 3, poi2: 5, carAuction: 0, station: 16, busStop: 6, kindergarten: 1, school: 1,
     },
   },
   {
@@ -55,7 +55,7 @@ export const BUILT_IN_PRESETS: readonly WeightPreset[] = [
     description: "Lowest rent and the least money lost moving in",
     weights: {
       rent: 16, rentPerM2: 4, moveInCost: 12, size: 2, yearBuilt: 1,
-      poi1: 5, poi2: 4, station: 4, busStop: 2, kindergarten: 2, school: 2,
+      poi1: 5, poi2: 4, carAuction: 0, station: 4, busStop: 2, kindergarten: 2, school: 2,
     },
   },
   {
@@ -64,7 +64,7 @@ export const BUILT_IN_PRESETS: readonly WeightPreset[] = [
     description: "Large homes that are cheap for their floor area",
     weights: {
       rent: 4, rentPerM2: 16, moveInCost: 4, size: 14, yearBuilt: 2,
-      poi1: 5, poi2: 4, station: 4, busStop: 2, kindergarten: 3, school: 3,
+      poi1: 5, poi2: 4, carAuction: 0, station: 4, busStop: 2, kindergarten: 3, school: 3,
     },
   },
 ];

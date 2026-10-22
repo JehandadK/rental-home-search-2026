@@ -211,6 +211,8 @@ const MAP_COLOR_PROPERTIES = {
   prefectureLabel: "--rs-map-prefecture-label",
   mosque: "--rs-map-mosque",
   mosqueLabel: "--rs-map-mosque-label",
+  carAuction: "--rs-map-car-auction",
+  carAuctionLabel: "--rs-map-car-auction-label",
   ur: "--rs-map-ur",
   urLabel: "--rs-map-ur-label",
   target: "--rs-map-target",
@@ -228,17 +230,18 @@ function readMapColors(element: Element): MapColors {
     .map(([key, property]) => [key, style.getPropertyValue(property).trim()])) as MapColors;
 }
 
-type LayerKey = "stations" | "schools" | "mosques" | "urEstates" | "newRings" | "rings";
+type LayerKey = "stations" | "schools" | "mosques" | "carAuctions" | "urEstates" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations in the chosen areas; the scored stations are larger, and names appear as you zoom in" },
   { key: "schools", label: "Schools", title: "Public elementary schools" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
+  { key: "carAuctions", label: "Car auctions", title: "Car auction venues; the nearest one is scored once its weight is above zero" },
   { key: "urEstates", label: "UR estates", title: "UR賃貸 estates (団地), whatever the filters: filled when UR advertises a family-size room, outlined otherwise. Hover one for its rents" },
   { key: "newRings", label: "New rings", title: "Green ring around new listings (see Listing status in the filters)" },
   { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
-const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, urEstates: true, newRings: true, rings: true };
+const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, carAuctions: true, urEstates: true, newRings: true, rings: true };
 
 /** How many lines serve a station (from the station import), for label priority. */
 function lineCount(place: CatalogPlace): number {
@@ -446,6 +449,7 @@ export const MapView = memo(function MapView({
   const areaPlaces = useMemo(() => ({
     mosques: reference.catalog.inCategory("mosque").filter(inAreas),
     pois: reference.catalog.inCategory("poi").filter(inAreas),
+    carAuctions: reference.catalog.inCategory("carAuction").filter(inAreas),
   }), [reference, inAreas]);
   // Every UR estate in the chosen areas, by its city (like the rail stations) or, without one, by its position.
   // Listing filters never touch them: an estate with no vacancy, or whose rooms the filters hide, is still worth seeing.
@@ -928,6 +932,22 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // Car auction venues as orange triangles.
+    if (layers.carAuctions) {
+      for (const venue of areaPlaces.carAuctions) {
+        const { x, y } = toScreen(venue.lat, venue.lon);
+        ctx.beginPath();
+        ctx.moveTo(x, y - 7);
+        ctx.lineTo(x + 7, y + 5);
+        ctx.lineTo(x - 7, y + 5);
+        ctx.closePath();
+        ctx.fillStyle = colors.carAuction;
+        ctx.strokeStyle = colors.markerOutline;
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
     // Private schools left out of the poi1 score as outlined stars.
     const scoredIds = new Set(scoredPois.map((poi) => poi.id));
     const otherPois = areaPlaces.pois.filter((poi) => !scoredIds.has(poi.id));
@@ -969,6 +989,12 @@ export const MapView = memo(function MapView({
       for (const mosque of areaPlaces.mosques) {
         const { x, y } = toScreen(mosque.lat, mosque.lon);
         label(mosque.name, x + 9, y + 4, colors.mosqueLabel);
+      }
+    }
+    if (layers.carAuctions) {
+      for (const venue of areaPlaces.carAuctions) {
+        const { x, y } = toScreen(venue.lat, venue.lon);
+        label(venue.name, x + 10, y + 4, colors.carAuctionLabel);
       }
     }
     const labelCity = (layer: CityLayer, color: string, font: string, force = false) => {
@@ -1325,6 +1351,9 @@ export const MapView = memo(function MapView({
               <span><i className={styles.keyStar}>☆</i>Other private school</span>
             )}
             <span><i className={styles.keyMosque} />Mosque</span>
+            {layers.carAuctions && areaPlaces.carAuctions.length > 0 && (
+              <span><i className={styles.keyCarAuction} />Car auction</span>
+            )}
             {layers.urEstates && urEstates.length > 0 && (
               <>
                 <span><i className={styles.keyUrVacant}>UR</i>UR estate · vacancy</span>

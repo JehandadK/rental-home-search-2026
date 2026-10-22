@@ -14,7 +14,7 @@ const row = (key: ScoreParameterKey, score: number | null, value: number | null)
 };
 
 const WEIGHTS = {
-  rent: 7, rentPerM2: 10, moveInCost: 4, size: 5, yearBuilt: 3, poi1: 8, poi2: 8,
+  rent: 7, rentPerM2: 10, moveInCost: 4, size: 5, yearBuilt: 3, poi1: 8, poi2: 8, carAuction: 0,
   station: 9, busStop: 4, kindergarten: 6, school: 6,
 };
 

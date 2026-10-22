@@ -15,7 +15,7 @@ import type { GeoPoint, NamedPlace, ScoreParameterKey } from "./types";
 export type PlaceCategory = string;
 
 /** Categories the scoring parameters and UI know how to use. */
-export type KnownPlaceCategory = "poi" | "mosque" | "station" | "school" | "childcare" | "busStop" | "railStation" | "urDanchi";
+export type KnownPlaceCategory = "poi" | "mosque" | "carAuction" | "station" | "school" | "childcare" | "busStop" | "railStation" | "urDanchi";
 
 type PlaceAttributes = Readonly<Record<string, string | number | boolean | null>>;
 
@@ -159,6 +159,7 @@ export function isKindergarten(place: CatalogPlace): boolean {
 export const DISTANCE_PARAMETERS = [
   "poi1",
   "poi2",
+  "carAuction",
   "station",
   "busStop",
   "kindergarten",
@@ -171,6 +172,7 @@ export type DistanceParameterKey = (typeof DISTANCE_PARAMETERS)[number];
 export const CATEGORY_LABELS: Record<KnownPlaceCategory, string> = {
   poi: "Private schools",
   mosque: "Mosques / Masjids / Musallas",
+  carAuction: "Car auctions",
   station: "Stations",
   school: "Elementary schools",
   childcare: "Childcare",
@@ -197,6 +199,7 @@ export const PARAMETER_SOURCES: Record<DistanceParameterKey, ParameterSource> = 
   // single school or mosque if they explicitly select only that one.
   poi1: { category: "poi" },
   poi2: { category: "mosque" },
+  carAuction: { category: "carAuction" },
   station: { category: "station" },
   busStop: { category: "busStop" },
   kindergarten: { category: "childcare" },

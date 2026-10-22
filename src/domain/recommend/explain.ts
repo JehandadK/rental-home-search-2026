@@ -66,6 +66,7 @@ const META = new Map<ScoringCriterionKey, Meta>([
 const DESTINATIONS: Partial<Record<ScoringCriterionKey, string>> = {
   poi1: "private school",
   poi2: "mosque",
+  carAuction: "car auction",
   station: "station",
   busStop: "bus stop",
   kindergarten: "kindergarten",

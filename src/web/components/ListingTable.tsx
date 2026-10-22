@@ -733,7 +733,7 @@ function Breakdown({ row, moveIn, notes }: { row: ScoredRow; moveIn: CostBasis["
               </span>
               <span>
                 {formatValue(part)}
-                {part.value != null && ["poi1", "poi2", "station", "busStop", "kindergarten", "school"].includes(part.key)
+                {part.value != null && ["poi1", "poi2", "carAuction", "station", "busStop", "kindergarten", "school"].includes(part.key)
                   ? " min"
                   : ""}
                 {part.key === "moveInCost" ? " sunk" : ""}

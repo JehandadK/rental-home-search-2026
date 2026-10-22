@@ -269,6 +269,8 @@ export interface EnrichedListing extends RawListing {
   geocodeMatched?: string;
   poi1?: Proximity;
   poi2?: Proximity;
+  /** Nearest car auction venue (USS…). */
+  carAuction?: Proximity;
   station?: Proximity;
   busStop?: Proximity;
   school?: Proximity;
@@ -330,6 +332,7 @@ export type ScoreParameterKey =
   | "yearBuilt"
   | "poi1"
   | "poi2"
+  | "carAuction"
   | "station"
   | "busStop"
   | "kindergarten"

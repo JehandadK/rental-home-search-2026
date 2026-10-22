@@ -50,7 +50,7 @@ interface Section {
 
 const yen = new Intl.NumberFormat("ja-JP");
 const money = (n: number) => `¥${yen.format(n)}`;
-const DISTANCE_KEYS = ["poi1", "poi2", "station", "busStop", "kindergarten", "school"] as const;
+const DISTANCE_KEYS = ["poi1", "poi2", "carAuction", "station", "busStop", "kindergarten", "school"] as const;
 const LABELS = new Map<string, string>([...SCORE_PARAMETERS, ...FEATURE_PARAMETERS].map((meta) => [meta.key, meta.label]));
 
 export const ComparePanel = memo(function ComparePanel({

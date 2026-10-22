@@ -106,6 +106,7 @@ export function scoreListing(listing: EnrichedListing, config: ScoringConfig): L
   const stationMin = effectiveStationMinutes(listing, config);
   const poi1Min = travelMinutesOf(listing.poi1, config);
   const poi2Min = travelMinutesOf(listing.poi2, config);
+  const carAuctionMin = travelMinutesOf(listing.carAuction, config);
   const busMin = travelMinutesOf(listing.busStop, config);
   const childcareMin = travelMinutesOf(childcare, config);
   const schoolMin = travelMinutesOf(listing.school, config);
@@ -186,6 +187,13 @@ export function scoreListing(listing: EnrichedListing, config: ScoringConfig): L
       score: poi2Min != null ? walkScore(poi2Min, zero.poi2) : null,
       weight: weights.poi2,
       detail: listing.poi2?.name,
+    },
+    {
+      key: "carAuction",
+      value: carAuctionMin,
+      score: carAuctionMin != null ? walkScore(carAuctionMin, zero.carAuction) : null,
+      weight: weights.carAuction,
+      detail: listing.carAuction?.name,
     },
     {
       key: "station",
