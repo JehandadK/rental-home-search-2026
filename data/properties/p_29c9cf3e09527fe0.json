@@ -14,6 +14,7 @@
     "ad:suumo|jnc_000109546221|bc_100514099542",
     "ad:suumo|jnc_000109546221|bc_100522130052",
     "key:ルクレ川口イースト|埼玉県川口市青木3|64.54",
+    "key:川口駅よりバス7分徒歩4分築26年2ヶ月11階建|埼玉県川口市青木3|64.53",
     "room:suumo|jnc_000109546221|2SLDK|64.54"
   ],
   "ads": {
@@ -307,13 +308,14 @@
     },
     "building.conditions": {
       "chosen": [
-        "二人入居可",
-        "子供可"
+        "バス・トイレ別",
+        "2階以上",
+        "即入居可"
       ],
       "chosenFrom": {
-        "source": "suumo",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-13T13:22:49.451Z"
+        "observedAt": "2026-10-10T02:38:49.945Z"
       },
       "values": [
         {
@@ -331,7 +333,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "athome|1170295022": "2026-09-25T05:11:35.000Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:17:05.562Z"
         },
         {
           "value": [
@@ -887,11 +890,11 @@
       ]
     },
     "costs.parking.available": {
-      "chosen": true,
+      "chosen": false,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-13T13:22:49.451Z"
+        "observedAt": "2026-10-10T02:38:49.945Z"
       },
       "values": [
         {
@@ -905,7 +908,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "athome|1170295022": "2026-09-25T05:11:35.000Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:17:05.562Z"
         },
         {
           "value": true,
@@ -1012,11 +1016,11 @@
       ]
     },
     "costs.parking.raw": {
-      "chosen": "近隣686m19800円",
+      "chosen": "駐車場（近隣含む）",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-13T13:22:49.451Z"
+        "observedAt": "2026-10-10T02:38:49.945Z"
       },
       "values": [
         {
@@ -1030,7 +1034,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "athome|1170295022": "2026-09-25T05:11:35.000Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:17:05.562Z"
         },
         {
           "value": "近隣686m19800円",
@@ -1419,11 +1424,11 @@
       ]
     },
     "parking.available": {
-      "chosen": true,
+      "chosen": false,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-13T13:22:49.451Z"
+        "observedAt": "2026-10-10T02:38:49.945Z"
       },
       "values": [
         {
@@ -1453,7 +1458,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "athome|1170295022": "2026-09-25T05:11:35.000Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:17:05.562Z"
         },
         {
           "value": true,
@@ -1560,11 +1566,11 @@
       ]
     },
     "parking.raw": {
-      "chosen": "近隣686m19800円",
+      "chosen": "駐車場（近隣含む）",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "athome",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-13T13:22:49.451Z"
+        "observedAt": "2026-10-10T02:38:49.945Z"
       },
       "values": [
         {
@@ -1594,7 +1600,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "athome|1170295022": "2026-09-25T05:11:35.000Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:17:05.562Z"
         },
         {
           "value": "近隣686m19800円",
@@ -3355,6 +3362,30 @@
       "url": "https://suumo.jp/chintai/jnc_000109546221/?bc=100495961734",
       "data": {
         "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
+    },
+    {
+      "id": "ad.superseded|athome|1170295022|2026-10-27T06:17:05.562Z",
+      "type": "ad.superseded",
+      "at": "2026-10-27T06:17:05.562Z",
+      "recordedAt": "2026-10-27T06:27:22.150Z",
+      "source": "athome",
+      "adKey": "athome|1170295022",
+      "url": "https://www.athome.co.jp/chintai/1170295022/",
+      "data": {
+        "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
+      }
+    },
+    {
+      "id": "ad.superseded|athome|1126727834|2026-10-27T06:17:05.562Z",
+      "type": "ad.superseded",
+      "at": "2026-10-27T06:17:05.562Z",
+      "recordedAt": "2026-10-27T06:27:22.150Z",
+      "source": "athome",
+      "adKey": "athome|1126727834",
+      "url": "https://www.athome.co.jp/chintai/1126727834/",
+      "data": {
+        "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
     }
   ],

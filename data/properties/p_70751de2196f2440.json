@@ -8,6 +8,7 @@
     "ad:athome|6992124807",
     "ad:athome|6992596829",
     "ad:nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+    "ad:nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4",
     "ad:roomspot|1139288674810000323571",
     "ad:roomspot|1139288674810000323657",
     "ad:roomspot|1139288674810000323775",
@@ -19,7 +20,9 @@
     "ad:suumo|jnc_000108269932|bc_100524787003",
     "ad:suumo|jnc_000108269932|bc_100525354097",
     "ad:suumo|jnc_000110581058|bc_100532837152",
+    "ad:suumo|jnc_000110581058|bc_100532883014",
     "key:maisonettepark大道2b棟|埼玉県越谷市大字大道|60.1",
+    "key:maisonettepark大道iib棟1階|埼玉県越谷市大道|60.1",
     "key:maisonettepark大道iib棟|埼玉県越谷市大字大道|60.1",
     "room:suumo|jnc_000108269932|2LDK|60.10",
     "room:suumo|jnc_000110581058|2LDK|60.10"
@@ -99,6 +102,20 @@
         "2026-10-13T13:23:00.794Z"
       ],
       "firstRecordedAt": "2026-10-04T06:34:49.603Z"
+    },
+    "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": {
+      "source": "nifty",
+      "ids": [
+        "nifty-b9f878a40c3332e7bc042d5c1f9d46c4"
+      ],
+      "urls": [
+        "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_b9f878a40c3332e7bc042d5c1f9d46c4/"
+      ],
+      "sightings": [
+        "2026-10-25T11:12:17.688Z",
+        "2026-10-27T06:28:29.094Z"
+      ],
+      "firstRecordedAt": "2026-10-27T06:27:22.150Z"
     },
     "roomspot|1139288674810000323571": {
       "source": "roomspot",
@@ -273,15 +290,28 @@
         "2026-10-25T11:10:51.123Z"
       ],
       "firstRecordedAt": "2026-10-20T09:59:24.484Z"
+    },
+    "suumo|jnc_000110581058|bc_100532883014": {
+      "source": "suumo",
+      "ids": [
+        "suumo-Ｍａｉｓｏｎｅｔｔｅｐａｒｋ大道IIＢ棟-2LDK-105000"
+      ],
+      "urls": [
+        "https://suumo.jp/chintai/jnc_000110581058/?bc=100532883014"
+      ],
+      "sightings": [
+        "2026-10-27T06:15:06.614Z"
+      ],
+      "firstRecordedAt": "2026-10-27T06:27:22.150Z"
     }
   },
   "facts": {
     "address": {
       "chosen": "埼玉県越谷市大字大道",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -308,14 +338,17 @@
           "value": "埼玉県越谷市大字大道",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "埼玉県越谷市大道838-3",
@@ -345,10 +378,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -358,7 +392,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -367,9 +402,9 @@
     "advertisedStation": {
       "chosen": "大袋駅",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -396,14 +431,17 @@
           "value": "大袋駅",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "東武スカイツリーライン大袋駅",
@@ -433,10 +471,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -446,7 +485,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -597,7 +637,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -632,10 +672,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -644,7 +685,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -652,19 +694,17 @@
     },
     "building.features": {
       "chosen": [
-        "バストイレ別、バルコニー、エアコン、ガスコンロ対応、クロゼット、フローリング、TVインターホン、浴室乾燥機、室内洗濯置、シューズボックス、システムキッチン、南向き、角住戸、温水洗浄便座、脱衣所、洗面所独立、洗面化粧台、駐輪場、宅配ボックス、光ファイバー、即入居可、BS・CS、敷金不要、3口以上コンロ、ペット相談、全居室洋室、ウォークインクロゼット、全居室フローリング、メゾネット、ネット使用料不要、24時間換気システム、南面リビング、南面バルコニー、室内物干機、高速ネット対応、LAN、礼金1ヶ月、保証会社利用可、IT重説 対応物件、初期費用カード決済可",
-        "-",
-        "ペット飼育の場合敷金1ヶ月（総額）",
-        "普通借家 2年",
-        "保証会社利用可 指定保証会社要加入・諸条件は指定保証会社による、要確認",
-        "合計6.05万円（内訳：鍵交換代：33000円/契約事務手数料:11000円/抗菌消臭代:16500円）",
-        "更新料新賃料(ヶ月):1.00ヶ月、24時間緊急サポート費用:2200円/月",
-        "巡回管理/★インターネット無料★ペット共生可能（飼育時礼金１ヶ月積増）★宅配ボックス完備★システムキッチン★浴室乾燥機★独立洗面化粧台★温水洗浄便座★モニターホン★ＢＳ・ＣＳ対応★その他設備充実★早期解約違約金：1年未満の解約時、総賃料1ヶ月分相当額★"
+        "駐車場あり",
+        "駐輪場あり",
+        "宅配ボックス",
+        "バス・トイレ別",
+        "ペット相談",
+        "フローリング"
       ],
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -678,14 +718,17 @@
           ],
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": [
@@ -706,10 +749,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -718,18 +762,19 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
       ]
     },
     "building.floor": {
-      "chosen": "1-2階",
+      "chosen": "2階",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -743,7 +788,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "1階",
@@ -801,29 +847,58 @@
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z"
           },
           "observedBefore": "2026-10-17T05:36:39.475Z"
+        },
+        {
+          "value": "2階",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-25T11:12:17.688Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          }
+        },
+        {
+          "value": "2階",
+          "source": "suumo",
+          "adKeys": [
+            "suumo|jnc_000110581058|bc_100532883014"
+          ],
+          "firstObservedAt": "2026-10-27T06:15:06.614Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
+          }
         }
       ]
     },
     "building.structure": {
       "chosen": "木造",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
           "value": "木造",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "木造",
@@ -835,10 +910,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -847,7 +923,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -856,9 +933,9 @@
     "building.totalFloors": {
       "chosen": 2,
       "chosenFrom": {
-        "source": "athome",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-18T07:50:01.405Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -885,23 +962,26 @@
           "value": 2,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         }
       ]
     },
     "builtYear": {
-      "chosen": 2022,
+      "chosen": 2023,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -928,14 +1008,17 @@
           "value": 2023,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 2023,
@@ -965,10 +1048,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -978,7 +1062,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -987,9 +1072,9 @@
     "city": {
       "chosen": "Koshigaya",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1016,14 +1101,17 @@
           "value": "Koshigaya",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "Koshigaya",
@@ -1053,10 +1141,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -1066,7 +1155,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -1075,9 +1165,9 @@
     "costs.adminFeeYen": {
       "chosen": 5000,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1104,14 +1194,17 @@
           "value": 5000,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 5000,
@@ -1141,10 +1234,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -1154,7 +1248,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -1163,9 +1258,9 @@
     "costs.depositYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-19T09:28:53.052Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1192,14 +1287,17 @@
           "value": 0,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 0,
@@ -1225,7 +1323,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -1238,10 +1336,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -1250,18 +1349,19 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
       ]
     },
     "costs.keyMoneyYen": {
-      "chosen": 104000,
+      "chosen": 105000,
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-19T09:28:53.052Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1295,7 +1395,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 104000,
@@ -1313,6 +1414,19 @@
             "roomspot|1139288674810000323657": "2026-10-12T11:31:29.781Z",
             "roomspot|1139288674810000323571": "2026-10-13T13:24:58.513Z"
           }
+        },
+        {
+          "value": 105000,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-25T11:12:17.688Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          }
         }
       ]
     },
@@ -1321,7 +1435,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -1350,10 +1464,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -1362,7 +1477,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -1373,7 +1489,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -1386,10 +1502,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -1398,7 +1515,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -1409,7 +1527,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -1438,10 +1556,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -1450,7 +1569,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -1461,7 +1581,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -1474,10 +1594,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -1486,7 +1607,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -1495,9 +1617,9 @@
     "depositYen": {
       "chosen": 0,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1524,14 +1646,17 @@
           "value": 0,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 0,
@@ -1561,10 +1686,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -1574,7 +1700,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -1583,9 +1710,9 @@
     "keyMoneyYen": {
       "chosen": 105000,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1619,7 +1746,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 104000,
@@ -1668,24 +1796,39 @@
           "value": 105000,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-10-20T09:48:26.347Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-20T09:59:24.484Z",
           "reportedAt": {
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-25T11:11:01.389Z"
+        },
+        {
+          "value": 105000,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-25T11:12:17.688Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          }
         }
       ]
     },
     "layout": {
       "chosen": "2LDK",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1712,14 +1855,17 @@
           "value": "2LDK",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "2LDK",
@@ -1749,10 +1895,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -1762,18 +1909,19 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
       ]
     },
     "name": {
-      "chosen": "Maisonettepark 大道II B棟",
+      "chosen": "大袋駅より徒歩21分 築3年7ヶ月 2階建",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -1800,14 +1948,17 @@
           "value": "大袋駅より徒歩21分 築3年7ヶ月 2階建",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:28:51.826Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "Ｍａｉｓｏｎｅｔｔｅｐａｒｋ大道ⅡＢ棟 1階",
@@ -1833,16 +1984,18 @@
             "suumo|jnc_000108269932|bc_100515352284",
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100523642025",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-20T09:48:26.347Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         },
@@ -1913,16 +2066,30 @@
           "firstRecordedAt": "2026-10-25T11:14:51.238Z",
           "reportedAt": {
             "suumo|jnc_000110581058|bc_100532837152": "2026-10-25T11:14:51.238Z"
+          },
+          "observedBefore": "2026-10-27T06:15:09.970Z"
+        },
+        {
+          "value": "大袋駅より徒歩21分 築3年8ヶ月 2階建",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-25T11:12:17.688Z",
+          "lastObservedAt": "2026-10-25T11:12:17.688Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
           }
         }
       ]
     },
     "notes": {
-      "chosen": "築4年・1-2階・管理費込",
+      "chosen": "築4年・2階・管理費込",
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2015,15 +2182,28 @@
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z"
           },
           "observedBefore": "2026-10-17T05:36:39.475Z"
+        },
+        {
+          "value": "築4年・2階・管理費込",
+          "source": "suumo",
+          "adKeys": [
+            "suumo|jnc_000110581058|bc_100532883014"
+          ],
+          "firstObservedAt": "2026-10-27T06:15:06.614Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
+          }
         }
       ]
     },
     "parking.available": {
       "chosen": true,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -2046,14 +2226,17 @@
           "value": true,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": true,
@@ -2066,10 +2249,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -2079,7 +2263,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -2090,7 +2275,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2104,10 +2289,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -2117,18 +2303,19 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
       ]
     },
     "parking.raw": {
-      "chosen": "付無料",
+      "chosen": "駐車場あり",
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -2151,14 +2338,17 @@
           "value": "駐車場あり",
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": "付無料",
@@ -2171,10 +2361,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -2184,7 +2375,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -2194,19 +2386,19 @@
       "chosen": [
         {
           "kind": "exterior",
-          "source": "roomspot",
-          "url": "https://www.roomspot.net/app/mu-plugins/es-web/assets/images/default-thumbnail.png"
+          "source": "nifty",
+          "url": "https://img01.suumo.com/front/gazo/fr/bukken/014/100532883014/100532883014_gt.jpg"
         },
         {
           "kind": "floorPlan",
-          "source": "roomspot",
-          "url": "https://property.es-img.jp/rent/img/1139288674810000323775/0000000001139288674810000323775_1.jpg?iid=3787265852"
+          "source": "nifty",
+          "url": "https://img01.suumo.com/front/gazo/fr/bukken/014/100532883014/100532883014_ct.jpg"
         }
       ],
       "chosenFrom": {
-        "source": "roomspot",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-19T09:28:53.052Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -2267,7 +2459,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": [
@@ -2340,6 +2533,54 @@
           "reportedAt": {
             "roomspot|1139288674810000323571": "2026-10-13T13:24:58.513Z"
           }
+        },
+        {
+          "value": [
+            {
+              "kind": "exterior",
+              "source": "nifty",
+              "url": "https://img01.suumo.com/front/gazo/fr/bukken/541/100533206541/100533206541_gt.jpg"
+            },
+            {
+              "kind": "floorPlan",
+              "source": "nifty",
+              "url": "https://img01.suumo.com/front/gazo/fr/bukken/541/100533206541/100533206541_ct.jpg"
+            }
+          ],
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-25T11:12:17.688Z",
+          "lastObservedAt": "2026-10-25T11:12:17.688Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          }
+        },
+        {
+          "value": [
+            {
+              "kind": "exterior",
+              "source": "nifty",
+              "url": "https://img01.suumo.com/front/gazo/fr/bukken/014/100532883014/100532883014_gt.jpg"
+            },
+            {
+              "kind": "floorPlan",
+              "source": "nifty",
+              "url": "https://img01.suumo.com/front/gazo/fr/bukken/014/100532883014/100532883014_ct.jpg"
+            }
+          ],
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-27T06:28:29.094Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
+          "firstRecordedAt": "2026-10-27T06:28:51.826Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:28:51.826Z"
+          }
         }
       ]
     },
@@ -2348,7 +2589,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2361,10 +2602,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2373,7 +2615,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2384,7 +2627,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2397,10 +2640,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2409,7 +2653,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2418,9 +2663,9 @@
     "rent": {
       "chosen": 110000,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -2454,7 +2699,8 @@
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 109000,
@@ -2503,24 +2749,39 @@
           "value": 110000,
           "source": "suumo",
           "adKeys": [
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-10-20T09:48:26.347Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-20T09:59:24.484Z",
           "reportedAt": {
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-25T11:11:01.389Z"
+        },
+        {
+          "value": 110000,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
+          ],
+          "firstObservedAt": "2026-10-25T11:12:17.688Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
+          "firstRecordedAt": "2026-10-27T06:27:22.150Z",
+          "reportedAt": {
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          }
         }
       ]
     },
     "sizeM2": {
       "chosen": 60.1,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -2547,14 +2808,17 @@
           "value": 60.1,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 60.1,
@@ -2584,10 +2848,11 @@
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
@@ -2597,7 +2862,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         }
@@ -2608,7 +2874,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2621,10 +2887,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2633,7 +2900,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2644,7 +2912,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2657,10 +2925,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2669,7 +2938,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2680,7 +2950,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2693,10 +2963,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2705,7 +2976,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2716,7 +2988,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2729,10 +3001,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2741,7 +3014,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2752,7 +3026,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2765,10 +3039,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2777,7 +3052,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2788,7 +3064,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2801,10 +3077,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2813,7 +3090,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2824,7 +3102,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2837,10 +3115,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2849,7 +3128,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2860,7 +3140,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2873,10 +3153,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2885,7 +3166,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2896,7 +3178,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2909,10 +3191,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2921,7 +3204,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2932,7 +3216,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2945,10 +3229,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2957,7 +3242,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -2968,7 +3254,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -2981,10 +3267,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -2993,7 +3280,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3004,7 +3292,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3017,10 +3305,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3029,7 +3318,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3040,7 +3330,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3053,10 +3343,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3065,7 +3356,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3076,7 +3368,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3089,10 +3381,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3101,7 +3394,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3112,7 +3406,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3125,10 +3419,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3137,7 +3432,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3148,7 +3444,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3161,10 +3457,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3173,7 +3470,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3184,7 +3482,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3197,10 +3495,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3209,7 +3508,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3220,7 +3520,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3233,10 +3533,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3245,7 +3546,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3256,7 +3558,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3269,10 +3571,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3281,7 +3584,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3292,7 +3596,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3305,10 +3609,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3317,7 +3622,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3328,7 +3634,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3341,10 +3647,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3353,7 +3660,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3364,7 +3672,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3377,10 +3685,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3389,7 +3698,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3400,7 +3710,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3413,10 +3723,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3425,7 +3736,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3436,7 +3748,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3449,10 +3761,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3461,7 +3774,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3472,7 +3786,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3485,10 +3799,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3497,7 +3812,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3508,7 +3824,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3521,10 +3837,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3533,7 +3850,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3544,7 +3862,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3557,10 +3875,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3569,7 +3888,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3580,7 +3900,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3593,10 +3913,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3605,7 +3926,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3616,7 +3938,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3629,10 +3951,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3641,7 +3964,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3652,7 +3976,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3665,10 +3989,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3677,7 +4002,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3688,7 +4014,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3701,10 +4027,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3713,7 +4040,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3724,7 +4052,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3737,10 +4065,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3749,7 +4078,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3760,7 +4090,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3773,10 +4103,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3785,7 +4116,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3796,7 +4128,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3809,10 +4141,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3821,7 +4154,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3832,7 +4166,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3845,10 +4179,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3857,7 +4192,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3868,7 +4204,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3881,10 +4217,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3893,7 +4230,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3904,7 +4242,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3917,10 +4255,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3929,7 +4268,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3940,7 +4280,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3953,10 +4293,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -3965,7 +4306,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -3976,7 +4318,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -3989,10 +4331,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4001,7 +4344,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4012,7 +4356,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -4025,10 +4369,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4037,7 +4382,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4048,7 +4394,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -4061,10 +4407,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4073,7 +4420,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4082,9 +4430,9 @@
     "stationWalkMin": {
       "chosen": 21,
       "chosenFrom": {
-        "source": "suumo",
+        "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:28:29.094Z"
       },
       "values": [
         {
@@ -4111,14 +4459,17 @@
           "value": 21,
           "source": "nifty",
           "adKeys": [
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56"
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4"
           ],
           "firstObservedAt": "2026-10-04T06:13:33.402Z",
-          "lastObservedAt": "2026-10-13T13:23:00.794Z",
+          "lastObservedAt": "2026-10-27T06:28:29.094Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
-            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z"
-          }
+            "nifty|detail_214d038bae953fdc96e5c527b71fbb56": "2026-10-04T06:34:49.603Z",
+            "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": "2026-10-27T06:27:22.150Z"
+          },
+          "observedBefore": "2026-10-27T06:28:29.094Z"
         },
         {
           "value": 21,
@@ -4145,17 +4496,19 @@
             "suumo|jnc_000108269932|bc_100515268765",
             "suumo|jnc_000108269932|bc_100523642025",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-24T20:59:27.381Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T06:34:49.603Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100523642025": "2026-09-25T05:11:35.000Z",
             "suumo|jnc_000108269932|bc_100515221111": "2026-09-28T23:34:10.000Z",
             "suumo|jnc_000108269932|bc_100515268765": "2026-10-14T09:51:35.192Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-09-28T22:39:05.214Z"
         },
@@ -4196,7 +4549,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -4209,10 +4562,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4221,7 +4575,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4232,7 +4587,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -4245,10 +4600,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4257,7 +4613,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4268,7 +4625,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -4281,10 +4638,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4293,7 +4651,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4304,7 +4663,7 @@
       "chosenFrom": {
         "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:10:51.123Z"
+        "observedAt": "2026-10-27T06:15:06.614Z"
       },
       "values": [
         {
@@ -4317,10 +4676,11 @@
             "suumo|jnc_000108269932|bc_100515587106",
             "suumo|jnc_000108269932|bc_100524787003",
             "suumo|jnc_000108269932|bc_100525354097",
-            "suumo|jnc_000110581058|bc_100532837152"
+            "suumo|jnc_000110581058|bc_100532837152",
+            "suumo|jnc_000110581058|bc_100532883014"
           ],
           "firstObservedAt": "2026-09-28T22:37:28.264Z",
-          "lastObservedAt": "2026-10-25T11:10:51.123Z",
+          "lastObservedAt": "2026-10-27T06:15:06.614Z",
           "firstRecordedAt": "2026-10-04T08:34:02.835Z",
           "reportedAt": {
             "suumo|jnc_000108269932|bc_100515221111": "2026-10-04T08:34:02.835Z",
@@ -4329,7 +4689,8 @@
             "suumo|jnc_000108269932|bc_100515587106": "2026-10-15T05:28:06.496Z",
             "suumo|jnc_000108269932|bc_100525354097": "2026-10-16T10:21:38.352Z",
             "suumo|jnc_000108269932|bc_100515352284": "2026-10-19T09:40:47.383Z",
-            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z"
+            "suumo|jnc_000110581058|bc_100532837152": "2026-10-20T09:59:24.484Z",
+            "suumo|jnc_000110581058|bc_100532883014": "2026-10-27T06:27:22.150Z"
           },
           "observedBefore": "2026-10-13T13:22:47.718Z"
         }
@@ -4360,7 +4721,9 @@
     "2026-10-19T09:28:47.888Z",
     "2026-10-19T09:28:53.052Z",
     "2026-10-20T09:48:26.347Z",
-    "2026-10-25T11:10:51.123Z"
+    "2026-10-25T11:10:51.123Z",
+    "2026-10-27T06:15:06.614Z",
+    "2026-10-27T06:28:29.094Z"
   ],
   "events": [
     {
@@ -4636,6 +4999,30 @@
       "data": {
         "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110581058|bc_100532837152|2026-10-27T06:15:09.970Z",
+      "type": "ad.superseded",
+      "at": "2026-10-27T06:15:09.970Z",
+      "recordedAt": "2026-10-27T06:27:22.150Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110581058|bc_100532837152",
+      "url": "https://suumo.jp/chintai/jnc_000110581058/?bc=100532837152",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
+    },
+    {
+      "id": "ad.superseded|nifty|detail_214d038bae953fdc96e5c527b71fbb56|2026-10-27T06:28:29.094Z",
+      "type": "ad.superseded",
+      "at": "2026-10-27T06:28:29.094Z",
+      "recordedAt": "2026-10-27T06:28:51.826Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_214d038bae953fdc96e5c527b71fbb56",
+      "url": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_214d038bae953fdc96e5c527b71fbb56/",
+      "data": {
+        "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -4644,8 +5031,8 @@
     "firstSeenBasis": "build",
     "firstSeenAdKey": "athome|6992124807",
     "firstSeenUrl": "https://www.athome.co.jp/chintai/6992124807/",
-    "lastSeenAt": "2026-10-25T11:10:51.123Z",
-    "lastListedAt": "2026-10-25T11:10:51.123Z",
+    "lastSeenAt": "2026-10-27T06:28:29.094Z",
+    "lastListedAt": "2026-10-27T06:28:29.094Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -4701,6 +5088,14 @@
         "firstSeenAt": "2026-10-04T06:13:33.402Z",
         "lastSeenAt": "2026-10-13T13:23:00.794Z",
         "lastListedAt": "2026-10-13T13:23:00.794Z",
+        "goneSince": null,
+        "relistCount": 0
+      },
+      "nifty|detail_b9f878a40c3332e7bc042d5c1f9d46c4": {
+        "source": "nifty",
+        "firstSeenAt": "2026-10-25T11:12:17.688Z",
+        "lastSeenAt": "2026-10-27T06:28:29.094Z",
+        "lastListedAt": "2026-10-27T06:28:29.094Z",
         "goneSince": null,
         "relistCount": 0
       },
@@ -4791,6 +5186,14 @@
         "lastListedAt": "2026-10-25T11:10:51.123Z",
         "goneSince": null,
         "relistCount": 0
+      },
+      "suumo|jnc_000110581058|bc_100532883014": {
+        "source": "suumo",
+        "firstSeenAt": "2026-10-27T06:15:06.614Z",
+        "lastSeenAt": "2026-10-27T06:15:06.614Z",
+        "lastListedAt": "2026-10-27T06:15:06.614Z",
+        "goneSince": null,
+        "relistCount": 0
       }
     },
     "conflicts": [
@@ -4802,6 +5205,7 @@
       "building.features",
       "building.floor",
       "builtYear",
+      "costs.keyMoneyYen",
       "costs.parking.raw",
       "keyMoneyYen",
       "name",

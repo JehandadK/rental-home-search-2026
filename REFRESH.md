@@ -600,6 +600,24 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-27 refresh with the 60㎡ minimum, five cities (Playwright)
+
+- Run `2026-10-27T06-14-47-137Z-39230a0b`: **SUCCESS** after one resume. Nifty
+  Soka ("Execution context was destroyed … navigation") and Koshigaya
+  ("results not ready") failed; `--resume` re-ran just those two and they
+  passed. `nifty-noda` ran normally (also on 2026-10-25), so the 2026-10-21
+  HTTP 403 for `chiba/nodashi_ct` was transient and the slug is right.
+- Source additions: SUUMO **37**, AtHome **88**, RoomSpot **8**, Nifty **86**
+  (Noda 46, Katsushika 24, Kawaguchi 12, Soka 3, Koshigaya 1).
+- UR swept 74 of 74 municipalities: 138 estates, 78 vacant rooms (66 with 2+
+  rooms), 300 API calls. The `ur` source went 176 → 180 rooms (4 added, none
+  gone, no rent changes); the rooms page has 74 open of 1583.
+- **53 newly tracked properties** (Kawaguchi 17, Noda 10, Katsushika 9,
+  Koshigaya 7, Soka 7, and UR in Koshigaya, Kuki, Sakado, Tokorozawa): 49 from
+  the portals, all ≥60㎡ (60.4–477㎡; the 477㎡ is a real 6SLDK house in Noda at
+  ¥500,000), 23 ≥70㎡, 29 at ≤¥150,000; and 4 UR rooms. All geocoded. **6183**
+  archival rows.
+
 ## 2026-10-21 Noda (Chiba) first load (Playwright)
 
 - Added Noda as the fifth target city and the first in Chiba
