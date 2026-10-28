@@ -600,6 +600,26 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-28 refresh with every source in parallel (Playwright)
+
+- Run `2026-10-28T01-03-26-998Z-c32ca1f4` with `--concurrency 5` ("Running 5
+  sources in parallel (max 5)"): **SUCCESS**, no resume, 12m48s. The default
+  cap of 4 leaves one of the five source groups waiting, but the run was barely
+  faster (13m12s the day before) because UR's 74-municipality sweep is the
+  longest stage either way; the Nifty cities still run in order inside their
+  group (they share `nifty.json`).
+- Source additions: SUUMO **9**, AtHome **7**, RoomSpot **4**, Nifty **33**
+  (Koshigaya 10, Kawaguchi 9, Soka 7, Katsushika 5, Noda 2).
+- UR swept 74 of 74 municipalities: 138 estates, 81 vacant rooms (68 with 2+
+  rooms), 304 API calls. The `ur` source went 180 → 183 rooms (3 added, none
+  gone, no rent changes), all on properties already tracked; the rooms page has
+  76 open of 1586.
+- **17 newly tracked properties** (Kawaguchi 7, Koshigaya 5, Katsushika 2,
+  Noda 2, Soka 1), all from the portals, all ≥60㎡ (62.69–99.37㎡, 12 ≥70㎡,
+  9 at ≤¥150,000), all geocoded. **6204** archival rows. Nifty's 西川口駅 3LDK
+  (77.44㎡, ¥134,000) and SUUMO's コートアネックス西川口 (77.44㎡, ¥139,000) look
+  like the same flat but were kept apart.
+
 ## 2026-10-27 refresh with the 60㎡ minimum, five cities (Playwright)
 
 - Run `2026-10-27T06-14-47-137Z-39230a0b`: **SUCCESS** after one resume. Nifty
