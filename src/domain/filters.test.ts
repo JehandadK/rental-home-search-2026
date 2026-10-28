@@ -8,6 +8,7 @@ import {
   EMPTY_FILTERS,
   layoutFamily,
   layoutOptions,
+  roomMinimum,
   listingArea,
   matchesListing,
   type ListingFilters,
@@ -66,6 +67,11 @@ describe("option extractors", () => {
     expect(cityOptions(listings)).toEqual(["Soka", "Koshigaya"]);
     expect(layoutOptions(listings)).toEqual(["2", "3"]);
   });
+
+  it("folds layouts of 4 rooms or more into one 4+ minimum", () => {
+    const large = [make({ layout: "2DK" }), make({ layout: "4LDK" }), make({ layout: "5DK" }), make({ layout: "11LDK" })];
+    expect(layoutOptions(large)).toEqual(["2", "4"]);
+  });
 });
 
 describe("matchesListing", () => {
@@ -95,9 +101,23 @@ describe("matchesListing", () => {
     expect(matchesListing(make({ sizeM2: null }), { ...base, sizeMin: 50 })).toBe(false);
   });
 
-  it("filters by layout family", () => {
+  it("filters by a minimum room count", () => {
     expect(matchesListing(make({ layout: "2DK" }), { ...base, layouts: ["3"] })).toBe(false);
     expect(matchesListing(make({ layout: "3LDK" }), { ...base, layouts: ["3"] })).toBe(true);
+    expect(matchesListing(make({ layout: "4LDK" }), { ...base, layouts: ["3"] })).toBe(true);
+    expect(matchesListing(make({ layout: "5DK" }), { ...base, layouts: ["3"] })).toBe(true);
+    expect(matchesListing(make({ layout: "3LDK" }), { ...base, layouts: ["4"] })).toBe(false);
+    expect(matchesListing(make({ layout: "6SLDK" }), { ...base, layouts: ["4"] })).toBe(true);
+    expect(matchesListing(make({ layout: null }), { ...base, layouts: ["2"] })).toBe(false);
+  });
+
+  it("applies the smallest of several minimums, and never more than 4", () => {
+    expect(matchesListing(make({ layout: "3DK" }), { ...base, layouts: ["4", "3"] })).toBe(true);
+    expect(matchesListing(make({ layout: "2DK" }), { ...base, layouts: ["4", "3"] })).toBe(false);
+    // A minimum saved before 5+ was removed now means 4+.
+    expect(matchesListing(make({ layout: "4LDK" }), { ...base, layouts: ["5"] })).toBe(true);
+    expect(roomMinimum(["5"])).toBe(4);
+    expect(roomMinimum([])).toBeNull();
   });
 });
 

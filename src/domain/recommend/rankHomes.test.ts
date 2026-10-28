@@ -157,7 +157,7 @@ describe("rankHomes", () => {
     const [hint] = rank({ filters: { cities: ["Soka"], rentMax: 1 } }).relaxationHints;
     (hint.set["filters.rentMin"] as unknown) = 5;
     expect(EMPTY_FILTERS.rentMin).toBeNull();
-    const layouts = rank({ filters: { layouts: ["1"], rentMin: 100_000 } }).relaxationHints.find((h) => h.id === "layouts")!;
+    const layouts = rank({ filters: { layouts: ["3"], rentMax: 65_000 } }).relaxationHints.find((h) => h.id === "layouts")!;
     expect(layouts.set["filters.layouts"]).toEqual([]);
     expect(layouts.set["filters.layouts"]).not.toBe(EMPTY_FILTERS.layouts);
   });

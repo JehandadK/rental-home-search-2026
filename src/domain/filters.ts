@@ -67,7 +67,11 @@ export interface ListingFilters {
   /** Floor-area bounds in ㎡; null = unbounded. */
   sizeMin: number | null;
   sizeMax: number | null;
-  /** Layout prefixes to keep, e.g. "3" matches 3K/3DK/3LDK (empty = all). */
+  /**
+   * Minimum room count as a layout family: "3" keeps 3K/3DK/3LDK and every
+   * larger layout, "4" every 4-room-or-larger one (empty = all). With several,
+   * the smallest applies.
+   */
   layouts: string[];
   /** Minimum weighted score, 0–100. */
   minScore: number;
@@ -249,14 +253,22 @@ export function cityOptions(listings: readonly EnrichedListing[]): string[] {
   return seen;
 }
 
-/** All distinct layout families present, sorted ascending. */
+/** The largest room-count minimum offered; "4" covers every bigger layout too. */
+export const MAX_ROOM_MINIMUM = 4;
+
+/** The room-count minimums the data supports, ascending, with families above 4 folded into "4". */
 export function layoutOptions(listings: readonly EnrichedListing[]): string[] {
-  const set = new Set<string>();
+  const set = new Set<number>();
   for (const l of listings) {
     const fam = layoutFamily(l.layout);
-    if (fam) set.add(fam);
+    if (fam) set.add(Math.min(Number(fam), MAX_ROOM_MINIMUM));
   }
-  return [...set].sort((a, b) => Number(a) - Number(b));
+  return [...set].sort((a, b) => a - b).map(String);
+}
+
+/** The room-count minimum a `layouts` filter applies (at most 4), or null for any. */
+export function roomMinimum(layouts: readonly string[]): number | null {
+  return layouts.length ? Math.min(...layouts.map(Number), MAX_ROOM_MINIMUM) : null;
 }
 
 /** True when a listing passes every active filter (score-independent parts). */
@@ -288,9 +300,10 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
     return false;
   }
 
-  if (filters.layouts.length > 0) {
+  const minRooms = roomMinimum(filters.layouts);
+  if (minRooms != null) {
     const fam = layoutFamily(listing.layout);
-    if (!fam || !filters.layouts.includes(fam)) return false;
+    if (!fam || Number(fam) < minRooms) return false;
   }
 
   if (!matchesParking(listing, filters)) return false;

@@ -13,6 +13,7 @@ import {
   type AgencyStoreOption,
   cityOptions,
   layoutOptions,
+  roomMinimum,
   type ListingFilters,
 } from "../../domain/filters";
 import { MAX_NEW_WINDOW_DAYS, MIN_NEW_WINDOW_DAYS, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
@@ -187,11 +188,11 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
     onUpdate({ cities: next, areas: [] });
   };
 
+  // One room-count minimum at a time; tapping the active one clears it.
+  const minRooms = roomMinimum(filters.layouts);
+  const activeLayout = minRooms == null ? null : String(minRooms);
   const toggleLayout = (layout: string) => {
-    const next = filters.layouts.includes(layout)
-      ? filters.layouts.filter((l) => l !== layout)
-      : [...filters.layouts, layout];
-    onUpdate({ layouts: next });
+    onUpdate({ layouts: activeLayout === layout ? [] : [layout] });
   };
 
   return (
@@ -445,7 +446,7 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
             {layouts.map((layout) => (
               <button
                 key={layout}
-                className={`${styles.chip} ${filters.layouts.includes(layout) ? styles.on : ""}`}
+                className={`${styles.chip} ${activeLayout === layout ? styles.on : ""}`}
                 onClick={() => toggleLayout(layout)}
               >
                 {layout}+

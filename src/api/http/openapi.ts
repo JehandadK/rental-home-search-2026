@@ -188,7 +188,7 @@ export const REQUEST_EXAMPLES: Record<string, { summary: string; value: Record<s
     summary: "By bicycle, with a car: parking required and counted in rent",
     value: {
       travel: { mode: "bicycle", includeParking: true },
-      filters: { parking: "required", layouts: ["3", "4"] },
+      filters: { parking: "required", layouts: ["3"] },
       ranking: { minPartScores: { poi2: 40 } },
     },
   },
@@ -294,7 +294,7 @@ export function openApiDocument(): JsonSchema {
         get: {
           operationId: "rankHomesByQuery", tags: ["rank"],
           summary: "Rank homes (query string)",
-          description: "The same as POST /recommendations, with each field as a dotted query key: `?preset=commuter&weights.station=14&filters.layouts=3,4`.",
+          description: "The same as POST /recommendations, with each field as a dotted query key: `?preset=commuter&weights.station=14&filters.layouts=3`.",
           parameters: rankingParameters(),
           responses: { "200": json("Ranked, explained homes with the scoring used", "RankingResult"), ...DATA_ERRORS },
         },

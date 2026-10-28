@@ -322,7 +322,7 @@ export const FIELD_SPECS: readonly FieldSpec[] = [
   filter("rentMax", "Maximum rent", "Highest advertised rent (null = no maximum)", { kind: "nullableNumber", min: 0, max: 10_000_000 }, "¥/mo"),
   filter("sizeMin", "Minimum size", "Smallest floor area; homes with unknown size are dropped", { kind: "nullableNumber", min: 0, max: 1_000 }, "㎡"),
   filter("sizeMax", "Maximum size", "Largest floor area; homes with unknown size are dropped", { kind: "nullableNumber", min: 0, max: 1_000 }, "㎡"),
-  filter("layouts", "Layouts", 'Room-count families, e.g. "3" for 3K/3DK/3LDK ([] = all)', { kind: "stringList", values: "layouts" }),
+  filter("layouts", "Layouts", 'Minimum room count: "3" keeps 3K/3DK/3LDK and larger, "4" every 4-room-or-larger layout ([] = all; with several, the smallest applies)', { kind: "stringList", values: "layouts" }),
   filter("parking", "Parking", "required = a space must exist; free = at no monthly charge. Homes that do not say are kept", enumOf(["any", "required", "free"])),
   filter("parkingMaxYen", "Parking price cap", "Drop homes whose parking costs more (null = no cap)", { kind: "nullableNumber", min: 0, max: 200_000 }, "¥/mo"),
   filter("status", "Listing status", "all, only active, or only sold", enumOf(["all", "active", "sold"])),
