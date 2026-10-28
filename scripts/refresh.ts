@@ -273,6 +273,7 @@ let sharedBrowser: SharedBrowser | undefined;
 const closeSharedBrowser = async () => {
   const browser = sharedBrowser;
   sharedBrowser = undefined;
+  if (browser && process.env.PLAYWRIGHT_CDP_URL === browser.cdpUrl) delete process.env.PLAYWRIGHT_CDP_URL;
   await browser?.close().catch(() => undefined);
 };
 let stopping = false;
@@ -290,6 +291,7 @@ const stop = async (signal: string) => {
 };
 process.once("SIGINT", () => void stop("SIGINT"));
 process.once("SIGTERM", () => void stop("SIGTERM"));
+process.once("SIGHUP", () => void stop("SIGHUP"));
 
 try {
   const ledger = await readRefreshLedger();
@@ -342,10 +344,22 @@ try {
     }
     queue.push({ definition, stage });
   }
-  if (!separateBrowsers && !process.env.PLAYWRIGHT_CDP_URL && queue.some(({ stage }) => NETWORK_STAGES.has(stage.id))) {
-    sharedBrowser = await openSharedBrowser();
-    process.env.PLAYWRIGHT_CDP_URL = sharedBrowser.cdpUrl;
-    console.log(`Portal pages load in one shared browser (profile ${sharedBrowser.userDataDir})`);
+  if (separateBrowsers) delete process.env.PLAYWRIGHT_CDP_URL;
+  else if (!process.env.PLAYWRIGHT_CDP_URL && queue.some(({ stage }) => NETWORK_STAGES.has(stage.id))) {
+    try {
+      const browser = await openSharedBrowser();
+      sharedBrowser = browser;
+      process.env.PLAYWRIGHT_CDP_URL = browser.cdpUrl;
+      // Later stages launch their own browsers rather than attach to a dead one.
+      browser.onUnexpectedClose(() => {
+        if (process.env.PLAYWRIGHT_CDP_URL !== browser.cdpUrl) return;
+        delete process.env.PLAYWRIGHT_CDP_URL;
+        console.warn("The shared browser closed; the remaining portal stages launch their own browsers.");
+      });
+      console.log(`Portal pages load in one shared browser (profile ${browser.userDataDir})`);
+    } catch (error) {
+      console.warn(`Shared browser unavailable (${error instanceof Error ? error.message.split("\n")[0] : String(error)}); each collector launches its own.`);
+    }
   }
   // Independent portal collectors first. Sources run concurrently; stages that share a
   // source file (Nifty cities) run in order inside their group. Failures are recoverable.
@@ -360,9 +374,13 @@ try {
   await runLimited([...groups.values()], concurrency, async (items) => {
     for (const { definition, stage } of items) await executeStage(definition, stage, activeRun!);
   });
-  for (const { definition, stage } of queue) {
-    if (PARALLEL_COLLECTOR_STAGES.has(stage.id)) continue;
+  const sequential = queue.filter(({ stage }) => !PARALLEL_COLLECTOR_STAGES.has(stage.id));
+  // The window closes once the last portal stage is done, not after the local build.
+  const lastNetwork = sequential.map(({ stage }) => NETWORK_STAGES.has(stage.id)).lastIndexOf(true);
+  if (lastNetwork < 0) await closeSharedBrowser();
+  for (const [index, { definition, stage }] of sequential.entries()) {
     const ok = await executeStage(definition, stage, activeRun);
+    if (index === lastNetwork) await closeSharedBrowser();
     if (!ok && !definition.recoverable) {
       mandatoryFailure = true;
       break;

@@ -7,8 +7,10 @@ describe("devToolsPort", () => {
   });
   it("treats an empty, partly written or junk file as no port yet", () => {
     expect(devToolsPort("")).toBeUndefined();
+    expect(devToolsPort("531")).toBeUndefined();
+    expect(devToolsPort("53114\n")).toBeUndefined();
     expect(devToolsPort("\n")).toBeUndefined();
-    expect(devToolsPort("abc\n")).toBeUndefined();
-    expect(devToolsPort("0\n")).toBeUndefined();
+    expect(devToolsPort("abc\n/devtools/browser/x")).toBeUndefined();
+    expect(devToolsPort("0\n/devtools/browser/x")).toBeUndefined();
   });
 });

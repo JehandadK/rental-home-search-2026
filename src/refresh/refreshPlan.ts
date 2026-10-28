@@ -67,7 +67,7 @@ export const PERSISTENT_PROFILE_STAGE = "athome";
 
 /** Child-process environment for a stage; never mutates `env`. */
 export function stageEnv(stageId: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const attached = env.PLAYWRIGHT_CDP_URL != null;
+  const attached = Boolean(env.PLAYWRIGHT_CDP_URL);
   if ((!attached && stageId === PERSISTENT_PROFILE_STAGE) || env.PLAYWRIGHT_USER_DATA_DIR == null) return env;
   const { PLAYWRIGHT_USER_DATA_DIR: _profile, ...rest } = env;
   return rest;

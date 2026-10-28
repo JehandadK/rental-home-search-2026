@@ -18,3 +18,8 @@ const shutdown = async () => {
 };
 process.once("SIGINT", shutdown);
 process.once("SIGTERM", shutdown);
+process.once("SIGHUP", shutdown);
+browser.onUnexpectedClose(() => {
+  console.log("The shared browser was closed.");
+  process.exit(0);
+});

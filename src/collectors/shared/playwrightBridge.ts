@@ -25,10 +25,13 @@ interface Page {
   url(): string;
   close(): Promise<void>;
 }
-interface BrowserContext { newPage(): Promise<Page> }
+interface BrowserContext { newPage(): Promise<Page>; on?(event: "close", listener: () => void): unknown }
 interface Browser { newContext(options: Record<string, unknown>): Promise<BrowserContext>; close(): Promise<void> }
 interface AttachedBrowser { contexts(): BrowserContext[]; close(): Promise<void> }
-export interface LaunchOptions { headless: boolean; executablePath?: string; locale?: string; timezoneId?: string; args?: string[] }
+export interface LaunchOptions {
+  headless: boolean; executablePath?: string; locale?: string; timezoneId?: string; args?: string[];
+  handleSIGINT?: boolean; handleSIGTERM?: boolean; handleSIGHUP?: boolean;
+}
 interface PlaywrightCore {
   chromium: {
     launch(options: LaunchOptions): Promise<Browser>;
@@ -88,9 +91,13 @@ export class PlaywrightBridge {
     const { chromium } = loadPlaywright();
     const cdpUrl = process.env.PLAYWRIGHT_CDP_URL;
     if (cdpUrl) {
-      this.attached = await chromium.connectOverCDP(cdpUrl);
-      const [shared] = this.attached.contexts();
-      if (!shared) throw new Error(`The shared browser at ${cdpUrl} has no browser context`);
+      const attached = await chromium.connectOverCDP(cdpUrl);
+      const [shared] = attached.contexts();
+      if (!shared) {
+        await attached.close().catch(() => undefined);
+        throw new Error(`The shared browser at ${cdpUrl} has no browser context`);
+      }
+      this.attached = attached;
       this.context = shared;
       return;
     }
@@ -125,7 +132,15 @@ export class PlaywrightBridge {
         const page = await this.context.newPage();
         const id = this.nextTabId++;
         this.pages.set(id, page);
-        const response = await page.goto(String(params.url), { waitUntil, timeout });
+        let response;
+        try {
+          response = await page.goto(String(params.url), { waitUntil, timeout });
+        } catch (error) {
+          // The caller never learns this tab's id, so close it here rather than leave it in a shared window.
+          this.pages.delete(id);
+          await page.close().catch(() => undefined);
+          throw error;
+        }
         return { tab: { id, url: page.url() }, httpStatus: response?.status() } as T;
       }
       case "navigate": {
