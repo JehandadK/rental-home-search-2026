@@ -600,6 +600,27 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-10-28 every-size load without UR (Playwright, partial)
+
+- `npm run refresh` has no way to skip UR, so the portal collectors ran
+  directly in four parallel lanes with `--min-area 0 --max-pages 150`: SUUMO,
+  AtHome (`--detail-limit 10`, shared profile), RoomSpot (`--detail-limit 10`),
+  and the five Nifty cities in order (`crawl:nifty --pages 150 --merge`); then
+  `import:nifty`, `data:build`, `enrich`, `data:web`. UR was not run.
+- Done: SUUMO **387** new ads (109 pages, every city), RoomSpot **121** (24
+  pages, every city), Nifty Soka **49** and Koshigaya **61**. Most cities
+  stopped on two all-known pages: small rooms seen before 2026-10-12 (when the
+  60㎡ minimum began) were already held.
+- Not finished: AtHome committed Soka and Koshigaya (**270** new), then showed
+  its verification page again on Kawaguchi page 64 and stopped when nobody
+  passed it; its 63 pages are in the capture cache. Nifty Kawaguchi read 28
+  pages (checkpointed), then answered **HTTP 405**; Katsushika and Noda failed
+  on page 1 right after ("results not ready", "Execution context was
+  destroyed"). Nifty was left alone after that.
+- **410 newly tracked properties** (Kawaguchi 160, Katsushika 101, Koshigaya
+  87, Soka 51, Noda 11): 405 under 60㎡ (22.6–59.92㎡, mostly 2DK/2LDK, median
+  rent ¥81,000) and 5 new ≥60㎡ ads. All geocoded. **6661** archival rows.
+
 ## 2026-10-28 refresh with every source in parallel (Playwright)
 
 - Run `2026-10-28T01-03-26-998Z-c32ca1f4` with `--concurrency 5` ("Running 5
