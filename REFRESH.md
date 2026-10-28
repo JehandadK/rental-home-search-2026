@@ -107,6 +107,18 @@
   existing browser session… profile is already in use"); on 2026-10-02 AtHome
   and RoomSpot failed at launch, and only `--concurrency 1` worked. The default
   parallel run now works with the profile set.
+- **One shared browser (since 2026-10-28).** `npm run refresh` opens a single
+  headed Chromium on one persistent profile (`PLAYWRIGHT_USER_DATA_DIR`, else
+  `.context/browser-profile`; `src/collectors/shared/sharedBrowser.ts`) before
+  its portal stages and closes it at the end. Every stage attaches to it through
+  `PLAYWRIGHT_CDP_URL` (a localhost DevTools port, open only while it runs) and
+  works in its own tabs, so parallel collectors are tabs in one window and every
+  portal keeps its cookies and hand-passed verification between runs, instead of
+  about 12 fresh, cookieless browsers per refresh. A collector's `close()` closes
+  only its tabs. `--separate-browsers` restores the old per-collector launches.
+  For collectors run by hand, `npm run browser` opens the same browser and prints
+  the `PLAYWRIGHT_CDP_URL` to pass them. From a worktree, point
+  `PLAYWRIGHT_USER_DATA_DIR` at the main checkout's `.context/athome-profile`.
 
 ## Rented-out detection
 

@@ -7,7 +7,9 @@
  * serve a wait/verification page to headless Chromium; PLAYWRIGHT_HEADLESS=1 opts out.
  * PLAYWRIGHT_USER_DATA_DIR keeps cookies between runs, so a portal's human
  * verification passed once by hand in the headed window is reused. It is never
- * automated or bypassed here. playwright-core is resolved from PLAYWRIGHT_CORE_PATH, then node resolution, then the global
+ * automated or bypassed here. PLAYWRIGHT_CDP_URL attaches to the shared browser
+ * (sharedBrowser.ts) instead: the collector opens its own tabs in that one window
+ * and profile, and closing it closes only those tabs. playwright-core is resolved from PLAYWRIGHT_CORE_PATH, then node resolution, then the global
  * `playwright-cli` install.
  */
 import { existsSync, readdirSync } from "node:fs";
@@ -25,17 +27,19 @@ interface Page {
 }
 interface BrowserContext { newPage(): Promise<Page> }
 interface Browser { newContext(options: Record<string, unknown>): Promise<BrowserContext>; close(): Promise<void> }
-interface LaunchOptions { headless: boolean; executablePath?: string; locale?: string; timezoneId?: string }
+interface AttachedBrowser { contexts(): BrowserContext[]; close(): Promise<void> }
+export interface LaunchOptions { headless: boolean; executablePath?: string; locale?: string; timezoneId?: string; args?: string[] }
 interface PlaywrightCore {
   chromium: {
     launch(options: LaunchOptions): Promise<Browser>;
     launchPersistentContext(userDataDir: string, options: LaunchOptions): Promise<BrowserContext & { close(): Promise<void> }>;
+    connectOverCDP(endpointURL: string): Promise<AttachedBrowser>;
   };
 }
 
 const GLOBAL_CORE = "/opt/homebrew/lib/node_modules/@playwright/cli/node_modules/playwright-core";
 
-function loadPlaywright(): PlaywrightCore {
+export function loadPlaywright(): PlaywrightCore {
   const load = createRequire(import.meta.url);
   const candidates = [process.env.PLAYWRIGHT_CORE_PATH, "playwright-core", GLOBAL_CORE].filter((path): path is string => Boolean(path));
   for (const path of candidates) {
@@ -49,7 +53,7 @@ function loadPlaywright(): PlaywrightCore {
  * than the one already cached. Use PLAYWRIGHT_EXECUTABLE_PATH, else the newest
  * cached Chromium, rather than downloading a browser.
  */
-function cachedChromium(headless: boolean): string | undefined {
+export function cachedChromium(headless: boolean): string | undefined {
   const root = join(homedir(), "Library", "Caches", "ms-playwright");
   if (!existsSync(root)) return undefined;
   const prefix = headless ? "chromium_headless_shell-" : "chromium-";
@@ -68,6 +72,7 @@ function cachedChromium(headless: boolean): string | undefined {
 export class PlaywrightBridge {
   private browser?: Browser;
   private persistent?: BrowserContext & { close(): Promise<void> };
+  private attached?: AttachedBrowser;
   private context?: BrowserContext;
   private pages = new Map<number, Page>();
   private nextTabId = 1;
@@ -81,6 +86,14 @@ export class PlaywrightBridge {
   private async launch(): Promise<void> {
     const headless = process.env.PLAYWRIGHT_HEADLESS === "1";
     const { chromium } = loadPlaywright();
+    const cdpUrl = process.env.PLAYWRIGHT_CDP_URL;
+    if (cdpUrl) {
+      this.attached = await chromium.connectOverCDP(cdpUrl);
+      const [shared] = this.attached.contexts();
+      if (!shared) throw new Error(`The shared browser at ${cdpUrl} has no browser context`);
+      this.context = shared;
+      return;
+    }
     const userDataDir = process.env.PLAYWRIGHT_USER_DATA_DIR;
     const context = { locale: "ja-JP", timezoneId: "Asia/Tokyo" };
     const open = async (executablePath?: string) => {
@@ -141,7 +154,16 @@ export class PlaywrightBridge {
 
   close(): void {
     // Adapters call close() synchronously at the end of a run.
-    void (this.persistent ?? this.browser)?.close().catch(() => undefined);
+    if (this.attached) {
+      // The shared browser outlives this collector: close only its tabs, then disconnect.
+      const attached = this.attached;
+      void Promise.all([...this.pages.values()].map((page) => page.close().catch(() => undefined)))
+        .then(() => attached.close()).catch(() => undefined);
+    } else {
+      void (this.persistent ?? this.browser)?.close().catch(() => undefined);
+    }
+    this.pages.clear();
+    this.attached = undefined;
     this.browser = undefined;
     this.persistent = undefined;
     this.context = undefined;

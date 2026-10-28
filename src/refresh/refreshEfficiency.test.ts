@@ -104,4 +104,11 @@ describe("persistent Playwright profile under parallel collection", () => {
     expect(env.PLAYWRIGHT_USER_DATA_DIR).toBe(".context/athome-profile");
     expect(stageEnv("suumo", { PATH: "/bin" })).toEqual({ PATH: "/bin" });
   });
+  it("lets every collector attach to the shared browser and none launch the profile", () => {
+    const shared = { ...env, PLAYWRIGHT_CDP_URL: "http://127.0.0.1:53114" };
+    for (const id of PARALLEL_COLLECTOR_STAGES) {
+      expect(stageEnv(id, shared)).not.toHaveProperty("PLAYWRIGHT_USER_DATA_DIR");
+      expect(stageEnv(id, shared).PLAYWRIGHT_CDP_URL).toBe("http://127.0.0.1:53114");
+    }
+  });
 });

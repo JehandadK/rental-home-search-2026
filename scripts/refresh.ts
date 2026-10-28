@@ -6,6 +6,7 @@
  *   npm run refresh -- --resume        continue the latest incomplete run
  *   npm run refresh -- --verbose       stream full collector output
  *   npm run refresh -- --concurrency N cap parallel sources (1 = sequential)
+ *   npm run refresh -- --separate-browsers  each collector launches its own browser
  *
  * Every stage is checkpointed in data/refresh-runs.json. Source collectors
  * remain independently atomic, so a failed portal retains its last successful
@@ -30,6 +31,7 @@ import {
 } from "../src/refresh/refreshLedger";
 import type { EnrichedListing } from "../src/domain/types";
 import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, niftyStageId, planRefresh, runLimited, stageEnv } from "../src/refresh/refreshPlan";
+import { openSharedBrowser, type SharedBrowser } from "../src/collectors/shared/sharedBrowser";
 import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
 
@@ -43,6 +45,8 @@ const verbose = argv.includes("--verbose");
 const planOnly = argv.includes("--plan");
 const prepareOnly = argv.includes("--prepare");
 const localOnly = argv.includes("--local-only");
+// Portal stages share one headed browser and profile (sharedBrowser.ts) unless asked not to.
+const separateBrowsers = argv.includes("--separate-browsers");
 const flag = (name: string) => argv.includes(name) ? argv[argv.indexOf(name) + 1] : undefined;
 const onlyStage = flag("--only");
 let pageBudget = positiveInteger(flag("--max-pages"), requestedDeep ? 100 : DEFAULT_INCREMENTAL_PAGE_CEILING);
@@ -151,7 +155,7 @@ async function executeStage(
 
   const child = spawn(npm, definition.args, {
     cwd: ROOT,
-    // Only AtHome launches the persistent Playwright profile, so parallel collectors never contend for it.
+    // Stages attach to the shared browser, or else only AtHome launches the persistent profile.
     env: stageEnv(definition.id, { ...process.env, ...definition.env }),
   });
   let stdout = "", stderr = "";
@@ -265,6 +269,12 @@ try {
   process.exit(1);
 }
 let activeRun: RefreshRunRecord | undefined;
+let sharedBrowser: SharedBrowser | undefined;
+const closeSharedBrowser = async () => {
+  const browser = sharedBrowser;
+  sharedBrowser = undefined;
+  await browser?.close().catch(() => undefined);
+};
 let stopping = false;
 const stop = async (signal: string) => {
   if (stopping) return;
@@ -273,6 +283,7 @@ const stop = async (signal: string) => {
     markInterrupted(activeRun);
     await saveRefreshRun(activeRun).catch(() => undefined);
   }
+  await closeSharedBrowser();
   await releaseLock?.();
   console.error(`\nRefresh interrupted by ${signal}; checkpoint saved. Resume with \`npm run refresh -- --resume\`.`);
   process.exit(130);
@@ -331,6 +342,11 @@ try {
     }
     queue.push({ definition, stage });
   }
+  if (!separateBrowsers && !process.env.PLAYWRIGHT_CDP_URL && queue.some(({ stage }) => NETWORK_STAGES.has(stage.id))) {
+    sharedBrowser = await openSharedBrowser();
+    process.env.PLAYWRIGHT_CDP_URL = sharedBrowser.cdpUrl;
+    console.log(`Portal pages load in one shared browser (profile ${sharedBrowser.userDataDir})`);
+  }
   // Independent portal collectors first. Sources run concurrently; stages that share a
   // source file (Nifty cities) run in order inside their group. Failures are recoverable.
   const groups = new Map<string, typeof queue>();
@@ -353,6 +369,8 @@ try {
     }
   }
 
+  await closeSharedBrowser();
+
   if (mandatoryFailure) {
     activeRun.status = "failed";
     activeRun.completedAt = new Date().toISOString();
@@ -374,5 +392,6 @@ try {
   console.error(`\n${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 } finally {
+  await closeSharedBrowser();
   await releaseLock?.();
 }

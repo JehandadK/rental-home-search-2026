@@ -58,15 +58,17 @@ export async function runLimited<T, R>(items: readonly T[], limit: number, task:
 
 /**
  * Chromium allows one instance per user-data directory, so concurrent collectors
- * cannot all launch PLAYWRIGHT_USER_DATA_DIR. Only AtHome needs the session whose
- * verification was passed by hand; every other stage gets a fresh, non-persistent
- * Playwright context.
+ * cannot all launch PLAYWRIGHT_USER_DATA_DIR. With a shared browser
+ * (PLAYWRIGHT_CDP_URL) every stage attaches to it and none launches the profile;
+ * without one, only AtHome, which needs the session whose verification was passed
+ * by hand, gets the profile and every other stage a fresh, non-persistent context.
  */
 export const PERSISTENT_PROFILE_STAGE = "athome";
 
 /** Child-process environment for a stage; never mutates `env`. */
 export function stageEnv(stageId: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  if (stageId === PERSISTENT_PROFILE_STAGE || env.PLAYWRIGHT_USER_DATA_DIR == null) return env;
+  const attached = env.PLAYWRIGHT_CDP_URL != null;
+  if ((!attached && stageId === PERSISTENT_PROFILE_STAGE) || env.PLAYWRIGHT_USER_DATA_DIR == null) return env;
   const { PLAYWRIGHT_USER_DATA_DIR: _profile, ...rest } = env;
   return rest;
 }
