@@ -632,6 +632,19 @@ removed, and every collector now uses the headed Playwright browser.
 - **410 newly tracked properties** (Kawaguchi 160, Katsushika 101, Koshigaya
   87, Soka 51, Noda 11): 405 under 60㎡ (22.6–59.92㎡, mostly 2DK/2LDK, median
   rent ¥81,000) and 5 new ≥60㎡ ads. All geocoded. **6661** archival rows.
+- Finished the six remaining cities in **one shared browser** (`npm run
+  browser` on the main checkout's `.context/athome-profile`, every lane attached
+  with `PLAYWRIGHT_CDP_URL`). AtHome Kawaguchi (replaying its cached pages),
+  Katsushika and Noda: **902 / 200 / 22** new ads; Kawaguchi showed the
+  verification page once and it was passed by hand, Katsushika and Noda then
+  ran with no prompt. Nifty, started over an hour after its 405: Katsushika
+  **118**, Noda **142**; Kawaguchi stopped after two all-known pages with 0 new
+  because its first 28 pages were already held, so its older pages still need
+  a `--deep` crawl.
+- Rebuild: **86** more newly tracked properties (Katsushika 50, Kawaguchi 21,
+  Noda 15), 82 under 60㎡ (24.84–59.92㎡, median rent ¥87,000), all geocoded;
+  most of AtHome's 902 Kawaguchi ads joined properties already held from other
+  portals. **6738** archival rows; UR untouched.
 
 ## 2026-10-28 refresh with every source in parallel (Playwright)
 
