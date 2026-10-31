@@ -352,9 +352,9 @@
     "building.floor": {
       "chosen": "7階",
       "chosenFrom": {
-        "source": "nifty",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-27T06:17:07.385Z"
+        "observedAt": "2026-10-25T11:12:01.368Z"
       },
       "values": [
         {
@@ -437,7 +437,8 @@
           "firstRecordedAt": "2026-10-25T11:14:51.238Z",
           "reportedAt": {
             "suumo|jnc_000110184031|bc_100529792893": "2026-10-25T11:14:51.238Z"
-          }
+          },
+          "observedBefore": "2026-10-31T23:10:15.853Z"
         }
       ]
     },
@@ -1160,7 +1161,8 @@
           "firstRecordedAt": "2026-10-25T11:14:51.238Z",
           "reportedAt": {
             "suumo|jnc_000110184031|bc_100529792893": "2026-10-25T11:14:51.238Z"
-          }
+          },
+          "observedBefore": "2026-10-31T23:10:15.853Z"
         }
       ]
     },
@@ -1992,6 +1994,32 @@
       "type": "ad.checked",
       "at": "2026-10-28T01:11:17.623Z",
       "recordedAt": "2026-10-28T01:15:48.301Z",
+      "source": "ur",
+      "adKey": "ur|20_2950-000010740",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/tokyo/20_2950_room.html?JKSS=000010740",
+      "data": {
+        "state": "gone",
+        "evidence": "UR detail_room returned no room (no longer advertised)",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110184031|bc_100529792893|2026-10-31T23:10:15.853Z",
+      "type": "ad.superseded",
+      "at": "2026-10-31T23:10:15.853Z",
+      "recordedAt": "2026-10-31T23:22:33.491Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110184031|bc_100529792893",
+      "url": "https://suumo.jp/chintai/jnc_000110184031/?bc=100529792893",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
+    },
+    {
+      "id": "ad.checked|ur|20_2950-000010740|2026-10-31T23:17:28.537Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:17:28.537Z",
+      "recordedAt": "2026-10-31T23:22:33.491Z",
       "source": "ur",
       "adKey": "ur|20_2950-000010740",
       "url": "https://www.ur-net.go.jp/chintai/kanto/tokyo/20_2950_room.html?JKSS=000010740",

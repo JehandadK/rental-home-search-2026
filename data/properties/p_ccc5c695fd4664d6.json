@@ -18,7 +18,8 @@
         "2026-10-25T11:13:45.525Z",
         "2026-10-27T06:17:31.857Z",
         "2026-10-28T01:04:56.299Z",
-        "2026-10-28T05:24:10.980Z"
+        "2026-10-28T05:24:10.980Z",
+        "2026-10-31T23:11:15.765Z"
       ],
       "firstRecordedAt": "2026-10-27T06:27:22.150Z"
     }
@@ -182,11 +183,11 @@
       ]
     },
     "builtYear": {
-      "chosen": 2026,
+      "chosen": 2025,
       "chosenFrom": {
         "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:13:50.350Z"
+        "observedAt": "2026-10-31T23:11:19.193Z"
       },
       "values": [
         {
@@ -199,6 +200,17 @@
           "lastObservedAt": null,
           "observedBefore": "2026-10-25T11:13:50.350Z",
           "firstRecordedAt": "2026-10-27T06:27:22.150Z"
+        },
+        {
+          "value": 2025,
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_776b28b9912036898ff2a7ae08333bdd"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "observedBefore": "2026-10-31T23:11:19.193Z",
+          "firstRecordedAt": "2026-10-31T23:22:33.491Z"
         }
       ]
     },
@@ -350,11 +362,11 @@
       ]
     },
     "name": {
-      "chosen": "愛宕駅より徒歩14分 新築 2階建",
+      "chosen": "愛宕駅より徒歩14分 築1年 2階建",
       "chosenFrom": {
         "source": "nifty",
         "rule": "latest-evidence",
-        "observedAt": "2026-10-25T11:13:50.350Z"
+        "observedAt": "2026-10-31T23:11:19.193Z"
       },
       "values": [
         {
@@ -367,6 +379,17 @@
           "lastObservedAt": null,
           "observedBefore": "2026-10-25T11:13:50.350Z",
           "firstRecordedAt": "2026-10-27T06:27:22.150Z"
+        },
+        {
+          "value": "愛宕駅より徒歩14分 築1年 2階建",
+          "source": "nifty",
+          "adKeys": [
+            "nifty|detail_776b28b9912036898ff2a7ae08333bdd"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "observedBefore": "2026-10-31T23:11:19.193Z",
+          "firstRecordedAt": "2026-10-31T23:22:33.491Z"
         }
       ]
     },
@@ -568,6 +591,18 @@
       "data": {
         "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.superseded|nifty|detail_776b28b9912036898ff2a7ae08333bdd|2026-10-31T23:11:19.193Z",
+      "type": "ad.superseded",
+      "at": "2026-10-31T23:11:19.193Z",
+      "recordedAt": "2026-10-31T23:22:33.491Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_776b28b9912036898ff2a7ae08333bdd",
+      "url": "https://myhome.nifty.com/rent/chiba/nodashi_ct/detail_776b28b9912036898ff2a7ae08333bdd/",
+      "data": {
+        "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -576,8 +611,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "nifty|detail_776b28b9912036898ff2a7ae08333bdd",
     "firstSeenUrl": "https://myhome.nifty.com/rent/chiba/nodashi_ct/detail_776b28b9912036898ff2a7ae08333bdd/",
-    "lastSeenAt": "2026-10-28T05:24:10.980Z",
-    "lastListedAt": "2026-10-28T05:24:10.980Z",
+    "lastSeenAt": "2026-10-31T23:11:15.765Z",
+    "lastListedAt": "2026-10-31T23:11:15.765Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -592,14 +627,16 @@
       "nifty|detail_776b28b9912036898ff2a7ae08333bdd": {
         "source": "nifty",
         "firstSeenAt": "2026-10-25T11:13:45.525Z",
-        "lastSeenAt": "2026-10-28T05:24:10.980Z",
-        "lastListedAt": "2026-10-28T05:24:10.980Z",
+        "lastSeenAt": "2026-10-31T23:11:15.765Z",
+        "lastListedAt": "2026-10-31T23:11:15.765Z",
         "goneSince": null,
         "relistCount": 0
       }
     },
     "conflicts": [
-      "building.features"
+      "building.features",
+      "builtYear",
+      "name"
     ]
   }
 }

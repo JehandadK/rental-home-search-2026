@@ -612,6 +612,25 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-01 first refresh in one shared browser (Playwright)
+
+- Run `2026-10-31T23-08-30-569Z-6d13e9ea` (`--concurrency 5`): **SUCCESS**,
+  no resume, 14m42s. "Portal pages load in one shared browser" on the main
+  checkout's `.context/athome-profile`; every source ran as tabs in that one
+  window. AtHome showed its verification page once (passed by hand); every
+  Nifty city, Kawaguchi included, loaded without an error for the first time
+  since 2026-10-25.
+- Source additions: SUUMO **41**, AtHome **74**, RoomSpot **10**, Nifty **82**
+  (Kawaguchi 38, Katsushika 18, Koshigaya 15, Soka 8, Noda 3).
+- UR swept 74 of 74 municipalities: 138 estates, 90 vacant rooms (76 with 2+
+  rooms), 338 API calls. The `ur` source went 183 → 209 rooms (26 added, none
+  gone, no rent changes); the rooms page has 84 open of 1611.
+- **88 newly tracked properties**: 78 from the portals, all ≥60㎡
+  (60–146.97㎡, 40 ≥70㎡, 39 at ≤¥150,000), and 10 UR rooms. All geocoded.
+  **6839** archival rows. Pairs that look like one home on two portals but
+  were kept apart: Koshigaya 75.51㎡ ¥107,000 (Nifty, SUUMO Ambicia) and
+  Kawaguchi 72.66/72.7㎡ ¥138,000 (Nifty, SUUMO 芝富士1丁目住宅).
+
 ## 2026-10-28 every-size load without UR (Playwright, partial)
 
 - `npm run refresh` has no way to skip UR, so the portal collectors ran
