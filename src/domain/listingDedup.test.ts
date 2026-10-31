@@ -105,6 +105,36 @@ describe("cross-source listing deduplication", () => {
     expect(isSameProperty(athome, { ...suumo, stationWalkMin: 21 })).toBe(false);
   });
 
+  it("matches a house SUUMO gives as floors 1-2 and AtHome as floor 1", () => {
+    // 2026-11-01: 赤山町４丁目貸家Ⅱ, the same house on four portals, was two homes.
+    const athome = make({
+      id: "athome-1", source: "athome", name: "赤山町４丁目貸家Ⅱ", address: "埼玉県越谷市赤山町４丁目14-8",
+      rent: 135_000, layout: "4LDK", sizeM2: 104.34, builtYear: 1995, stationWalkMin: 13, building: { floor: "1階" },
+    });
+    const suumo = make({
+      name: "赤山町４丁目貸家II", address: "埼玉県越谷市赤山町４",
+      rent: 135_000, layout: "4LDK", sizeM2: 104.34, builtYear: 1995, stationWalkMin: 13, building: { floor: "1-2階" },
+    });
+    expect(isSameProperty(athome, suumo)).toBe(true);
+    expect(isSameProperty(suumo, { ...athome, building: { floor: "2階" } })).toBe(true);
+    expect(isSameProperty(suumo, { ...athome, building: { floor: "1～3階" } })).toBe(true);
+  });
+
+  it("keeps a building's own number when a portal appends the floor after a space", () => {
+    // RoomSpot "ピカソ４５ 1階" lost its 45 with the floor and never matched SUUMO "ピカソ４５".
+    const suumo = make({ name: "ピカソ４５", address: "埼玉県越谷市東越谷１０", rent: 92_000, layout: "2LDK", sizeM2: 75.15, builtYear: 1999, stationWalkMin: null, building: { floor: "1階" } });
+    const roomspot = make({ id: "roomspot-1", source: "roomspot", name: "ピカソ４５ 1階", address: "埼玉県越谷市東越谷１０丁目22-14", rent: 92_000, layout: "2LDK", sizeM2: 75.15, builtYear: 2000, stationWalkMin: null, building: { floor: "1階" } });
+    expect(isSameProperty(suumo, roomspot)).toBe(true);
+    expect(isSameProperty(make({ name: "ピカソ４６" }), { ...roomspot, name: "ピカソ４５ 1階" })).toBe(false);
+  });
+
+  it("still keeps floors apart that a range does not cover", () => {
+    const athome = make({ id: "athome-1", source: "athome", building: { floor: "3階" } });
+    expect(isSameProperty(make({ building: { floor: "1-2階" } }), athome)).toBe(false);
+    expect(isSameProperty(make({ building: { floor: "1階" } }), { ...athome, building: { floor: "2階" } })).toBe(false);
+    expect(isSameProperty(make({ building: { floor: "B1階" } }), { ...athome, building: { floor: "1階" } })).toBe(false);
+  });
+
   it("treats a dash floor as unknown, not as a conflict", () => {
     const athome = make({
       id: "athome-2",

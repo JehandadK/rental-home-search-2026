@@ -49,8 +49,16 @@ const foldRomanNumerals = (value: string): string =>
  * trailing unit designators (repeatedly, e.g. "…Ａ棟 2階") and fold hyphens
  * and roman numerals so equivalent building names compare equal.
  */
+/**
+ * A designator set off by a space ("ピカソ４５ 1階"). Stripped before spaces are
+ * dropped, or "ピカソ451階" would lose the building's own number with the floor.
+ */
+const SPACED_DESIGNATOR = /\s+(?:\d+号室|\d+(?:[-‐‑‒–—―ー−]\d+)?階|\d{3,5})$/;
+
 const normName = (value: string): string => {
-  let name = foldRomanNumerals(norm(value)).replace(HYPHENS, "-").replace(/-/g, "");
+  let spaced = value.normalize("NFKC").trim();
+  while (SPACED_DESIGNATOR.test(spaced)) spaced = spaced.replace(SPACED_DESIGNATOR, "").trim();
+  let name = foldRomanNumerals(norm(spaced)).replace(HYPHENS, "-").replace(/-/g, "");
   let previous = "";
   while (previous !== name) {
     previous = name;
@@ -113,12 +121,29 @@ function sameSize(a: RawListing, b: RawListing): boolean {
  * unstated; that is absence of information, not a floor to conflict with.
  */
 const UNKNOWN_FLOORS = new Set(["", "-"]);
-const normFloor = (value: string | null | undefined): string => norm(value).replace(HYPHENS, "-");
+const normFloor = (value: string | null | undefined): string => norm(value).replace(HYPHENS, "-").replace(/[~～]/g, "-");
 
+/** "2階" → [2, 2]; "1-2階", a house or maisonette over several floors, → [1, 2]. */
+function floorRange(floor: string): [number, number] | undefined {
+  const match = floor.match(/^(\d+)(?:-(\d+))?階$/);
+  if (!match) return undefined;
+  const low = Number(match[1]);
+  return [low, match[2] ? Number(match[2]) : low];
+}
+
+/**
+ * Different floors mean different rooms. A house is the exception that portals
+ * print two ways: SUUMO gives its floors ("1-2階"), AtHome and others the floor
+ * of the entrance ("1階"). A floor within the other side's range is no conflict.
+ */
 function hasFloorConflict(a: RawListing, b: RawListing): boolean {
   const floorA = normFloor(a.building?.floor);
   const floorB = normFloor(b.building?.floor);
-  return !UNKNOWN_FLOORS.has(floorA) && !UNKNOWN_FLOORS.has(floorB) && floorA !== floorB;
+  if (UNKNOWN_FLOORS.has(floorA) || UNKNOWN_FLOORS.has(floorB) || floorA === floorB) return false;
+  const rangeA = floorRange(floorA);
+  const rangeB = floorRange(floorB);
+  if (!rangeA || !rangeB) return true;
+  return rangeA[1] < rangeB[0] || rangeB[1] < rangeA[0];
 }
 
 /**
