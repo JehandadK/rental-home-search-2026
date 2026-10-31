@@ -42,7 +42,7 @@ import { FEATURE_PARAMETERS, SCORE_PARAMETERS } from "../../domain/scoringConfig
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
-import { isRentedOut } from "../../domain/availability";
+import { isLikelyRented, isRentedOut } from "../../domain/availability";
 import { isUrListing, sourceLabel, UR_PLACE_CATEGORY } from "../../domain/ur";
 import { describeNearby, urEstateNearby } from "../../domain/urEstateNearby";
 import { urEstateNameEn } from "../../domain/urEstateNames";
@@ -795,7 +795,7 @@ export const MapView = memo(function MapView({
       const ruledOut = isRuledOut(mark);
       const candidate = mark != null && !ruledOut;
       // Sold listings recede to grey; ruled-out homes become a faded cross.
-      const dimmed = sold || isRentedOut(listing);
+      const dimmed = sold || isRentedOut(listing) || isLikelyRented(listing);
       const fresh = layers.newRings && isNewListing(listing, now, newWithinDays);
       // A UR room keeps its score colour inside a UR-coloured edge.
       const ur = urRows.has(row);

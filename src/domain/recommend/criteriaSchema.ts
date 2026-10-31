@@ -327,6 +327,7 @@ export const FIELD_SPECS: readonly FieldSpec[] = [
   filter("parkingMaxYen", "Parking price cap", "Drop homes whose parking costs more (null = no cap)", { kind: "nullableNumber", min: 0, max: 200_000 }, "¥/mo"),
   filter("status", "Listing status", "all, only active, or only sold", enumOf(["all", "active", "sold"])),
   filter("rentedOut", "Rented out everywhere", "Homes every portal shows as gone: hide, show, or only those", enumOf(["hide", "show", "only"])),
+  filter("likelyRented", "Likely rented", "Homes whose SUUMO and AtHome ads are all gone, even if another portal still lists them: hide, show, or only those", enumOf(["hide", "show", "only"])),
   filter("ur", "UR rooms", "UR賃貸 rooms: show, hide, or only those", enumOf(["show", "hide", "only"])),
   filter("newOnly", "New only", "Keep only homes first seen within filters.newWithinDays", { kind: "boolean" }),
   filter("newWithinDays", "New window", "Days a home counts as new", { kind: "number", min: MIN_NEW_WINDOW_DAYS, max: MAX_NEW_WINDOW_DAYS, integer: true }, "days"),

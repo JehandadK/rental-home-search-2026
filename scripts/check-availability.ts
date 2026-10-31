@@ -4,6 +4,8 @@
  *   npm run check:availability                      most-likely-gone first, 25 properties
  *   npm run check:availability -- --limit 60 --city Soka --min-size 60
  *   npm run check:availability -- --url <ad url>    check one ad (and its property's other ads)
+ *   npm run check:availability -- --keys-file keys.json --portals suumo,athome
+ *                                                   every SUUMO and AtHome ad of these dashboard keys
  *   npm run check:availability -- --dry-run         list what would be visited; no browser
  *
  * Every visit goes through the headed Playwright browser, never plain HTTP. A property is checked cheapest portal
@@ -12,6 +14,7 @@
  * ATHOME_VERIFY_WAIT_SECONDS to give yourself time to pass a verification page.
  */
 import { readFile } from "node:fs/promises";
+import { listingKey } from "../src/domain/listingKey";
 import { join } from "node:path";
 import { adKey, withAvailability } from "../src/domain/availability";
 import { deduplicateListings, sourceListings } from "../src/domain/listingDedup";
@@ -41,9 +44,20 @@ const listings = deduplicateListings(JSON.parse(await readFile(join(DATA_DIR, "l
 const known = await readAvailability();
 const now = new Date();
 
+// `--portals suumo,athome` visits every ad of those portals instead of stopping at the first live one.
+const portals = flag("--portals")?.split(",").map((source) => source.trim()).filter(Boolean);
+const keysFile = flag("--keys-file");
+
 let targets: RawListing[];
 const urls = flags("--url");
-if (urls.length) {
+if (keysFile) {
+  // A JSON array of dashboard keys (as in a ranking's results[].key), or one key per line.
+  const text = await readFile(keysFile, "utf8");
+  const keys = new Set<string>(text.trim().startsWith("[") ? JSON.parse(text) : text.split("\n").map((line) => line.trim()).filter(Boolean));
+  targets = listings.filter((listing) => keys.has(listingKey(listing)));
+  const missing = keys.size - targets.length;
+  if (missing) console.log(`${missing} key${missing === 1 ? "" : "s"} matched no current property`);
+} else if (urls.length) {
   targets = urls.map((url) => {
     const source = sourceOf(url);
     if (!source) throw new Error(`Unsupported portal URL: ${url}`);
@@ -71,10 +85,12 @@ try {
     const check = await checkProperty(withAvailability(listing, known), known, {
       visit: (ad) => visitor.visit(ad), now: () => new Date().toISOString(), delayMs: 2_000,
       sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-    });
+    }, { portals });
     await recordAvailability(check.records);
-    const state = check.rentedOut ? "RENTED OUT" : check.ads.some((ad) => ad.verdict === "listed") ? "listed" : "unresolved";
-    if (check.rentedOut) rentedOut++; else if (state === "listed") stillListed++; else unresolved++;
+    const allGone = check.ads.length > 0 && check.ads.every((ad) => ad.verdict === "gone" || ad.verdict === "known-gone");
+    const state = check.rentedOut ? "RENTED OUT"
+      : portals && allGone ? "GONE" : check.ads.some((ad) => ad.verdict === "listed") ? "listed" : check.ads.length ? "unresolved" : "no ads";
+    if (check.rentedOut || state === "GONE") rentedOut++; else if (state === "listed") stillListed++; else unresolved++;
     console.log(`${state.padEnd(10)} ${listing.name}`);
     for (const ad of check.ads) console.log(`             ${ad.source.padEnd(8)} ${ad.verdict.padEnd(10)} ${ad.evidence}`);
     await new Promise((resolve) => setTimeout(resolve, 2_000));
@@ -83,4 +99,4 @@ try {
   await visitor.close();
 }
 console.log(describePropertySync(await syncCurrentProperties("check:availability")));
-console.log(`\nRented out: ${rentedOut} · still listed: ${stillListed} · unresolved: ${unresolved}. Publish with \`npm run data:web\`.`);
+console.log(`\n${portals ? `Gone from ${portals.join("/")}` : "Rented out"}: ${rentedOut} · still listed: ${stillListed} · unresolved or no such ads: ${unresolved}. Publish with \`npm run data:web\`.`);

@@ -76,7 +76,7 @@ describe("lifecycleCounts", () => {
       make({ name: "legacy", firstSeenAt: null }),
       make({ name: "gone", status: "sold", firstSeenAt: daysAgo(1) }),
     ];
-    expect(lifecycleCounts(listings)).toEqual({ newCount: 2, soldCount: 1, rentedOutCount: 0 });
+    expect(lifecycleCounts(listings)).toEqual({ newCount: 2, soldCount: 1, rentedOutCount: 0, likelyRentedCount: 0 });
   });
 });
 

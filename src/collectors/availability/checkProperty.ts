@@ -3,6 +3,9 @@
  *
  * A property is available if ANY of its portal ads is live, so ads are visited
  * in a fixed cheapest-first order and the walk stops at the first live one.
+ * With `portals`, only those portals' ads are checked and every one is visited:
+ * SUUMO and AtHome take an ad down once the home is let (isLikelyRented), so
+ * each of their ads matters, whatever an aggregator still shows.
  * Ads already known to be gone are not visited again. Only positive
  * evidence is recorded: an `unknown` visit (verification page, timeout) is
  * reported but never written as gone.
@@ -31,6 +34,11 @@ export interface PropertyCheck {
   records: Array<AdAvailability & { source: string; url: string }>;
 }
 
+export interface CheckOptions {
+  /** Check only these portals' ads, every one of them, without stopping at a live ad. */
+  portals?: readonly string[];
+}
+
 export interface CheckDependencies {
   visit(ad: { source: string; url: string }): Promise<AdVisit>;
   now(): string;
@@ -38,9 +46,10 @@ export interface CheckDependencies {
   delayMs: number;
 }
 
-export async function checkProperty(listing: RawListing, known: AvailabilityMap, deps: CheckDependencies): Promise<PropertyCheck> {
+export async function checkProperty(listing: RawListing, known: AvailabilityMap, deps: CheckDependencies, options: CheckOptions = {}): Promise<PropertyCheck> {
   const ads = sourceListings(listing)
     .filter((ad): ad is typeof ad & { url: string } => Boolean(ad.url))
+    .filter((ad) => !options.portals || options.portals.includes(ad.source))
     .sort((a, b) => rank(a.source) - rank(b.source));
   const result: PropertyCheck = { ads: [], rentedOut: false, records: [] };
   let goneCount = 0;
@@ -65,9 +74,10 @@ export async function checkProperty(listing: RawListing, known: AvailabilityMap,
       result.records.push({ source: ad.source, url: ad.url, state: verdict.state, checkedAt: deps.now(), evidence: verdict.evidence, method: "probe" });
     }
     if (verdict.state === "gone") goneCount++;
-    if (verdict.state === "listed") break; // available somewhere: no need to visit the rest
+    if (verdict.state === "listed" && !options.portals) break; // available somewhere: no need to visit the rest
   }
 
-  result.rentedOut = ads.length > 0 && goneCount === ads.length;
+  // Only a check of every ad can conclude that the whole property is rented out.
+  result.rentedOut = !options.portals && ads.length > 0 && goneCount === ads.length;
   return result;
 }

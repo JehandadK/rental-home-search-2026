@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adKey, adAvailability, describeAvailability, isRentedOut, withAvailability, type AvailabilityMap } from "./availability";
+import { adKey, adAvailability, describeAvailability, isLikelyRented, isRentedOut, withAvailability, type AvailabilityMap } from "./availability";
 import { EMPTY_FILTERS, matchesListing } from "./filters";
 import { lifecycleCounts } from "./lifecycle";
 import type { AdAvailability, EnrichedListing } from "./types";
@@ -30,6 +30,37 @@ describe("adKey", () => {
   it("falls back to the URL without its query, then to the id", () => {
     expect(adKey("other", "https://x.example/a?b=1#c")).toBe("other|https://x.example/a");
     expect(adKey("other", null, "77")).toBe("other|77");
+  });
+});
+
+describe("isLikelyRented", () => {
+  const NIFTY = "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_63aeb294ac273e7a9de8fb8879eba592/";
+  it("is every SUUMO and AtHome ad gone, whatever Nifty or RoomSpot still show", () => {
+    const stale = listing({ sourceListings: [
+      { source: "suumo", url: SUUMO, availability: gone() }, { source: "athome", url: ATHOME, availability: gone() },
+      { source: "nifty", url: NIFTY, availability: listed() },
+    ] });
+    expect(isLikelyRented(stale)).toBe(true);
+    expect(isRentedOut(stale)).toBe(false);
+  });
+  it("needs every SUUMO and AtHome ad gone, and at least one of them", () => {
+    expect(isLikelyRented(listing({ sourceListings: [{ source: "suumo", url: SUUMO, availability: gone() }, { source: "athome", url: ATHOME }] }))).toBe(false);
+    expect(isLikelyRented(listing({ sourceListings: [{ source: "suumo", url: SUUMO, availability: gone() }, { source: "athome", url: ATHOME, availability: listed() }] }))).toBe(false);
+    expect(isLikelyRented(listing({ source: "nifty", url: NIFTY, sourceListings: [{ source: "nifty", url: NIFTY, availability: gone() }] }))).toBe(false);
+  });
+  it("hides likely-rented homes by default, and shows or keeps only them on request", () => {
+    const stale = listing({ sourceListings: [{ source: "suumo", url: SUUMO, availability: gone() }, { source: "nifty", url: NIFTY, availability: listed() }] });
+    const live = listing({ sourceListings: [{ source: "suumo", url: SUUMO, availability: listed() }, { source: "nifty", url: NIFTY }] });
+    expect(matchesListing(stale, EMPTY_FILTERS)).toBe(false);
+    expect(matchesListing(stale, { ...EMPTY_FILTERS, likelyRented: "show" })).toBe(true);
+    expect(matchesListing(live, { ...EMPTY_FILTERS, likelyRented: "only" })).toBe(false);
+    expect(matchesListing(stale, { ...EMPTY_FILTERS, likelyRented: "only" })).toBe(true);
+    expect(lifecycleCounts([stale, live]).likelyRentedCount).toBe(1);
+  });
+  it("leaves a rented-out home to the rented-out filter", () => {
+    const all = listing({ sourceListings: [{ source: "suumo", url: SUUMO, availability: gone() }, { source: "athome", url: ATHOME, availability: gone() }] });
+    expect(matchesListing(all, { ...EMPTY_FILTERS, rentedOut: "show" })).toBe(true);
+    expect(lifecycleCounts([all])).toMatchObject({ rentedOutCount: 1, likelyRentedCount: 0 });
   });
 });
 

@@ -34,6 +34,21 @@ function deps(pages: Record<string, AdVisit | Error>) {
 }
 
 describe("checkProperty", () => {
+  it("with portals, visits every SUUMO and AtHome ad, live or not, and skips the rest", async () => {
+    const { value, visited } = deps({ [SUUMO]: gonePage(SUUMO) });
+    const result = await checkProperty(home(), {}, value, { portals: ["suumo", "athome"] });
+    expect(visited).toEqual([SUUMO, ATHOME]);
+    expect(result.ads.map((ad) => [ad.source, ad.verdict])).toEqual([["suumo", "gone"], ["athome", "listed"]]);
+    expect(result.rentedOut).toBe(false);
+  });
+
+  it("with portals, never calls the property rented out: other portals were not checked", async () => {
+    const { value } = deps({ [SUUMO]: gonePage(SUUMO), [ATHOME]: gonePage(ATHOME) });
+    const result = await checkProperty(home(), {}, value, { portals: ["suumo", "athome"] });
+    expect(result.ads.every((ad) => ad.verdict === "gone")).toBe(true);
+    expect(result.rentedOut).toBe(false);
+  });
+
   it("stops at the first live portal, so an available property costs one visit", async () => {
     const { value, visited } = deps({});
     const result = await checkProperty(home(), {}, value);

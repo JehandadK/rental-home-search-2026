@@ -9,7 +9,7 @@ import { agencyIdentity, agencyOf, type AgencyGazetteer } from "./agencyNames";
 import type { ReferenceCity } from "./referenceData";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
 import type { MarkFilter } from "./marks";
-import { isRentedOut } from "./availability";
+import { isLikelyRented, isRentedOut } from "./availability";
 import { isUrListing } from "./ur";
 
 export type AreaMode = "include" | "exclude";
@@ -88,6 +88,11 @@ export interface ListingFilters {
   status: StatusFilter;
   /** Visibility of properties rented out on every portal. */
   rentedOut: RentedOutFilter;
+  /**
+   * Likely rented (every SUUMO and AtHome ad gone, isLikelyRented): hide, show,
+   * or only those. Rented-out properties still follow `rentedOut`.
+   */
+  likelyRented: RentedOutFilter;
   /** Visibility of UR rooms. The map's UR estate layer is not a listing and ignores it. */
   ur: UrFilter;
   /** Keep only listings first seen within the NEW window. */
@@ -121,6 +126,7 @@ export const EMPTY_FILTERS: ListingFilters = {
   parkingMaxYen: null,
   status: "all",
   rentedOut: "hide",
+  likelyRented: "hide",
   ur: "show",
   newOnly: false,
   newWithinDays: NEW_LISTING_WINDOW_DAYS,
@@ -312,6 +318,11 @@ export function matchesListing(listing: EnrichedListing, filters: ListingFilters
   if (filters.status === "sold" && !isSold(listing)) return false;
   if (filters.newOnly && !isNewListing(listing, new Date(), filters.newWithinDays)) return false;
 
+  if (filters.likelyRented !== "show") {
+    const likely = isLikelyRented(listing);
+    if (filters.likelyRented === "hide" && likely && !isRentedOut(listing)) return false;
+    if (filters.likelyRented === "only" && !likely) return false;
+  }
   if (filters.rentedOut !== "show") {
     const rentedOut = isRentedOut(listing);
     if (filters.rentedOut === "hide" && rentedOut) return false;
@@ -364,6 +375,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   if (filters.status !== "all") n++;
   if (filters.newOnly) n++;
   if (filters.rentedOut !== "hide") n++;
+  if (filters.likelyRented !== "hide") n++;
   if (filters.ur !== "show") n++;
   if (filters.markFilter !== "all") n++;
   return n;

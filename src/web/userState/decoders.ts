@@ -52,7 +52,9 @@ export function decodeFilters(raw: unknown): ListingFilters {
   const agencyMode = filters.agencyMode === "exclude" ? "exclude" : "include";
   // Filters saved before the UR filter existed have none: they show UR rooms.
   const ur = filters.ur === "hide" || filters.ur === "only" ? filters.ur : "show";
-  return { ...filters, agencies, agencyMode, ur, newWithinDays: clampNewWindowDays(filters.newWithinDays) };
+  // Filters saved before likely-rented existed hide those homes, like rented-out ones.
+  const likelyRented = filters.likelyRented === "show" || filters.likelyRented === "only" ? filters.likelyRented : "hide";
+  return { ...filters, agencies, agencyMode, ur, likelyRented, newWithinDays: clampNewWindowDays(filters.newWithinDays) };
 }
 
 const MARK_KEYS = new Set<string>(LISTING_MARKS.map((mark) => mark.key));

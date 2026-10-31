@@ -7,7 +7,7 @@
  * `firstSeenAt` and are therefore never "new".
  */
 import type { EnrichedListing } from "./types";
-import { isRentedOut } from "./availability";
+import { isLikelyRented, isRentedOut } from "./availability";
 
 /** How long a listing counts as "new" after it is first seen, by default. */
 export const NEW_LISTING_WINDOW_DAYS = 14;
@@ -53,14 +53,18 @@ export function lifecycleCounts(
   soldCount: number;
   /** Still-advertised-by-absence rows that every portal has shown as gone. */
   rentedOutCount: number;
+  /** Rows whose SUUMO and AtHome ads are all gone while another portal still lists them. */
+  likelyRentedCount: number;
 } {
   let newCount = 0;
   let soldCount = 0;
   let rentedOutCount = 0;
+  let likelyRentedCount = 0;
   for (const listing of listings) {
     if (isSold(listing)) soldCount++;
     else if (isRentedOut(listing)) rentedOutCount++;
+    else if (isLikelyRented(listing)) likelyRentedCount++;
     else if (isNewListing(listing, new Date(), windowDays)) newCount++;
   }
-  return { newCount, soldCount, rentedOutCount };
+  return { newCount, soldCount, rentedOutCount, likelyRentedCount };
 }

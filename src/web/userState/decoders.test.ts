@@ -89,6 +89,10 @@ describe("user-state decoders", () => {
     expect(decodeFilters({ newOnly: true }).newWithinDays).toBe(14);
     // Filters saved before the UR filter existed show UR rooms; a corrupt mode does too.
     expect(decodeFilters({ rentedOut: "show" })).toMatchObject({ rentedOut: "show", ur: "show" });
+    // Saved before likely-rented existed: those homes are hidden, like rented-out ones; junk falls back too.
+    expect(decodeFilters({ rentedOut: "show" })).toMatchObject({ likelyRented: "hide" });
+    expect(decodeFilters({ likelyRented: "only" })).toMatchObject({ likelyRented: "only" });
+    expect(decodeFilters({ likelyRented: "maybe" })).toMatchObject({ likelyRented: "hide" });
     expect(decodeFilters({ ur: "only" }).ur).toBe("only");
     expect(decodeFilters({ ur: "hide" }).ur).toBe("hide");
     expect(decodeFilters({ ur: "sideways" }).ur).toBe("show");

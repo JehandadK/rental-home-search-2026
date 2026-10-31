@@ -7,7 +7,7 @@
  *   explainHome                  one home under the criteria, filters or not
  *   compareHomes                 a few homes side by side
  */
-import { isRentedOut } from "../availability";
+import { isLikelyRented, isRentedOut } from "../availability";
 import { areaOptions, cityOptions, layoutOptions, listingAgencyKeys, listingArea, type ListingFilters } from "../filters";
 import { isNewListing } from "../lifecycle";
 import { sourceListings } from "../listingDedup";
@@ -78,6 +78,8 @@ export interface HomeSummary {
   status: "active" | "sold";
   isNew: boolean;
   rentedOut: boolean;
+  /** Every SUUMO and AtHome ad is gone (rented-out homes included). */
+  likelyRented: boolean;
   ur: boolean;
   /** Each portal ad for this home. */
   ads: { source: string; url: string | null }[];
@@ -293,6 +295,7 @@ export function homeSummary({ listing, score }: ScoredRow, criteria: Criteria, n
     status: listing.status === "sold" ? "sold" : "active",
     isNew: isNewListing(listing, now, criteria.filters.newWithinDays),
     rentedOut: isRentedOut(listing),
+    likelyRented: isLikelyRented(listing),
     ur: isUrListing(listing),
     ads: sourceListings(listing).map((ad) => ({ source: ad.source, url: ad.url })),
     photo: listingPhotos(listing)[0]?.url ?? null,

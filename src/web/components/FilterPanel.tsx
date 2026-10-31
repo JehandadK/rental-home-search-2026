@@ -55,6 +55,7 @@ function statusSummary(filters: ListingFilters): string {
   const parts: string[] = [];
   if (filters.status !== "all") parts.push(filters.status === "active" ? "active only" : "sold only");
   if (filters.rentedOut !== "hide") parts.push(filters.rentedOut === "show" ? "+ rented out" : "rented out only");
+  if (filters.likelyRented !== "hide") parts.push(filters.likelyRented === "show" ? "+ likely rented" : "likely rented only");
   if (filters.newOnly) parts.push(`new only (${filters.newWithinDays}d)`);
   else if (filters.newWithinDays !== NEW_LISTING_WINDOW_DAYS) parts.push(`new = ${filters.newWithinDays}d`);
   return parts.length ? parts.join(" · ") : "default";
@@ -114,6 +115,7 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
   const statusActive =
     filters.status !== "all" ||
     filters.rentedOut !== "hide" ||
+    filters.likelyRented !== "hide" ||
     filters.newOnly ||
     filters.newWithinDays !== NEW_LISTING_WINDOW_DAYS;
   const dayWord = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
@@ -546,6 +548,24 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
               }
             >
               {mode === "hide" ? "hide rented out" : mode === "show" ? "show rented out" : "rented out only"}
+            </button>
+          ))}
+        </div>
+        <div className={`${styles.chips} ${styles.chipRow}`}>
+          {(["hide", "show", "only"] as const).map((mode) => (
+            <button
+              key={`likely-${mode}`}
+              className={`${styles.chip} ${filters.likelyRented === mode ? styles.on : ""}`}
+              onClick={() => onUpdate({ likelyRented: mode })}
+              title={
+                mode === "hide"
+                  ? "Hide properties whose SUUMO and AtHome ads are all gone (likely rented), even if another portal still lists them"
+                  : mode === "show"
+                    ? "Show likely-rented properties, marked"
+                    : "Only properties whose SUUMO and AtHome ads are all gone"
+              }
+            >
+              {mode === "hide" ? "hide likely rented" : mode === "show" ? "show likely rented" : "likely rented only"}
             </button>
           ))}
           <button

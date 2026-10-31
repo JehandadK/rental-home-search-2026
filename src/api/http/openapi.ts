@@ -65,7 +65,7 @@ function schemas(): Record<string, JsonSchema> {
       sizeM2: nullable(num), builtYear: nullable(int), rent: num, monthlyTotal: num, parkingYen: nullable(num),
       station: object({ name: nullable(str), minutes: nullable(num) }),
       status: { type: "string", enum: ["active", "sold"] },
-      isNew: bool, rentedOut: bool, ur: bool,
+      isNew: bool, rentedOut: bool, likelyRented: bool, ur: bool,
       ads: { type: "array", items: object({ source: str, url: nullable(str) }) },
       photo: nullable(str), firstSeenAt: nullable(str), lastSeenAt: nullable(str),
     }),

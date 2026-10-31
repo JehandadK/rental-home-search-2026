@@ -92,6 +92,21 @@ export function isRentedOut(listing: RawListing): boolean {
 }
 
 /**
+ * Portals that take an ad down as soon as the home is let. Aggregators such as
+ * Nifty and RoomSpot can keep showing a copy for days after.
+ */
+export const DELISTING_PORTALS: readonly string[] = ["suumo", "athome"];
+
+/**
+ * Likely rented: the property had a SUUMO or AtHome ad and every one of them is
+ * now gone, even if another portal still shows it. Rented-out properties count too.
+ */
+export function isLikelyRented(listing: RawListing): boolean {
+  const ads = sourceListings(listing).filter((ad) => DELISTING_PORTALS.includes(ad.source));
+  return ads.length > 0 && ads.every((ad) => ad.availability?.state === "gone");
+}
+
+/**
  * Overlay availability records onto a listing's ads. Returns the same object
  * when nothing changes, so unrelated rows keep their identity in memoised views.
  */

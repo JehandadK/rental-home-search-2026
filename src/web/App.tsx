@@ -293,7 +293,7 @@ export function App({ data }: { data: WebData }) {
   }, [compare, filtered]);
 
   /** Lifecycle headline numbers: fresh discoveries and sold stock. */
-  const { newCount, soldCount, rentedOutCount } = useMemo(
+  const { newCount, soldCount, rentedOutCount, likelyRentedCount } = useMemo(
     () => lifecycleCounts(available, filters.newWithinDays),
     [available, filters.newWithinDays],
   );
@@ -394,6 +394,7 @@ export function App({ data }: { data: WebData }) {
           {newCount > 0 && ` · ${newCount} new`}
           {soldCount > 0 && ` · ${soldCount} sold`}
           {rentedOutCount > 0 && ` · ${rentedOutCount} rented out${filters.rentedOut === "hide" ? " (hidden)" : ""}`}
+          {likelyRentedCount > 0 && ` · ${likelyRentedCount} likely rented${filters.likelyRented === "hide" ? " (hidden)" : ""}`}
           {urCount > 0 && ` · ${urCount} UR${filters.ur === "hide" ? " (hidden)" : ""}`}
           {markSummary.candidates > 0 && ` · ★${markSummary.candidates} shortlisted`}
           {markSummary.ruledOut > 0 && ` · ✕${markSummary.ruledOut} ruled out`}

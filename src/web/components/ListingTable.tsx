@@ -19,7 +19,7 @@ import { ATTRIBUTE_CATEGORY_LABELS } from "../../domain/listingAttributes";
 import { listingKey } from "../../domain/listingKey";
 import { sourceListings as portalReferences } from "../../domain/listingDedup";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
-import { describeAvailability, isRentedOut } from "../../domain/availability";
+import { describeAvailability, isLikelyRented, isRentedOut } from "../../domain/availability";
 import { isUrListing, sourceLabel, urEstateCodeOf } from "../../domain/ur";
 import { urEstateNameEn } from "../../domain/urEstateNames";
 import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } from "../../domain/marks";
@@ -426,6 +426,7 @@ export const ListingTable = memo(function ListingTable({
               const isSelected = key === selected;
               const sold = isSold(listing);
               const rentedOut = isRentedOut(listing);
+              const likelyRented = !rentedOut && isLikelyRented(listing);
               const ur = isUrListing(listing);
               const fresh = isNewListing(listing, now, newWithinDays);
               const mark = marks[key];
@@ -440,7 +441,7 @@ export const ListingTable = memo(function ListingTable({
                   ref={isSelected ? selectedRowRef : undefined}
                   className={`${styles.listing} ${isHover ? styles.hovered : ""} ${
                     isSelected ? styles.selected : ""
-                  } ${sold || rentedOut ? styles.sold : ""} ${ruledOut ? styles.ruledOut : ""}`}
+                  } ${sold || rentedOut || likelyRented ? styles.sold : ""} ${ruledOut ? styles.ruledOut : ""}`}
                   onMouseEnter={() => onHover(key)}
                   onMouseLeave={() => onHover(null)}
                   onClick={() => {
@@ -496,6 +497,14 @@ export const ListingTable = memo(function ListingTable({
                         title={`Every portal ad is gone:\n${portals.map((ad) => `${ad.source}: ${describeAvailability(ad.availability)}`).join("\n")}`}
                       >
                         RENTED OUT
+                      </span>
+                    )}
+                    {likelyRented && (
+                      <span
+                        className={styles.badgeLikelyRented}
+                        title={`Gone from SUUMO and AtHome, which take an ad down once the home is let:\n${portals.map((ad) => `${ad.source}: ${describeAvailability(ad.availability)}`).join("\n")}`}
+                      >
+                        LIKELY RENTED
                       </span>
                     )}
                     {ur && (
