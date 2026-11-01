@@ -2921,6 +2921,48 @@
           "suumo|jnc_000109887587|bc_100511165748"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109624539|bc_100525354371|2026-10-31T23:52:33.542Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:52:33.542Z",
+      "recordedAt": "2026-11-01T00:00:48.324Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109624539|bc_100525354371",
+      "url": "https://suumo.jp/chintai/jnc_000109624539/?bc=100525354371",
+      "data": {
+        "state": "listed",
+        "evidence": "HTTP 200 · ad page still shown",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109887587|bc_100511165748|2026-10-31T23:52:35.665Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:52:35.665Z",
+      "recordedAt": "2026-11-01T00:00:48.324Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109887587|bc_100511165748",
+      "url": "https://suumo.jp/chintai/jnc_000109887587/?bc=100511165748",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1183354529|2026-10-31T23:52:38.244Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:52:38.244Z",
+      "recordedAt": "2026-11-01T00:00:48.324Z",
+      "source": "athome",
+      "adKey": "athome|1183354529",
+      "url": "https://www.athome.co.jp/chintai/1183354529/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2930,12 +2972,18 @@
     "firstSeenAdKey": "athome|1183354529",
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1183354529/",
     "lastSeenAt": "2026-10-28T01:48:51.476Z",
-    "lastListedAt": "2026-10-28T01:48:51.476Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "lastListedAt": "2026-10-31T23:52:33.542Z",
+    "offMarket": {
+      "after": "2026-10-31T23:52:33.542Z",
+      "before": "2026-10-31T23:52:38.244Z"
+    },
+    "daysOnMarket": {
+      "min": 59.8,
+      "max": 59.8
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-02T04:11:16.351Z",
@@ -2953,7 +3001,7 @@
         "firstSeenAt": "2026-10-04T06:05:40.053Z",
         "lastSeenAt": "2026-10-07T14:10:57.129Z",
         "lastListedAt": "2026-10-07T14:10:57.129Z",
-        "goneSince": null,
+        "goneSince": "2026-10-31T23:52:38.244Z",
         "relistCount": 0
       },
       "nifty|detail_9b456694ce533f7998e89e8196ee7bf6": {
@@ -2968,7 +3016,7 @@
         "source": "suumo",
         "firstSeenAt": "2026-10-28T01:48:51.476Z",
         "lastSeenAt": "2026-10-28T01:48:51.476Z",
-        "lastListedAt": "2026-10-28T01:48:51.476Z",
+        "lastListedAt": "2026-10-31T23:52:33.542Z",
         "goneSince": null,
         "relistCount": 0
       },
@@ -2993,7 +3041,7 @@
         "firstSeenAt": "2026-10-12T11:28:32.985Z",
         "lastSeenAt": "2026-10-12T11:28:32.985Z",
         "lastListedAt": "2026-10-12T11:28:32.985Z",
-        "goneSince": null,
+        "goneSince": "2026-10-31T23:52:35.665Z",
         "relistCount": 0
       }
     },

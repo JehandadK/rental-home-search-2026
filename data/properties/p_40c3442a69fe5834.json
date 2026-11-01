@@ -779,6 +779,34 @@
           "suumo|jnc_000109441015|bc_100521507670"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109441015|bc_100521507670|2026-10-31T23:51:11.978Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:51:11.978Z",
+      "recordedAt": "2026-11-01T00:00:48.324Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109441015|bc_100521507670",
+      "url": "https://suumo.jp/chintai/jnc_000109441015/?bc=100521507670",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1164863317|2026-10-31T23:51:14.510Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:51:14.510Z",
+      "recordedAt": "2026-11-01T00:00:48.324Z",
+      "source": "athome",
+      "adKey": "athome|1164863317",
+      "url": "https://www.athome.co.jp/chintai/1164863317/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -789,11 +817,17 @@
     "firstSeenUrl": null,
     "lastSeenAt": "2026-10-14T09:42:56.391Z",
     "lastListedAt": "2026-10-14T09:42:56.391Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-14T09:42:56.391Z",
+      "before": "2026-10-31T23:51:14.510Z"
+    },
+    "daysOnMarket": {
+      "min": 42.8,
+      "max": 60.4
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-28T23:28:33.254Z",
@@ -810,7 +844,7 @@
         "firstSeenAt": "2026-09-28T23:01:15.000Z",
         "lastSeenAt": "2026-10-04T06:02:20.198Z",
         "lastListedAt": "2026-10-04T06:02:20.198Z",
-        "goneSince": null,
+        "goneSince": "2026-10-31T23:51:14.510Z",
         "relistCount": 0
       },
       "suumo|jnc_000109441015|bc_100521507670": {
@@ -818,7 +852,7 @@
         "firstSeenAt": "2026-10-12T11:28:01.271Z",
         "lastSeenAt": "2026-10-14T09:42:56.391Z",
         "lastListedAt": "2026-10-14T09:42:56.391Z",
-        "goneSince": null,
+        "goneSince": "2026-10-31T23:51:11.978Z",
         "relistCount": 0
       }
     },

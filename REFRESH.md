@@ -612,6 +612,24 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-01 likely-rented check of the top-scoring homes (Playwright)
+
+- Scored every home with the dashboard weights (walk; rent 2, value 7,
+  move-in 1, size 5, age 3, private school 3, mosque 4, car auction 0, station
+  0, bus stop 0, kindergarten 1, elementary school 1; other settings default):
+  **356 above 60** (5 more at exactly 60).
+- New condition **likely rented** (`isLikelyRented`): every SUUMO and AtHome ad
+  of a home is gone, whatever Nifty or RoomSpot still show. Badged, dimmed on
+  the map, counted in the header and filtered hide / show / only (hidden by
+  default). Checked with `check:availability --keys-file <keys> --portals
+  suumo,athome` (every SUUMO and AtHome ad, 495 for these homes) in the shared
+  browser; the 38 homes with neither portal get the normal check.
+- Matcher: houses SUUMO lists over floors 1-2 merge with the same house
+  elsewhere, and names with a designator after a space keep their number. 207
+  properties merged (6839 → 6628 rows), none across differing layouts or sizes.
+- Intermediate rebuild with 146 of the 356 homes checked (62 gone from SUUMO
+  and AtHome): **123 likely rented**, 428 rented out, of 6628.
+
 ## 2026-11-01 first refresh in one shared browser (Playwright)
 
 - Run `2026-10-31T23-08-30-569Z-6d13e9ea` (`--concurrency 5`): **SUCCESS**,

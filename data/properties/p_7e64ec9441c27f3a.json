@@ -835,6 +835,20 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.checked|athome|6992493026|2026-10-31T23:53:42.077Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-10-31T23:53:42.077Z",
+      "recordedAt": "2026-11-01T00:00:48.324Z",
+      "source": "athome",
+      "adKey": "athome|6992493026",
+      "url": "https://www.athome.co.jp/chintai/6992493026/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -845,11 +859,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_5413658451303ef680536b71ca2a2b53/",
     "lastSeenAt": "2026-10-10T02:38:54.726Z",
     "lastListedAt": "2026-10-10T02:38:54.726Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-10T02:38:54.726Z",
+      "before": "2026-10-31T23:53:42.077Z"
+    },
+    "daysOnMarket": {
+      "min": 2.5,
+      "max": 24.4
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-07T13:58:12.467Z",
@@ -866,7 +886,7 @@
         "firstSeenAt": "2026-10-07T14:10:28.204Z",
         "lastSeenAt": "2026-10-07T14:10:28.204Z",
         "lastListedAt": "2026-10-07T14:10:28.204Z",
-        "goneSince": null,
+        "goneSince": "2026-10-31T23:53:42.077Z",
         "relistCount": 0
       },
       "nifty|detail_5413658451303ef680536b71ca2a2b53": {
