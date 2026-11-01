@@ -1726,6 +1726,76 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109916597|bc_100512745751|2026-11-01T00:02:07.132Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:02:07.132Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109916597|bc_100512745751",
+      "url": "https://suumo.jp/chintai/jnc_000109916597/?bc=100512745751",
+      "data": {
+        "state": "listed",
+        "evidence": "HTTP 200 · ad page still shown",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1138985930|2026-11-01T00:02:09.965Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:02:09.965Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "athome",
+      "adKey": "athome|1138985930",
+      "url": "https://www.athome.co.jp/chintai/1138985930/",
+      "data": {
+        "state": "listed",
+        "evidence": "HTTP 200 · ad page still shown",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1081134871|2026-11-01T00:02:13.008Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:02:13.008Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "athome",
+      "adKey": "athome|1081134871",
+      "url": "https://www.athome.co.jp/chintai/1081134871/",
+      "data": {
+        "state": "listed",
+        "evidence": "HTTP 200 · ad page still shown",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1129283127|2026-11-01T00:02:16.258Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:02:16.258Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "athome",
+      "adKey": "athome|1129283127",
+      "url": "https://www.athome.co.jp/chintai/1129283127/",
+      "data": {
+        "state": "listed",
+        "evidence": "HTTP 200 · ad page still shown",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1081134771|2026-11-01T00:02:18.846Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:02:18.846Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "athome",
+      "adKey": "athome|1081134771",
+      "url": "https://www.athome.co.jp/chintai/1081134771/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1735,12 +1805,18 @@
     "firstSeenAdKey": "suumo|jnc_000109916597|bc_100512539908",
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000109916597/?bc=100512539908",
     "lastSeenAt": "2026-10-31T23:11:05.720Z",
-    "lastListedAt": "2026-10-31T23:11:05.720Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "lastListedAt": "2026-11-01T00:02:16.258Z",
+    "offMarket": {
+      "after": "2026-11-01T00:02:16.258Z",
+      "before": "2026-11-01T00:02:18.846Z"
+    },
+    "daysOnMarket": {
+      "min": 10.8,
+      "max": 10.8
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-21T05:52:29.045Z",
@@ -1758,14 +1834,14 @@
         "firstSeenAt": "2026-10-27T06:17:17.789Z",
         "lastSeenAt": "2026-10-28T01:04:37.900Z",
         "lastListedAt": "2026-10-28T01:04:37.900Z",
-        "goneSince": null,
+        "goneSince": "2026-11-01T00:02:18.846Z",
         "relistCount": 0
       },
       "athome|1081134871": {
         "source": "athome",
         "firstSeenAt": "2026-10-21T05:50:00.397Z",
         "lastSeenAt": "2026-10-31T23:11:05.720Z",
-        "lastListedAt": "2026-10-31T23:11:05.720Z",
+        "lastListedAt": "2026-11-01T00:02:13.008Z",
         "goneSince": null,
         "relistCount": 0
       },
@@ -1773,7 +1849,7 @@
         "source": "athome",
         "firstSeenAt": "2026-10-21T05:50:29.128Z",
         "lastSeenAt": "2026-10-21T05:50:29.128Z",
-        "lastListedAt": "2026-10-21T05:50:29.128Z",
+        "lastListedAt": "2026-11-01T00:02:16.258Z",
         "goneSince": null,
         "relistCount": 0
       },
@@ -1781,7 +1857,7 @@
         "source": "athome",
         "firstSeenAt": "2026-10-21T05:50:25.752Z",
         "lastSeenAt": "2026-10-21T05:50:25.752Z",
-        "lastListedAt": "2026-10-21T05:50:25.752Z",
+        "lastListedAt": "2026-11-01T00:02:09.965Z",
         "goneSince": null,
         "relistCount": 0
       },
@@ -1821,7 +1897,7 @@
         "source": "suumo",
         "firstSeenAt": "2026-10-27T06:16:04.016Z",
         "lastSeenAt": "2026-10-27T06:16:04.016Z",
-        "lastListedAt": "2026-10-27T06:16:04.016Z",
+        "lastListedAt": "2026-11-01T00:02:07.132Z",
         "goneSince": null,
         "relistCount": 0
       }

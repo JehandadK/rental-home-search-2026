@@ -629,6 +629,14 @@ removed, and every collector now uses the headed Playwright browser.
   properties merged (6839 → 6628 rows), none across differing layouts or sizes.
 - Intermediate rebuild with 146 of the 356 homes checked (62 gone from SUUMO
   and AtHome): **123 likely rented**, 428 rented out, of 6628.
+- Check complete: of the 356, **115 gone** from SUUMO and AtHome, 202 still
+  listed there, 1 unresolved; of the 38 on other portals only, 15 rented out
+  everywhere, 10 listed, 1 unresolved (12 had been merged into homes with SUUMO
+  or AtHome ads). A follow-up for the 8 top homes whose ads joined in the
+  merges or stayed unresolved: 1 more gone. Timestamps are UTC, so "checked
+  today" means after 15:00 UTC the day before.
+- After the merges, **302 homes score above 60**: **186 available**, 68 likely
+  rented, 48 rented out. List: `research/top-homes-2026-11-01.md`.
 
 ## 2026-11-01 first refresh in one shared browser (Playwright)
 

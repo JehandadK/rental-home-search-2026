@@ -3129,6 +3129,34 @@
       "data": {
         "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000110567214|bc_100532732508|2026-11-01T00:08:51.660Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:08:51.660Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110567214|bc_100532732508",
+      "url": "https://suumo.jp/chintai/jnc_000110567214/?bc=100532732508",
+      "data": {
+        "state": "listed",
+        "evidence": "HTTP 200 · ad page still shown",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|nifty|detail_90e27fd878d03827b379887664331897|2026-11-01T00:15:44.245Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:15:44.245Z",
+      "recordedAt": "2026-11-01T00:16:12.821Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_90e27fd878d03827b379887664331897",
+      "url": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_90e27fd878d03827b379887664331897/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · 越谷駅よりバス8分 徒歩3分（越谷市東越谷１０） 1階 2LDKの賃貸｜ニフティ不動産",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -3138,12 +3166,18 @@
     "firstSeenAdKey": "suumo|jnc_000107003252|bc_100500808344",
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000107003252/?bc=100500808344",
     "lastSeenAt": "2026-10-31T23:09:10.980Z",
-    "lastListedAt": "2026-10-31T23:09:10.980Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "lastListedAt": "2026-11-01T00:08:51.660Z",
+    "offMarket": {
+      "after": "2026-11-01T00:08:51.660Z",
+      "before": "2026-11-01T00:15:44.245Z"
+    },
+    "daysOnMarket": {
+      "min": 33.1,
+      "max": 33.1
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-28T23:28:33.254Z",
@@ -3168,7 +3202,7 @@
         "firstSeenAt": "2026-10-04T06:13:52.996Z",
         "lastSeenAt": "2026-10-28T01:04:11.395Z",
         "lastListedAt": "2026-10-28T01:04:11.395Z",
-        "goneSince": null,
+        "goneSince": "2026-11-01T00:15:44.245Z",
         "relistCount": 0
       },
       "suumo|jnc_000106985709|bc_100517970619": {
@@ -3215,7 +3249,7 @@
         "source": "suumo",
         "firstSeenAt": "2026-10-20T09:48:26.347Z",
         "lastSeenAt": "2026-10-31T23:09:10.980Z",
-        "lastListedAt": "2026-10-31T23:09:10.980Z",
+        "lastListedAt": "2026-11-01T00:08:51.660Z",
         "goneSince": null,
         "relistCount": 0
       }

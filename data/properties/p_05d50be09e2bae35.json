@@ -1353,6 +1353,20 @@
         "evidence": "HTTP 200 · ad page still shown",
         "method": "probe"
       }
+    },
+    {
+      "id": "ad.checked|nifty|detail_c36e448b1254357aa1670d655f949ad6|2026-11-01T00:15:50.279Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:15:50.279Z",
+      "recordedAt": "2026-11-01T00:16:12.821Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_c36e448b1254357aa1670d655f949ad6",
+      "url": "https://myhome.nifty.com/rent/chiba/nodashi_ct/detail_c36e448b1254357aa1670d655f949ad6/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · 野田市岡田857貸家 1 川間駅より徒歩58分（野田市岡田） 4LDKの賃貸｜ニフティ不動産",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1363,11 +1377,17 @@
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000110301650/?bc=100530676470",
     "lastSeenAt": "2026-10-31T23:11:52.274Z",
     "lastListedAt": "2026-10-31T23:56:49.735Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-31T23:56:49.735Z",
+      "before": "2026-11-01T00:15:50.279Z"
+    },
+    "daysOnMarket": {
+      "min": 10.8,
+      "max": 10.8
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-21T05:52:29.045Z",
@@ -1393,7 +1413,7 @@
         "firstSeenAt": "2026-10-25T11:13:41.397Z",
         "lastSeenAt": "2026-10-28T05:23:56.960Z",
         "lastListedAt": "2026-10-28T05:23:56.960Z",
-        "goneSince": null,
+        "goneSince": "2026-11-01T00:15:50.279Z",
         "relistCount": 0
       },
       "suumo|jnc_000110301650|bc_100530676470": {

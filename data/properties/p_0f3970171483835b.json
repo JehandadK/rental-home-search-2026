@@ -518,6 +518,20 @@
       "data": {
         "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|nifty|detail_b2ae5b28e4053eb4bc651f4cae12574a|2026-11-01T00:16:10.759Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:16:10.759Z",
+      "recordedAt": "2026-11-01T00:16:12.821Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_b2ae5b28e4053eb4bc651f4cae12574a",
+      "url": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_b2ae5b28e4053eb4bc651f4cae12574a/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · 草加市（埼玉県）の賃貸情報（物件番号:detail_b2ae5b28e4053eb4bc651f4cae12574a）ニフティ不動産",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -528,11 +542,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_b2ae5b28e4053eb4bc651f4cae12574a/",
     "lastSeenAt": "2026-10-28T01:46:48.143Z",
     "lastListedAt": "2026-10-28T01:46:48.143Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-28T01:46:48.143Z",
+      "before": "2026-11-01T00:16:10.759Z"
+    },
+    "daysOnMarket": {
+      "min": 25.6,
+      "max": 29.6
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-02T10:46:48.780Z",
@@ -548,7 +568,7 @@
         "firstSeenAt": "2026-10-02T10:46:17.194Z",
         "lastSeenAt": "2026-10-02T10:46:17.194Z",
         "lastListedAt": "2026-10-02T10:46:17.194Z",
-        "goneSince": null,
+        "goneSince": "2026-11-01T00:16:10.759Z",
         "relistCount": 0
       }
     },

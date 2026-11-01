@@ -1029,6 +1029,34 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000110432270|bc_100531526815|2026-11-01T00:03:44.893Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:03:44.893Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110432270|bc_100531526815",
+      "url": "https://suumo.jp/chintai/jnc_000110432270/?bc=100531526815",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1112342505|2026-11-01T00:03:47.474Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-01T00:03:47.474Z",
+      "recordedAt": "2026-11-01T00:13:59.439Z",
+      "source": "athome",
+      "adKey": "athome|1112342505",
+      "url": "https://www.athome.co.jp/chintai/1112342505/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1039,11 +1067,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_9773a0548ad53035969d57f3a5ac68fa/",
     "lastSeenAt": "2026-10-28T01:48:34.568Z",
     "lastListedAt": "2026-10-28T01:48:34.568Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-28T01:48:34.568Z",
+      "before": "2026-11-01T00:03:47.474Z"
+    },
+    "daysOnMarket": {
+      "min": 0,
+      "max": 3.9
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-28T04:19:40.311Z",
@@ -1061,7 +1095,7 @@
         "firstSeenAt": "2026-10-28T01:48:34.568Z",
         "lastSeenAt": "2026-10-28T01:48:34.568Z",
         "lastListedAt": "2026-10-28T01:48:34.568Z",
-        "goneSince": null,
+        "goneSince": "2026-11-01T00:03:47.474Z",
         "relistCount": 0
       },
       "nifty|detail_9773a0548ad53035969d57f3a5ac68fa": {
@@ -1077,7 +1111,7 @@
         "firstSeenAt": "2026-10-28T01:48:26.252Z",
         "lastSeenAt": "2026-10-28T01:48:26.252Z",
         "lastListedAt": "2026-10-28T01:48:26.252Z",
-        "goneSince": null,
+        "goneSince": "2026-11-01T00:03:44.893Z",
         "relistCount": 0
       }
     },
