@@ -1088,6 +1088,20 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.checked|ur|20_2950-000010242|2026-11-03T21:58:11.306Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-03T21:58:11.306Z",
+      "recordedAt": "2026-11-03T21:58:32.715Z",
+      "source": "ur",
+      "adKey": "ur|20_2950-000010242",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/tokyo/20_2950_room.html?JKSS=000010242",
+      "data": {
+        "state": "gone",
+        "evidence": "UR detail_room returned no room (no longer advertised)",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1098,11 +1112,17 @@
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/tokyo/20_2950_room.html?JKSS=000010242",
     "lastSeenAt": "2026-10-31T23:09:57.714Z",
     "lastListedAt": "2026-10-31T23:09:57.714Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-31T23:09:57.714Z",
+      "before": "2026-11-03T21:58:11.306Z"
+    },
+    "daysOnMarket": {
+      "min": 21.5,
+      "max": 24.4
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-10T11:34:15.142Z",
@@ -1127,7 +1147,7 @@
         "firstSeenAt": "2026-10-31T23:08:34.026Z",
         "lastSeenAt": "2026-10-31T23:08:34.026Z",
         "lastListedAt": "2026-10-31T23:08:34.026Z",
-        "goneSince": null,
+        "goneSince": "2026-11-03T21:58:11.306Z",
         "relistCount": 0
       }
     },

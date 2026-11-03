@@ -23138,6 +23138,359 @@
           "ur": 10
         }
       }
+    },
+    {
+      "schemaVersion": 1,
+      "id": "2026-11-03T21-41-53-779Z-4de6ea5d",
+      "startedAt": "2026-11-03T21:41:53.779Z",
+      "updatedAt": "2026-11-03T21:58:49.673Z",
+      "status": "success",
+      "mode": "incremental",
+      "skipNifty": false,
+      "skipRoomspot": false,
+      "limits": {
+        "pagesPerCity": 100,
+        "detailRequests": 10
+      },
+      "invocations": [
+        {
+          "startedAt": "2026-11-03T21:41:53.779Z",
+          "resume": false
+        },
+        {
+          "startedAt": "2026-11-03T21:45:12.385Z",
+          "resume": true
+        }
+      ],
+      "beforeTotal": 6628,
+      "stages": [
+        {
+          "id": "suumo",
+          "label": "SUUMO",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:41:55.034Z",
+              "completedAt": "2026-11-03T21:43:55.587Z",
+              "durationMs": 120553,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 22
+            }
+          ],
+          "startedAt": "2026-11-03T21:41:55.034Z",
+          "completedAt": "2026-11-03T21:43:55.587Z",
+          "durationMs": 120553,
+          "exitCode": 0,
+          "discovered": 22
+        },
+        {
+          "id": "suumo-parking",
+          "label": "Legacy parking pass",
+          "status": "skipped",
+          "detail": "Disabled by refresh policy/options",
+          "attempts": []
+        },
+        {
+          "id": "athome",
+          "label": "AtHome",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:41:55.034Z",
+              "completedAt": "2026-11-03T21:44:00.764Z",
+              "durationMs": 125731,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 20
+            }
+          ],
+          "startedAt": "2026-11-03T21:41:55.034Z",
+          "completedAt": "2026-11-03T21:44:00.764Z",
+          "durationMs": 125731,
+          "exitCode": 0,
+          "discovered": 20
+        },
+        {
+          "id": "roomspot",
+          "label": "RoomSpot",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:41:55.034Z",
+              "completedAt": "2026-11-03T21:43:28.837Z",
+              "durationMs": 93803,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 2
+            }
+          ],
+          "startedAt": "2026-11-03T21:41:55.034Z",
+          "completedAt": "2026-11-03T21:43:28.837Z",
+          "durationMs": 93803,
+          "exitCode": 0,
+          "discovered": 2
+        },
+        {
+          "id": "ur",
+          "label": "UR",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:41:55.034Z",
+              "completedAt": "2026-11-03T21:42:28.687Z",
+              "durationMs": 33654,
+              "exitCode": 1,
+              "status": "failed",
+              "detail": "UR API bukken/detail/detail_bukken_room/ failed: HTTP 500 error"
+            },
+            {
+              "startedAt": "2026-11-03T21:45:13.180Z",
+              "completedAt": "2026-11-03T21:58:30.993Z",
+              "durationMs": 797813,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-11-03T21:45:13.180Z",
+          "completedAt": "2026-11-03T21:58:30.993Z",
+          "durationMs": 797813,
+          "exitCode": 0
+        },
+        {
+          "id": "nifty-soka",
+          "label": "Nifty Soka",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:41:55.034Z",
+              "completedAt": "2026-11-03T21:42:04.791Z",
+              "durationMs": 9757,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 6
+            }
+          ],
+          "startedAt": "2026-11-03T21:41:55.034Z",
+          "completedAt": "2026-11-03T21:42:04.791Z",
+          "durationMs": 9757,
+          "exitCode": 0,
+          "discovered": 6
+        },
+        {
+          "id": "nifty-koshigaya",
+          "label": "Nifty Koshigaya",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:42:04.816Z",
+              "completedAt": "2026-11-03T21:42:13.512Z",
+              "durationMs": 8696,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 6
+            }
+          ],
+          "startedAt": "2026-11-03T21:42:04.816Z",
+          "completedAt": "2026-11-03T21:42:13.512Z",
+          "durationMs": 8696,
+          "exitCode": 0,
+          "discovered": 6
+        },
+        {
+          "id": "nifty-kawaguchi",
+          "label": "Nifty Kawaguchi",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:42:13.534Z",
+              "completedAt": "2026-11-03T21:42:26.054Z",
+              "durationMs": 12520,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 16
+            }
+          ],
+          "startedAt": "2026-11-03T21:42:13.534Z",
+          "completedAt": "2026-11-03T21:42:26.054Z",
+          "durationMs": 12520,
+          "exitCode": 0,
+          "discovered": 16
+        },
+        {
+          "id": "nifty-katsushika",
+          "label": "Nifty Katsushika",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:42:26.075Z",
+              "completedAt": "2026-11-03T21:43:07.300Z",
+              "durationMs": 41225,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 17
+            }
+          ],
+          "startedAt": "2026-11-03T21:42:26.075Z",
+          "completedAt": "2026-11-03T21:43:07.300Z",
+          "durationMs": 41225,
+          "exitCode": 0,
+          "discovered": 17
+        },
+        {
+          "id": "nifty-noda",
+          "label": "Nifty Noda",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:43:07.334Z",
+              "completedAt": "2026-11-03T21:43:24.331Z",
+              "durationMs": 16997,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 13
+            }
+          ],
+          "startedAt": "2026-11-03T21:43:07.334Z",
+          "completedAt": "2026-11-03T21:43:24.331Z",
+          "durationMs": 16997,
+          "exitCode": 0,
+          "discovered": 13
+        },
+        {
+          "id": "nifty-import",
+          "label": "Nifty import",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:44:00.787Z",
+              "completedAt": "2026-11-03T21:44:01.230Z",
+              "durationMs": 443,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-11-03T21:44:00.787Z",
+          "completedAt": "2026-11-03T21:44:01.230Z",
+          "durationMs": 443,
+          "exitCode": 0
+        },
+        {
+          "id": "detail-enrich",
+          "label": "SUUMO details",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:44:01.250Z",
+              "completedAt": "2026-11-03T21:44:23.097Z",
+              "durationMs": 21847,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-11-03T21:44:01.250Z",
+          "completedAt": "2026-11-03T21:44:23.097Z",
+          "durationMs": 21847,
+          "exitCode": 0
+        },
+        {
+          "id": "data-build",
+          "label": "Merge/deduplicate",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:44:23.250Z",
+              "completedAt": "2026-11-03T21:44:48.932Z",
+              "durationMs": 25682,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 41
+            },
+            {
+              "startedAt": "2026-11-03T21:58:31.067Z",
+              "completedAt": "2026-11-03T21:58:46.180Z",
+              "durationMs": 15113,
+              "exitCode": 0,
+              "status": "success",
+              "discovered": 5
+            }
+          ],
+          "startedAt": "2026-11-03T21:58:31.067Z",
+          "completedAt": "2026-11-03T21:58:46.180Z",
+          "durationMs": 15113,
+          "exitCode": 0,
+          "discovered": 5
+        },
+        {
+          "id": "enrich",
+          "label": "Geocode/enrich",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:44:48.949Z",
+              "completedAt": "2026-11-03T21:44:56.428Z",
+              "durationMs": 7479,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-11-03T21:58:46.201Z",
+              "completedAt": "2026-11-03T21:58:48.378Z",
+              "durationMs": 2177,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-11-03T21:58:46.201Z",
+          "completedAt": "2026-11-03T21:58:48.378Z",
+          "durationMs": 2177,
+          "exitCode": 0
+        },
+        {
+          "id": "web-data",
+          "label": "Web payload",
+          "status": "success",
+          "attempts": [
+            {
+              "startedAt": "2026-11-03T21:44:56.446Z",
+              "completedAt": "2026-11-03T21:44:57.724Z",
+              "durationMs": 1278,
+              "exitCode": 0,
+              "status": "success"
+            },
+            {
+              "startedAt": "2026-11-03T21:58:48.402Z",
+              "completedAt": "2026-11-03T21:58:49.574Z",
+              "durationMs": 1172,
+              "exitCode": 0,
+              "status": "success"
+            }
+          ],
+          "startedAt": "2026-11-03T21:58:48.402Z",
+          "completedAt": "2026-11-03T21:58:49.574Z",
+          "durationMs": 1172,
+          "exitCode": 0
+        }
+      ],
+      "completedAt": "2026-11-03T21:58:49.673Z",
+      "afterTotal": 6676,
+      "netUniqueAdded": 46,
+      "duplicatesDropped": 6863,
+      "lifecycle": {
+        "continued": 6671,
+        "added": 5,
+        "sold": 0,
+        "reactivated": 0
+      },
+      "recent24h": {
+        "total": 46,
+        "bySource": {
+          "athome": 2,
+          "nifty": 19,
+          "suumo": 20,
+          "ur": 5
+        }
+      }
     }
   ]
 }

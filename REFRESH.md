@@ -612,6 +612,21 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-04 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-11-03T21-41-53-779Z-4de6ea5d` (`--concurrency 5`): **SUCCESS**
+  after one resume, 16m56s, in the shared browser on the main checkout's
+  `.context/athome-profile` (AtHome passed without a prompt). UR failed on the
+  first try with HTTP 500 from `bukken/detail/detail_bukken_room/`; the
+  `--resume` re-ran only UR, which completed (13m18s).
+- Source additions: SUUMO **22**, AtHome **20**, RoomSpot **2**, Nifty **58**
+  (Katsushika 17, Kawaguchi 16, Noda 13, Soka 6, Koshigaya 6). The `ur` source
+  went 209 → 218 rooms; the rooms page has 84 open of 1617 in 138 estates.
+- **46 newly tracked properties** (Katsushika 16, Kawaguchi 14, Noda 5,
+  Koshigaya 4, Soka 3, Tsurugashima 2, Kasukabe 1, Fujimi 1): 41 from the
+  portals, all ≥60㎡ (60.68–124.2㎡, 18 ≥70㎡, 27 at ≤¥150,000), and 5 UR
+  rooms. All geocoded. **6676** archival rows.
+
 ## 2026-11-01 likely-rented check of the top-scoring homes (Playwright)
 
 - Scored every home with the dashboard weights (walk; rent 2, value 7,

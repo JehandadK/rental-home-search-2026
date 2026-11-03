@@ -16,7 +16,8 @@
         "https://www.ur-net.go.jp/chintai/kanto/saitama/50_1800_room.html?JKSS=002190408"
       ],
       "sightings": [
-        "2026-10-31T23:08:34.026Z"
+        "2026-10-31T23:08:34.026Z",
+        "2026-11-03T21:45:14.010Z"
       ],
       "firstRecordedAt": "2026-10-31T23:22:33.491Z"
     }
@@ -703,7 +704,7 @@
       ]
     },
     "tenancy.availableFrom": {
-      "chosen": "2026年11月2日以降",
+      "chosen": "随時",
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -722,11 +723,24 @@
           "reportedAt": {
             "ur|50_1800-002190408": "2026-10-31T23:22:33.491Z"
           }
+        },
+        {
+          "value": "随時",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_1800-002190408"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-03T21:58:32.715Z",
+          "reportedAt": {
+            "ur|50_1800-002190408": "2026-11-03T21:58:32.715Z"
+          }
         }
       ]
     },
     "tenancy.immediateMoveIn": {
-      "chosen": false,
+      "chosen": true,
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -744,6 +758,19 @@
           "firstRecordedAt": "2026-10-31T23:22:33.491Z",
           "reportedAt": {
             "ur|50_1800-002190408": "2026-10-31T23:22:33.491Z"
+          }
+        },
+        {
+          "value": true,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_1800-002190408"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-03T21:58:32.715Z",
+          "reportedAt": {
+            "ur|50_1800-002190408": "2026-11-03T21:58:32.715Z"
           }
         }
       ]
@@ -804,8 +831,8 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "ur|50_1800-002190408",
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_1800_room.html?JKSS=002190408",
-    "lastSeenAt": "2026-10-31T23:08:34.026Z",
-    "lastListedAt": "2026-10-31T23:08:34.026Z",
+    "lastSeenAt": "2026-11-03T21:45:14.010Z",
+    "lastListedAt": "2026-11-03T21:45:14.010Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,
@@ -824,12 +851,15 @@
       "ur|50_1800-002190408": {
         "source": "ur",
         "firstSeenAt": "2026-10-31T23:08:34.026Z",
-        "lastSeenAt": "2026-10-31T23:08:34.026Z",
-        "lastListedAt": "2026-10-31T23:08:34.026Z",
+        "lastSeenAt": "2026-11-03T21:45:14.010Z",
+        "lastListedAt": "2026-11-03T21:45:14.010Z",
         "goneSince": null,
         "relistCount": 0
       }
     },
-    "conflicts": []
+    "conflicts": [
+      "tenancy.availableFrom",
+      "tenancy.immediateMoveIn"
+    ]
   }
 }
