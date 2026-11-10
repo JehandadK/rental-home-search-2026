@@ -612,6 +612,23 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-10 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-11-10T07-13-47-248Z-0a7726c0` (`--concurrency 5`): **SUCCESS**
+  after one resume, 18m3s, in the shared browser on the main checkout's
+  `.context/athome-profile`. AtHome showed its verification page and stopped
+  after 3m (16 ads already saved); the `--resume` re-ran only AtHome, which
+  passed and completed (79s). Its 16 ads all joined homes already tracked.
+- Source additions: SUUMO **76**, AtHome **16**, RoomSpot **23**, Nifty **87**
+  (Kawaguchi 35, Katsushika 33, Koshigaya 11, Soka 4, Noda 4). The `ur` source
+  went 218 → 248 rooms; the rooms page has 80 open of 1646 in 138 estates.
+- **120 newly tracked properties** (Kawaguchi 35, Katsushika 32, Koshigaya 17,
+  Soka 10, Noda 10, Fujimino 4, Tokorozawa 3, Misato 2, Sakado 2, and one each
+  in Saitama Kita-ku, Kawagoe, Ageo, Asaka, Yashio): 103 from the portals, all
+  ≥60㎡ (60.04–477㎡, 53 ≥70㎡, 58 at ≤¥150,000), and 17 UR rooms. All
+  geocoded. **6808** archival rows. The 477㎡ one is a Nifty 6SLDK house in
+  Noda at ¥450,000.
+
 ## 2026-11-04 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-11-03T21-41-53-779Z-4de6ea5d` (`--concurrency 5`): **SUCCESS**
