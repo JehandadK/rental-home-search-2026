@@ -19,6 +19,8 @@ export interface RefreshAttempt {
   status: "success" | "failed";
   discovered?: number;
   detail?: string;
+  /** The stage's own one-line result (its `Stage summary:` line). */
+  summary?: string;
 }
 
 export interface RefreshStageRecord {
@@ -31,6 +33,7 @@ export interface RefreshStageRecord {
   exitCode?: number | null;
   discovered?: number;
   detail?: string;
+  summary?: string;
   attempts: RefreshAttempt[];
 }
 
@@ -45,8 +48,11 @@ export interface RefreshRunRecord {
   skipNifty: boolean;
   /** Skip collection only; preserve the existing RoomSpot source in builds. */
   skipRoomspot?: boolean;
-  /** `minAreaM2` is the run's `--min-area` override, kept for resumes; absent = collectors.config.json. */
-  limits?: { pagesPerCity: number; detailRequests: number; minAreaM2?: number };
+  /**
+   * `minAreaM2` is the run's `--min-area` override, kept for resumes; absent = collectors.config.json.
+   * `availabilityLoads` is the availability stage's page-load budget; absent in runs from before it existed.
+   */
+  limits?: { pagesPerCity: number; detailRequests: number; minAreaM2?: number; availabilityLoads?: number };
   invocations: Array<{ startedAt: string; resume: boolean }>;
   beforeTotal: number;
   afterTotal?: number;
@@ -113,6 +119,11 @@ export function markInterrupted(run: RefreshRunRecord, now = new Date().toISOStr
   run.completedAt = now;
   run.updatedAt = now;
   return run;
+}
+
+/** A stage's own one-line result: the last `Stage summary: …` line it printed. */
+export function parseSummary(output: string): string | undefined {
+  return [...output.matchAll(/^Stage summary: (.+)$/gm)].at(-1)?.[1].trim().slice(0, 300);
 }
 
 export function parseDiscovered(output: string): number | undefined {

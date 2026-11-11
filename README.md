@@ -359,7 +359,7 @@ the two files the browser fetches into `public/data/` (below).
 | `sources/yahoo.json` | User-selected Yahoo! Real Estate detail listings, retained across rebuilds | Native-browser detail extraction; no automatic market crawl |
 | `listings_raw.json` | Cross-source merged/deduplicated listings | `npm run data:build` |
 | `listings.json` | Full archival data, geocoded + enriched with baked nearest places | `npm run enrich` |
-| `availability.json` | Every ad-page check (listed / gone), newest per ad plus its full `history` | `npm run check:availability` |
+| `availability.json` | Every ad-page check (listed / gone), newest per ad plus its full `history` | `npm run check:availability`; the `availability` stage of `npm run refresh` (`-- --watch`: the top-scoring homes most overdue for a check) |
 | `properties/<id>.json` | One additive document per property: every value each portal reported (conflicts kept side by side, plus the value shown), every sighting, every check and lifecycle event, and a derived summary (first seen and where, last seen, off-market window, days on market, portal posting dates) | `npm run data:properties` (run by `data:build`, `check:availability`, `data:journal:compact`); `npm run data:properties:backfill` replays git history and backups |
 
 Property documents are the analysis record: they only ever grow. A value that
@@ -408,7 +408,9 @@ lease type remain unknown; alternative guarantor fees are kept verbatim.
 npm run refresh -- --plan
 
 # Human CLI: bounded source discovery, then one derived-data rebuild.
-# Optional detail requests default to zero; add --detail-limit 10 to opt in.
+# Up to 10 detail pages per portal (--detail-limit N; 0 turns them off), then a
+# re-check of the top-scoring homes most overdue for one, within 60 ad-page
+# loads (--availability-limit N; 0 turns it off; see collectors.config.json).
 npm run refresh
 npm run find:new -- --min-score 45 --max-rent 150000 --min-size 40
 

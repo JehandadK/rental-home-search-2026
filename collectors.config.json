@@ -6,5 +6,12 @@
     "roomspot": { "minAreaM2": 60 },
     "nifty": { "minAreaM2": 60 },
     "ur": { "minAreaM2": null }
+  },
+  "availability": {
+    "$comment": "Which homes `npm run refresh` re-checks for still being on offer (the `availability` stage, `npm run check:availability -- --watch`). top: how many of the best-scoring homes to watch. criteria: what decides the best-scoring ones, as a recommendations API request (RECOMMENDATIONS_API.md: weights, filters, travel …); the dashboard keeps yours in the browser where a script cannot read them, so repeat them here (anything left out keeps its default; these are the dashboard weights recorded in REFRESH.md on 2026-11-01). staleDays: a home seen in a portal's results or confirmed still listed within this many days is not visited. pageLoads: ad pages one refresh may load for this; 0 turns the stage off, and `--availability-limit N` on `npm run refresh` overrides it for one run.",
+    "top": 300,
+    "pageLoads": 60,
+    "staleDays": 5,
+    "criteria": { "weights": { "rent": 2, "rentPerM2": 7, "moveInCost": 1, "size": 5, "yearBuilt": 3, "poi1": 3, "poi2": 4, "carAuction": 0, "station": 0, "busStop": 0, "kindergarten": 1, "school": 1 } }
   }
 }

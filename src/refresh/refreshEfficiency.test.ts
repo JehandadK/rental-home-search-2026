@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { planRefresh, runLimited, PARALLEL_COLLECTOR_STAGES, collectorGroup, stageEnv } from "./refreshPlan";
+import { planRefresh, runLimited, NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, stageEnv } from "./refreshPlan";
+import { parseSummary } from "./refreshLedger";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../collectors/shared/pageBudget";
 import { addressKey, cachedGeocode, seedGeocodes } from "../collectors/enrichment/geocodeCache";
 import { parseDetail } from "../collectors/enrichment/detailEnrichment";
@@ -16,6 +17,17 @@ describe("efficient refresh", () => {
   it("retries failed collectors, not successful independent ones", () => {
     const stages = ["suumo", "athome", "roomspot", "nifty-soka", "nifty-import", "data-build", "enrich", "web-data"].map((id) => ({ id, label: id, status: id === "athome" ? "failed" as const : "success" as const, attempts: [] }));
     expect([...planRefresh(stages, true)]).toEqual(["athome", "data-build", "enrich", "web-data"]);
+  });
+  it("keeps finished availability checks on resume, and republishes when they rerun", () => {
+    const run = (failed: string) => ["suumo", "athome", "detail-enrich", "availability", "data-build", "enrich", "web-data"]
+      .map((id) => ({ id, label: id, status: id === failed ? "failed" as const : "success" as const, attempts: [] }));
+    expect([...planRefresh(run("athome"), true)]).toEqual(["athome", "detail-enrich", "data-build", "enrich", "web-data"]);
+    expect([...planRefresh(run("availability"), true)]).toEqual(["availability", "web-data"]);
+    expect(NETWORK_STAGES.has("availability")).toBe(true);
+  });
+  it("takes a stage's own summary line from its output", () => {
+    expect(parseSummary("listed  Home\nStage summary: 12 page loads · 9 homes checked\n")).toBe("12 page loads · 9 homes checked");
+    expect(parseSummary("Discovered 3 new")).toBeUndefined();
   });
   it("uses a generous safety ceiling so incremental scans reach prior observations", () => {
     expect(DEFAULT_INCREMENTAL_PAGE_CEILING).toBeGreaterThanOrEqual(100);

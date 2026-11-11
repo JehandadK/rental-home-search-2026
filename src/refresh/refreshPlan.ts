@@ -12,9 +12,10 @@ export const DEPENDENCIES: Record<string, readonly string[]> = {
   "detail-enrich": ["suumo", "athome", "roomspot", "nifty-import"],
   "data-build": ["suumo", "suumo-parking", "athome", "roomspot", "ur", "nifty-import", "detail-enrich"],
   enrich: ["data-build"],
-  "web-data": ["enrich"],
+  // The web payload bakes in data/availability.json, so new checks republish it.
+  "web-data": ["enrich", "availability"],
 };
-export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", "ur", ...NIFTY_CITY_STAGES, "detail-enrich"]);
+export const NETWORK_STAGES = new Set(["suumo", "suumo-parking", "athome", "roomspot", "ur", ...NIFTY_CITY_STAGES, "detail-enrich", "availability"]);
 
 export function planRefresh(stages: readonly RefreshStageRecord[], resume: boolean): Set<string> {
   const planned = new Set<string>();

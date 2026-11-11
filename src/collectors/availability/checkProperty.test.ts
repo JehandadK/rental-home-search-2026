@@ -42,6 +42,17 @@ describe("checkProperty", () => {
     expect(result.rentedOut).toBe(false);
   });
 
+  it("with portals and stopAtLive, stops at the first live SUUMO or AtHome ad", async () => {
+    const live = deps({});
+    await checkProperty(home(), {}, live.value, { portals: ["suumo", "athome"], stopAtLive: true });
+    expect(live.visited).toEqual([SUUMO]);
+
+    const gone = deps({ [SUUMO]: gonePage(SUUMO) });
+    const result = await checkProperty(home(), {}, gone.value, { portals: ["suumo", "athome"], stopAtLive: true });
+    expect(gone.visited).toEqual([SUUMO, ATHOME]);
+    expect(result.ads.map((ad) => ad.verdict)).toEqual(["gone", "listed"]);
+  });
+
   it("with portals, never calls the property rented out: other portals were not checked", async () => {
     const { value } = deps({ [SUUMO]: gonePage(SUUMO), [ATHOME]: gonePage(ATHOME) });
     const result = await checkProperty(home(), {}, value, { portals: ["suumo", "athome"] });

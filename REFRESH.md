@@ -53,6 +53,14 @@
   `scrape:roomspot` right after their list data is committed. A failed, blocked or
   paused detail load is logged and never fails the list stage or changes the list
   data already stored.
+- Refresh re-checks the top-scoring homes for still being on offer: the
+  `availability` stage (`check:availability --watch`), after the detail pages
+  and before the rebuild, bounded by `--availability-limit` page loads (default
+  from `availability.pageLoads` in `collectors.config.json`, 60; `0` turns it
+  off). See [Rented-out detection](#rented-out-detection). It writes only
+  `data/availability.json` and the property documents, a portal that refuses it
+  is paused for the run instead of failing the stage, and on `--resume` a
+  finished check is not repeated.
 - A detail fetch parses parking, lease, availability, fees, structure and amenities
   together. Valid HTML is cached; `--replay` re-parses it with zero requests.
   `--force` explicitly rechecks within the budget. Deferred URLs live in
@@ -134,6 +142,29 @@ only inferred from absence in crawls.
   recorded gone are never revisited. Flags: `--limit N` (25), `--stale-days D`
   (3), `--city`, `--min-size`, `--max-rent`, `--recheck-gone`, `--url <ad>`,
   `--dry-run` (no browser).
+- `npm run check:availability -- --watch` is the refresh stage. It ranks the
+  published homes with `availability.criteria` in `collectors.config.json` (a
+  recommendations API request, run through the same pipeline as the dashboard,
+  so a home's rank here is its rank there for those criteria) and watches the
+  best `top` (300).
+  - Left out: sold, rented-out and likely-rented homes, and UR rooms (the UR
+    sweep asks UR about every held room).
+  - Not visited: a home a refresh saw in a portal's results, or a check
+    confirmed still listed, within `staleDays` (5).
+  - Order: most overdue first, where a home at rank 51 waits twice as long as
+    the top home and one at rank 151 four times (`watchlist.ts`).
+  - A home with SUUMO or AtHome ads is asked there only, SUUMO first, stopping
+    at the first live ad: one live ad means it is not likely rented. Other
+    homes get the normal cheapest-first check.
+  - Budget: `--max-loads N` page loads (`availability.pageLoads`); the home in
+    progress is finished. A portal is paused for the rest of the run after one
+    verification or busy page, or two unreadable pages in a row; its ads are
+    reported as not visited and cost no load.
+  - Also `--top N`, `--stale-days D`, `--dry-run`. The last line, `Stage
+    summary: …`, is what `npm run refresh` prints for the stage and stores in
+    the run ledger. Exit 2 only when pages were loaded and none could be read.
+  The dashboard keeps your weights in the browser, so when you change them
+  there, change `availability.criteria` to match.
 - What "gone" looks like (`src/collectors/availability/classify.ts`): AtHome
   HTTP 404 「お探しのページが見つかりません」; SUUMO HTTP 404 「エラー｜SUUMO」 or a
   redirect to the building's `/library/` page; RoomSpot HTTP 404 with 掲載終了;

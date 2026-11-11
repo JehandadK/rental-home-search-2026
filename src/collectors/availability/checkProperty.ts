@@ -5,7 +5,9 @@
  * in a fixed cheapest-first order and the walk stops at the first live one.
  * With `portals`, only those portals' ads are checked and every one is visited:
  * SUUMO and AtHome take an ad down once the home is let (isLikelyRented), so
- * each of their ads matters, whatever an aggregator still shows.
+ * each of their ads matters, whatever an aggregator still shows. `stopAtLive`
+ * ends that walk at the first live ad: one live SUUMO or AtHome ad is enough to
+ * know the home is not likely rented.
  * Ads already known to be gone are not visited again. Only positive
  * evidence is recorded: an `unknown` visit (verification page, timeout) is
  * reported but never written as gone.
@@ -37,6 +39,8 @@ export interface PropertyCheck {
 export interface CheckOptions {
   /** Check only these portals' ads, every one of them, without stopping at a live ad. */
   portals?: readonly string[];
+  /** With `portals`: stop at the first live ad instead of visiting every one. */
+  stopAtLive?: boolean;
 }
 
 export interface CheckDependencies {
@@ -74,7 +78,7 @@ export async function checkProperty(listing: RawListing, known: AvailabilityMap,
       result.records.push({ source: ad.source, url: ad.url, state: verdict.state, checkedAt: deps.now(), evidence: verdict.evidence, method: "probe" });
     }
     if (verdict.state === "gone") goneCount++;
-    if (verdict.state === "listed" && !options.portals) break; // available somewhere: no need to visit the rest
+    if (verdict.state === "listed" && (!options.portals || options.stopAtLive)) break; // available: no need to visit the rest
   }
 
   // Only a check of every ad can conclude that the whole property is rented out.

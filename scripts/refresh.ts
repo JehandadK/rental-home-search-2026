@@ -7,6 +7,7 @@
  *   npm run refresh -- --verbose       stream full collector output
  *   npm run refresh -- --concurrency N cap parallel sources (1 = sequential)
  *   npm run refresh -- --separate-browsers  each collector launches its own browser
+ *   npm run refresh -- --availability-limit N  ad pages to load re-checking the top homes (0 = off)
  *
  * Every stage is checkpointed in data/refresh-runs.json. Source collectors
  * remain independently atomic, so a failed portal retains its last successful
@@ -24,6 +25,7 @@ import {
   latestResumableRun,
   markInterrupted,
   parseDiscovered,
+  parseSummary,
   readRefreshLedger,
   saveRefreshRun,
   type RefreshRunRecord,
@@ -34,6 +36,7 @@ import { NETWORK_STAGES, PARALLEL_COLLECTOR_STAGES, collectorGroup, niftyStageId
 import { openSharedBrowser, type SharedBrowser } from "../src/collectors/shared/sharedBrowser";
 import { TARGET_CITIES } from "../src/collectors/shared/targetCities";
 import { DEFAULT_INCREMENTAL_PAGE_CEILING, positiveInteger } from "../src/collectors/shared/pageBudget";
+import { readWatchConfig } from "../src/collectors/availability/watchConfig";
 
 const ROOT = REPO_ROOT;
 const argv = process.argv.slice(2);
@@ -53,6 +56,9 @@ let pageBudget = positiveInteger(flag("--max-pages"), requestedDeep ? 100 : DEFA
 // Detail pages are always tried (bounded); `--detail-limit 0` turns them off. A
 // detail failure never touches the list data its collector already committed.
 let detailBudget = positiveInteger(flag("--detail-limit"), 10, 0);
+// Re-check the top-scoring homes that are most overdue for one (check:availability --watch), inside
+// this many ad-page loads; `--availability-limit 0` turns the stage off.
+let availabilityBudget = positiveInteger(flag("--availability-limit"), readWatchConfig().pageLoads, 0);
 // `--min-area N` overrides collectors.config.json for every collector this run (0 = any).
 let minArea: number | undefined = flag("--min-area") === undefined ? undefined : Number(flag("--min-area"));
 if (minArea !== undefined && !(Number.isFinite(minArea) && minArea >= 0)) throw new Error(`--min-area needs a number of square metres (0 = any), not ${flag("--min-area")}`);
@@ -92,6 +98,8 @@ function definitions(deep: boolean, skipNifty: boolean, skipRoomspot = false): S
       recoverable: true, skipped: skipNifty, env: { NIFTY_BATCH_SIZE: "10" } })),
     { id: "nifty-import", label: "Nifty import", args: ["run", "import:nifty"], recoverable: true, skipped: skipNifty },
     { id: "detail-enrich", label: "SUUMO details", args: ["run", "detail:enrich", "--", "--limit", String(detailBudget)], recoverable: true, skipped: detailBudget === 0 },
+    // Reads the last build's listings and writes only data/availability.json and the property documents.
+    { id: "availability", label: "Availability", args: ["run", "check:availability", "--", "--watch", "--max-loads", String(availabilityBudget)], recoverable: true, skipped: availabilityBudget === 0 },
     { id: "data-build", label: "Merge/deduplicate", args: ["run", "data:build"] },
     { id: "enrich", label: "Geocode/enrich", args: ["run", "enrich"] },
     { id: "web-data", label: "Web payload", args: ["run", "data:web"] },
@@ -118,7 +126,7 @@ function freshRun(defs: StageDefinition[], beforeTotal: number): RefreshRunRecor
     mode: requestedDeep ? "deep" : "incremental",
     skipNifty: requestedSkipNifty,
     skipRoomspot: requestedSkipRoomspot,
-    limits: { pagesPerCity: pageBudget, detailRequests: detailBudget, ...(minArea !== undefined ? { minAreaM2: minArea } : {}) },
+    limits: { pagesPerCity: pageBudget, detailRequests: detailBudget, availabilityLoads: availabilityBudget, ...(minArea !== undefined ? { minAreaM2: minArea } : {}) },
     invocations: [{ startedAt: now, resume: false }],
     beforeTotal,
     stages: defs.map((stage) => ({
@@ -147,6 +155,7 @@ async function executeStage(
   stage.completedAt = undefined;
   stage.durationMs = undefined;
   stage.detail = undefined;
+  stage.summary = undefined;
   stage.attempts.push({ startedAt, completedAt: "", durationMs: 0, exitCode: null, status: "failed" });
   run.status = "running";
   run.completedAt = undefined;
@@ -180,6 +189,7 @@ async function executeStage(
   const completedAt = new Date().toISOString();
   const output = `${stdout}\n${stderr}`;
   const discovered = parseDiscovered(output);
+  const summary = parseSummary(stdout);
   const detail = exitCode === 0 ? undefined : detailFrom(stderr || stdout);
   const attempt = stage.attempts.at(-1)!;
   Object.assign(attempt, {
@@ -189,6 +199,7 @@ async function executeStage(
     status: exitCode === 0 ? "success" : "failed",
     discovered,
     detail,
+    summary,
   });
   Object.assign(stage, {
     status: exitCode === 0 ? "success" : "failed",
@@ -197,12 +208,13 @@ async function executeStage(
     exitCode,
     discovered,
     detail,
+    summary,
   });
   run.updatedAt = completedAt;
   await saveRefreshRun(run);
 
   if (exitCode === 0) {
-    console.log(`${definition.label.padEnd(20)} ${discovered == null ? "OK" : `${discovered} new`}`);
+    console.log(`${definition.label.padEnd(20)} ${summary ?? (discovered == null ? "OK" : `${discovered} new`)}`);
     return true;
   }
   console.log(`${definition.label.padEnd(20)} ${definition.recoverable ? "FAILED (saved snapshot retained)" : "FAILED"}${detail ? ` — ${detail.slice(0, 140)}` : ""}`);
@@ -250,13 +262,14 @@ if (planOnly) {
   if (resume && !checkpoint) throw new Error("There is no incomplete refresh run to resume.");
   if (checkpoint?.limits && !flag("--max-pages")) pageBudget = checkpoint.limits.pagesPerCity;
   if (checkpoint?.limits && !flag("--detail-limit")) detailBudget = checkpoint.limits.detailRequests;
+  if (checkpoint?.limits?.availabilityLoads !== undefined && !flag("--availability-limit")) availabilityBudget = checkpoint.limits.availabilityLoads;
   if (checkpoint?.limits?.minAreaM2 !== undefined && flag("--min-area") === undefined) minArea = checkpoint.limits.minAreaM2;
   const defs = definitions(checkpoint?.mode === "deep" || requestedDeep, checkpoint?.skipNifty ?? requestedSkipNifty, checkpoint ? checkpoint.skipRoomspot ?? false : requestedSkipRoomspot);
   const stages = defs.map((d) => checkpoint?.stages.find((s) => s.id === d.id) ?? {
     id: d.id, label: d.label, status: d.skipped ? "skipped" as const : "pending" as const, attempts: [],
   });
   const planned = planRefresh(stages, resume);
-  console.log(`Offline plan · newest-first until 2 all-known pages (emergency ceiling ${pageBudget}/city/source) · <=${detailBudget} detail pages per portal`);
+  console.log(`Offline plan · newest-first until 2 all-known pages (emergency ceiling ${pageBudget}/city/source) · <=${detailBudget} detail pages per portal · <=${availabilityBudget} availability page loads`);
   for (const stage of stages) console.log(`${stage.id.padEnd(20)} ${planned.has(stage.id) ? localOnly && NETWORK_STAGES.has(stage.id) ? "WAIT (native browser / network collector)" : "RUN" : "REUSE / DISABLED"}`);
   process.exit(0);
 }
@@ -306,6 +319,7 @@ try {
     activeRun = checkpoint;
     if (checkpoint.limits && !flag("--max-pages")) pageBudget = checkpoint.limits.pagesPerCity;
     if (checkpoint.limits && !flag("--detail-limit")) detailBudget = checkpoint.limits.detailRequests;
+    if (checkpoint.limits?.availabilityLoads !== undefined && !flag("--availability-limit")) availabilityBudget = checkpoint.limits.availabilityLoads;
     if (checkpoint.limits?.minAreaM2 !== undefined && flag("--min-area") === undefined) minArea = checkpoint.limits.minAreaM2;
     const now = new Date().toISOString();
     activeRun.invocations.push({ startedAt: now, resume: true });
