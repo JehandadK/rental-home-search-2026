@@ -49,6 +49,11 @@ const numberOrNull = (raw: string): number | null => {
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 };
+/** A cap in minutes: empty, zero or negative means no cap. */
+const minutesOrNull = (raw: string): number | null => {
+  const n = numberOrNull(raw);
+  return n != null && n > 0 ? n : null;
+};
 
 /** Summary of the lifecycle chips for the collapsed "Listing status" header. */
 function statusSummary(filters: ListingFilters): string {
@@ -474,6 +479,35 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
             placeholder="max"
             value={filters.sizeMax ?? ""}
             onChange={(e) => onUpdate({ sizeMax: numberOrNull(e.target.value) })}
+          />
+        </div>
+      </div>
+
+      {/* Reach */}
+      <div className={styles.group}>
+        <div
+          className={styles.groupLabel}
+          title="Hide homes further than this from the nearest counted place, in the travel mode set with the weights (walk or bicycle)"
+        >
+          Reach (max minutes)
+        </div>
+        <div className={styles.range}>
+          <input
+            type="number"
+            min={1}
+            placeholder="school"
+            aria-label="Maximum minutes to the private school"
+            value={filters.poi1MaxMinutes ?? ""}
+            onChange={(e) => onUpdate({ poi1MaxMinutes: minutesOrNull(e.target.value) })}
+          />
+          <span>·</span>
+          <input
+            type="number"
+            min={1}
+            placeholder="mosque"
+            aria-label="Maximum minutes to the mosque"
+            value={filters.poi2MaxMinutes ?? ""}
+            onChange={(e) => onUpdate({ poi2MaxMinutes: minutesOrNull(e.target.value) })}
           />
         </div>
       </div>

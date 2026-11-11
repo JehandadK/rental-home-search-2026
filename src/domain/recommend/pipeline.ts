@@ -11,6 +11,7 @@
  *   mergeConfirmedDuplicates "same home" answers
  *   filterCandidates         listing filters and the decision-mark filter
  *   scoreCandidates          the weighted score
+ *   withinReach              the travel-time caps to the private school and mosque
  *   meetsMinScore            the minimum-score cut
  *   emptyResultHints         which filter to relax when nothing is left
  */
@@ -94,6 +95,22 @@ export function meetsMinScore(rows: ScoredRow[], minScore: number): ScoredRow[] 
   return minScore > 0 ? rows.filter(({ score }) => (score.total ?? -1) >= minScore) : rows;
 }
 
+type ReachCaps = Pick<ListingFilters, "poi1MaxMinutes" | "poi2MaxMinutes">;
+
+/** True when the home is within both travel-time caps; a distance that was not measured passes. */
+export function isWithinReach(score: ScoredRow["score"], caps: ReachCaps): boolean {
+  const within = (key: "poi1" | "poi2", cap: number | null) => {
+    const minutes = cap == null ? null : score.parts.find((part) => part.key === key)?.value;
+    return minutes == null || minutes <= cap!;
+  };
+  return within("poi1", caps.poi1MaxMinutes) && within("poi2", caps.poi2MaxMinutes);
+}
+
+/** Rows within the travel-time caps (filters.poi1MaxMinutes / poi2MaxMinutes). Returns the input when there is no cap. */
+export function withinReach(rows: ScoredRow[], caps: ReachCaps): ScoredRow[] {
+  return caps.poi1MaxMinutes == null && caps.poi2MaxMinutes == null ? rows : rows.filter(({ score }) => isWithinReach(score, caps));
+}
+
 /** Best score first; unscoreable rows last. Stable, so ties keep their input order. */
 export function byScoreDesc(a: ScoredRow, b: ScoredRow): number {
   return (b.score.total ?? -1) - (a.score.total ?? -1);
@@ -116,15 +133,16 @@ export function emptyResultHints(
   marks: MarkMap,
   config: ScoringConfig,
 ): RelaxationHint[] {
-  const totals = new Map<EnrichedListing, number>();
-  const totalOf = (listing: EnrichedListing) => {
-    if (!totals.has(listing)) totals.set(listing, scoreListing(listing, config).total ?? -1);
-    return totals.get(listing)!;
+  const scores = new Map<EnrichedListing, ScoredRow["score"]>();
+  const scoreOf = (listing: EnrichedListing) => {
+    if (!scores.has(listing)) scores.set(listing, scoreListing(listing, config));
+    return scores.get(listing)!;
   };
+  const scoreCuts = (relaxed: ListingFilters) => relaxed.minScore > 0 || relaxed.poi1MaxMinutes != null || relaxed.poi2MaxMinutes != null;
   const countMatching = (relaxed: ListingFilters) => available.filter((listing) =>
     matchesListing(listing, relaxed)
     && matchesMarkFilter(marks[listingKey(listing)], relaxed.markFilter)
-    && (relaxed.minScore <= 0 || totalOf(listing) >= relaxed.minScore),
+    && (!scoreCuts(relaxed) || (isWithinReach(scoreOf(listing), relaxed) && (relaxed.minScore <= 0 || (scoreOf(listing).total ?? -1) >= relaxed.minScore))),
   ).length;
   return relaxationHints(filters, countMatching);
 }
@@ -169,7 +187,7 @@ export function recommend(input: RecommendationInput, options: { hints?: boolean
   const available = mergeConfirmedDuplicates(withMarks, leadOf);
   const candidates = filterCandidates(available, filters, marks);
   const scored = scoreCandidates(candidates, config);
-  const ranked = [...meetsMinScore(scored, filters.minScore)].sort(byScoreDesc);
+  const ranked = [...meetsMinScore(withinReach(scored, filters), filters.minScore)].sort(byScoreDesc);
   const hints = ranked.length > 0 || available.length === 0 || options.hints === false
     ? []
     : emptyResultHints(available, filters, marks, config);

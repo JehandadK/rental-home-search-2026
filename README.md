@@ -290,6 +290,12 @@ The **Filters** panel narrows the listing set before scoring/ranking:
 - **Rent** and **Size** — min/max bounds.
 - **Rooms** — layout-family chips (2+, 3+, …).
 - **Min score** — a 0–100 slider gating on the current weighted score.
+- **Reach (max minutes)** — hide homes further than this from the nearest
+  counted private school and/or mosque, in the travel mode set with the weights
+  (walk or bicycle). A weight only nudges the score, so a cheap, large home an
+  hour away can still rank first; a cap removes it. Applied after scoring, like
+  the minimum score; a home with no measured distance is kept. In the API:
+  `filters.poi1MaxMinutes`, `filters.poi2MaxMinutes`.
 
 Filters persist in `localStorage`; the map, table, count line and CSV/Markdown
 exports all reflect the filtered set live.

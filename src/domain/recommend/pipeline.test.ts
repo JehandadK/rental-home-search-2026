@@ -27,6 +27,7 @@ import {
   byScoreDesc,
   filterCandidates,
   meetsMinScore,
+  withinReach,
   overlayAvailability,
   rankOf,
   recommend,
@@ -76,6 +77,29 @@ describe("pipeline stages", () => {
     expect(overlayAvailability(listings, {})).toBe(listings);
     const rows = [row(10)];
     expect(meetsMinScore(rows, 0)).toBe(rows);
+  });
+
+  it("cuts on travel minutes to the private school and the mosque, keeping homes with no measured distance", () => {
+    const at = (poi1: number | null, poi2: number | null): ScoredRow => ({
+      listing: make(),
+      score: { total: 50, parts: [{ key: "poi1", value: poi1, score: null, weight: 1 }, { key: "poi2", value: poi2, score: null, weight: 1 }] },
+    });
+    const rows = [at(10, 30), at(25, 5), at(null, 5), at(20, 20)];
+    expect(withinReach(rows, { poi1MaxMinutes: null, poi2MaxMinutes: null })).toBe(rows);
+    expect(withinReach(rows, { poi1MaxMinutes: 20, poi2MaxMinutes: null })).toEqual([rows[0], rows[2], rows[3]]);
+    expect(withinReach(rows, { poi1MaxMinutes: 20, poi2MaxMinutes: 20 })).toEqual([rows[2], rows[3]]);
+  });
+
+  it("applies the travel-time caps in a recommendation, and offers to drop them when nothing is left", () => {
+    const listings = [make()];
+    const open = recommend(input(listings));
+    expect(open.ranked).toHaveLength(1);
+    const minutes = open.ranked[0].score.parts.find((part) => part.key === "poi2")?.value;
+    expect(minutes).toBeGreaterThan(1);
+    const capped = recommend(input(listings, { filters: { ...EMPTY_FILTERS, poi2MaxMinutes: minutes! - 1 } }));
+    expect(capped.ranked).toHaveLength(0);
+    expect(capped.relaxationHints).toEqual([{ id: "reach", label: "travel-time cap", patch: { poi1MaxMinutes: null, poi2MaxMinutes: null }, count: 1 }]);
+    expect(recommend(input(listings, { filters: { ...EMPTY_FILTERS, poi2MaxMinutes: minutes! } })).ranked).toHaveLength(1);
   });
 
   it("cuts on the minimum score, counting an unscoreable row as -1", () => {

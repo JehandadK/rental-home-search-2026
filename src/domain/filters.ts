@@ -84,6 +84,15 @@ export interface ListingFilters {
   parking: "any" | "required" | "free";
   /** Reject listings whose monthly parking charge exceeds this (yen). */
   parkingMaxYen: number | null;
+  /**
+   * Reach: the most travel minutes to the nearest counted private school
+   * (poi1) and mosque (poi2), in the scoring's travel mode — on foot or by
+   * bicycle. null = no cap. A cap needs the measured minutes, so it is applied
+   * after scoring (`withinReach`), like `minScore`; `matchesListing` ignores
+   * it. A home with no measured distance is kept.
+   */
+  poi1MaxMinutes: number | null;
+  poi2MaxMinutes: number | null;
   /** Lifecycle visibility: show sold listings or not. */
   status: StatusFilter;
   /** Visibility of properties rented out on every portal. */
@@ -124,6 +133,8 @@ export const EMPTY_FILTERS: ListingFilters = {
   minScore: 0,
   parking: "any",
   parkingMaxYen: null,
+  poi1MaxMinutes: null,
+  poi2MaxMinutes: null,
   status: "all",
   rentedOut: "hide",
   likelyRented: "hide",
@@ -372,6 +383,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   if (filters.minScore > 0) n++;
   if (filters.parking !== "any") n++;
   if (filters.parkingMaxYen != null) n++;
+  if (filters.poi1MaxMinutes != null || filters.poi2MaxMinutes != null) n++;
   if (filters.status !== "all") n++;
   if (filters.newOnly) n++;
   if (filters.rentedOut !== "hide") n++;

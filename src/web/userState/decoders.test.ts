@@ -81,6 +81,9 @@ describe("user-state decoders", () => {
   it("keep the saved new-listing window within 1–14 days", () => {
     expect(decodeFilters({ newOnly: true, newWithinDays: 5 })).toMatchObject({ newOnly: true, newWithinDays: 5 });
     expect(decodeFilters({ newWithinDays: 0 }).newWithinDays).toBe(1);
+    expect(decodeFilters({})).toMatchObject({ poi1MaxMinutes: null, poi2MaxMinutes: null });
+    expect(decodeFilters({ poi1MaxMinutes: 20, poi2MaxMinutes: "soon" })).toMatchObject({ poi1MaxMinutes: 20, poi2MaxMinutes: null });
+    expect(decodeFilters({ poi1MaxMinutes: 0 }).poi1MaxMinutes).toBeNull();
     expect(decodeFilters({ newWithinDays: 99 }).newWithinDays).toBe(14);
     expect(decodeFilters({ newWithinDays: "x" }).newWithinDays).toBe(EMPTY_FILTERS.newWithinDays);
     expect(decodeFilters({ agencies: "brand:x", agencyMode: "sideways" })).toMatchObject({ agencies: [], agencyMode: "include" });

@@ -34,6 +34,7 @@ const RELAXATIONS: readonly Relaxation[] = [
   { id: "minScore", label: "minimum score", fields: ["minScore"] },
   { id: "parking", label: "parking requirement", fields: ["parking"] },
   { id: "parkingMaxYen", label: "parking price cap", fields: ["parkingMaxYen"] },
+  { id: "reach", label: "travel-time cap", fields: ["poi1MaxMinutes", "poi2MaxMinutes"] },
   { id: "status", label: "listing status", fields: ["status"] },
   { id: "newOnly", label: "new only", fields: ["newOnly"] },
   { id: "rentedOut", label: "rented-out filter", fields: ["rentedOut"] },

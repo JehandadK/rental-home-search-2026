@@ -23,6 +23,7 @@ import {
   emptyResultHints,
   filterCandidates,
   meetsMinScore,
+  withinReach,
   mergeConfirmedDuplicates,
   overlayAvailability,
   rankOf,
@@ -220,7 +221,10 @@ export function App({ data }: { data: WebData }) {
 
   const scored: ScoredRow[] = useMemo(() => scoreCandidates(candidates, config), [candidates, config]);
 
-  const filtered: ScoredRow[] = useMemo(() => meetsMinScore(scored, filters.minScore), [scored, filters.minScore]);
+  const filtered: ScoredRow[] = useMemo(
+    () => meetsMinScore(withinReach(scored, filters), filters.minScore),
+    [scored, filters.minScore, filters.poi1MaxMinutes, filters.poi2MaxMinutes],
+  );
 
   /**
    * How far each home moved in the ranking after the last change to the

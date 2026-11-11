@@ -174,6 +174,12 @@ describe("UR filter", () => {
     expect(activeFilterCount(EMPTY_FILTERS)).toBe(0);
     expect(activeFilterCount({ ...EMPTY_FILTERS, ur: "only" })).toBe(1);
   });
+
+  it("counts the two travel-time caps as one filter, and leaves them to the score stage", () => {
+    const capped = { ...EMPTY_FILTERS, poi1MaxMinutes: 20, poi2MaxMinutes: 15 };
+    expect(activeFilterCount(capped)).toBe(1);
+    expect(matchesListing(make({}), capped)).toBe(true);
+  });
 });
 
 describe("parking filters", () => {

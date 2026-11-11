@@ -325,6 +325,8 @@ export const FIELD_SPECS: readonly FieldSpec[] = [
   filter("layouts", "Layouts", 'Minimum room count: "3" keeps 3K/3DK/3LDK and larger, "4" every 4-room-or-larger layout ([] = all; with several, the smallest applies)', { kind: "stringList", values: "layouts" }),
   filter("parking", "Parking", "required = a space must exist; free = at no monthly charge. Homes that do not say are kept", enumOf(["any", "required", "free"])),
   filter("parkingMaxYen", "Parking price cap", "Drop homes whose parking costs more (null = no cap)", { kind: "nullableNumber", min: 0, max: 200_000 }, "¥/mo"),
+  filter("poi1MaxMinutes", "Private school reach", "Drop homes more than this many travel minutes (travel.mode) from the nearest counted private school (null = no cap)", { kind: "nullableNumber", min: 1, max: 600 }, "min"),
+  filter("poi2MaxMinutes", "Mosque reach", "Drop homes more than this many travel minutes (travel.mode) from the nearest counted mosque (null = no cap)", { kind: "nullableNumber", min: 1, max: 600 }, "min"),
   filter("status", "Listing status", "all, only active, or only sold", enumOf(["all", "active", "sold"])),
   filter("rentedOut", "Rented out everywhere", "Homes every portal shows as gone: hide, show, or only those", enumOf(["hide", "show", "only"])),
   filter("likelyRented", "Likely rented", "Homes whose SUUMO and AtHome ads are all gone, even if another portal still lists them: hide, show, or only those", enumOf(["hide", "show", "only"])),

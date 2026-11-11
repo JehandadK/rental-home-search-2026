@@ -54,7 +54,12 @@ export function decodeFilters(raw: unknown): ListingFilters {
   const ur = filters.ur === "hide" || filters.ur === "only" ? filters.ur : "show";
   // Filters saved before likely-rented existed hide those homes, like rented-out ones.
   const likelyRented = filters.likelyRented === "show" || filters.likelyRented === "only" ? filters.likelyRented : "hide";
-  return { ...filters, agencies, agencyMode, ur, likelyRented, newWithinDays: clampNewWindowDays(filters.newWithinDays) };
+  // Filters saved before the reach caps existed have none; anything but a positive number is no cap.
+  const cap = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null);
+  return {
+    ...filters, agencies, agencyMode, ur, likelyRented, newWithinDays: clampNewWindowDays(filters.newWithinDays),
+    poi1MaxMinutes: cap(filters.poi1MaxMinutes), poi2MaxMinutes: cap(filters.poi2MaxMinutes),
+  };
 }
 
 const MARK_KEYS = new Set<string>(LISTING_MARKS.map((mark) => mark.key));
