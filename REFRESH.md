@@ -643,6 +643,32 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-11 first refresh with the availability stage (Playwright)
+
+- Run `2026-11-11T07-33-48-850Z-12a303d2`: **SUCCESS** after one resume,
+  32m30s start to finish (two invocations, with a gap before the resume), in
+  the shared browser on the main checkout's `.context/athome-profile`. In the
+  first pass SUUMO (a navigation timeout, 36s), RoomSpot (`Failed to fetch` on
+  page 2, 19s) and UR (`HTTP 0` from `map_marker` after 11m) failed; AtHome and
+  every Nifty city succeeded. The `--resume` re-ran only those three, the SUUMO
+  detail pages and the rebuild; all passed (UR 15m29s).
+- **Availability stage**, first live run (`check:availability --watch`, in the
+  first pass, not repeated on resume): **60 page loads in 220s**, **48 homes
+  checked: 32 gone, 16 still listed, none unresolved**, no portal paused.
+  Evidence for the gone ads: AtHome 19 (HTTP 404, its not-found page), SUUMO 18
+  (11 HTTP 404, 7 redirects to the building's `/library/` page), Nifty 6 (4
+  redirects to `/mansion-info/`, 2 HTTP 404), Yahoo 1. The SUUMO detail stage
+  recorded 9 more ended ads. Published homes: rented out 484 → **499**, likely
+  rented 141 → **157**. 135 of the top 300 were due before the run, so two or
+  three more refreshes clear that backlog.
+- Source additions: SUUMO **12**, AtHome **49**, RoomSpot **0**, Nifty **18**
+  (Katsushika 10, Kawaguchi 4, Soka 2, Koshigaya 1, Noda 1). The `ur` source
+  went 248 → 255 rooms; the rooms page has 85 open of 1653 in 138 estates.
+- **22 newly tracked properties** (Kawaguchi 7, Katsushika 6, Koshigaya 5, and
+  one each in Noda, Soka, Kasukabe, Ageo): 20 from the portals, all ≥60㎡
+  (60.33–117.25㎡, 13 ≥70㎡, 11 at ≤¥150,000), and 2 UR rooms. All geocoded.
+  **6830** archival rows.
+
 ## 2026-11-10 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-11-10T07-13-47-248Z-0a7726c0` (`--concurrency 5`): **SUCCESS**

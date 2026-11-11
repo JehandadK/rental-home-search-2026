@@ -1213,6 +1213,20 @@
         "status": "active",
         "via": "backfill:git:ea4c8c9"
       }
+    },
+    {
+      "id": "ad.checked|nifty|detail_c8d781178ddd33e888a97b3d9bb18333|2026-11-11T07:45:17.027Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-11T07:45:17.027Z",
+      "recordedAt": "2026-11-11T07:48:28.992Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_c8d781178ddd33e888a97b3d9bb18333",
+      "url": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_c8d781178ddd33e888a97b3d9bb18333/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · 獨協大学前（草加松原）駅よりバス11分 徒歩1分（草加市青柳３丁目） 1階 2DKの賃貸｜ニフティ不動産",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1223,11 +1237,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_c8d781178ddd33e888a97b3d9bb18333/",
     "lastSeenAt": null,
     "lastListedAt": null,
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": null,
+      "before": "2026-11-11T07:45:17.027Z"
+    },
+    "daysOnMarket": {
+      "min": 0,
+      "max": 43.3
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "unknown",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-28T23:28:33.254Z",
@@ -1243,7 +1263,7 @@
         "firstSeenAt": null,
         "lastSeenAt": null,
         "lastListedAt": null,
-        "goneSince": null,
+        "goneSince": "2026-11-11T07:45:17.027Z",
         "relistCount": 0
       }
     },

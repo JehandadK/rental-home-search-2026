@@ -903,11 +903,11 @@
       ]
     },
     "stationWalkMin": {
-      "chosen": 12,
+      "chosen": 11,
       "chosenFrom": {
-        "source": "athome",
+        "source": "suumo",
         "rule": "latest-evidence",
-        "observedAt": "2026-11-10T07:14:44.028Z"
+        "observedAt": "2026-11-10T07:13:58.404Z"
       },
       "values": [
         {
@@ -955,7 +955,8 @@
           "firstRecordedAt": "2026-11-10T07:29:02.549Z",
           "reportedAt": {
             "suumo|jnc_000110631311|bc_100535891367": "2026-11-10T07:29:02.549Z"
-          }
+          },
+          "observedBefore": "2026-11-11T07:50:07.287Z"
         }
       ]
     }
@@ -963,7 +964,8 @@
   "seenByBuilds": [
     "2026-10-31T23:09:07.818Z",
     "2026-11-03T21:41:56.087Z",
-    "2026-11-10T07:14:44.028Z"
+    "2026-11-10T07:14:44.028Z",
+    "2026-11-11T07:34:11.054Z"
   ],
   "events": [
     {
@@ -1024,6 +1026,18 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.superseded|suumo|jnc_000110631311|bc_100535891367|2026-11-11T07:50:07.287Z",
+      "type": "ad.superseded",
+      "at": "2026-11-11T07:50:07.287Z",
+      "recordedAt": "2026-11-11T08:05:55.585Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110631311|bc_100535891367",
+      "url": "https://suumo.jp/chintai/jnc_000110631311/?bc=100535891367",
+      "data": {
+        "reason": "Superseded or compacted by SUUMO incremental source-alias reconciliation (bc/jnc, property, market); not evidence of delisting"
+      }
     }
   ],
   "summary": {
@@ -1032,8 +1046,8 @@
     "firstSeenBasis": "build",
     "firstSeenAdKey": "athome|1192155436",
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1192155436/",
-    "lastSeenAt": "2026-11-10T07:14:44.028Z",
-    "lastListedAt": "2026-11-10T07:14:44.028Z",
+    "lastSeenAt": "2026-11-11T07:34:11.054Z",
+    "lastListedAt": "2026-11-11T07:34:11.054Z",
     "offMarket": null,
     "daysOnMarket": null,
     "portalPublishedOn": null,

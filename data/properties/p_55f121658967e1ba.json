@@ -1534,6 +1534,20 @@
         "evidence": "HTTP 200 · ad page still shown",
         "method": "probe"
       }
+    },
+    {
+      "id": "ad.checked|athome|1141360434|2026-11-11T07:47:26.723Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-11T07:47:26.723Z",
+      "recordedAt": "2026-11-11T07:48:28.992Z",
+      "source": "athome",
+      "adKey": "athome|1141360434",
+      "url": "https://www.athome.co.jp/chintai/1141360434/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1544,11 +1558,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1153130633/?DOWN=1&BKLISTID=001LPC&sref=list_simple&bi=tatemono",
     "lastSeenAt": "2026-10-28T01:51:24.124Z",
     "lastListedAt": "2026-11-01T00:19:05.054Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-11-01T00:19:05.054Z",
+      "before": "2026-11-11T07:47:26.723Z"
+    },
+    "daysOnMarket": {
+      "min": 56,
+      "max": 66.3
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-06T01:12:42.178Z",
@@ -1566,7 +1586,7 @@
         "firstSeenAt": "2026-10-28T01:51:24.124Z",
         "lastSeenAt": "2026-10-28T01:51:24.124Z",
         "lastListedAt": "2026-11-01T00:19:05.054Z",
-        "goneSince": null,
+        "goneSince": "2026-11-11T07:47:26.723Z",
         "relistCount": 0
       },
       "athome|1153130633": {

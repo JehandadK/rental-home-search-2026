@@ -635,6 +635,20 @@
       "data": {
         "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|nifty|detail_02261f244c603b1593a8e1e08f4e0be0|2026-11-11T07:48:03.108Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-11T07:48:03.108Z",
+      "recordedAt": "2026-11-11T07:48:28.992Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_02261f244c603b1593a8e1e08f4e0be0",
+      "url": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_02261f244c603b1593a8e1e08f4e0be0/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · 四季の森 越谷駅より徒歩14分（越谷市東越谷２） 1階 3LDKの賃貸｜ニフティ不動産",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -645,11 +659,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/koshigayashi_ct/detail_02261f244c603b1593a8e1e08f4e0be0/",
     "lastSeenAt": "2026-10-20T09:49:16.604Z",
     "lastListedAt": "2026-10-20T09:49:16.604Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-20T09:49:16.604Z",
+      "before": "2026-11-11T07:48:03.108Z"
+    },
+    "daysOnMarket": {
+      "min": 9.2,
+      "max": 31.1
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-11T04:21:58.973Z",
@@ -665,7 +685,7 @@
         "firstSeenAt": "2026-10-11T04:16:10.425Z",
         "lastSeenAt": "2026-10-20T09:49:16.604Z",
         "lastListedAt": "2026-10-20T09:49:16.604Z",
-        "goneSince": null,
+        "goneSince": "2026-11-11T07:48:03.108Z",
         "relistCount": 0
       }
     },

@@ -1216,6 +1216,20 @@
         "evidence": "HTTP 200 · ad page still shown",
         "method": "probe"
       }
+    },
+    {
+      "id": "ad.checked|nifty|detail_41cd8e2ad5f83791ae96b2cfda55ed26|2026-11-11T07:48:26.916Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-11T07:48:26.916Z",
+      "recordedAt": "2026-11-11T07:48:28.992Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_41cd8e2ad5f83791ae96b2cfda55ed26",
+      "url": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_41cd8e2ad5f83791ae96b2cfda55ed26/",
+      "data": {
+        "state": "gone",
+        "evidence": "redirected off the ad page to the building page /mansion-info/saitama/sokashi_ct/mansion_cd9fbd8b52b3f7e15614b6bc0e7cd0ba/",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1226,11 +1240,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1143926029/",
     "lastSeenAt": "2026-10-31T23:08:42.283Z",
     "lastListedAt": "2026-11-01T00:15:20.261Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-11-01T00:15:20.261Z",
+      "before": "2026-11-11T07:48:26.916Z"
+    },
+    "daysOnMarket": {
+      "min": 53.9,
+      "max": 64.2
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-08T03:44:00.488Z",
@@ -1263,7 +1283,7 @@
         "firstSeenAt": "2026-09-11T03:12:16.424Z",
         "lastSeenAt": "2026-10-31T23:08:42.283Z",
         "lastListedAt": "2026-11-01T00:15:20.261Z",
-        "goneSince": null,
+        "goneSince": "2026-11-11T07:48:26.916Z",
         "relistCount": 0
       }
     },
