@@ -10,7 +10,8 @@ import { urVacancies as countUrVacancies } from "../domain/urEstates";
 import {
   carryToLeads,
   findPossibleDuplicates,
-    isPendingPair,
+  groupIntoCases,
+  isPendingPair,
   resolveDecisions,
   shownKey,
   type PossibleDuplicate,
@@ -84,7 +85,7 @@ export function App({ data }: { data: WebData }) {
   const { notes: savedNotes, setNote: saveNote } = useNotes();
   const { compare: savedCompare, toggleCompare: toggleSavedCompare, clearCompare, retainCompare: retainSavedCompare } = useCompare();
   const { selection, setPlaces, togglePlace, reset: resetPlaces } = usePlaceSelection(catalog);
-  const { decisions: duplicateDecisions, decide: decideDuplicate, undo: undoDuplicate } = useDuplicateDecisions();
+  const { decisions: duplicateDecisions, decideMany: decideDuplicates, undoMany: undoDuplicates } = useDuplicateDecisions();
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const { urRoomsOpen, setUrRoomsOpen } = useUrRoomsView();
 
@@ -193,9 +194,9 @@ export function App({ data }: { data: WebData }) {
   }, [listings]);
   /** Every listing by key before any "same" merge: the review panel shows both sides. */
   const unmergedByKey = useMemo(() => new Map(listings.map((listing) => [listingKey(listing), listing])), [listings]);
-  /** Pairs still to review: unanswered, and not already one home through other answers. */
+  /** Cases still to review: unanswered, and not already one home through other answers. */
   const pendingDuplicates = useMemo(
-    () => duplicatePairs?.filter((pair) => isPendingPair(pair, resolvedDuplicates)).length ?? null,
+    () => duplicatePairs && groupIntoCases(duplicatePairs.filter((pair) => isPendingPair(pair, resolvedDuplicates))).length,
     [duplicatePairs, resolvedDuplicates],
   );
 
@@ -535,8 +536,8 @@ export function App({ data }: { data: WebData }) {
           decisions={duplicateDecisions}
           resolved={resolvedDuplicates}
           visibleKeys={visibleKeys}
-          onDecide={decideDuplicate}
-          onUndo={undoDuplicate}
+          onDecide={decideDuplicates}
+          onUndo={undoDuplicates}
           onLocate={locateReviewed}
           onClose={closeDuplicates}
         />

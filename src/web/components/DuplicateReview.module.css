@@ -106,6 +106,36 @@
   cursor: pointer;
 }
 
+/* Answer every likely case at once, or take that back. */
+.bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--rs-radius);
+  background: var(--rs-accent-wash);
+  color: var(--rs-ink);
+}
+
+.bulk span {
+  margin-right: auto;
+}
+
+.bulk button {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.intro kbd {
+  border: 1px solid var(--rs-line);
+  border-radius: 4px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 11px;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -141,11 +171,18 @@
   font-size: 12.5px;
 }
 
-.pair {
+.pair,
+.pairActive {
   border: 1px solid var(--rs-line);
   border-radius: var(--rs-radius);
   padding: 10px;
   margin-bottom: 10px;
+}
+
+/* The case the keyboard acts on. */
+.pairActive {
+  border-color: var(--rs-accent);
+  box-shadow: 0 0 0 1px var(--rs-accent);
 }
 
 .pairHead {
@@ -180,26 +217,36 @@
   color: var(--rs-slate-600);
 }
 
-.sides {
+/* One column per listing, one row per fact. */
+.compare {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-@media (max-width: 480px) {
-  .sides {
-    grid-template-columns: 1fr;
-  }
-}
-
-.side {
-  min-width: 0;
+  gap: 2px 8px;
   font-size: 12px;
+}
+
+.column,
+.asideColumn {
+  min-width: 0;
+}
+
+/* A listing set aside from the case: not the same home as the others. */
+.asideColumn {
+  opacity: 0.45;
+}
+
+.keep {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+  font-size: 11px;
+  color: var(--rs-muted);
+  cursor: pointer;
 }
 
 .thumb {
   width: 100%;
-  height: 96px;
+  height: 84px;
   margin-bottom: 4px;
 }
 
@@ -221,33 +268,30 @@ button.name:hover {
   color: var(--rs-accent);
 }
 
-.facts {
-  margin: 0;
-}
-
-.facts div {
+.fact,
+.factDiffers {
   display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 4px;
+  gap: 8px;
   padding: 1px 2px;
-}
-
-.facts dt {
-  color: var(--rs-muted);
-}
-
-.facts dd {
-  margin: 0;
+  border-radius: 4px;
   overflow-wrap: anywhere;
 }
 
-/* A fact the other side states differently. */
-.differs {
-  background: var(--rs-amber-50);
-  border-radius: 4px;
+/* Facts every listing agrees on recede, so the eye lands on what differs. */
+.fact {
+  color: var(--rs-slate-600);
 }
 
-.differs dd {
+.factDiffers {
+  background: var(--rs-amber-50);
+}
+
+.label {
+  color: var(--rs-muted);
+}
+
+/* A fact the listings state differently. */
+.differs {
   color: var(--rs-amber-900);
   font-weight: 600;
 }
@@ -255,8 +299,9 @@ button.name:hover {
 .links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px 8px;
   margin-top: 4px;
+  min-width: 0;
 }
 
 .actions {

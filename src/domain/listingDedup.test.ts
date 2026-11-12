@@ -296,6 +296,104 @@ describe("cross-source listing deduplication", () => {
     expect(result[0].sourceListings?.map(({ source }) => source)).toEqual(["athome", "suumo"]);
   });
 
+  it("merges two agencies' SUUMO ads for one room code though their figures differ, keeping both links", () => {
+    // SUUMO builds a row id from name, layout and rent; the room is the jnc code in the URL.
+    const room = "https://suumo.jp/chintai/jnc_000107987942/";
+    const first = make({ id: "suumo-ファミールメゾン-3DK-90000", name: "ファミールメゾン", layout: "3DK", sizeM2: 62, builtYear: 1990, url: `${room}?bc=100521444001` });
+    const second = make({ id: "suumo-ファミール・メゾン-3LDK-90000", name: "ファミール・メゾン", layout: "3LDK", sizeM2: 60, builtYear: 1989, url: `${room}?bc=100512987367` });
+    const result = deduplicateListings([first, second]);
+    expect(result).toHaveLength(1);
+    expect(result[0].sourceListings?.map(({ url }) => url).sort()).toEqual([second.url, first.url]);
+  });
+
+  it("keeps both SUUMO links when two agencies' ads share a built row id", () => {
+    const room = "https://suumo.jp/chintai/jnc_000106582077/";
+    const first = make({ id: "suumo-row", sizeM2: 60.79, url: `${room}?bc=100525918398` });
+    const second = make({ id: "suumo-row", sizeM2: 60.8, url: `${room}?bc=100518802541` });
+    const [merged] = deduplicateListings([first, second]);
+    expect(merged.sourceListings).toHaveLength(2);
+  });
+
+  it("keeps two SUUMO room codes apart though their built row ids are the same", () => {
+    const third = make({ id: "suumo-row", sizeM2: 67.13, building: { floor: "3階" }, url: "https://suumo.jp/chintai/jnc_000110005189/?bc=1" });
+    const sixth = make({ id: "suumo-row", sizeM2: 67.4, building: { floor: "6階" }, url: "https://suumo.jp/chintai/jnc_000110005190/?bc=2" });
+    expect(deduplicateListings([third, sixth])).toHaveLength(2);
+  });
+
+  it("does not let a SUUMO ad without a room code join two room codes through a shared row id", () => {
+    const third = make({ id: "suumo-row", sizeM2: 67.13, building: { floor: "3階" }, url: "https://suumo.jp/chintai/jnc_000110005189/?bc=1" });
+    const plain = make({ id: "suumo-row", sizeM2: 70, building: undefined, url: "https://suumo.jp/chintai/bc_3/" });
+    const sixth = make({ id: "suumo-row", sizeM2: 67.4, building: { floor: "6階" }, url: "https://suumo.jp/chintai/jnc_000110005190/?bc=2" });
+    expect(deduplicateListings([third, plain, sixth])).toHaveLength(3);
+  });
+
+  describe("a room two agencies measured differently", () => {
+    const first = make({ id: "nifty-1", source: "nifty", name: "モア・コンフォート", rent: 157_000, sizeM2: 62.1, builtYear: 2004, building: { floor: "1階" } });
+    const other = (over: Partial<RawListing> = {}) =>
+      make({ id: "athome-1", source: "athome", name: "モア・コンフォート", rent: 157_000, sizeM2: 62.82, builtYear: 2003, building: { floor: "1階" }, ...over });
+
+    it("matches when the building, the floor and the rent agree exactly", () => {
+      expect(isSameProperty(first, other())).toBe(true);
+      expect(isSameProperty(first, other({ layout: "3LDK", sizeM2: 60 }))).toBe(false);
+      expect(isSameProperty(make({ ...first, layout: "3DK" }), other({ layout: "3LDK" }))).toBe(true);
+    });
+
+    it("needs the floor from both ads, the same rent and the same building name", () => {
+      expect(isSameProperty(first, other({ building: undefined }))).toBe(false);
+      expect(isSameProperty(first, other({ building: { floor: "2階" } }))).toBe(false);
+      expect(isSameProperty(first, other({ rent: 157_500 }))).toBe(false);
+      expect(isSameProperty(first, other({ name: "モア・コンフォートＢ" }))).toBe(false);
+      expect(isSameProperty(first, other({ sizeM2: 66 }))).toBe(false);
+    });
+
+    it("leaves a new building's alike rooms apart", () => {
+      const year = new Date().getFullYear();
+      expect(isSameProperty(make({ ...first, builtYear: year }), other({ builtYear: year }))).toBe(false);
+    });
+  });
+
+  it("finds a row through any ad in it, not only the ad that leads it", () => {
+    // Two agencies' SUUMO ads for one room; Nifty copies the figures of the one that does not lead.
+    const room = "https://suumo.jp/chintai/jnc_000110109894/";
+    const common = { name: "エステートナカムラ", rent: 72_000, layout: "3DK", builtYear: 1990, building: { floor: "2階" } };
+    const result = deduplicateListings([
+      make({ ...common, id: "suumo-a", sizeM2: 68, url: `${room}?bc=100533662642` }),
+      make({ ...common, id: "suumo-b", sizeM2: 64, url: `${room}?bc=100528634770` }),
+      make({ ...common, id: "nifty-1", source: "nifty", sizeM2: 64, builtYear: 1991, url: "https://nifty.example/1" }),
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].sourceListings).toHaveLength(3);
+  });
+
+  it("lets a second agency's ad join through another portal's copy of it at the same rent", () => {
+    const common = { name: "グランディール西川口", rent: 130_000, layout: "3DK", builtYear: 1990 };
+    const result = deduplicateListings([
+      make({ ...common, id: "athome-1", source: "athome", sizeM2: 61.11, building: undefined, url: "https://athome.example/1" }),
+      make({ ...common, id: "athome-2", source: "athome", sizeM2: 60.9, building: undefined, url: "https://athome.example/2" }),
+      make({ ...common, id: "suumo-1", sizeM2: 61.11, url: "https://suumo.jp/chintai/jnc_000110451420/?bc=1" }),
+      make({ ...common, id: "suumo-2", sizeM2: 60.9, url: "https://suumo.jp/chintai/jnc_000110451420/?bc=2" }),
+    ]);
+    expect(result).toHaveLength(1);
+    expect(deduplicateListings([...result]).length).toBe(1);
+    // The SUUMO room first, then the two AtHome ads: the same single row.
+    const reversed = deduplicateListings([
+      make({ ...common, id: "suumo-1", sizeM2: 61.11, url: "https://suumo.jp/chintai/jnc_000110451420/?bc=1" }),
+      make({ ...common, id: "suumo-2", sizeM2: 60.9, url: "https://suumo.jp/chintai/jnc_000110451420/?bc=2" }),
+      make({ ...common, id: "athome-1", source: "athome", sizeM2: 61.11, building: undefined, url: "https://athome.example/1" }),
+      make({ ...common, id: "athome-2", source: "athome", sizeM2: 60.9, building: undefined, url: "https://athome.example/2" }),
+    ]);
+    expect(reversed).toHaveLength(1);
+    expect(reversed[0].sourceListings).toHaveLength(4);
+    // At another rent the second AtHome ad may be another room, and stays out.
+    const dearer = deduplicateListings([
+      make({ ...common, id: "athome-1", source: "athome", sizeM2: 61.11, building: undefined, url: "https://athome.example/1" }),
+      make({ ...common, id: "athome-2", source: "athome", rent: 131_000, sizeM2: 60.9, building: undefined, url: "https://athome.example/2" }),
+      make({ ...common, id: "suumo-1", sizeM2: 61.11, url: "https://suumo.jp/chintai/jnc_000110451420/?bc=1" }),
+      make({ ...common, id: "suumo-2", sizeM2: 60.9, url: "https://suumo.jp/chintai/jnc_000110451420/?bc=2" }),
+    ]);
+    expect(dearer.map((row) => row.sourceListings?.length ?? 1).sort()).toEqual([1, 3]);
+  });
+
   it("keeps the preferred record, fills missing details and retains every link", () => {
     // athome outranks suumo, so its presentation leads the merged row.
     const suumo = make({ parking: { available: true, monthlyYen: 7_700, location: "onsite", distanceM: null, raw: "敷地内7700円" } });

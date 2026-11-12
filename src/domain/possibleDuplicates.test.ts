@@ -6,9 +6,11 @@ import {
   applySameDecisions,
   carryToLeads,
   findPossibleDuplicates,
+  groupIntoCases,
   isDescriptiveName,
   isPendingPair,
   listingAdKeys,
+  namesDifferentBuildings,
   nameSimilarity,
   pairId,
   resolveDecisions,
@@ -81,11 +83,54 @@ describe("possible duplicates", () => {
     expect(pair.reasons).toContain("same 丁目");
   });
 
-  it("scores two ads on one portal lower than the same pair across portals", () => {
+  it("scores two ads one portal carries at different rents lower than the same pair across portals", () => {
+    const second = { ...nifty, source: "athome", id: "athome-2", url: "https://www.athome.co.jp/chintai/2/" };
     const [across] = findPossibleDuplicates([make(), nifty]);
-    const [within] = findPossibleDuplicates([make(), { ...nifty, source: "athome", id: "athome-2", url: "https://www.athome.co.jp/chintai/2/" }]);
+    const [within] = findPossibleDuplicates([make(), second]);
     expect(within.score).toBeLessThan(across.score);
-    expect(within.reasons).toContain("both on athome");
+    expect(within.reasons).toContain("both on athome at different rents");
+    // Two agencies' copies on one portal show one rent; that is no sign of two rooms.
+    const [copy] = findPossibleDuplicates([make(), { ...second, rent: 172_000, sizeM2: 62.9 }]);
+    expect(copy.reasons.join()).not.toContain("both on athome");
+  });
+
+  it("does not suggest two wings or numbered houses of one estate", () => {
+    expect(namesDifferentBuildings("セレスティア細田a", "セレスティア細田b")).toBe(true);
+    expect(namesDifferentBuildings("kolet野田梅郷#08", "kolet野田梅郷#10")).toBe(true);
+    expect(namesDifferentBuildings("kolet野田梅郷#08", "kolet野田梅郷#06")).toBe(true);
+    expect(namesDifferentBuildings("ur西上尾第一", "ur西上尾第二")).toBe(true);
+    // One portal leaves the wing off, writes the number another way, or spells the name in kana.
+    expect(namesDifferentBuildings("メゾンラフォーレ", "メゾンラフォーレc")).toBe(false);
+    expect(namesDifferentBuildings("kolet野田梅郷#08", "kolet野田梅郷08")).toBe(false);
+    expect(namesDifferentBuildings("ハイネス毬藻", "ハイネスマリモ")).toBe(false);
+    expect(namesDifferentBuildings("ur西上尾第2", "ur西上尾第二")).toBe(false);
+    const wingB = { ...nifty, name: "ベレオ ヴィラ リーブス東川口Ｂ" };
+    expect(findPossibleDuplicates([make({ name: "ベレオ ヴィラ リーブス東川口Ａ" }), wingB])).toEqual([]);
+  });
+
+  it("does not suggest a new building's ads that one portal carries at different rents", () => {
+    const builtYear = new Date().getFullYear();
+    const second = { ...nifty, builtYear, source: "athome", id: "athome-2", url: "https://www.athome.co.jp/chintai/2/" };
+    expect(findPossibleDuplicates([make({ builtYear }), second])).toEqual([]);
+    expect(findPossibleDuplicates([make({ builtYear }), { ...nifty, builtYear }])).toHaveLength(1);
+  });
+
+  it("reviews listings that are each a possible duplicate of the others as one case", () => {
+    const pair = (a: string, b: string, score: number) => ({ keys: [a, b] as [string, string], score, reasons: [`${a}${b}`] });
+    const cases = groupIntoCases([pair("a", "b", 0.9), pair("a", "c", 0.7), pair("b", "c", 0.8), pair("x", "y", 0.95)]);
+    expect(cases.map((item) => [...item.keys].sort().join(""))).toEqual(["xy", "abc"]);
+    // The case is as sure as its weakest pair.
+    expect(cases[1]).toMatchObject({ score: 0.7, reasons: ["ac"] });
+  });
+
+  it("keeps a chain, or a group too big to compare, as separate pairs", () => {
+    const pair = (a: string, b: string) => ({ keys: [a, b] as [string, string], score: 0.8, reasons: [] });
+    expect(groupIntoCases([pair("a", "b"), pair("b", "c")]).map((item) => item.keys.length)).toEqual([2, 2]);
+    // A pair given twice is not the pair the chain lacks.
+    expect(groupIntoCases([pair("a", "b"), pair("b", "a"), pair("b", "c")]).map((item) => item.keys.length)).toEqual([2, 2]);
+    const five = ["a", "b", "c", "d", "e"];
+    const all = five.flatMap((x, i) => five.slice(i + 1).map((y) => pair(x, y)));
+    expect(groupIntoCases(all)).toHaveLength(10);
   });
 
   it("recognises descriptive names and compares real ones by their characters", () => {

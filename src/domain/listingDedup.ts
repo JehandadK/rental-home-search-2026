@@ -169,9 +169,17 @@ export function isSameProperty(a: RawListing, b: RawListing): boolean {
  * and the full address match exactly, a larger gap (±5%) is a price update
  * on a re-listed room, not a different room — mirroring the lifecycle rule
  * that identity is name + address + size, rent excluded. The relaxed path
- * additionally requires the agent walk time to agree when both sides state it.
+ * additionally requires the agent walk time to agree when both sides state it,
+ * and is closed to new buildings.
+ *
+ * Floor area is normally strict too, except for a room two agencies measured
+ * differently (`isRemeasuredUnit`).
  */
 export function isSameUnit(a: RawListing, b: RawListing): boolean {
+  return agreesOnUnitFacts(a, b) || isRemeasuredUnit(a, b);
+}
+
+function agreesOnUnitFacts(a: RawListing, b: RawListing): boolean {
   if (!sameSize(a, b)) return false;
   if (a.builtYear != null && b.builtYear != null && Math.abs(a.builtYear - b.builtYear) > 1) return false;
 
@@ -205,7 +213,9 @@ export function isSameUnit(a: RawListing, b: RawListing): boolean {
     if (!(knownConvertiblePair && exactUnitFacts)) return false;
   }
 
-  const strongIdentity = sameName && sameAddress;
+  // Not in a new building: its alike rooms are let together at rents a few
+  // thousand yen apart, and one portal's ads for five of them are five rooms.
+  const strongIdentity = sameName && sameAddress && !isNewBuild(a) && !isNewBuild(b);
   const tolerance = strongIdentity
     ? Math.max(1_000, Math.min(a.rent, b.rent) * 0.05)
     : Math.max(1_000, Math.min(a.rent, b.rent) * 0.01);
@@ -230,6 +240,50 @@ export function isSameUnit(a: RawListing, b: RawListing): boolean {
   const sameBuildYear = a.builtYear != null && b.builtYear != null && Math.abs(a.builtYear - b.builtYear) <= 1;
   const sameWalk = close(a.stationWalkMin, b.stationWalkMin, 2);
   return sameStation || sameBuildYear || sameWalk;
+}
+
+/** Rooms a layout counts: 2DK → 2, and a service room is a room, so 2SLDK → 3. */
+function roomCount(layout: string): number | undefined {
+  const match = layout.match(/^(\d+)(s?)/);
+  return match ? Number(match[1]) + (match[2] ? 1 : 0) : undefined;
+}
+
+/** 2K / 2DK / 2LDK, or 2SLDK / 3LDK / 3SLDK: one room that agencies label differently. */
+function layoutsCompatible(a: string, b: string): boolean {
+  if (!a || !b || a === b) return true;
+  const [roomsA, roomsB] = [roomCount(a), roomCount(b)];
+  if (roomsA == null || roomsB == null) return false;
+  return roomsA === roomsB || a.replace(/^(\d+)s/, "$1") === b.replace(/^(\d+)s/, "$1");
+}
+
+/** A building finished this year or last is still filling up: many alike rooms are on offer at once. */
+const NEW_BUILD_FROM = new Date().getFullYear() - 1;
+export const isNewBuild = (listing: RawListing): boolean => listing.builtYear != null && listing.builtYear >= NEW_BUILD_FROM;
+
+/**
+ * One room as two agencies describe it. Each agency measures and labels a
+ * room itself, and its figures travel with its ad to every portal: SUUMO ads
+ * that SUUMO gives one room code differ in floor area in most pairs (often by
+ * 1–3 m², 60 vs 62), in layout in a fifth (3DK vs 3LDK) and in build year by
+ * one, yet never in rent. So where the building, the floor and the rent agree
+ * exactly, a different floor area or layout label is the other agency's
+ * figure, not another room.
+ *
+ * Both floors must be stated: an ad without one could be the alike room a
+ * floor up (measured on SUUMO room codes with `npm run dedup:eval`). New
+ * buildings are left out, since alike rooms on one floor are let together.
+ */
+function isRemeasuredUnit(a: RawListing, b: RawListing): boolean {
+  if (a.sizeM2 == null || b.sizeM2 == null || a.rent !== b.rent) return false;
+  if (Math.abs(a.sizeM2 - b.sizeM2) > Math.max(3, Math.min(a.sizeM2, b.sizeM2) * 0.05)) return false;
+  if (a.builtYear == null || b.builtYear == null || Math.abs(a.builtYear - b.builtYear) > 1) return false;
+  if (isNewBuild(a) || isNewBuild(b)) return false;
+  const [floorA, floorB] = [normFloor(a.building?.floor), normFloor(b.building?.floor)];
+  if (UNKNOWN_FLOORS.has(floorA) || UNKNOWN_FLOORS.has(floorB) || hasFloorConflict(a, b)) return false;
+  if (!layoutsCompatible(norm(a.layout), norm(b.layout))) return false;
+  const name = normName(a.name);
+  const area = normArea(a.address);
+  return name.length > 0 && name === normName(b.name) && area.length > 0 && area === normArea(b.address);
 }
 
 function sourceRank(listing: RawListing): number {
@@ -268,13 +322,19 @@ export function sourceListings(listing: RawListing): SourceListingReference[] {
     ? listing.sourceListings
     : [{ source: listing.source, id: listing.id, url: listing.url }];
   const unique = new Map<string, SourceListingReference>();
-  for (const reference of references) {
-    const key = reference.id
-      ? `${reference.source}|id:${reference.id}`
-      : `${reference.source}|url:${reference.url ?? ""}`;
-    unique.set(key, reference);
-  }
+  for (const reference of references) unique.set(referenceKey(reference), reference);
   return [...unique.values()].sort((x, y) => referenceRank(x) - referenceRank(y));
+}
+
+/**
+ * One key per portal ad. SUUMO row ids are built from name, layout and rent,
+ * so two agencies' ads for a room (or two rooms) can share one; SUUMO's own
+ * ad code in the URL (`bc`) tells them apart, so neither link is lost.
+ */
+function referenceKey(reference: SourceListingReference): string {
+  const bc = reference.source === "suumo" ? reference.url?.match(/[?&]bc=(\d+)/)?.[1] : undefined;
+  if (bc) return `${reference.source}|bc:${bc}`;
+  return reference.id ? `${reference.source}|id:${reference.id}` : `${reference.source}|url:${reference.url ?? ""}`;
 }
 
 const chooseParking = (primary?: ParkingInfo | null, secondary?: ParkingInfo | null): ParkingInfo | null | undefined => {
@@ -315,12 +375,7 @@ export function mergeDuplicateListings(a: RawListing, b: RawListing): RawListing
   const [primary, secondary] = isBetterListing(a, b) ? [a, b] : [b, a];
   const { agency: _agency, agencyInfo: _agencyInfo, ...merged } = mergeObject(primary, secondary)!;
   const references = [...sourceListings(primary), ...sourceListings(secondary)];
-  const uniqueReferences = new Map(references.map((reference) => [
-    reference.id
-      ? `${reference.source}|id:${reference.id}`
-      : `${reference.source}|url:${reference.url ?? ""}`,
-    reference,
-  ]));
+  const uniqueReferences = new Map(references.map((reference) => [referenceKey(reference), reference]));
 
   return {
     ...merged,
@@ -360,19 +415,42 @@ function mergePhotos(primary?: ListingPhoto[], secondary?: ListingPhoto[]): { ph
  * post the same room on SUUMO). Distinct units in one building disagree on
  * floor — or rent, or area — and stay separate. Both ads' links are kept.
  */
-/** A portal detail id is authoritative even if a later scrape corrected its facts. */
-function sharesSourceListingIdentity(a: RawListing, b: RawListing): boolean {
-  const identities = new Set(
-    sourceListings(a)
-      .filter((reference) => reference.id)
-      .map((reference) => `${reference.source}|${reference.id}`),
-  );
-  return sourceListings(b).some(
-    (reference) => reference.id && identities.has(`${reference.source}|${reference.id}`),
-  );
+/** SUUMO's code for a room, shared by every agency's ad for it (the ad's own code is `bc`). */
+const suumoRoomCode = (reference: SourceListingReference): string | undefined =>
+  reference.source === "suumo" ? reference.url?.match(/\/jnc_(\d+)/)?.[1] : undefined;
+
+/**
+ * Two references to one portal ad, or to one room as the portal itself
+ * identifies it. SUUMO row ids are built from name, layout and rent, so two
+ * rooms of one building can share an id; where a URL carries SUUMO's room
+ * code, the code decides and the id is ignored. Two codes are not proof of
+ * two rooms, though (SUUMO misses some copies), so ads with different codes
+ * can still merge on their facts like any other pair.
+ */
+function isSameAd(x: SourceListingReference, y: SourceListingReference): boolean {
+  if (x.source !== y.source) return false;
+  const [roomX, roomY] = [suumoRoomCode(x), suumoRoomCode(y)];
+  if (roomX || roomY) return roomX === roomY;
+  return Boolean(x.id) && x.id === y.id;
 }
 
-function deduplicateWithinSource(listings: readonly RawListing[]): RawListing[] {
+/**
+ * The portal's own identity is authoritative: the listings merge even when
+ * their facts disagree (a later scrape corrected them, or two agencies
+ * measured the room differently).
+ */
+export function sharesAdIdentity(a: RawListing, b: RawListing): boolean {
+  const references = sourceListings(b);
+  return sourceListings(a).some((x) => references.some((y) => isSameAd(x, y)));
+}
+
+/** Rows after merging, and for each row the ads as they were before it. */
+interface MergedRows {
+  merged: RawListing[];
+  members: RawListing[][];
+}
+
+function deduplicateWithinSource(listings: readonly RawListing[]): MergedRows {
   const merged: RawListing[] = [];
   const members: RawListing[][] = [];
   const byName = new Map<string, Set<number>>();
@@ -392,7 +470,7 @@ function deduplicateWithinSource(listings: readonly RawListing[]): RawListing[] 
     ]);
     const duplicateIndex = [...candidateIndices].find((index) =>
       merged[index].source === listing.source &&
-      (members[index].some((member) => sharesSourceListingIdentity(member, listing)) ||
+      (members[index].some((member) => sharesAdIdentity(member, listing)) ||
         (!members[index].some((member) => hasFloorConflict(member, listing)) &&
           members[index].some((member) => isSameUnit(member, listing)))),
     );
@@ -408,7 +486,7 @@ function deduplicateWithinSource(listings: readonly RawListing[]): RawListing[] 
     addTo(byName, normName(listing.name), index);
     addTo(byArea, normArea(listing.address), index);
   }
-  return merged;
+  return { merged, members };
 }
 
 /**
@@ -416,10 +494,16 @@ function deduplicateWithinSource(listings: readonly RawListing[]): RawListing[] 
  * own repeat ads; phase 2 merges across portals, never combining two ads
  * from the same portal into a cross-source group (they may be distinct
  * units) — phase 1 has already removed the true same-unit repeats.
+ *
+ * A row is matched through every ad in it, not through the facts the merged
+ * row happens to show. Two agencies' SUUMO ads for one room (64 m² and 68 m²)
+ * make one row, and another portal's 64 m² copy must still find it whichever
+ * of the two leads.
  */
 export function deduplicateListings(listings: readonly RawListing[]): RawListing[] {
   const input = deduplicateWithinSource(listings);
-  const merged: RawListing[] = [];
+  // A row absorbed into an earlier one leaves a hole, so indices stay valid.
+  const merged: (RawListing | undefined)[] = [];
   const members: RawListing[][] = [];
   // Matching keys off normalized name, address and chome-area, so index all
   // three instead of scanning every prior row (O(n²)). Keep all aliases from
@@ -434,48 +518,69 @@ export function deduplicateListings(listings: readonly RawListing[]): RawListing
     bucket.add(index);
     map.set(key, bucket);
   };
-
-  for (const listing of input) {
-    const candidateIndices = new Set([
-      ...(byName.get(normName(listing.name)) ?? []),
-      ...(byAddress.get(normAddress(listing.address)) ?? []),
-      ...(byArea.get(normArea(listing.address)) ?? []),
-    ]);
-    const listingSources = new Set(sourceListings(listing).map(({ source }) => source));
-    const duplicateIndex = [...candidateIndices].find((index) => {
-      // An unknown-floor ad may match either unit in isolation, but cannot
-      // bridge two groups whose observed floors explicitly disagree.
-      const sharedIdentity = members[index].some((member) => sharesSourceListingIdentity(member, listing));
-      if (!sharedIdentity && members[index].some((member) => hasFloorConflict(member, listing))) return false;
-      const candidateSources = sourceListings(merged[index]).map(({ source }) => source);
-      if (!candidateSources.some((source) => listingSources.has(source))) {
-        return members[index].some((member) => isSameProperty(member, listing));
-      }
-      // The group already carries a portal this listing also carries: fold in
-      // only when this is the same unit as that portal's existing entry (a
-      // repeat agency ad, or a historical group whose name/address drifted
-      // from the surviving ad). A merely similar ad stays out — it may be a
-      // different unit. Members may themselves be pre-merged groups, so
-      // compare against their whole source set.
-      return members[index].some(
-        (member) =>
-          sharesSourceListingIdentity(member, listing) ||
-          (sourceListings(member).some((ref) => listingSources.has(ref.source)) &&
-            isSameUnit(member, listing)),
-      );
-    });
-
-    const index = duplicateIndex ?? merged.length;
-    if (duplicateIndex == null) {
-      merged.push(listing);
-      members.push([listing]);
-    } else {
-      merged[index] = mergeDuplicateListings(merged[index], listing);
-      members[index].push(listing);
+  const indexAds = (ads: readonly RawListing[], index: number) => {
+    for (const ad of ads) {
+      addTo(byName, normName(ad.name), index);
+      addTo(byAddress, normAddress(ad.address), index);
+      addTo(byArea, normArea(ad.address), index);
     }
-    addTo(byName, normName(listing.name), index);
-    addTo(byAddress, normAddress(listing.address), index);
-    addTo(byArea, normArea(listing.address), index);
-  }
-  return merged;
+  };
+
+  /** Whether `ads`, one row's worth, are the room row `index` already holds. */
+  const joins = (index: number, ads: readonly RawListing[]): boolean => {
+    const anyPair = (test: (member: RawListing, ad: RawListing) => boolean) =>
+      members[index].some((member) => ads.some((ad) => test(member, ad)));
+    // An unknown-floor ad may match either unit in isolation, but cannot
+    // bridge two groups whose observed floors explicitly disagree.
+    if (!anyPair(sharesAdIdentity) && anyPair(hasFloorConflict)) return false;
+    const sources = new Set(ads.flatMap((ad) => sourceListings(ad).map(({ source }) => source)));
+    const onSharedPortal = (member: RawListing) => sourceListings(member).some((ref) => sources.has(ref.source));
+    if (!members[index].some(onSharedPortal)) return anyPair(isSameProperty);
+    // The group already carries a portal these ads also carry: fold in only
+    // when this is the same unit as that portal's existing entry (a repeat
+    // agency ad, or a historical group whose name/address drifted from the
+    // surviving ad). A merely similar ad stays out — it may be a different
+    // unit. Members may themselves be pre-merged groups, so compare against
+    // their whole source set.
+    if (anyPair((member, ad) => sharesAdIdentity(member, ad) || (onSharedPortal(member) && isSameUnit(member, ad)))) {
+      return true;
+    }
+    // Two agencies' ads on one portal show the room at one rent while their
+    // other figures differ, so the shared portal's entry need not match
+    // itself: at the same rent, matching any ad in the group is enough.
+    const sameRent = members[index].filter(onSharedPortal).every((member) => ads.every((ad) => ad.rent === member.rent));
+    return sameRent && anyPair(isSameUnit);
+  };
+
+  input.merged.forEach((listing, position) => {
+    const ads = input.members[position];
+    const candidates = [...new Set(ads.flatMap((ad) => [
+      ...(byName.get(normName(ad.name)) ?? []),
+      ...(byAddress.get(normAddress(ad.address)) ?? []),
+      ...(byArea.get(normArea(ad.address)) ?? []),
+    ]))].filter((index) => merged[index] != null).sort((x, y) => x - y);
+    const [index, ...others] = candidates.filter((candidate) => joins(candidate, ads));
+
+    if (index == null) {
+      merged.push(listing);
+      members.push([...ads]);
+      indexAds(ads, merged.length - 1);
+      return;
+    }
+    merged[index] = mergeDuplicateListings(merged[index]!, listing);
+    members[index].push(...ads);
+    indexAds(ads, index);
+    // These ads may also be what shows two earlier rows to be one room (two
+    // agencies' AtHome ads, then the SUUMO room that carries both sets of
+    // figures). Each later row joins on the same terms as any new ad.
+    for (const other of others) {
+      if (!joins(index, members[other])) continue;
+      merged[index] = mergeDuplicateListings(merged[index]!, merged[other]!);
+      members[index].push(...members[other]);
+      indexAds(members[other], index);
+      merged[other] = undefined;
+      members[other] = [];
+    }
+  });
+  return merged.filter((listing): listing is RawListing => listing != null);
 }

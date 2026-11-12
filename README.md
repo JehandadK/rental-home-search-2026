@@ -157,10 +157,15 @@ comfort, kitchen, connectivity, security, storage, building and tenancy
 features (e.g. free internet, city gas, pets, parcel box, fixed-term lease).
 Each is bilingual, can prefer Yes/No, and defaults to weight 0 so existing scores
 do not change until the user opts in. Unmapped portal details are still stored
-under **Other source details**. The header's **⧉ Possible duplicates** panel lists pairs
-that look like one home but differ in a detail (a ¥2,000 rent gap, a 0.3 ㎡
-area gap, a missing building name), so the automatic matcher kept them apart;
-mark each **Same home** (shown as one listing from then on) or **Different**. A **保育園 toggle** optionally counts daycares
+under **Other source details**. The header's **⧉ Possible duplicates** panel lists
+listings that look like one home but differ in a detail (a ¥2,000 rent gap, a
+missing building name), so the automatic matcher kept them apart. Listings
+that may all be one home are one case, shown side by side with the differing
+facts marked; mark it **Same home** (shown as one listing from then on) or
+**Different** with a click or the <kbd>S</kbd> / <kbd>D</kbd> keys, untick a
+listing that does not belong, or mark every likely case the same at once.
+`npm run dedup:eval` scores the automatic matcher against pairs the portals
+themselves identify (SUUMO room codes, UR room numbers). A **保育園 toggle** optionally counts daycares
 towards kindergarten. Settings persist in `localStorage`.
 
 ### Parking (駐車場)

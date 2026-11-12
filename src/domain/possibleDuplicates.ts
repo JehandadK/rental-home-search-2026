@@ -18,7 +18,7 @@
 import { listingAdKey } from "./availability";
 import { haversineM } from "./geo";
 import { isSold } from "./lifecycle";
-import { comparableArea, comparableName, sourceListings } from "./listingDedup";
+import { comparableArea, comparableName, isNewBuild, sourceListings } from "./listingDedup";
 import { listingKey } from "./listingKey";
 import type { EnrichedListing } from "./types";
 
@@ -77,6 +77,32 @@ export function nameSimilarity(a: string, b: string): number {
   return (2 * shared) / total;
 }
 
+/** What tells one wing or house of an estate from the next: a letter, a number, "#08", "第二". */
+const DESIGNATOR = /^[#＃第]?[a-z0-9一二三四五六七八九十壱弐参]{1,3}$/;
+
+/**
+ * Names that are one estate's but two buildings': the same stem, then a
+ * different wing letter or house number (セレスティア細田Ａ / Ｂ, Kolet #08 /
+ * #10, UR西上尾第一 / 第二). Those are neighbours, not copies of one ad.
+ */
+export function namesDifferentBuildings(a: string, b: string): boolean {
+  let shared = 0;
+  while (shared < a.length && shared < b.length && a[shared] === b[shared]) shared++;
+  // A stem ending inside a number ("#0" of #08 and #06) hands the digit back.
+  while (shared > 0 && /[0-9]/.test(a[shared - 1]) && /[0-9]/.test(a[shared] ?? "") && /[0-9]/.test(b[shared] ?? "")) shared--;
+  const [restA, restB] = [a.slice(shared), b.slice(shared)];
+  if (shared < 3 || !DESIGNATOR.test(restA) || !DESIGNATOR.test(restB)) return false;
+  return designatorValue(restA) !== designatorValue(restB);
+}
+
+const KANJI_DIGITS = "一二三四五六七八九";
+/** "#08", "第二" and "第2" as the bare designator: 08, 2, 2. */
+const designatorValue = (designator: string): string =>
+  designator
+    .replace(/^[#＃第]/, "")
+    .replace(/十/g, "10")
+    .replace(/[一二三四五六七八九壱弐参]/g, (digit) => String(KANJI_DIGITS.indexOf(digit) + 1 || "壱弐参".indexOf(digit) + 1));
+
 const floorOf = (listing: EnrichedListing) => normText(listing.building?.floor).replace(/[‐‑‒–—―ー−]/g, "-");
 const KNOWN_FLOOR = (floor: string) => floor !== "" && floor !== "-";
 
@@ -116,6 +142,7 @@ export function compareListings(a: Prepared, b: Prepared): Omit<PossibleDuplicat
 
   const reasons: string[] = [];
   const named = !a.descriptive && !b.descriptive && a.name !== "" && b.name !== "";
+  if (named && namesDifferentBuildings(a.name, b.name)) return null;
   const similarity = named ? nameSimilarity(a.name, b.name) : 0;
   const sameArea = a.area !== "" && a.area === b.area;
   const metres = x.lat != null && x.lon != null && y.lat != null && y.lon != null
@@ -150,13 +177,22 @@ export function compareListings(a: Prepared, b: Prepared): Omit<PossibleDuplicat
   if (sameStation && walkGap === 0) reasons.push("same station & walk");
   else if (sameStation) reasons.push("same station");
 
-  // One portal rarely lists a room twice; two of its ads are more often two rooms.
-  const sameSource = x.source === y.source;
-  if (sameSource) reasons.push(`both on ${x.source}`);
+  // Agencies copy one room onto a portal at one rent (every SUUMO pair with
+  // one room code agrees on it), so two ads a portal carries at two rents are
+  // more often two rooms. In a building still filling up they are.
+  const portal = rentGap > 0 ? sharedPortal(x, y) : undefined;
+  if (portal && (isNewBuild(x) || isNewBuild(y))) return null;
+  if (portal) reasons.push(`both on ${portal} at different rents`);
 
   const score = 0.3 * nameSignal + 0.25 * locationSignal + 0.15 * sizeSignal + 0.1 * rentSignal
-    + 0.1 * yearSignal + 0.1 * accessSignal - (layoutsDiffer ? 0.05 : 0) - (sameSource ? 0.1 : 0);
+    + 0.1 * yearSignal + 0.1 * accessSignal - (layoutsDiffer ? 0.05 : 0) - (portal ? 0.15 : 0);
   return { score: Math.round(score * 100) / 100, reasons };
+}
+
+/** A portal that carries an ad of both listings. */
+function sharedPortal(x: EnrichedListing, y: EnrichedListing): string | undefined {
+  const portals = new Set(sourceListings(y).map((reference) => reference.source));
+  return sourceListings(x).find((reference) => portals.has(reference.source))?.source;
 }
 
 function prepare(listing: EnrichedListing): Prepared {
@@ -208,6 +244,62 @@ export function findPossibleDuplicates(
     }
   }
   return pairs.sort((p, q) => q.score - p.score || p.keys[0].localeCompare(q.keys[0]));
+}
+
+/** Listings that may all be one home, reviewed together. */
+export interface DuplicateCase {
+  /** Stable for a set of listings: their keys, sorted. */
+  id: string;
+  /** listingKey of every listing in the case, best-connected first. */
+  keys: string[];
+  /** The weakest pair's score: how sure the whole case is. */
+  score: number;
+  /** That pair's evidence. */
+  reasons: string[];
+}
+
+/** More listings than this side by side cannot be compared at a glance. */
+export const MAX_CASE_SIZE = 4;
+
+/**
+ * Group pairs into cases, best first. Three ads of one room make three pairs
+ * but one question, so listings that are each a possible duplicate of every
+ * other one are reviewed as one case. A chain (A~B, B~C, but A and C ruled
+ * out) or a group too big to compare stays as its separate pairs.
+ */
+export function groupIntoCases(candidates: readonly PossibleDuplicate[]): DuplicateCase[] {
+  // Each pair once, or a repeat would be counted as the pair a chain lacks.
+  const pairs = [...new Map(candidates.map((pair) => [pairId(...pair.keys), pair])).values()];
+  const parent = new Map<string, string>();
+  const find = (key: string): string => {
+    const up = parent.get(key) ?? key;
+    if (up === key) return key;
+    const root = find(up);
+    parent.set(key, root);
+    return root;
+  };
+  for (const { keys: [a, b] } of pairs) parent.set(find(a), find(b));
+
+  const groups = new Map<string, PossibleDuplicate[]>();
+  for (const pair of pairs) {
+    const root = find(pair.keys[0]);
+    groups.set(root, [...(groups.get(root) ?? []), pair]);
+  }
+  const cases: DuplicateCase[] = [];
+  const caseOf = (members: readonly PossibleDuplicate[]): DuplicateCase => {
+    const weakest = members.reduce((low, pair) => (pair.score < low.score ? pair : low));
+    const links = new Map<string, number>();
+    for (const pair of members) for (const key of pair.keys) links.set(key, (links.get(key) ?? 0) + pair.score);
+    const keys = [...links.keys()].sort((p, q) => links.get(q)! - links.get(p)! || p.localeCompare(q));
+    return { id: [...keys].sort().join(" ~ "), keys, score: weakest.score, reasons: weakest.reasons };
+  };
+  for (const members of groups.values()) {
+    const size = new Set(members.flatMap((pair) => pair.keys)).size;
+    const everyPair = members.length === (size * (size - 1)) / 2;
+    if (size <= MAX_CASE_SIZE && everyPair) cases.push(caseOf(members));
+    else for (const pair of members) cases.push(caseOf([pair]));
+  }
+  return cases.sort((p, q) => q.score - p.score || p.id.localeCompare(q.id));
 }
 
 /** Every portal ad a listing carries, as finely as each portal tells ads apart (SUUMO: jnc + bc). */

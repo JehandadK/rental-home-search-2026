@@ -9,6 +9,13 @@ import { decodeDuplicateDecisions } from "../userState/decoders";
 import { USER_STATE_KEYS } from "../userState/store";
 import { usePersistentState } from "../userState/UserStateContext";
 
+/** One verdict about two listings, each given by its ad keys. */
+export interface DuplicateAnswer {
+  a: string[];
+  b: string[];
+  verdict: DuplicateVerdict;
+}
+
 export function useDuplicateDecisions() {
   const [decisions, setDecisions] = usePersistentState<Record<string, DuplicateDecision>>(
     USER_STATE_KEYS.duplicateDecisions,
@@ -23,15 +30,26 @@ export function useDuplicateDecisions() {
     }));
   }, [setDecisions]);
 
-  /** Forget a decision, putting the pair back up for review. */
-  const undo = useCallback((key: string) => {
+  /** Record several verdicts at once: a case of three listings, or every likely pair. */
+  const decideMany = useCallback((answers: readonly DuplicateAnswer[]) => {
+    if (answers.length === 0) return;
+    const decidedAt = new Date().toISOString();
+    setDecisions((current) => ({
+      ...current,
+      ...Object.fromEntries(answers.map(({ a, b, verdict }) => [decisionKey(a, b), { verdict, a, b, decidedAt }])),
+    }));
+  }, [setDecisions]);
+
+  /** Forget decisions, putting their pairs back up for review. */
+  const undoMany = useCallback((keys: readonly string[]) => {
     setDecisions((current) => {
-      if (!(key in current)) return current;
+      if (!keys.some((key) => key in current)) return current;
       const next = { ...current };
-      delete next[key];
+      for (const key of keys) delete next[key];
       return next;
     });
   }, [setDecisions]);
+  const undo = useCallback((key: string) => undoMany([key]), [undoMany]);
 
-  return { decisions, decide, undo };
+  return { decisions, decide, decideMany, undo, undoMany };
 }
