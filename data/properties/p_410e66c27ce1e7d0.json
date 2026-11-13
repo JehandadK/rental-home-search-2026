@@ -542,6 +542,20 @@
         "status": "active",
         "via": "backfill:git:bf82b09"
       }
+    },
+    {
+      "id": "ad.checked|athome|1256474601|2026-11-13T03:05:56.149Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-13T03:05:56.149Z",
+      "recordedAt": "2026-11-13T03:07:03.311Z",
+      "source": "athome",
+      "adKey": "athome|1256474601",
+      "url": "https://www.athome.co.jp/chintai/1256474601/?DOWN=1&BKLISTID=001LPC&sref=list_simple&bi=tatemono",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -552,11 +566,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1256474601/?DOWN=1&BKLISTID=001LPC&sref=list_simple&bi=tatemono",
     "lastSeenAt": "2026-09-07T08:34:56.206Z",
     "lastListedAt": "2026-09-07T08:34:56.206Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-09-07T08:34:56.206Z",
+      "before": "2026-11-13T03:05:56.149Z"
+    },
+    "daysOnMarket": {
+      "min": 0,
+      "max": 66.8
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-07T08:39:45.067Z",
@@ -572,7 +592,7 @@
         "firstSeenAt": "2026-09-07T08:34:56.206Z",
         "lastSeenAt": "2026-09-07T08:34:56.206Z",
         "lastListedAt": "2026-09-07T08:34:56.206Z",
-        "goneSince": null,
+        "goneSince": "2026-11-13T03:05:56.149Z",
         "relistCount": 0
       }
     },

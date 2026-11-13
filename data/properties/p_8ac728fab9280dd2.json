@@ -1107,6 +1107,20 @@
       "data": {
         "reason": "Superseded by a newer nifty observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|athome|1142852529|2026-11-13T03:05:08.396Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-13T03:05:08.396Z",
+      "recordedAt": "2026-11-13T03:07:03.311Z",
+      "source": "athome",
+      "adKey": "athome|1142852529",
+      "url": "https://www.athome.co.jp/chintai/1142852529/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1117,11 +1131,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1142852529/",
     "lastSeenAt": "2026-10-11T04:15:53.123Z",
     "lastListedAt": "2026-10-11T04:15:53.123Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-11T04:15:53.123Z",
+      "before": "2026-11-13T03:05:08.396Z"
+    },
+    "daysOnMarket": {
+      "min": 25,
+      "max": 58
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-02T10:46:48.780Z",
@@ -1138,7 +1158,7 @@
         "firstSeenAt": "2026-09-28T22:52:57.000Z",
         "lastSeenAt": "2026-10-04T06:01:50.243Z",
         "lastListedAt": "2026-10-04T06:01:50.243Z",
-        "goneSince": null,
+        "goneSince": "2026-11-13T03:05:08.396Z",
         "relistCount": 0
       },
       "nifty|detail_4f8853d4d5923307b596775b9f349250": {

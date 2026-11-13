@@ -1973,6 +1973,34 @@
           "athome|1153741133"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109359425|bc_100522215361|2026-11-13T03:06:58.697Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-13T03:06:58.697Z",
+      "recordedAt": "2026-11-13T03:07:03.311Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109359425|bc_100522215361",
+      "url": "https://suumo.jp/chintai/jnc_000109359425/?bc=100522215361",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1153741133|2026-11-13T03:07:01.265Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-13T03:07:01.265Z",
+      "recordedAt": "2026-11-13T03:07:03.311Z",
+      "source": "athome",
+      "adKey": "athome|1153741133",
+      "url": "https://www.athome.co.jp/chintai/1153741133/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -1983,11 +2011,17 @@
     "firstSeenUrl": "https://www.athome.co.jp/chintai/1153741133/",
     "lastSeenAt": "2026-10-04T09:33:11.593Z",
     "lastListedAt": "2026-10-04T09:33:11.593Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-04T09:33:11.593Z",
+      "before": "2026-11-13T03:07:01.265Z"
+    },
+    "daysOnMarket": {
+      "min": 11.2,
+      "max": 50.9
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-01",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": null,
     "relistCount": 0,
     "sources": [
@@ -2000,7 +2034,7 @@
         "firstSeenAt": "2026-09-23T05:39:17.451Z",
         "lastSeenAt": "2026-09-23T05:39:17.451Z",
         "lastListedAt": "2026-09-23T05:39:17.451Z",
-        "goneSince": null,
+        "goneSince": "2026-11-13T03:07:01.265Z",
         "relistCount": 0
       },
       "suumo|jnc_000109359425|bc_100522215361": {
@@ -2008,7 +2042,7 @@
         "firstSeenAt": "2026-10-04T09:33:11.593Z",
         "lastSeenAt": "2026-10-04T09:33:11.593Z",
         "lastListedAt": "2026-10-04T09:33:11.593Z",
-        "goneSince": null,
+        "goneSince": "2026-11-13T03:06:58.697Z",
         "relistCount": 0
       }
     },

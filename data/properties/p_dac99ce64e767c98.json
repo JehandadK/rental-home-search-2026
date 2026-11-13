@@ -625,6 +625,20 @@
         "status": "active",
         "via": "backfill:current"
       }
+    },
+    {
+      "id": "ad.checked|nifty|detail_2fed3fc6884838548f458a86c8933098|2026-11-13T03:05:44.468Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-13T03:05:44.468Z",
+      "recordedAt": "2026-11-13T03:07:03.311Z",
+      "source": "nifty",
+      "adKey": "nifty|detail_2fed3fc6884838548f458a86c8933098",
+      "url": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_2fed3fc6884838548f458a86c8933098/",
+      "data": {
+        "state": "gone",
+        "evidence": "redirected off the ad page to the building page /mansion-info/saitama/sokashi_ct/mansion_5321eb18a3b03ccf8c5c9f7d3df8e7dd/",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -635,11 +649,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/saitama/sokashi_ct/detail_2fed3fc6884838548f458a86c8933098/",
     "lastSeenAt": "2026-10-04T06:01:23.048Z",
     "lastListedAt": "2026-10-04T06:01:23.048Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-04T06:01:23.048Z",
+      "before": "2026-11-13T03:05:44.468Z"
+    },
+    "daysOnMarket": {
+      "min": 13.8,
+      "max": 53.6
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-04T06:14:57.497Z",
@@ -655,7 +675,7 @@
         "firstSeenAt": "2026-09-20T11:55:45.570Z",
         "lastSeenAt": "2026-10-04T06:01:23.048Z",
         "lastListedAt": "2026-10-04T06:01:23.048Z",
-        "goneSince": null,
+        "goneSince": "2026-11-13T03:05:44.468Z",
         "relistCount": 0
       }
     },

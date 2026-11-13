@@ -643,6 +643,23 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-13 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-11-13T02-40-42-590Z-3a92ac46`: **SUCCESS** after one resume, in the
+  shared browser on the main checkout's `.context/athome-profile` (run from a
+  worktree, `ATHOME_VERIFY_WAIT_SECONDS=300`; AtHome passed without a prompt).
+  The first pass ended PARTIAL: only Nifty Soka failed (`Nifty results not
+  ready`, a `page.evaluate` error); its saved snapshot was kept. The `--resume`
+  re-ran just that stage, the Nifty import, SUUMO details and the rebuild; Soka
+  read 3 new.
+- **Availability stage**: 60 page loads, **48 homes checked: 33 gone, 14 still
+  listed, 1 unresolved**.
+- Source additions: SUUMO **18**, AtHome **33**, RoomSpot **1**, Nifty **33**
+  (Koshigaya 16, Kawaguchi 6, Katsushika 5, Noda 3, Soka 3). UR ran with no
+  minimum, as configured.
+- **43 unique properties added after dedup** (39 in the first pass, 4 after the
+  resume); **6666** archival rows.
+
 ## 2026-11-11 first refresh with the availability stage (Playwright)
 
 - Run `2026-11-11T07-33-48-850Z-12a303d2`: **SUCCESS** after one resume,
