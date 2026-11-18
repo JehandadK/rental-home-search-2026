@@ -643,6 +643,19 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-18 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-11-18T01-46-40-062Z-556d3e0e`: **SUCCESS** in one pass, 1358s, in
+  the shared browser on the main checkout's `.context/athome-profile` (run from
+  a worktree, `ATHOME_VERIFY_WAIT_SECONDS=300`; AtHome passed without a prompt).
+  No stage failed.
+- **Availability stage**: 60 page loads, **44 homes checked: 35 gone, 8 still
+  listed, 1 unresolved**.
+- Source additions: SUUMO **49**, AtHome **23**, RoomSpot **12**, Nifty **65**
+  (Kawaguchi 27, Koshigaya 17, Katsushika 11, Noda 5, Soka 5). UR ran with no
+  minimum, as configured.
+- **80 unique properties added after dedup**; **6766** archival rows.
+
 ## 2026-11-13 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-11-13T02-40-42-590Z-3a92ac46`: **SUCCESS** after one resume, in the

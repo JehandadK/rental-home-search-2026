@@ -17,7 +17,8 @@
       ],
       "sightings": [
         "2026-11-10T07:13:52.313Z",
-        "2026-11-11T07:50:02.073Z"
+        "2026-11-11T07:50:02.073Z",
+        "2026-11-18T01:46:42.753Z"
       ],
       "firstRecordedAt": "2026-11-10T07:29:02.549Z"
     }
@@ -677,7 +678,7 @@
       ]
     },
     "tenancy.availableFrom": {
-      "chosen": "2026年11月14日以降",
+      "chosen": "随時",
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -696,11 +697,24 @@
           "reportedAt": {
             "ur|50_3230-000010406": "2026-11-10T07:29:02.549Z"
           }
+        },
+        {
+          "value": "随時",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_3230-000010406"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-18T02:08:07.676Z",
+          "reportedAt": {
+            "ur|50_3230-000010406": "2026-11-18T02:08:07.676Z"
+          }
         }
       ]
     },
     "tenancy.immediateMoveIn": {
-      "chosen": false,
+      "chosen": true,
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -718,6 +732,19 @@
           "firstRecordedAt": "2026-11-10T07:29:02.549Z",
           "reportedAt": {
             "ur|50_3230-000010406": "2026-11-10T07:29:02.549Z"
+          }
+        },
+        {
+          "value": true,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_3230-000010406"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-18T02:08:07.676Z",
+          "reportedAt": {
+            "ur|50_3230-000010406": "2026-11-18T02:08:07.676Z"
           }
         }
       ]
@@ -784,6 +811,20 @@
         "evidence": "UR detail_room returned no room (no longer advertised)",
         "method": "probe"
       }
+    },
+    {
+      "id": "ad.checked|ur|50_3230-000010406|2026-11-18T01:46:42.753Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-18T01:46:42.753Z",
+      "recordedAt": "2026-11-18T02:08:07.676Z",
+      "source": "ur",
+      "adKey": "ur|50_3230-000010406",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_3230_room.html?JKSS=000010406",
+      "data": {
+        "state": "listed",
+        "evidence": "Advertised again in UR's vacancy list",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -792,25 +833,19 @@
     "firstSeenBasis": "sighting",
     "firstSeenAdKey": "ur|50_3230-000010406",
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_3230_room.html?JKSS=000010406",
-    "lastSeenAt": "2026-11-11T07:50:02.073Z",
-    "lastListedAt": "2026-11-11T07:50:02.073Z",
-    "offMarket": {
-      "after": "2026-11-11T07:50:02.073Z",
-      "before": "2026-11-13T02:57:54.506Z"
-    },
-    "daysOnMarket": {
-      "min": 1,
-      "max": 2.8
-    },
+    "lastSeenAt": "2026-11-18T01:46:42.753Z",
+    "lastListedAt": "2026-11-18T01:46:42.753Z",
+    "offMarket": null,
+    "daysOnMarket": null,
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "gone",
+    "status": "listed",
     "buildStatus": {
       "status": "active",
       "since": "2026-11-10T07:29:01.939Z",
       "reactivations": 0
     },
-    "relistCount": 0,
+    "relistCount": 1,
     "sources": [
       "ur"
     ],
@@ -818,12 +853,15 @@
       "ur|50_3230-000010406": {
         "source": "ur",
         "firstSeenAt": "2026-11-10T07:13:52.313Z",
-        "lastSeenAt": "2026-11-11T07:50:02.073Z",
-        "lastListedAt": "2026-11-11T07:50:02.073Z",
-        "goneSince": "2026-11-13T02:57:54.506Z",
-        "relistCount": 0
+        "lastSeenAt": "2026-11-18T01:46:42.753Z",
+        "lastListedAt": "2026-11-18T01:46:42.753Z",
+        "goneSince": null,
+        "relistCount": 1
       }
     },
-    "conflicts": []
+    "conflicts": [
+      "tenancy.availableFrom",
+      "tenancy.immediateMoveIn"
+    ]
   }
 }

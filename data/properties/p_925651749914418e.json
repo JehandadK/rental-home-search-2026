@@ -16,7 +16,8 @@
         "https://www.ur-net.go.jp/chintai/kanto/saitama/50_1270_room.html?JKSS=000224105"
       ],
       "sightings": [
-        "2026-10-31T23:08:34.026Z"
+        "2026-10-31T23:08:34.026Z",
+        "2026-11-18T01:46:42.753Z"
       ],
       "firstRecordedAt": "2026-10-31T23:22:33.491Z"
     }
@@ -93,7 +94,8 @@
     },
     "building.conditions": {
       "chosen": [
-        "この住宅はバルコニーの1/2の面積を加えた面積を表示しています。"
+        "この住宅はバルコニーの1/2の面積を加えた面積を表示しています。",
+        "このお部屋はUR賃貸住宅取扱店（不動産会社）を通してのお申込みは出来ません。URの各営業窓口でお申込みください。"
       ],
       "chosenFrom": {
         "source": "ur",
@@ -114,6 +116,22 @@
           "firstRecordedAt": "2026-10-31T23:22:33.491Z",
           "reportedAt": {
             "ur|50_1270-000224105": "2026-10-31T23:22:33.491Z"
+          }
+        },
+        {
+          "value": [
+            "この住宅はバルコニーの1/2の面積を加えた面積を表示しています。",
+            "このお部屋はUR賃貸住宅取扱店（不動産会社）を通してのお申込みは出来ません。URの各営業窓口でお申込みください。"
+          ],
+          "source": "ur",
+          "adKeys": [
+            "ur|50_1270-000224105"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-18T02:08:07.676Z",
+          "reportedAt": {
+            "ur|50_1270-000224105": "2026-11-18T02:08:07.676Z"
           }
         }
       ]
@@ -699,7 +717,7 @@
       ]
     },
     "tenancy.availableFrom": {
-      "chosen": "2026年11月2日以降",
+      "chosen": "随時",
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -718,11 +736,24 @@
           "reportedAt": {
             "ur|50_1270-000224105": "2026-10-31T23:22:33.491Z"
           }
+        },
+        {
+          "value": "随時",
+          "source": "ur",
+          "adKeys": [
+            "ur|50_1270-000224105"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-18T02:08:07.676Z",
+          "reportedAt": {
+            "ur|50_1270-000224105": "2026-11-18T02:08:07.676Z"
+          }
         }
       ]
     },
     "tenancy.immediateMoveIn": {
-      "chosen": false,
+      "chosen": true,
       "chosenFrom": {
         "source": "ur",
         "rule": "latest-evidence",
@@ -740,6 +771,19 @@
           "firstRecordedAt": "2026-10-31T23:22:33.491Z",
           "reportedAt": {
             "ur|50_1270-000224105": "2026-10-31T23:22:33.491Z"
+          }
+        },
+        {
+          "value": true,
+          "source": "ur",
+          "adKeys": [
+            "ur|50_1270-000224105"
+          ],
+          "firstObservedAt": null,
+          "lastObservedAt": null,
+          "firstRecordedAt": "2026-11-18T02:08:07.676Z",
+          "reportedAt": {
+            "ur|50_1270-000224105": "2026-11-18T02:08:07.676Z"
           }
         }
       ]
@@ -848,6 +892,20 @@
         "evidence": "UR detail_room returned no room (no longer advertised)",
         "method": "probe"
       }
+    },
+    {
+      "id": "ad.checked|ur|50_1270-000224105|2026-11-18T01:46:42.753Z|listed|probe",
+      "type": "ad.checked",
+      "at": "2026-11-18T01:46:42.753Z",
+      "recordedAt": "2026-11-18T02:08:07.676Z",
+      "source": "ur",
+      "adKey": "ur|50_1270-000224105",
+      "url": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_1270_room.html?JKSS=000224105",
+      "data": {
+        "state": "listed",
+        "evidence": "Advertised again in UR's vacancy list",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -856,25 +914,19 @@
     "firstSeenBasis": "build",
     "firstSeenAdKey": "ur|50_1270-000224105",
     "firstSeenUrl": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_1270_room.html?JKSS=000224105",
-    "lastSeenAt": "2026-10-31T23:08:34.026Z",
-    "lastListedAt": "2026-10-31T23:08:34.026Z",
-    "offMarket": {
-      "after": "2026-10-31T23:08:34.026Z",
-      "before": "2026-11-03T21:58:28.050Z"
-    },
-    "daysOnMarket": {
-      "min": 15.5,
-      "max": 18.5
-    },
+    "lastSeenAt": "2026-11-18T01:46:42.753Z",
+    "lastListedAt": "2026-11-18T01:46:42.753Z",
+    "offMarket": null,
+    "daysOnMarket": null,
     "portalPublishedOn": null,
     "portalUpdatedOn": null,
-    "status": "gone",
+    "status": "listed",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-16T10:21:37.910Z",
       "reactivations": 0
     },
-    "relistCount": 0,
+    "relistCount": 1,
     "sources": [
       "ur"
     ],
@@ -882,12 +934,16 @@
       "ur|50_1270-000224105": {
         "source": "ur",
         "firstSeenAt": "2026-10-31T23:08:34.026Z",
-        "lastSeenAt": "2026-10-31T23:08:34.026Z",
-        "lastListedAt": "2026-10-31T23:08:34.026Z",
-        "goneSince": "2026-11-03T21:58:28.050Z",
-        "relistCount": 0
+        "lastSeenAt": "2026-11-18T01:46:42.753Z",
+        "lastListedAt": "2026-11-18T01:46:42.753Z",
+        "goneSince": null,
+        "relistCount": 1
       }
     },
-    "conflicts": []
+    "conflicts": [
+      "building.conditions",
+      "tenancy.availableFrom",
+      "tenancy.immediateMoveIn"
+    ]
   }
 }
