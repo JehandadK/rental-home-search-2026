@@ -7,6 +7,7 @@ import { scoreListing } from "../../domain/scoring";
 import { listingKey } from "../../domain/listingKey";
 import type { EnrichedListing } from "../../domain/types";
 import type { ScoredRow } from "../../domain/scoring";
+import type { MarketEstimate } from "../../domain/marketRent";
 import { ListingTable } from "./ListingTable";
 import { resetUnavailablePhotos } from "./ListingPhoto";
 
@@ -446,5 +447,75 @@ describe("ListingTable score evidence", () => {
         onSelect={() => {}} onCenterMap={() => {}} marks={{}} onSetMark={() => {}} emptyState={<p>Nothing here</p>} />,
     );
     expect(screen.getByText("Nothing here")).toBeTruthy();
+  });
+});
+
+describe("ListingTable market check", () => {
+  const estimate = (expectedRent: number, rent: number, over: Partial<MarketEstimate> = {}): MarketEstimate => ({
+    expectedRent,
+    deltaYen: rent - expectedRent,
+    deltaRatio: rent / expectedRent - 1,
+    confidence: "high",
+    comparables: [],
+    ...over,
+  });
+  const rowOf = (name: string) => screen.getByText(name).closest("tr")!;
+
+  it("shows the rent against similar homes and badges a clear deal", () => {
+    const cheap = makeRow({ id: "cheap", name: "Cheap home", rent: 80_000 });
+    const fair = makeRow({ id: "fair", name: "Fair home", rent: 100_000 });
+    const rough = makeRow({ id: "rough", name: "Rough home", rent: 60_000 });
+    const none = makeRow({ id: "none", name: "No estimate" });
+    renderTable([cheap, fair, rough, none], {
+      market: new Map([
+        ["cheap", estimate(100_000, 80_000)],
+        ["fair", estimate(102_000, 100_000)],
+        ["rough", estimate(100_000, 60_000, { confidence: "low" })],
+      ]),
+    });
+
+    expect(within(rowOf("Cheap home")).getByText("DEAL −20%")).toBeTruthy();
+    expect(within(rowOf("Cheap home")).getByTitle(/similar homes ask about ¥100,000 \(¥20,000 less\)/)).toBeTruthy();
+    expect(within(rowOf("Fair home")).getByText("−2%")).toBeTruthy();
+    expect(within(rowOf("Fair home")).queryByText(/DEAL/)).toBeNull();
+    // Thin evidence is shown as a rough figure, never as a deal.
+    expect(within(rowOf("Rough home")).getByText("~−40%")).toBeTruthy();
+    expect(within(rowOf("Rough home")).queryByText(/DEAL/)).toBeNull();
+    expect(within(rowOf("No estimate")).queryByText(/%/)).toBeNull();
+  });
+
+  it("sorts the best deals first, with unpriced and rough estimates last", () => {
+    const rows = [
+      makeRow({ id: "a", name: "Home A", rent: 95_000 }),
+      makeRow({ id: "b", name: "Home B", rent: 70_000 }),
+      makeRow({ id: "c", name: "Home C", rent: 50_000 }),
+      makeRow({ id: "d", name: "Home D" }),
+    ];
+    renderTable(rows, {
+      market: new Map([
+        ["a", estimate(100_000, 95_000)],
+        ["b", estimate(100_000, 70_000)],
+        ["c", estimate(100_000, 50_000, { confidence: "low" })],
+      ]),
+    });
+    fireEvent.click(screen.getByRole("columnheader", { name: /vs market/ }));
+    const names = screen.getAllByText(/^Home [A-D]/).map((cell) => cell.textContent!.slice(0, 6));
+    expect(names.slice(0, 2)).toEqual(["Home B", "Home A"]);
+    expect(names.slice(2).sort()).toEqual(["Home C", "Home D"]);
+  });
+
+  it("shows the homes an estimate is based on in the open row, with an inquiry draft", () => {
+    const home = makeRow({ id: "home", name: "Open home", rent: 80_000 });
+    renderTable([home], {
+      market: new Map([["home", estimate(100_000, 80_000, {
+        comparables: [{ key: "n1", name: "Neighbour One", rent: 99_000, sizeM2: 54, builtYear: 2008, layout: "2LDK", distanceM: 240 }],
+      })]]),
+    });
+    fireEvent.click(rowOf("Open home"));
+    expect(screen.getByText("Market check")).toBeTruthy();
+    expect(screen.getByText(/¥20,000 a month under similar homes/)).toBeTruthy();
+    expect(screen.getByText("Neighbour One")).toBeTruthy();
+    expect(screen.getByText(/¥99,000 · 2LDK · 54㎡ · 2008 · 240 m away/)).toBeTruthy();
+    expect(screen.getByText(/Inquiry draft/)).toBeTruthy();
   });
 });

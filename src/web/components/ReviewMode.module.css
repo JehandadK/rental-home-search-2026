@@ -1,0 +1,429 @@
+/* The page dims behind a centred panel; on a phone the panel is the screen. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(var(--rs-shade) / 0.45);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(980px, 100%);
+  height: min(860px, 100%);
+  background: var(--rs-card);
+  color: var(--rs-ink);
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  box-shadow: 0 16px 48px rgb(var(--rs-shadow) / 0.25);
+  overflow: hidden;
+}
+
+.dialog:focus {
+  outline: none;
+}
+
+.head {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--rs-line);
+}
+
+.head h2 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--rs-ink-strong);
+}
+
+.progress {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.tally {
+  display: inline-flex;
+  gap: 10px;
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--rs-muted);
+}
+
+.close {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: var(--rs-muted);
+  font-size: 24px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+/* The thin progress bar along the header's bottom edge. */
+.track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  background: var(--rs-track);
+}
+
+.fill {
+  height: 100%;
+  background: var(--rs-accent);
+  transition: width 0.2s ease-out;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Photo and facts side by side; the swipe is sideways, so vertical scroll stays native. */
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 18px;
+  padding: 16px;
+  touch-action: pan-y;
+}
+
+.media {
+  min-width: 0;
+}
+
+.gallery {
+  position: sticky;
+  top: 0;
+}
+
+.noPhoto {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--rs-slate-200);
+  border-radius: 8px;
+  background: repeating-linear-gradient(135deg, var(--rs-slate-100) 0 6px, var(--rs-photo-bg) 6px 12px);
+  color: var(--rs-slate-400);
+  font-size: 13px;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.3;
+  color: var(--rs-ink-strong);
+  overflow-wrap: anywhere;
+}
+
+.address {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--rs-muted);
+  overflow-wrap: anywhere;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.badgeNew,
+.badgeUr,
+.verdictDeal,
+.verdictFair,
+.verdictPricey,
+.markPositive,
+.markNegative {
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badgeNew {
+  background: var(--rs-green-600);
+  color: var(--rs-on-accent);
+}
+
+.badgeUr {
+  background: var(--rs-ur);
+  color: var(--rs-on-accent);
+}
+
+.verdictDeal {
+  background: var(--rs-emerald-50);
+  color: var(--rs-emerald-700);
+  border: 1px solid var(--rs-emerald-200);
+}
+
+.verdictFair {
+  background: var(--rs-slate-100);
+  color: var(--rs-slate-600);
+  border: 1px solid var(--rs-slate-200);
+}
+
+/* Asking clearly more than similar homes: a warning, not a verdict on the home. */
+.verdictPricey {
+  background: var(--rs-amber-50);
+  color: var(--rs-amber-800);
+  border: 1px solid var(--rs-amber-200);
+}
+
+.markPositive {
+  background: var(--rs-accent-wash);
+  color: var(--rs-blue-700);
+}
+
+.markNegative {
+  background: var(--rs-danger-wash);
+  color: var(--rs-danger-ink);
+}
+
+.markPositive small,
+.markNegative small {
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.facts div {
+  padding: 6px 8px;
+  border: 1px solid var(--rs-line);
+  border-radius: 8px;
+  background: var(--rs-slate-50);
+}
+
+.facts dt {
+  font-size: 11px;
+  color: var(--rs-muted);
+}
+
+.facts dd {
+  margin: 1px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.score {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.total {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.why {
+  margin: 0;
+  font-size: 13px;
+}
+
+.bars {
+  display: grid;
+  gap: 6px;
+}
+
+.bar {
+  font-size: 12px;
+}
+
+.barLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.barLabel em {
+  color: var(--rs-muted);
+}
+
+.barTrack {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--rs-track);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 13px;
+}
+
+/* Thumb-sized buttons; decisions on the left, page turning on the right. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--rs-line);
+  background: var(--rs-card);
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.action {
+  min-height: 44px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.action kbd {
+  margin-left: 4px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.positive {
+  background: var(--rs-accent);
+  color: var(--rs-on-accent);
+}
+
+.negative {
+  background: var(--rs-danger-wash);
+  color: var(--rs-danger-ink);
+}
+
+/* The mark the home already has: pressing it again clears it. */
+.action[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--rs-card), 0 0 0 4px var(--rs-accent);
+}
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--rs-muted);
+}
+
+.state p {
+  margin: 0;
+}
+
+.stateTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--rs-ink-strong);
+}
+
+.stateActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/*
+ * A phone: the overlay is the screen, from its top-left corner (the page can
+ * be wider than the screen), one column, and the decisions pinned under the
+ * thumb above the home indicator. Key hints mean nothing without a keyboard.
+ */
+@media (max-width: 640px) {
+  .backdrop {
+    inset: auto;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    padding: 0;
+  }
+
+  .dialog {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .head {
+    padding-top: calc(10px + env(safe-area-inset-top));
+  }
+
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 12px;
+  }
+
+  .gallery {
+    position: static;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .nav {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0;
+  }
+
+  .action {
+    padding: 8px 4px;
+    font-size: 13px;
+  }
+
+  .action kbd {
+    display: none;
+  }
+}

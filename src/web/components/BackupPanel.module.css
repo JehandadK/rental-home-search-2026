@@ -1,0 +1,135 @@
+.card {
+  background: var(--rs-card);
+  border: 1px solid var(--rs-line);
+  border-radius: var(--rs-radius);
+  padding: 14px 16px;
+}
+
+.summary {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rs-muted);
+}
+
+.lede {
+  font-size: 12px;
+  color: var(--rs-muted);
+}
+
+.section {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heading {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rs-ink);
+}
+
+.count,
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rs-muted);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--rs-muted);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--rs-red-700);
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--rs-line);
+  padding-top: 8px;
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 12px;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--rs-muted);
+}
+
+.check {
+  font-size: 12px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table th,
+.table td {
+  padding: 3px 6px;
+  text-align: right;
+  border-bottom: 1px solid var(--rs-line);
+}
+
+.table th:first-child {
+  text-align: left;
+  font-weight: normal;
+}
+
+.fine {
+  margin: 12px 0 0;
+  font-size: 11px;
+  color: var(--rs-muted);
+}
+
+/* Entries a replace would delete. */
+.removed {
+  color: var(--rs-red-700);
+  font-weight: 700;
+}

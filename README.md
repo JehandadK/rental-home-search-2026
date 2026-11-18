@@ -38,6 +38,90 @@ npm run rank       # print the current top listings in the terminal
 npm run rank -- -n 30
 ```
 
+## From a ranking to a decision
+
+The ranking says which homes fit. These say what to do about them today.
+
+### Today: what changed
+
+The strip above the map counts, among the homes your filters show:
+
+- **New homes** since the data you last acknowledged. *Mark all seen* moves
+  that line to the newest home held; until you have used it, the "new" window
+  from the filters stands in. It is measured against the data, not the clock,
+  so a refresh that lands an hour after a visit still counts as new.
+- **Deals**: undecided homes asking 15% or more under similar homes (below).
+- **Undecided homes**: everything matching with no decision mark.
+- **Homes you were pursuing that look taken**: shortlisted or applied-for homes
+  now sold, rented out or likely rented, even when a filter hides them, each
+  with *mark taken*.
+- **Viewings** booked in your notes, from today on.
+
+Each count opens **Review** on exactly those homes.
+
+### Market check: is this rent cheap for this home?
+
+The rent criteria score against fixed anchors; they cannot say whether ¥98,000
+is cheap *for an 80 ㎡ house five minutes from a station*. The market check
+does, from the listings themselves (`src/domain/marketRent.ts`): a fit of rent
+against floor area, age, station walk, rooms, building type and location,
+corrected by what the nearest similar homes ask.
+
+- **vs market** column: the asking rent against that estimate (`−12%`). Click
+  the header to put the best deals first.
+- **DEAL** badge at 15% or more under; nothing is called a deal where a home
+  has few neighbours to compare with (the figure shows as `~−12%`).
+- **Market check** in the open row: the estimate and the homes it leans on.
+
+It is an estimate, not an appraisal: leaving each home out of its own
+neighbours and its copies on other portals, half of the published homes ask
+within 7% of it and nine in ten within 23%. Addresses are geocoded to the 丁目, so "same neighbourhood" means
+the same block of addresses, not the same building. A wide gap is worth a
+look and worth a question: a fixed-term lease, a tired building or a busy road
+can explain it.
+
+### Review: one home at a time
+
+**Review them** opens a full-screen card for each home: photos, the facts, the
+score with what helps and hurts it most, the market check, your note, and the
+portal links. Decide with one key or one tap and it moves on:
+<kbd>S</kbd> shortlist · <kbd>X</kbd> not interested · <kbd>F</kbd> no
+foreigners · <kbd>→</kbd>/<kbd>J</kbd> skip · <kbd>←</kbd>/<kbd>K</kbd> back ·
+<kbd>U</kbd> undo · <kbd>Esc</kbd> close. On a phone, swipe to move and use the
+buttons along the bottom. The queue is fixed when it opens, so a decision never
+makes it jump.
+
+### Inquiry draft (日本語)
+
+An open row offers **✉ Inquiry draft**: a polite Japanese message to the agency
+for that home, with an English gloss of what it says. Tick what to ask (still
+available, whether a foreign tenant is accepted, a viewing on the date in your
+note, the move-in costs, parking, move-in date), fill in *About you* once, and
+copy it into your mail or the portal's form. A UR room is addressed to UR and
+skips the agency questions. Nothing is sent from the page.
+
+### Backup & sync
+
+Marks, notes, the compare list, duplicate answers, presets and custom listings
+live in one browser. **Backup & sync** (bottom of the sidebar) downloads them
+as a file, or copies them as text, and reads such a file back:
+
+- **Merge into mine** (the default) adds the file's decisions to yours. Where
+  both have a note on a home the newer one is kept; where both have a mark the
+  file's is. Everything else of yours stays. Tick *Also take their weights,
+  filters and places* to adopt those too.
+- **Replace mine** overwrites what the file contains.
+
+What an import would change is listed before anything is written. This is how
+a phone and a laptop, or two people, keep one shortlist.
+
+### On a phone
+
+Up to 900 px wide the homes come first and the filters, weights and places are
+a drawer behind **⚙ Filters & weights**; a phone that has not chosen its
+columns starts with the compact set. An open row's details stay within the
+screen however wide the table is.
+
 ## Static site
 
 The dashboard needs no server. `npm run build` writes a self-contained static
@@ -594,9 +678,10 @@ estimates, but treat exact positions as ±100–200 m.
 src/
   web/                  ← React app (reads data; never imports Node, storage or collectors)
     data/                 · WebDataBoundary + runtime client that fetches public/data/
-    components/           · PlacePanel, FilterPanel, WeightPanel, ListingTable, MapView, AddListingForm
+    components/           · PlacePanel, FilterPanel, WeightPanel, ListingTable, MapView, AddListingForm,
+                            BriefingBar, ReviewMode, InquiryDraft, BackupPanel
     hooks/                · persisted config, filters, places, marks, custom listings
-    userState/            · the only localStorage adapter (plus an in-memory one for tests)
+    userState/            · the only localStorage adapter (plus an in-memory one for tests); backup.ts exports and merges it
     lib/export.ts         · CSV/Markdown export
   domain/               ← pure, testable logic shared by every layer
     types.ts              · listing, place and score shapes
@@ -609,6 +694,10 @@ src/
     placeSelection.ts     · applies "which places count" to a listing
     diagnostics.ts        · finds criteria that decide nothing
     filters.ts            · area/city/rent/size/layout predicates
+    marketRent.ts         · what similar homes ask: the "vs market" estimate
+    briefing.ts           · what is new, a deal, taken or booked today
+    reviewQueue.ts        · the one-at-a-time review session
+    inquiry.ts            · the Japanese inquiry message
     recommend/            · ranking pipeline, criteria schema, request decoding, explanations
   collectors/           ← fetch, parse and submit observations (suumo/, athome/, roomspot/, nifty/, ur/, enrichment/, shared/)
   data-layer/           ← contracts, ingestion/correction/bootstrap services, per-source policies, lifecycle

@@ -41,6 +41,8 @@ export const USER_STATE_KEYS = {
   duplicateDecisions: "rental-search-duplicate-decisions-v1",
   urRoomWatch: "rental-search-ur-room-watch-v1",
   urRoomsFilters: "rental-search-ur-rooms-filters-v1",
+  lastVisit: "rental-search-last-visit-v1",
+  inquiryProfile: "rental-search-inquiry-profile-v1",
 } as const;
 
 /**

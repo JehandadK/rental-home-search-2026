@@ -26,6 +26,7 @@ import { isRuledOut, LISTING_MARKS, markRank, type ListingMark, type MarkMap } f
 import { listingPhotos } from "../../domain/listingPhotos";
 import { describeNote, formatViewing, type NoteDraft, type NoteMap } from "../../domain/notes";
 import { MAX_COMPARE } from "../../domain/compare";
+import { formatMarketDelta, marketVerdict, type MarketEstimate } from "../../domain/marketRent";
 import type { ScoredRow } from "../../domain/scoring";
 import type { ScoreParameterKey, ScoringCriterionKey, SourceListingReference } from "../../domain/types";
 import { decodeHiddenColumns } from "../userState/decoders";
@@ -33,6 +34,7 @@ import { USER_STATE_KEYS } from "../userState/store";
 import { useUserStateStore } from "../userState/UserStateContext";
 import { ListingThumb, PhotoGallery } from "./ListingPhoto";
 import { NoteEditor } from "./NoteEditor";
+import { InquiryDraft } from "./InquiryDraft";
 import styles from "./ListingTable.module.css";
 import appStyles from "../App.module.css";
 
@@ -61,6 +63,8 @@ interface Props {
   rankMoves?: ReadonlyMap<string, number>;
   /** Days a listing counts as new after it is first seen (the NEW badge). */
   newWithinDays?: number;
+  /** What similar homes ask, by listingKey; empty until it has been worked out. */
+  market?: ReadonlyMap<string, MarketEstimate>;
   /** Shown in place of the rows when nothing matches, e.g. which filter to relax. */
   emptyState?: ReactNode;
 }
@@ -72,13 +76,14 @@ export type CostBasis = Pick<ScoringConfig, "moveIn" | "includeParking">;
 const NO_NOTES: NoteMap = {};
 const NO_COMPARE: readonly string[] = [];
 const NO_MOVES: ReadonlyMap<string, number> = new Map();
+const NO_MARKET: ReadonlyMap<string, MarketEstimate> = new Map();
 const CRITERION_LABELS = new Map<string, string>(
   [...SCORE_PARAMETERS, ...FEATURE_PARAMETERS].map(({ key, label }) => [key, label]),
 );
 
-type SortKey = "score" | "mark" | "monthly" | "stay" | ScoreParameterKey;
+type SortKey = "score" | "mark" | "monthly" | "stay" | "market" | ScoreParameterKey;
 type ColumnKey =
-  | "locate" | "rank" | "photo" | "city" | "mark" | "compare" | "score" | "monthly" | "stay"
+  | "locate" | "rank" | "photo" | "city" | "mark" | "compare" | "score" | "monthly" | "stay" | "market"
   | ScoreParameterKey | "links";
 
 interface TableColumn {
@@ -98,6 +103,7 @@ const TABLE_COLUMNS: readonly TableColumn[] = [
   { key: "score", label: "Score" },
   { key: "monthly", label: "Monthly" },
   { key: "stay", label: "2-yr cost" },
+  { key: "market", label: "vs market" },
   ...SCORE_PARAMETERS.map(({ key, label }) => ({ key, label })),
   { key: "links", label: "Links" },
 ];
@@ -111,12 +117,17 @@ const COMPACT_COLUMNS = new Set<ColumnKey>([
   "score",
   "monthly",
   "stay",
+  "market",
   "rent",
   "moveInCost",
   "size",
   "station",
   "links",
 ]);
+
+/** A phone-width window. False where the browser cannot say (tests, server rendering). */
+const isNarrowScreen = () =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 700px)").matches;
 
 /** Format a parameter's raw value for compact table display. */
 function formatValue(part: ScorePart | undefined): string {
@@ -192,6 +203,22 @@ function RankMove({ places }: { places: number }) {
   );
 }
 
+/** The rent against what similar homes ask: "−12%", coloured only when it is a clear gap. */
+function MarketCell({ rent, estimate }: { rent: number; estimate: MarketEstimate | undefined }) {
+  if (!estimate) return <>—</>;
+  const verdict = marketVerdict(estimate);
+  const gap = Math.abs(estimate.deltaYen);
+  const title = `Asks ¥${yen.format(rent)} · similar homes ask about ¥${yen.format(estimate.expectedRent)}`
+    + (gap >= 1000 ? ` (¥${yen.format(gap)} ${estimate.deltaYen < 0 ? "less" : "more"})` : "")
+    + (verdict == null ? "\nFew similar homes nearby, so this is a rough guide only" : "");
+  const tone = verdict === "deal" ? styles.marketDeal : verdict === "pricey" ? styles.marketPricey : verdict == null ? styles.marketUnsure : "";
+  return (
+    <span className={tone || undefined} title={title}>
+      {verdict == null ? "~" : ""}{formatMarketDelta(estimate.deltaRatio)}
+    </span>
+  );
+}
+
 function stayTitle(cost: StayCost): string {
   return `¥${yen.format(cost.sunk)} sunk move-in + ${cost.months} × ¥${yen.format(cost.monthly)}`
     + (cost.parkingUnknown ? "\n* parking price not stated, so not included" : "");
@@ -215,15 +242,22 @@ export const ListingTable = memo(function ListingTable({
   onToggleCompare,
   rankMoves = NO_MOVES,
   newWithinDays = NEW_LISTING_WINDOW_DAYS,
+  market = NO_MARKET,
   emptyState,
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [ascending, setAscending] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const userState = useUserStateStore();
-  const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(
-    () => decodeHiddenColumns(userState.read(USER_STATE_KEYS.hiddenColumns), COLUMN_KEYS),
-  );
+  const [hiddenColumns, setHiddenColumns] = useState<Set<ColumnKey>>(() => {
+    const saved = userState.read(USER_STATE_KEYS.hiddenColumns);
+    // A phone that has never chosen its columns starts with the short set:
+    // every column is some 3,400 px of sideways scrolling.
+    if (saved === undefined && isNarrowScreen()) {
+      return new Set(TABLE_COLUMNS.filter(({ key }) => !COMPACT_COLUMNS.has(key)).map(({ key }) => key));
+    }
+    return decodeHiddenColumns(saved, COLUMN_KEYS);
+  });
   // Rendering 1,500+ table rows and ~15,000 cells at once dominates browser
   // startup. Render the first useful slice, then opt into more as needed.
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -246,6 +280,11 @@ export const ListingTable = memo(function ListingTable({
       if (sortKey === "mark") return markRank(marks[listingKey(listing)]);
       if (sortKey === "monthly") return stayCosts.get(listing)!.monthly;
       if (sortKey === "stay") return stayCosts.get(listing)!.total;
+      // Best deals first; homes with no estimate, or only a rough one, last.
+      if (sortKey === "market") {
+        const estimate = market.get(listingKey(listing));
+        return marketVerdict(estimate) == null ? Number.MAX_SAFE_INTEGER : estimate!.deltaRatio;
+      }
       if (sortKey === "rent") return listing.rent;
       if (sortKey === "rentPerM2") return listing.sizeM2 ? listing.rent / listing.sizeM2 : Number.MAX_SAFE_INTEGER;
       if (sortKey === "size") return listing.sizeM2 ?? -1;
@@ -260,7 +299,7 @@ export const ListingTable = memo(function ListingTable({
       }
       return (sortKey === "score" ? -diff : diff) * (ascending ? -1 : 1);
     });
-  }, [items, sortKey, ascending, marks, stayCosts]);
+  }, [items, sortKey, ascending, marks, stayCosts, market]);
 
   // Only a *selection* (a click on the map) scrolls the table — and only the
   // table's own container, never the page. Hover never scrolls anything.
@@ -409,6 +448,14 @@ export const ListingTable = memo(function ListingTable({
                   2-yr cost{sortMark("stay")}
                 </th>
               )}
+              {shows("market") && (
+                <th
+                  onClick={() => toggleSort("market")}
+                  title="The asking rent against what similar homes nearby ask (same size, age, station walk and neighbourhood). Click to put the best deals first. An estimate: expand a row to see the homes it is based on."
+                >
+                  vs market{sortMark("market")}
+                </th>
+              )}
               {SCORE_PARAMETERS.map((meta) => shows(meta.key) && (
                 <th key={meta.key} title={meta.description} onClick={() => toggleSort(meta.key)}>
                   {meta.label}
@@ -435,6 +482,8 @@ export const ListingTable = memo(function ListingTable({
               const note = notes[key];
               const comparing = compare.includes(key);
               const cost = stayCosts.get(listing)!;
+              const estimate = market.get(key);
+              const deal = marketVerdict(estimate) === "deal";
               return (
               <Fragment key={rowKey}>
                 <tr
@@ -481,6 +530,14 @@ export const ListingTable = memo(function ListingTable({
                     {fresh && (
                       <span className={styles.badgeNew} title={`First seen in the last ${newWithinDays} day${newWithinDays === 1 ? "" : "s"}`}>
                         NEW
+                      </span>
+                    )}
+                    {deal && !sold && (
+                      <span
+                        className={styles.badgeDeal}
+                        title={`Asks ¥${yen.format(listing.rent)} where similar homes nearby ask about ¥${yen.format(estimate!.expectedRent)}. An estimate: check the ad for what explains it.`}
+                      >
+                        DEAL {formatMarketDelta(estimate!.deltaRatio)}
                       </span>
                     )}
                     {sold && (
@@ -594,6 +651,7 @@ export const ListingTable = memo(function ListingTable({
                   {shows("stay") && (
                     <td title={stayTitle(cost)}>¥{yen.format(cost.total)}</td>
                   )}
+                  {shows("market") && <td><MarketCell rent={listing.rent} estimate={estimate} /></td>}
                   {SCORE_PARAMETERS.map((meta) => shows(meta.key) && (
                     <td key={meta.key}>
                       {formatValue(score.parts.find((p) => p.key === meta.key))}
@@ -652,6 +710,8 @@ export const ListingTable = memo(function ListingTable({
                       <Breakdown
                         row={{ listing, score }}
                         moveIn={moveIn}
+                        estimate={estimate}
+                        viewingAt={note?.viewingAt ?? null}
                         notes={onSetNote && (
                           <NoteEditor key={key} note={note} onSave={(draft) => onSetNote(key, draft)} />
                         )}
@@ -722,14 +782,23 @@ function ParkingLine({ listing }: { listing: ScoredRow["listing"] }) {
 }
 
 /** Per-parameter bars showing exactly why a listing scored what it did. */
-function Breakdown({ row, moveIn, notes }: { row: ScoredRow; moveIn: CostBasis["moveIn"]; notes?: ReactNode }) {
+function Breakdown({ row, moveIn, estimate, viewingAt, notes }: {
+  row: ScoredRow;
+  moveIn: CostBasis["moveIn"];
+  estimate?: MarketEstimate;
+  /** The viewing booked in this home's note, offered as the date in the inquiry draft. */
+  viewingAt: string | null;
+  notes?: ReactNode;
+}) {
   return (
-    <>
+    <div className={styles.detailInner}>
       <div className={styles.detailTop}>
         <PhotoGallery photos={listingPhotos(row.listing)} name={row.listing.name} className={styles.detailGallery} />
         <MoveInBreakdown row={row} moveIn={moveIn} />
       </div>
+      {estimate && <MarketCheck listing={row.listing} estimate={estimate} />}
       {notes}
+      <InquiryDraft listing={row.listing} viewingAt={viewingAt} />
       <div className={styles.bars}>
       {row.score.parts.map((part) => {
         const meta = [...SCORE_PARAMETERS, ...FEATURE_PARAMETERS].find((m) => m.key === part.key)!;
@@ -763,7 +832,54 @@ function Breakdown({ row, moveIn, notes }: { row: ScoredRow; moveIn: CostBasis["
         );
       })}
       </div>
-    </>
+    </div>
+  );
+}
+
+/**
+ * The asking rent beside what similar homes ask, with the homes that estimate
+ * leans on: a number nobody can check is not worth acting on.
+ */
+function MarketCheck({ listing, estimate }: { listing: ScoredRow["listing"]; estimate: MarketEstimate }) {
+  const verdict = marketVerdict(estimate);
+  const gap = Math.abs(estimate.deltaYen);
+  const headline = verdict === "deal"
+    ? `${formatMarketDelta(estimate.deltaRatio)} · ¥${yen.format(gap)} a month under similar homes`
+    : verdict === "pricey"
+      ? `${formatMarketDelta(estimate.deltaRatio)} · ¥${yen.format(gap)} a month over similar homes`
+      : verdict === "fair"
+        ? `${formatMarketDelta(estimate.deltaRatio)} · in line with similar homes`
+        : "few similar homes nearby · a rough guide only";
+  return (
+    <div className={styles.market}>
+      <div className={styles.moveInHead}>
+        <strong>Market check</strong>
+        <span>
+          asks ¥{yen.format(listing.rent)} · similar homes ask about ¥{yen.format(estimate.expectedRent)} ·{" "}
+          <span className={verdict === "deal" ? styles.marketDeal : verdict === "pricey" ? styles.marketPricey : styles.marketUnsure}>
+            {headline}
+          </span>
+        </span>
+      </div>
+      {estimate.comparables.length > 0 && (
+        <ul className={styles.comparables}>
+          {estimate.comparables.map((home) => (
+            <li key={home.key}>
+              <span title={home.name}>{home.name}</span>
+              <span>
+                ¥{yen.format(home.rent)} · {home.layout ?? "—"} · {home.sizeM2}㎡ · {home.builtYear} ·{" "}
+                {home.distanceM < 50 ? "same neighbourhood" : home.distanceM < 1000 ? `${Math.round(home.distanceM / 10) * 10} m away` : `${(home.distanceM / 1000).toFixed(1)} km away`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className={styles.moveInNote}>
+        An estimate from every listing held: floor area, age, station walk, building type and the nearest similar homes.
+        Half of all homes ask within 7% of it. A wide gap is worth a look, and worth a question: a fixed-term lease,
+        a ground floor or a busy road can explain it.
+      </p>
+    </div>
   );
 }
 

@@ -58,9 +58,18 @@ import { MapView } from "./components/MapView";
 import { NoMatches } from "./components/NoMatches";
 import { WeightPanel } from "./components/WeightPanel";
 import { UrRoomsPage } from "./components/UrRoomsPage";
+import { BriefingBar } from "./components/BriefingBar";
+import { ReviewMode } from "./components/ReviewMode";
+import { BackupPanel } from "./components/BackupPanel";
+import { buildBriefing, decodeSeenDataAt } from "../domain/briefing";
+import { estimateMarketRents, type MarketEstimate } from "../domain/marketRent";
+import type { EnrichedListing } from "../domain/types";
+import { USER_STATE_KEYS } from "./userState/store";
+import { usePersistentState } from "./userState/UserStateContext";
 import styles from "./App.module.css";
 
 const NO_HINTS: RelaxationHint[] = [];
+const NO_MARKET: ReadonlyMap<string, MarketEstimate> = new Map();
 
 /** The dashboard, over data the WebDataBoundary has already loaded. */
 export function App({ data }: { data: WebData }) {
@@ -88,6 +97,23 @@ export function App({ data }: { data: WebData }) {
   const { decisions: duplicateDecisions, decideMany: decideDuplicates, undoMany: undoDuplicates } = useDuplicateDecisions();
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const { urRoomsOpen, setUrRoomsOpen } = useUrRoomsView();
+  /** The homes being reviewed one at a time, as they were when the review opened, and its title; null when closed. */
+  const [review, setReview] = useState<{ title: string; rows: ScoredRow[] } | null>(null);
+  /** The newest data the user has acknowledged: homes first seen after it are "new" in the briefing. */
+  const [seenDataAt, setSeenDataAt] = usePersistentState<string | null>(USER_STATE_KEYS.lastVisit, decodeSeenDataAt);
+  /** On a phone the filters and weights are a drawer over the homes, closed until asked for. */
+  const [panelOpen, setPanelOpen] = useState(false);
+  const panelCloseRef = useRef<HTMLButtonElement>(null);
+  // An open drawer takes the focus and closes on Escape, like the other overlays.
+  useEffect(() => {
+    if (!panelOpen) return;
+    panelCloseRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) setPanelOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [panelOpen]);
 
   /** Each duplicate answer's listings today, and the homes the "same" answers form. */
   const resolvedDuplicates = useMemo(() => resolveDecisions(listings, duplicateDecisions), [listings, duplicateDecisions]);
@@ -192,6 +218,21 @@ export function App({ data }: { data: WebData }) {
     const timer = setTimeout(() => setDuplicatePairs(findPossibleDuplicates(listings)), 0);
     return () => clearTimeout(timer);
   }, [listings]);
+  /**
+   * What similar homes ask, for the "vs market" column and the deal badges.
+   * Fitted over every listing held, whatever the filters, and after the first
+   * paint like the duplicates: it takes a few hundred milliseconds.
+   */
+  const [market, setMarket] = useState<ReadonlyMap<string, MarketEstimate>>(NO_MARKET);
+  /**
+   * Homes confirmed as one are priced as one. Built from the listings rather
+   * than from `available`, which changes each time an ad is marked gone.
+   */
+  const marketBasis = useMemo(() => mergeConfirmedDuplicates(listings, leadOf), [listings, leadOf]);
+  useEffect(() => {
+    const timer = setTimeout(() => setMarket(estimateMarketRents(marketBasis)), 0);
+    return () => clearTimeout(timer);
+  }, [marketBasis]);
   /** Every listing by key before any "same" merge: the review panel shows both sides. */
   const unmergedByKey = useMemo(() => new Map(listings.map((listing) => [listingKey(listing), listing])), [listings]);
   /** Cases still to review: unanswered, and not already one home through other answers. */
@@ -380,6 +421,30 @@ export function App({ data }: { data: WebData }) {
     }));
   }, []);
 
+  /** What needs a look today: new homes, deals, shortlisted homes that look taken, viewings. */
+  const briefing = useMemo(
+    () => buildBriefing({ rows: filtered, all: available, marks, notes, market, seenDataAt, newWithinDays: filters.newWithinDays }),
+    [filtered, available, marks, notes, market, seenDataAt, filters.newWithinDays],
+  );
+  const openReview = useCallback((title: string, rows: ScoredRow[]) => setReview({ title, rows }), []);
+  /**
+   * The reviewed homes as they stand now: the review keeps its own queue, and
+   * draws each home from these so a rescore behind it shows at once. A home the
+   * filters have since dropped keeps the row it was opened with.
+   */
+  const reviewRows = useMemo(() => {
+    if (!review) return null;
+    const current = new Map(filtered.map((row) => [listingKey(row.listing), row]));
+    return review.rows.map((row) => current.get(listingKey(row.listing)) ?? row);
+  }, [review, filtered]);
+  const closeReview = useCallback(() => setReview(null), []);
+  const markDataSeen = useCallback(() => setSeenDataAt(briefing.dataAt), [setSeenDataAt, briefing.dataAt]);
+  const showListing = useCallback((listing: EnrichedListing) => {
+    const key = listingKey(listing);
+    if (listing.lat != null && listing.lon != null) centerMapOn(key, listing.lat, listing.lon);
+    else setSelected(key);
+  }, [centerMapOn]);
+
   /** A listing merged by a "same" answer is shown as the listing it joined. */
   const locateReviewed = useCallback((key: string, lat: number, lon: number) => {
     const shown = listingsByKey.get(shownKey({ leadOf }, key));
@@ -425,7 +490,19 @@ export function App({ data }: { data: WebData }) {
       </header>
       {urRoomsOpen && <UrRoomsPage onBack={() => setUrRoomsOpen(false)} />}
       <main className={styles.layout} hidden={urRoomsOpen}>
-        <aside className={styles.sidebar}>
+        <button
+          type="button"
+          className={styles.panelToggle}
+          onClick={() => setPanelOpen(true)}
+          aria-expanded={panelOpen}
+        >
+          ⚙ Filters &amp; weights{activeFilterCount(filters) > 0 && ` · ${activeFilterCount(filters)} on`}
+        </button>
+        {panelOpen && <div className={styles.backdrop} onClick={() => setPanelOpen(false)} />}
+        <aside className={`${styles.sidebar} ${panelOpen ? styles.sidebarOpen : ""}`}>
+          <button type="button" ref={panelCloseRef} className={`secondary ${styles.panelClose}`} onClick={() => setPanelOpen(false)}>
+            Show {filtered.length.toLocaleString("en")} homes
+          </button>
           <FilterPanel
             listings={listings}
             cities={reference.cities}
@@ -464,8 +541,19 @@ export function App({ data }: { data: WebData }) {
             onReset={resetPlaces}
           />
           <AddListingForm catalog={catalog} onAdd={addListing} />
+          <BackupPanel />
         </aside>
-        <section className={styles.main}>
+        <section className={styles.main} inert={panelOpen && narrowScreen() ? true : undefined}>
+          <BriefingBar
+            briefing={briefing}
+            seenDataAt={seenDataAt}
+            newWithinDays={filters.newWithinDays}
+            market={market}
+            onReview={openReview}
+            onMarkSeen={markDataSeen}
+            onShow={showListing}
+            onSetMark={setMark}
+          />
           <MapView
             items={filtered}
             reference={reference}
@@ -510,6 +598,7 @@ export function App({ data }: { data: WebData }) {
             onToggleCompare={toggleCompare}
             rankMoves={rankMoves}
             newWithinDays={filters.newWithinDays}
+            market={market}
             emptyState={noMatches}
           />
           {compare.length > 0 && (
@@ -529,6 +618,21 @@ export function App({ data }: { data: WebData }) {
           )}
         </section>
       </main>
+      {review && reviewRows && (
+        <ReviewMode
+          title={review.title}
+          rows={reviewRows}
+          marks={marks}
+          onSetMark={setMark}
+          notes={notes}
+          onSetNote={setNote}
+          costBasis={costBasis}
+          market={market}
+          newWithinDays={filters.newWithinDays}
+          onLocate={centerMapOn}
+          onClose={closeReview}
+        />
+      )}
       {duplicatesOpen && (
         <DuplicateReview
           pairs={duplicatePairs}
@@ -545,6 +649,10 @@ export function App({ data }: { data: WebData }) {
     </>
   );
 }
+
+/** The width at which the sidebar is a drawer (App.module.css). False where the browser cannot say. */
+const narrowScreen = () =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 900px)").matches;
 
 const UR_ROOMS_HASH = "#ur-rooms";
 

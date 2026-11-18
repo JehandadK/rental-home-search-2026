@@ -80,3 +80,97 @@
   padding: 3px 10px;
   font-size: 12px;
 }
+
+/*
+ * The phone layout's controls. On a wide screen the filters and weights sit
+ * beside the homes, so the toggle, the backdrop and the close button are off.
+ */
+.panelToggle,
+.panelClose,
+.backdrop {
+  display: none;
+}
+
+/*
+ * A phone: the homes come first. Stacked, the filters and weights were five
+ * screens to scroll past before the first home, so here they are a drawer
+ * opened from a button that stays within reach of a thumb.
+ */
+@media (max-width: 900px) {
+  .header {
+    padding: 10px 12px;
+    gap: 6px 10px;
+  }
+
+  .layout {
+    padding: 10px 10px calc(76px + env(safe-area-inset-bottom, 0px));
+    gap: 10px;
+  }
+
+  .main {
+    gap: 10px;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 900;
+    width: min(380px, 92vw);
+    padding: 10px 10px calc(16px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--rs-bg);
+    box-shadow: 4px 0 24px rgb(var(--rs-shadow) / 0.25);
+    transform: translateX(-104%);
+    visibility: hidden;
+    /* Hidden only once it has slid away. */
+    transition: transform 0.2s ease, visibility 0s 0.2s;
+  }
+
+  .sidebarOpen {
+    transform: none;
+    visibility: visible;
+    /* Visible at once, so it can take the focus as it opens. */
+    transition: transform 0.2s ease;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 890;
+    background: rgb(var(--rs-shade) / 0.4);
+  }
+
+  .panelClose {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    width: 100%;
+    padding: 9px 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgb(var(--rs-shadow) / 0.15);
+  }
+
+  .panelToggle {
+    display: block;
+    position: fixed;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    z-index: 880;
+    transform: translateX(-50%);
+    padding: 11px 18px;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 6px 20px rgb(var(--rs-shadow) / 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}
