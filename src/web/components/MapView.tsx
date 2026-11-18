@@ -74,6 +74,10 @@ import { describeNote, type ListingNote, type NoteMap } from "../../domain/notes
 import { MAX_COMPARE } from "../../domain/compare";
 import type { ScoredRow } from "../../domain/scoring";
 import { cityName, type NameLanguage } from "../../domain/mapAreas";
+import { placeDetails, placeLabel, placeName, placeTags } from "../../domain/placeDisplay";
+import { haversineM } from "../../domain/geo";
+import type { Proximity, ScoreParameterKey } from "../../domain/types";
+import { drawIconBadge, MapIconBadge, type MapIconName } from "./mapIcons";
 import { ListingThumb, PhotoGallery } from "./ListingPhoto";
 import { AreaPicker, type AreaCity } from "./AreaPicker";
 import styles from "./MapView.module.css";
@@ -134,6 +138,16 @@ interface Projected {
   y: number;
   key: string;
   row: ScoredRow;
+}
+
+/** A reference place where it was last drawn, for hovering, clicking and its label. */
+interface ProjectedPlace {
+  x: number;
+  y: number;
+  place: CatalogPlace;
+  layer: PlaceLayer;
+  /** The marker's width in pixels. */
+  size: number;
 }
 
 /** A UR estate marker where it was last drawn (its tile's centre), for hovering and its label. */
@@ -197,6 +211,8 @@ const MAP_COLOR_PROPERTIES = {
   schoolLabel: "--rs-map-school-label",
   kindergarten: "--rs-map-kindergarten",
   kindergartenLabel: "--rs-map-kindergarten-label",
+  tagJapanese: "--rs-map-tag-japanese",
+  tagResourceRoom: "--rs-map-tag-resource-room",
   ringStroke: "--rs-map-ring-stroke",
   ringLabel: "--rs-map-ring-label",
   mosqueRingStroke: "--rs-map-mosque-ring-stroke",
@@ -239,8 +255,8 @@ type LayerKey = "stations" | "schools" | "kindergartens" | "mosques" | "carAucti
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations in the chosen areas; the scored stations are larger, and names appear as you zoom in" },
-  { key: "schools", label: "Schools", title: "Public elementary schools; names appear as you zoom in" },
-  { key: "kindergartens", label: "Kindergartens", title: "Kindergartens (幼稚園, 認定こども園), and 保育園 too when the scoring counts them; names appear as you zoom in" },
+  { key: "schools", label: "Schools", title: "Public elementary schools; names appear as you zoom in. Hover one for its support classes, click for its links" },
+  { key: "kindergartens", label: "Kindergartens", title: "Kindergartens (幼稚園, 認定こども園), and 保育園 too (outlined) when the scoring counts them; names appear as you zoom in" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
   { key: "carAuctions", label: "Car auctions", title: "Car auction venues; the nearest one is scored once its weight is above zero" },
   { key: "shops", label: "Shops", title: "Listed shops (Super19); the nearest one is scored once its weight is above zero" },
@@ -250,10 +266,48 @@ const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
 ];
 const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, kindergartens: true, mosques: true, carAuctions: true, shops: true, urEstates: true, newRings: true, rings: true };
 
-/** A school's name without its operator: "越谷市立蒲生小学校" → "蒲生小学校", "認定こども園小牧" → "小牧". */
-function schoolName(place: CatalogPlace): string {
-  const short = place.name.replace(/^(?:.+?[市区町村]立|[市区町村]立|私立|(?:幼保連携型)?認定こども園)/u, "");
-  return short || place.name;
+/**
+ * The layers of reference places drawn as pictogram badges: which icon and
+ * theme colours each uses, and the score parameter that measures to it.
+ * `dense` layers (a place every few hundred metres) are dots until the map
+ * is zoomed in far enough for badges, and are named later; `localised`
+ * layers have names in both languages.
+ */
+interface PlaceLayer {
+  key: "schools" | "kindergartens" | "mosques" | "carAuctions" | "shops";
+  category: string;
+  icon: MapIconName;
+  color: "school" | "kindergarten" | "mosque" | "carAuction" | "shop";
+  labelColor: "schoolLabel" | "kindergartenLabel" | "mosqueLabel" | "carAuctionLabel" | "shopLabel";
+  parameter: ScoreParameterKey;
+  dense: boolean;
+  localised: boolean;
+}
+
+const PLACE_LAYERS: readonly PlaceLayer[] = [
+  { key: "schools", category: "school", icon: "school", color: "school", labelColor: "schoolLabel", parameter: "school", dense: true, localised: true },
+  { key: "kindergartens", category: "childcare", icon: "kindergarten", color: "kindergarten", labelColor: "kindergartenLabel", parameter: "kindergarten", dense: true, localised: true },
+  { key: "mosques", category: "mosque", icon: "mosque", color: "mosque", labelColor: "mosqueLabel", parameter: "poi2", dense: false, localised: false },
+  { key: "carAuctions", category: "carAuction", icon: "carAuction", color: "carAuction", labelColor: "carAuctionLabel", parameter: "carAuction", dense: false, localised: false },
+  { key: "shops", category: "shop", icon: "shop", color: "shop", labelColor: "shopLabel", parameter: "shop", dense: false, localised: true },
+];
+const placeLayerOf = (place: CatalogPlace): PlaceLayer | undefined => PLACE_LAYERS.find((layer) => layer.category === place.category);
+
+/** The selection card's distance rows whose place has a name in both languages, by its catalog category. */
+const LOCALISED_DISTANCE_ROWS: Record<string, string | undefined> = { school: "school", childcare: "childcare", shop: "shop" };
+
+/** How far a place may be for the pinned home to be joined to it. */
+const NEAREST_LINE_MAX_M = { dense: 3_000, sparse: 10_000 };
+
+/** Schools and kindergartens are a few hundred metres apart: dots until badges have room. */
+const PLACE_ICON_MIN_PX_PER_KM = 30;
+const PLACE_CARD_WIDTH = 250;
+
+/** "8 min walk" / "徒歩8分", in the scoring's travel mode. */
+function travelMinutes(minutes: number, mode: "walk" | "bicycle", language: NameLanguage): string {
+  const rounded = Math.round(minutes);
+  if (language === "en") return `${rounded} min ${mode === "bicycle" ? "ride" : "walk"}`;
+  return `${mode === "bicycle" ? "自転車" : "徒歩"}${rounded}分`;
 }
 
 /** How many lines serve a station (from the station import), for label priority. */
@@ -350,10 +404,14 @@ export const MapView = memo(function MapView({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Projected[]>([]);
   const estatesRef = useRef<ProjectedEstate[]>([]);
+  const placesRef = useRef<ProjectedPlace[]>([]);
   /** The UR estate under the pointer, when no listing is. */
   const [hoveredEstate, setHoveredEstate] = useState<UrEstate | null>(null);
   /** The clicked UR estate's place id: its card stays open, with links to UR and Google Maps. */
   const [pinnedEstateId, setPinnedEstateId] = useState<string | null>(null);
+  /** The school, kindergarten, mosque, venue or shop under the pointer, when no listing or estate is. */
+  const [hoveredPlace, setHoveredPlace] = useState<CatalogPlace | null>(null);
+  const [pinnedPlaceId, setPinnedPlaceId] = useState<string | null>(null);
   const [view, setView] = useState<View>(IDENTITY);
   /** The canvas width in canvas units: HEIGHT × its rendered aspect ratio. */
   const [canvasWidth, setCanvasWidth] = useState(WIDTH);
@@ -472,6 +530,11 @@ export const MapView = memo(function MapView({
       .filter((place) => walking.includeHoikuen || isKindergarten(place))
       .filter(inAreas),
   }), [reference, inAreas, walking.includeHoikuen]);
+  // The tags the shown schools carry, for the legend.
+  const schoolTagKeys = useMemo(
+    () => new Set(areaPlaces.schools.flatMap((school) => placeTags(school, "en").map((tag) => tag.key))),
+    [areaPlaces],
+  );
   // Every UR estate in the chosen areas, by its city (like the rail stations) or, without one, by its position.
   // Listing filters never touch them: an estate with no vacancy, or whose rooms the filters hide, is still worth seeing.
   const urEstates = useMemo(() => reference.catalog.inCategory(UR_PLACE_CATEGORY)
@@ -578,6 +641,42 @@ export const MapView = memo(function MapView({
     const name = selectedRow?.listing.poi1?.name;
     return name == null ? undefined : scoredPois.find((poi) => poi.name === name)?.id;
   }, [selectedRow, scoredPois]);
+  /**
+   * The places the pinned home's score measured to (its nearest school,
+   * kindergarten, shop and mosque), each with the travel minutes the score
+   * used. The map joins them to the home and names them.
+   */
+  const selectedNearest = useMemo(() => {
+    const found = new Map<string, { place: CatalogPlace; layer: PlaceLayer; minutes: number | null }>();
+    const listing = selectedRow?.listing;
+    if (!selectedRow || !listing || listing.lat == null || listing.lon == null) return found;
+    const home = { lat: listing.lat, lon: listing.lon };
+    const proximities: Record<PlaceLayer["key"], Proximity | undefined> = {
+      schools: listing.school,
+      kindergartens: walking.includeHoikuen ? listing.childcareAny : listing.kindergarten,
+      mosques: listing.poi2,
+      carAuctions: undefined,
+      shops: listing.shop,
+    };
+    for (const layer of PLACE_LAYERS) {
+      const proximity = proximities[layer.key];
+      if (!proximity || !layers[layer.key]) continue;
+      // Names repeat across cities (川柳小学校): the measured place is the nearest of that name.
+      let best: CatalogPlace | null = null;
+      let bestDistance = Infinity;
+      for (const place of areaPlaces[layer.key]) {
+        if (place.name !== proximity.name) continue;
+        const distance = haversineM(home, place);
+        if (distance < bestDistance) {
+          best = place;
+          bestDistance = distance;
+        }
+      }
+      // A home outside the cities whose schools are collected measures to one far away: no line across the map for that.
+      if (best && bestDistance <= (layer.dense ? NEAREST_LINE_MAX_M.dense : NEAREST_LINE_MAX_M.sparse)) found.set(best.id, { place: best, layer, minutes: selectedRow.score.parts.find((part) => part.key === layer.parameter)?.value ?? null });
+    }
+    return found;
+  }, [selectedRow, areaPlaces, layers, walking.includeHoikuen]);
   const selectedDistances = useMemo(
     () => selectedRow
       ? listingDistances(selectedRow.listing, {
@@ -586,9 +685,14 @@ export const MapView = memo(function MapView({
           walkSpeedMPerMin: walking.speedMPerMin,
           detourFactor: walking.detourFactor,
           includeHoikuen: walking.includeHoikuen,
+        }).map((row) => {
+          // The school, kindergarten and shop read in the map's name language.
+          const category = row.place == null ? undefined : LOCALISED_DISTANCE_ROWS[row.key];
+          const place = category && reference.catalog.inCategory(category).find((candidate) => candidate.name === row.place);
+          return place ? { ...row, place: placeName(place, language) } : row;
         })
       : [],
-    [selectedRow, reference, scoredPoiId, walking.speedMPerMin, walking.detourFactor, walking.includeHoikuen],
+    [selectedRow, reference, scoredPoiId, walking.speedMPerMin, walking.detourFactor, walking.includeHoikuen, language],
   );
 
   // Table-row locate buttons issue an explicit center request. Use the current
@@ -721,28 +825,40 @@ export const MapView = memo(function MapView({
     const neighbours = cityLayers.filter((layer) => !layer.focus);
     const focus = cityLayers.filter((candidate) => candidate.focus);
 
-    // Elementary schools and kindergartens: dots that grow, and gain an outline, as the map zooms in.
-    // Zoomed out they sit under the listings, which they would otherwise speckle; zoomed in, above them.
-    const schoolsAboveListings = pxPerKm >= RAIL_STATION_LABEL_MIN_PX_PER_KM;
-    const schoolRadius = pxPerKm < RAIL_STATION_LABEL_MIN_PX_PER_KM ? 2.5 : pxPerKm < SCHOOL_LABEL_MIN_PX_PER_KM ? 3.5 : 4.5;
-    const schoolDots = (places: readonly CatalogPlace[], color: string) => {
-      ctx.fillStyle = color;
-      ctx.strokeStyle = colors.markerOutline;
-      ctx.lineWidth = 1;
-      for (const place of places) {
+    // Reference places are pictogram badges: a white glyph on a rounded square in the layer's colour.
+    // The dense layers (schools, kindergartens) are dots until the map is zoomed in far enough for badges.
+    placesRef.current = [];
+    const asDots = (layer: PlaceLayer) => layer.dense && pxPerKm < PLACE_ICON_MIN_PX_PER_KM;
+    const badgeSize = (layer: PlaceLayer) => layer.dense
+      ? (pxPerKm < 60 ? 15 : 19)
+      : (pxPerKm < RAIL_STATION_LABEL_MIN_PX_PER_KM ? 13 : pxPerKm < SCHOOL_LABEL_MIN_PX_PER_KM ? 16 : 19);
+    const drawPlaceLayer = (layer: PlaceLayer) => {
+      if (!layers[layer.key]) return;
+      const dots = asDots(layer);
+      const size = dots ? (pxPerKm < RAIL_STATION_LABEL_MIN_PX_PER_KM ? 5 : 7) : badgeSize(layer);
+      const color = colors[layer.color];
+      for (const place of areaPlaces[layer.key]) {
         const { x, y } = toScreen(place.lat, place.lon);
-        if (x < -6 || y < -6 || x > canvasWidth + 6 || y > HEIGHT + 6) continue;
-        ctx.beginPath();
-        ctx.arc(x, y, schoolRadius, 0, Math.PI * 2);
-        ctx.fill();
-        if (schoolRadius > 3) ctx.stroke();
+        if (x < -size || y < -size || x > canvasWidth + size || y > HEIGHT + size) continue;
+        if (dots) {
+          ctx.beginPath();
+          ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          if (size > 5) {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = colors.markerOutline;
+            ctx.stroke();
+          }
+        } else {
+          // A 保育園 on the kindergarten layer (when the scoring counts them) is outlined.
+          drawIconBadge(ctx, layer.icon, x, y, size, color, colors.markerOutline, layer.key === "kindergartens" && !isKindergarten(place));
+        }
+        placesRef.current.push({ x, y, place, layer, size });
       }
     };
-    const drawSchools = () => {
-      if (layers.schools) schoolDots(areaPlaces.schools, colors.school);
-      if (layers.kindergartens) schoolDots(areaPlaces.kindergartens, colors.kindergarten);
-    };
-    if (!schoolsAboveListings) drawSchools();
+    // Zoomed out, the dots sit under the listings, which they would otherwise speckle.
+    for (const layer of PLACE_LAYERS) if (asDots(layer)) drawPlaceLayer(layer);
 
     // Travel-time rings under the listings: dashed at 5 and 10 minutes, solid at 15.
     if (layers.rings && ringsDrawable(ringMetresPerMinute)) {
@@ -888,18 +1004,70 @@ export const MapView = memo(function MapView({
       }
       const left = align === "center" ? x - width / 2 : x;
       const box = { left: left - 2, top: y - size - 1, right: left + width + 2, bottom: y + 3 };
-      if (box.right < 0 || box.left > canvasWidth || box.bottom < 0 || box.top > HEIGHT) return;
+      if (box.right < 0 || box.left > canvasWidth || box.bottom < 0 || box.top > HEIGHT) return null;
       if (!force && placed.some((other) =>
-        box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top)) return;
+        box.left < other.right && box.right > other.left && box.top < other.bottom && box.bottom > other.top)) return null;
       placed.push(box);
       haloText(text, x, y, color, font, align);
+      return box;
+    };
+    // A place's name beside its marker, in the map's language, then its tags as small chips.
+    const TAG_FONT = `600 9px ${FONT}`;
+    const placeLabels = (entry: ProjectedPlace, { extra, force = false }: { extra?: string; force?: boolean } = {}) => {
+      const { place, layer } = entry;
+      const name = layer.localised ? placeLabel(place, language) : place.name;
+      const small = layer.dense && !force;
+      const box = label(extra ? `${name} · ${extra}` : name, entry.x + entry.size / 2 + 4, entry.y + 4, colors[layer.labelColor], {
+        font: `${force ? "600 " : ""}${small ? 10 : 11}px ${FONT}`, size: small ? 10 : 11, force,
+      });
+      if (!box) return;
+      let left = box.right + 3;
+      for (const tag of placeTags(place, language)) {
+        ctx.font = TAG_FONT;
+        const widthKey = `${TAG_FONT}|${tag.text}`;
+        let width = labelWidths.current.get(widthKey);
+        if (width == null) {
+          width = ctx.measureText(tag.text).width;
+          labelWidths.current.set(widthKey, width);
+        }
+        const chip = { left, top: entry.y - 6, right: left + width + 8, bottom: entry.y + 7 };
+        if (!force && placed.some((other) =>
+          chip.left < other.right && chip.right > other.left && chip.top < other.bottom && chip.bottom > other.top)) break;
+        placed.push(chip);
+        ctx.beginPath();
+        ctx.roundRect(chip.left, chip.top, chip.right - chip.left, chip.bottom - chip.top, 6);
+        ctx.fillStyle = tag.key === "japanese" ? colors.tagJapanese : colors.tagResourceRoom;
+        ctx.fill();
+        ctx.fillStyle = colors.markerOutline;
+        ctx.fillText(tag.text, chip.left + 4, entry.y + 4);
+        left = chip.right + 3;
+      }
+    };
+    const labelPlaceLayer = (key: PlaceLayer["key"]) => {
+      for (const entry of placesRef.current) if (entry.layer.key === key) placeLabels(entry);
     };
     // Station names wait for the label pass: the hubs early, the rest last.
     let hubLabels = () => {};
     let stationLabels = () => {};
 
+    // Lines from the pinned home to the places its score measured to.
+    if (selectedDot) {
+      const home: Projected = selectedDot;
+      ctx.save();
+      ctx.setLineDash([5, 4]);
+      ctx.lineWidth = 1.5;
+      for (const { place, layer } of selectedNearest.values()) {
+        const { x, y } = toScreen(place.lat, place.lon);
+        ctx.strokeStyle = colors[layer.color];
+        ctx.beginPath();
+        ctx.moveTo(home.x, home.y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     // Reference places sit above the listings so they are never buried.
-    if (schoolsAboveListings) drawSchools();
     // Stations: small squares across the region, larger ones for the scored stations.
     if (layers.stations) {
       const half = pxPerKm < 8 ? 1.25 : pxPerKm < 30 ? 2 : 2.75;
@@ -951,54 +1119,8 @@ export const MapView = memo(function MapView({
       }
     }
 
-    // Mosque candidates as purple diamonds; scoring uses the nearest selected one.
-    if (layers.mosques) {
-      for (const mosque of areaPlaces.mosques) {
-        const { x, y } = toScreen(mosque.lat, mosque.lon);
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = colors.mosque;
-        ctx.strokeStyle = colors.markerOutline;
-        ctx.fillRect(-5, -5, 10, 10);
-        ctx.strokeRect(-5, -5, 10, 10);
-        ctx.restore();
-      }
-    }
-
-    // Car auction venues as orange triangles.
-    if (layers.carAuctions) {
-      for (const venue of areaPlaces.carAuctions) {
-        const { x, y } = toScreen(venue.lat, venue.lon);
-        ctx.beginPath();
-        ctx.moveTo(x, y - 7);
-        ctx.lineTo(x + 7, y + 5);
-        ctx.lineTo(x - 7, y + 5);
-        ctx.closePath();
-        ctx.fillStyle = colors.carAuction;
-        ctx.strokeStyle = colors.markerOutline;
-        ctx.fill();
-        ctx.stroke();
-      }
-    }
-
-    // Shops as green pentagons.
-    if (layers.shops) {
-      for (const shop of areaPlaces.shops) {
-        const { x, y } = toScreen(shop.lat, shop.lon);
-        ctx.beginPath();
-        ctx.moveTo(x, y - 7);
-        ctx.lineTo(x + 7, y - 1.5);
-        ctx.lineTo(x + 4.5, y + 6);
-        ctx.lineTo(x - 4.5, y + 6);
-        ctx.lineTo(x - 7, y - 1.5);
-        ctx.closePath();
-        ctx.fillStyle = colors.shop;
-        ctx.strokeStyle = colors.markerOutline;
-        ctx.fill();
-        ctx.stroke();
-      }
-    }
+    // Mosques, car auction venues and shops, and the schools and kindergartens once zoomed in.
+    for (const layer of PLACE_LAYERS) if (!asDots(layer)) drawPlaceLayer(layer);
 
     // Private schools left out of the poi1 score as outlined stars.
     const scoredIds = new Set(scoredPois.map((poi) => poi.id));
@@ -1028,6 +1150,11 @@ export const MapView = memo(function MapView({
       const { x, y } = toScreen(poi.lat, poi.lon);
       label(poi.name, x + 10, y + 4, colors.targetLabel);
     }
+    // The places the pinned home's score measured to, with the travel time.
+    for (const entry of placesRef.current) {
+      const nearest = selectedNearest.get(entry.place.id);
+      if (nearest) placeLabels(entry, { extra: nearest.minutes == null ? undefined : travelMinutes(nearest.minutes, travelMode, language), force: true });
+    }
     // UR estates with a vacancy, most rooms first, as far as they fit; the
     // others only once zoomed in, after everything else.
     const urLabels = (vacant: boolean) => {
@@ -1037,24 +1164,9 @@ export const MapView = memo(function MapView({
       }
     };
     if (pxPerKm > PREFECTURE_LABEL_MAX_PX_PER_KM) urLabels(true);
-    if (layers.mosques) {
-      for (const mosque of areaPlaces.mosques) {
-        const { x, y } = toScreen(mosque.lat, mosque.lon);
-        label(mosque.name, x + 9, y + 4, colors.mosqueLabel);
-      }
-    }
-    if (layers.carAuctions) {
-      for (const venue of areaPlaces.carAuctions) {
-        const { x, y } = toScreen(venue.lat, venue.lon);
-        label(venue.name, x + 10, y + 4, colors.carAuctionLabel);
-      }
-    }
-    if (layers.shops) {
-      for (const shop of areaPlaces.shops) {
-        const { x, y } = toScreen(shop.lat, shop.lon);
-        label(shop.name, x + 10, y + 4, colors.shopLabel);
-      }
-    }
+    labelPlaceLayer("shops");
+    labelPlaceLayer("mosques");
+    labelPlaceLayer("carAuctions");
     const labelCity = (layer: CityLayer, color: string, font: string, force = false) => {
       if (!layer.labelAt || !onScreen(layer.extent)) return;
       const topLeft = toScreen(layer.extent.maxLat, layer.extent.minLon);
@@ -1078,19 +1190,13 @@ export const MapView = memo(function MapView({
     if (pxPerKm >= RAIL_STATION_LABEL_MIN_PX_PER_KM) urLabels(false);
     // School and kindergarten names last, once zoomed in to a neighbourhood.
     if (pxPerKm >= SCHOOL_LABEL_MIN_PX_PER_KM) {
-      const schoolLabels = (places: readonly CatalogPlace[], color: string) => {
-        for (const place of places) {
-          const { x, y } = toScreen(place.lat, place.lon);
-          label(schoolName(place), x + schoolRadius + 3, y + 4, color, { font: `10px ${FONT}`, size: 10 });
-        }
-      };
-      if (layers.schools) schoolLabels(areaPlaces.schools, colors.schoolLabel);
-      if (layers.kindergartens) schoolLabels(areaPlaces.kindergartens, colors.kindergartenLabel);
+      labelPlaceLayer("schools");
+      labelPlaceLayer("kindergartens");
     }
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
-  }, [drawOrder, reference, scoredPois, shownScoredPois, cityLayers, prefectures, railStations, areaPlaces, urEstates, urRows, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, shownRingCenters, ringMetresPerMinute, language]);
+  }, [drawOrder, reference, scoredPois, shownScoredPois, cityLayers, prefectures, railStations, areaPlaces, urEstates, urRows, project, toScreen, basePxPerKm, view, canvasWidth, frameShift, hovered, selected, marks, layers, newWithinDays, shownRingCenters, ringMetresPerMinute, language, selectedNearest, travelMode]);
 
   // Wheel zoom toward the cursor. Attached manually so preventDefault works
   // (React's onWheel is passive and cannot block the page from scrolling).
@@ -1158,6 +1264,19 @@ export const MapView = memo(function MapView({
     return best;
   };
 
+  const placeAt = (mx: number, my: number): CatalogPlace | null => {
+    let best: CatalogPlace | null = null;
+    let bestDistance = Infinity;
+    for (const { x, y, place, size } of placesRef.current) {
+      const distance = Math.hypot(x - mx, y - my);
+      if (distance < Math.max(HIT_RADIUS, size / 2 + 2) && distance < bestDistance) {
+        best = place;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const { mx, my } = canvasCoords(e.currentTarget, e.clientX, e.clientY);
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -1177,16 +1296,20 @@ export const MapView = memo(function MapView({
         setView({ scale: d.view.scale, tx: d.view.tx + dx, ty: d.view.ty + dy });
         onHover(null);
         setHoveredEstate(null);
+        setHoveredPlace(null);
       }
       return;
     }
     const hit = hitTest(mx, my);
     const nextHovered = hit?.key ?? null;
     if (nextHovered !== hovered) onHover(nextHovered);
-    if (Boolean(hit) !== overDot) setOverDot(Boolean(hit));
-    // A listing wins over the estate it sits in.
+    // A listing wins over the estate it sits in, and both over a place marker.
     const estate = hit ? null : estateAt(mx, my);
     if (estate !== hoveredEstate) setHoveredEstate(estate);
+    const place = hit || estate ? null : placeAt(mx, my);
+    if (place !== hoveredPlace) setHoveredPlace(place);
+    const clickable = Boolean(hit || place);
+    if (clickable !== overDot) setOverDot(clickable);
   };
 
   const endDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -1201,8 +1324,10 @@ export const MapView = memo(function MapView({
       setSelectionCluster(keys);
       if (keys.length === 0) {
         onSelect(null);
-        // An estate, vacant or not, opens its card with links to its pages.
-        setPinnedEstateId(estateAt(mx, my)?.place.id ?? null);
+        // An estate, vacant or not, opens its card with links to its pages; so does a school, mosque or shop.
+        const estate = estateAt(mx, my);
+        setPinnedEstateId(estate?.place.id ?? null);
+        setPinnedPlaceId(estate ? null : placeAt(mx, my)?.id ?? null);
       } else {
         // Clicking the same stack again advances to its next property.
         const current = selected ? keys.indexOf(selected) : -1;
@@ -1249,12 +1374,24 @@ export const MapView = memo(function MapView({
     : null;
   const pinnedEstateVisible = pinnedEstatePoint && pinnedEstatePoint.x >= 0 && pinnedEstatePoint.x <= canvasWidth
     && pinnedEstatePoint.y >= 0 && pinnedEstatePoint.y <= HEIGHT;
-  const estateCardStyle = (point: { x: number; y: number }): React.CSSProperties => ({
-    left: `clamp(4px, calc(${(point.x / canvasWidth) * 100}% - ${ESTATE_CARD_WIDTH / 2}px), calc(100% - ${ESTATE_CARD_WIDTH + 4}px))`,
+  const estateCardStyle = (point: { x: number; y: number }, width = ESTATE_CARD_WIDTH): React.CSSProperties => ({
+    left: `clamp(4px, calc(${(point.x / canvasWidth) * 100}% - ${width / 2}px), calc(100% - ${width + 4}px))`,
     top: `${(point.y / HEIGHT) * 100}%`,
-    width: ESTATE_CARD_WIDTH,
+    width,
     transform: point.y < HEIGHT * 0.25 ? "translateY(14px)" : "translateY(calc(-100% - 22px))",
   });
+  // A place's card works like an estate's: shown on hover, pinned with its links by a click.
+  const shownLayer = (place: CatalogPlace | null | undefined) => {
+    const layer = place ? placeLayerOf(place) : undefined;
+    return layer && layers[layer.key] ? layer : undefined;
+  };
+  const pinnedPlace = pinnedPlaceId ? reference.catalog.byId.get(pinnedPlaceId) ?? null : null;
+  const hoveredPlaceLayer = hoveredPlace && hoveredPlace.id !== pinnedPlaceId && !dragging && !hoveredRow ? shownLayer(hoveredPlace) : undefined;
+  const hoveredPlacePoint = hoveredPlace && hoveredPlaceLayer ? toScreen(hoveredPlace.lat, hoveredPlace.lon) : null;
+  const pinnedPlaceLayer = !selectedRow ? shownLayer(pinnedPlace) : undefined;
+  const pinnedPlacePoint = pinnedPlace && pinnedPlaceLayer ? toScreen(pinnedPlace.lat, pinnedPlace.lon) : null;
+  const pinnedPlaceVisible = pinnedPlacePoint && pinnedPlacePoint.x >= 0 && pinnedPlacePoint.x <= canvasWidth
+    && pinnedPlacePoint.y >= 0 && pinnedPlacePoint.y <= HEIGHT;
 
   return (
     <section className={appStyles.card}>
@@ -1271,6 +1408,7 @@ export const MapView = memo(function MapView({
             onHover(null);
             setOverDot(false);
             setHoveredEstate(null);
+            setHoveredPlace(null);
           }}
         />
         <button
@@ -1311,7 +1449,7 @@ export const MapView = memo(function MapView({
               className={`${styles.layerChip} ${styles[`layer_${layer.key}`]} ${layers[layer.key] ? styles.layerOn : ""}`}
               onClick={() => setLayers((current) => ({ ...current, [layer.key]: !current[layer.key] }))}
             >
-              <i aria-hidden="true" />
+              {placeLayerIcon(layer.key, layers[layer.key]) ?? <i aria-hidden="true" />}
               {layer.label}
             </button>
           ))}
@@ -1358,6 +1496,23 @@ export const MapView = memo(function MapView({
               </a>
             </div>
           </aside>
+        )}
+        {hoveredPlacePoint && hoveredPlace && hoveredPlaceLayer && (
+          <PlaceCard
+            place={hoveredPlace}
+            language={language}
+            color={`var(${MAP_COLOR_PROPERTIES[hoveredPlaceLayer.color]})`}
+            style={estateCardStyle(hoveredPlacePoint, PLACE_CARD_WIDTH)}
+          />
+        )}
+        {pinnedPlacePoint && pinnedPlaceVisible && pinnedPlace && pinnedPlaceLayer && (
+          <PlaceCard
+            place={pinnedPlace}
+            language={language}
+            color={`var(${MAP_COLOR_PROPERTIES[pinnedPlaceLayer.color]})`}
+            style={estateCardStyle(pinnedPlacePoint, PLACE_CARD_WIDTH)}
+            onClose={() => setPinnedPlaceId(null)}
+          />
         )}
         {selectedRow && (
           <MapListingCard
@@ -1419,12 +1574,12 @@ export const MapView = memo(function MapView({
             {reference.catalog.inCategory("poi").length > scoredPois.length && (
               <span><i className={styles.keyStar}>☆</i>Other private school</span>
             )}
-            <span><i className={styles.keyMosque} />Mosque</span>
+            {layers.mosques && <span>{placeLayerIcon("mosques", true)}Mosque</span>}
             {layers.carAuctions && areaPlaces.carAuctions.length > 0 && (
-              <span><i className={styles.keyCarAuction} />Car auction</span>
+              <span>{placeLayerIcon("carAuctions", true)}Car auction</span>
             )}
             {layers.shops && areaPlaces.shops.length > 0 && (
-              <span><i className={styles.keyShop} />Shop</span>
+              <span>{placeLayerIcon("shops", true)}Shop</span>
             )}
             {layers.urEstates && urEstates.length > 0 && (
               <>
@@ -1435,10 +1590,12 @@ export const MapView = memo(function MapView({
             <span><i className={styles.keyStation} />Scored station</span>
             {layers.stations && <span><i className={styles.keyRailStation} />Other station</span>}
             {prefectures.borders.length > 0 && <span><i className={styles.keyPrefecture} />Prefecture border</span>}
-            {layers.schools && areaPlaces.schools.length > 0 && <span><i className={styles.keySchool} />Elementary school</span>}
+            {layers.schools && areaPlaces.schools.length > 0 && <span>{placeLayerIcon("schools", true)}Elementary school</span>}
             {layers.kindergartens && areaPlaces.kindergartens.length > 0 && (
-              <span><i className={styles.keyKindergarten} />{walking.includeHoikuen ? "Kindergarten · 保育園" : "Kindergarten"}</span>
+              <span>{placeLayerIcon("kindergartens", true)}{walking.includeHoikuen ? "Kindergarten · 保育園" : "Kindergarten"}</span>
             )}
+            {layers.schools && schoolTagKeys.has("japanese") && <span><i className={styles.keyTagJapanese} />Japanese-language class</span>}
+            {layers.schools && schoolTagKeys.has("resourceRoom") && <span><i className={styles.keyTagResourceRoom} />Resource room (通級)</span>}
             <span><i className={styles.keyNew} />New</span>
             <span><i className={styles.keyCandidate}>★</i>Shortlisted · applied</span>
             <span><i className={styles.keyUndecided} />Undecided</span>
@@ -1459,6 +1616,8 @@ export const MapView = memo(function MapView({
       <div className={styles.info}>
         {hoveredEstate && !hoveredRow && !selectedRow && layers.urEstates
           ? `${urEstateLabel(hoveredEstate)} — ${urEstateDetails(hoveredEstate).join(" · ")} · click for its UR page and Google Maps`
+          : hoveredPlace && hoveredPlaceLayer && !selectedRow
+          ? `${placeDetails(hoveredPlace, language).title} — ${[placeDetails(hoveredPlace, language).kind, ...placeTags(hoveredPlace, language).map((tag) => tag.text)].filter(Boolean).join(" · ") || hoveredPlaceLayer.category} · click for its details and links`
           : hoveredRow && !selectedRow
           ? `${hoveredRow.listing.name} — score ${
               hoveredRow.score.total?.toFixed(0) ?? "—"
@@ -1722,6 +1881,57 @@ function drawCross(ctx: CanvasRenderingContext2D, cx: number, cy: number, half: 
   ctx.lineCap = "butt";
   ctx.lineWidth = 1;
   ctx.globalAlpha = 1;
+}
+
+/** The pictogram badge of a place layer, greyed while the layer is off; undefined for the other layers. */
+function placeLayerIcon(key: string, on: boolean) {
+  const layer = PLACE_LAYERS.find((candidate) => candidate.key === key);
+  if (!layer) return undefined;
+  return <MapIconBadge icon={layer.icon} color={on ? `var(${MAP_COLOR_PROPERTIES[layer.color]})` : "var(--rs-slate-300)"} />;
+}
+
+/**
+ * The details of a school, kindergarten, mosque, venue or shop, in the map's
+ * name language. On hover it is a passive preview; pinned by a click
+ * (`onClose` given) it also carries the links.
+ */
+function PlaceCard({ place, language, color, style, onClose }: {
+  place: CatalogPlace;
+  language: NameLanguage;
+  color: string;
+  style: React.CSSProperties;
+  onClose?: () => void;
+}) {
+  const details = placeDetails(place, language);
+  const tags = placeTags(place, language);
+  const en = language === "en";
+  const body = (
+    <>
+      <strong>{details.title}</strong>
+      {details.otherName && <small>{details.otherName}</small>}
+      {details.kind && <small className={styles.placeKind}>{details.kind}</small>}
+      {tags.length > 0 && (
+        <span className={styles.placeTags}>
+          {tags.map((tag) => <b key={tag.key} className={styles[`placeTag_${tag.key}`]}>{tag.text}</b>)}
+        </span>
+      )}
+      {details.lines.map((line) => <small key={line}>{line}</small>)}
+    </>
+  );
+  const cardStyle = { ...style, "--place-color": color } as React.CSSProperties;
+  if (!onClose) {
+    return <div className={`${styles.estateCard} ${styles.placeCard}`} aria-hidden="true" style={cardStyle}>{body}</div>;
+  }
+  return (
+    <aside className={`${styles.estateCard} ${styles.placeCard} ${styles.estatePinned}`} aria-label={details.title} style={cardStyle}>
+      <button className={styles.estateClose} onClick={onClose} aria-label={en ? "Close place details" : "閉じる"}>×</button>
+      {body}
+      <div className={styles.popupActions}>
+        {details.website && <a href={details.website} target="_blank" rel="noreferrer">{en ? "Website ↗" : "公式サイト ↗"}</a>}
+        <a href={`https://www.google.com/maps?q=${place.lat},${place.lon}`} target="_blank" rel="noreferrer">Google Maps ↗</a>
+      </div>
+    </aside>
+  );
 }
 
 /** Trace a five-point star path (not yet filled or stroked). */

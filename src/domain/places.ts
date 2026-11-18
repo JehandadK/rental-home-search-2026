@@ -27,6 +27,7 @@ type PlaceAttributes = Readonly<Record<string, string | number | boolean | null>
 export interface ReferencePlace extends NamedPlace {
   id: string;
   category: string;
+  address?: string;
   subtitle?: string;
   attributes?: PlaceAttributes;
   status?: "active" | "retired";
@@ -41,6 +42,8 @@ export interface CatalogPlace extends NamedPlace {
   /** The reference record's own id (distinct from the app-facing id). */
   recordId: string;
   category: PlaceCategory;
+  /** Postal address in Japanese, when the record has one. */
+  address?: string;
   /** Extra qualifier shown in the UI (operator, facility type…). */
   subtitle?: string;
   /** Scoring role carried by the record (for example the `poi1` target). */
@@ -113,6 +116,7 @@ export function buildPlaceCatalog(input: readonly ReferencePlace[]): PlaceCatalo
       lat: place.lat,
       lon: place.lon,
       category: place.category,
+      ...(place.address ? { address: place.address } : {}),
       ...(place.subtitle ? { subtitle: place.subtitle } : {}),
       ...(role ? { role } : {}),
       ...(place.attributes ? { attributes: place.attributes } : {}),

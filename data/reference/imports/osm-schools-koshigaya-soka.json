@@ -9,7 +9,30 @@
       "city:soka"
     ],
     "query": "[out:json][timeout:90];\n(area[\"name\"=\"越谷市\"][\"admin_level\"=\"7\"]; area[\"name\"=\"草加市\"][\"admin_level\"=\"7\"];)->.a;\n(nwr[\"amenity\"=\"school\"](area.a); nwr[\"amenity\"=\"kindergarten\"](area.a); nwr[\"amenity\"=\"childcare\"](area.a););\nout center tags;",
-    "notes": "Public elementary schools (amenity=school named …小学校) and childcare (amenity=kindergarten|childcare) inside the catalog boundaries of 越谷市 and 草加市. Records follow ReferencePlaceRecord. OSM tags 幼稚園, 認定こども園 and 保育園 alike, so facilityType comes from the name: 幼稚園 = kindergarten, こども園 = kodomoen, otherwise hoikuen. Checked against the cities' own lists: all 30 越谷市立 and 21 草加市立 elementary schools, all 18 越谷 and 15 草加 private kindergartens, and the 認定こども園 of both cities are covered; しらとり保育園 is しらとりこども園 on 越谷市's list, and わかばの森ナーサリー (not in OSM) is added from that list at its GSI-geocoded address. A facility OSM maps as both a node and a way is kept once."
+    "notes": "Public elementary schools (amenity=school named …小学校) and childcare (amenity=kindergarten|childcare) inside the catalog boundaries of 越谷市 and 草加市. Records follow ReferencePlaceRecord. OSM tags 幼稚園, 認定こども園 and 保育園 alike, so facilityType comes from the name: 幼稚園 = kindergarten, こども園 = kodomoen, otherwise hoikuen. Checked against the cities' own lists: the 29 越谷市立 and 21 草加市立 elementary schools, all 18 越谷 and 15 草加 private kindergartens, and the 認定こども園 of both cities are covered. 越谷市立蒲生第二小学校, which OSM still maps, merged into 蒲生小学校 on 2022-04-01 and is saved as retired; しらとり保育園 is しらとりこども園 on 越谷市's list, and わかばの森ナーサリー (not in OSM) is added from that list at its GSI-geocoded address. A facility OSM maps as both a node and a way is kept once.",
+    "names": "nameEn is the reading in Hepburn without macrons plus the kind in English (Elementary School, Kindergarten, Nursery, Kodomoen); `reading` is the kana it was made from. School readings agree with 越谷市's school pages (all 29) and, for 草加市, with the city's and prefecture's pages (6 schools) or マピオン電話帳 (15). Childcare readings are the kana of the name itself or the place name it carries; 越谷市's 保育所 readings were checked against the city's guide. A name with a part of unknown reading has no nameEn.",
+    "schoolDetails": {
+      "researchedAt": "2026-11-18",
+      "fields": "address, postalCode, phone, website, pupils/pupilsYear, specialSupportClass/specialSupportKinds (特別支援学級), resourceRoom (通級指導教室), japaneseSupport/japaneseSupportEn (the city's scheme), note/noteEn, detailSource",
+      "japaneseLanguageClass": "Not set for any school: neither city publishes which schools host a 日本語指導教室 or have 日本語指導 加配 teachers. 越谷市 dispatches 日本語指導員 to a pupil's school on request (33 schools and 85 pupils in 令和5年度); 草加市 runs one central room, SOKAいっぽ, and places 8 国際理解教育補助員 at the schools the pupils attend.",
+      "sources": {
+        "越谷市": [
+          "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/index.html",
+          "https://www.city.koshigaya.saitama.jp/gigakoshigaya/kyoiku_sodan/kodomo_yousu_qa/files/R8tokubetsushiengakkyuusecchikou.pdf",
+          "https://www.city.koshigaya.saitama.jp/kurashi_shisei/shisei/keikaku/kakushukeikaku/kosodate/kyoikuyoran/files/r7kyouikuyouran.pdf",
+          "https://www.city.koshigaya.saitama.jp/kurashi_shisei/kosodate/kyoikuiin/files/r6tenkennhyouka.pdf",
+          "https://www.city.koshigaya.saitama.jp/kurashi_shisei/kosodate/syotyugakkou/syochuikkan/kasyo_gamogakuen.html"
+        ],
+        "草加市": [
+          "https://www.city.soka.saitama.jp/cont/s2101/030/010/021/educationforchildren.pdf",
+          "https://www.city.soka.saitama.jp/cont/s2101/030/010/021/primaryschool.pdf",
+          "https://www.pref.saitama.lg.jp/documents/36890/0724ichiran.pdf",
+          "https://www.city.soka.saitama.jp/cont/s2104/010/010/020/010/03-2.tukyushidou.pdf",
+          "https://www.city.soka.saitama.jp/cont/s2101/030/010/021/R6tenkenhyokaHP.pdf"
+        ]
+      },
+      "caveats": "Pupil counts are as of 2025-05-01 (越谷市) and 2026-05-01 (草加市). 草加市's special-support kinds come from the prefecture's 令和7年度 list. 蒲生小学校 has used a new building at the same site since September 2026; its address is the city's listed one."
+    }
   },
   "records": [
     {
@@ -24,7 +47,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166116
+        "osmId": 1420166116,
+        "nameEn": "Aoi Nursery",
+        "reading": "あおい"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -41,7 +66,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166119
+        "osmId": 1420166119,
+        "nameEn": "Aoyagi Nursery",
+        "reading": "あおやぎ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -58,7 +85,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 709511483
+        "osmId": 709511483,
+        "nameEn": "Asahi Nursery",
+        "reading": "あさひ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -75,7 +104,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420188797
+        "osmId": 1420188797,
+        "nameEn": "Azuma Nursery",
+        "reading": "あずま"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -92,7 +123,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166145
+        "osmId": 1420166145,
+        "nameEn": "Azuma Kindergarten",
+        "reading": "あずま"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -109,7 +142,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 213435168
+        "osmId": 213435168,
+        "nameEn": "Ayano Kindergarten",
+        "reading": "あやの"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -126,7 +161,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420188815
+        "osmId": 1420188815,
+        "nameEn": "Ayumi Kindergarten",
+        "reading": "あゆみ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -143,7 +180,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166170
+        "osmId": 1420166170,
+        "nameEn": "Inari Kindergarten",
+        "reading": "いなり"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -160,7 +199,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420188947
+        "osmId": 1420188947,
+        "nameEn": "Otake Nursery",
+        "reading": "おおたけ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -177,7 +218,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189022
+        "osmId": 1420189022,
+        "nameEn": "Kaori Kindergarten",
+        "reading": "かおり"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -194,7 +237,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 10065631408
+        "osmId": 10065631408,
+        "nameEn": "Kabasan Nursery",
+        "reading": "かばさん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -211,7 +256,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 155229383
+        "osmId": 155229383,
+        "nameEn": "Kitaura Nursery",
+        "reading": "きたうら"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -228,7 +275,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189137
+        "osmId": 1420189137,
+        "nameEn": "Koyama Nursery",
+        "reading": "こやま"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -245,7 +294,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 335533970
+        "osmId": 335533970,
+        "nameEn": "Sakae Nursery",
+        "reading": "さかえ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -262,7 +313,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1374364517
+        "osmId": 1374364517,
+        "nameEn": "Sanae Kindergarten",
+        "reading": "さなえ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -279,7 +332,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166511
+        "osmId": 1420166511,
+        "nameEn": "Shinoha Nursery",
+        "reading": "しのは"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -296,7 +351,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166521
+        "osmId": 1420166521,
+        "nameEn": "Shirakobato Kindergarten",
+        "reading": "しらこばと"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -314,7 +371,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189381
+        "osmId": 1420189381,
+        "nameEn": "Shiratori Nursery",
+        "reading": "しらとり"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -331,7 +390,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189384
+        "osmId": 1420189384,
+        "nameEn": "Shinei Nursery",
+        "reading": "しんえい"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -348,7 +409,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1574905003
+        "osmId": 1574905003,
+        "nameEn": "Shinzen Nursery",
+        "reading": "しんぜん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -365,7 +428,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166611
+        "osmId": 1420166611,
+        "nameEn": "Sezaki Nursery",
+        "reading": "せざき"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -382,7 +447,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189399
+        "osmId": 1420189399,
+        "nameEn": "Takasago Nursery",
+        "reading": "たかさご"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -399,7 +466,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1120251455
+        "osmId": 1120251455,
+        "nameEn": "Doronko Nursery",
+        "reading": "どろんこ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -416,7 +485,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189446
+        "osmId": 1420189446,
+        "nameEn": "Nishimachi Nursery",
+        "reading": "にしまち"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -433,7 +504,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166930
+        "osmId": 1420166930,
+        "nameEn": "Nobiru Nursery",
+        "reading": "のーびる"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -450,7 +523,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 550432985
+        "osmId": 550432985,
+        "nameEn": "Hikari Kindergarten",
+        "reading": "ひかり"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -467,7 +542,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420166973
+        "osmId": 1420166973,
+        "nameEn": "Hikawa Nursery",
+        "reading": "ひかわ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -484,7 +561,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420167030
+        "osmId": 1420167030,
+        "nameEn": "Budozono Kindergarten",
+        "reading": "ぶどうぞの"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -501,7 +580,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420167046
+        "osmId": 1420167046,
+        "nameEn": "Madoka Kindergarten",
+        "reading": "まどか"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -518,7 +599,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189665
+        "osmId": 1420189665,
+        "nameEn": "Minobe Kindergarten",
+        "reading": "みのべ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -535,7 +618,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1574048227
+        "osmId": 1574048227,
+        "nameEn": "Meme Koyagi Kodomoen",
+        "reading": "めぇめぇこやぎ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -552,7 +637,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189810
+        "osmId": 1420189810,
+        "nameEn": "Yatsuka Kami Nursery",
+        "reading": "やつかかみ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -569,7 +656,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189811
+        "osmId": 1420189811,
+        "nameEn": "Yatsuka Nursery",
+        "reading": "やつか"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -586,7 +675,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189815
+        "osmId": 1420189815,
+        "nameEn": "Yanagishino Nursery",
+        "reading": "やなぎしの"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -603,7 +694,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189819
+        "osmId": 1420189819,
+        "nameEn": "Yahata Nursery",
+        "reading": "やはた"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -620,7 +713,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420189861
+        "osmId": 1420189861,
+        "nameEn": "Asunaro Kindergarten",
+        "reading": "あすなろ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -637,7 +732,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 6433501913
+        "osmId": 6433501913,
+        "nameEn": "Aeon Yume Mirai Nursery Lake Town",
+        "reading": "いおんゆめみらいれいくたうん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -654,7 +751,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 986211928
+        "osmId": 986211928,
+        "nameEn": "Smart Smile Nursery",
+        "reading": "すまーとすまいる"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -671,7 +770,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420167255
+        "osmId": 1420167255,
+        "nameEn": "Flower Kindergarten",
+        "reading": "ふらわー"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -688,7 +789,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420167277
+        "osmId": 1420167277,
+        "nameEn": "Rumi Kindergarten",
+        "reading": "るみ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -705,7 +808,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1120241096
+        "osmId": 1120241096,
+        "nameEn": "Lake Asunaro Kindergarten",
+        "reading": "れいくあすなろ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -722,7 +827,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420167295
+        "osmId": 1420167295,
+        "nameEn": "Shichiza Nursery",
+        "reading": "しちざ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -739,7 +846,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420190318
+        "osmId": 1420190318,
+        "nameEn": "Chuo Nursery",
+        "reading": "ちゅうおう"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -756,7 +865,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420191187
+        "osmId": 1420191187,
+        "nameEn": "Kita-Koshigaya Kindergarten",
+        "reading": "きたこしがや"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -773,7 +884,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420169467
+        "osmId": 1420169467,
+        "nameEn": "Minami-Koshigaya Kindergarten",
+        "reading": "みなみこしがや"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -790,7 +903,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420192445
+        "osmId": 1420192445,
+        "nameEn": "Mashibayashi Nursery",
+        "reading": "ましばやし"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -807,7 +922,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420192575
+        "osmId": 1420192575,
+        "nameEn": "Osawa Kindergarten",
+        "reading": "おおさわ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -824,7 +941,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420192583
+        "osmId": 1420192583,
+        "nameEn": "Osagami Nursery",
+        "reading": "おおさがみ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -841,7 +960,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420170949
+        "osmId": 1420170949,
+        "nameEn": "Obukuro Wakaba Kindergarten",
+        "reading": "おおぶくろわかば"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -858,7 +979,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420170951
+        "osmId": 1420170951,
+        "nameEn": "Obukuro Kita Nursery",
+        "reading": "おおぶくろきた"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -875,7 +998,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420192590
+        "osmId": 1420192590,
+        "nameEn": "Obukuro Kindergarten",
+        "reading": "おおぶくろ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -892,7 +1017,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420192670
+        "osmId": 1420192670,
+        "nameEn": "Miyamoto Nursery",
+        "reading": "みやもと"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -909,7 +1036,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420192803
+        "osmId": 1420192803,
+        "nameEn": "Komaki Kindergarten",
+        "reading": "こまき"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -926,7 +1055,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 596677050
+        "osmId": 596677050,
+        "nameEn": "Osawa Daiichi Nursery",
+        "reading": "おおさわだいいち"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -943,7 +1074,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 592505557
+        "osmId": 592505557,
+        "nameEn": "Obukuro Nursery",
+        "reading": "おおぶくろ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -960,7 +1093,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420178787
+        "osmId": 1420178787,
+        "nameEn": "Airin Kindergarten",
+        "reading": "あいりん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -977,7 +1112,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420179139
+        "osmId": 1420179139,
+        "nameEn": "Niigata Nursery",
+        "reading": "にいがた"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -994,7 +1131,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420196806
+        "osmId": 1420196806,
+        "nameEn": "Shinden Kindergarten",
+        "reading": "しんでん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1011,7 +1150,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420179720
+        "osmId": 1420179720,
+        "nameEn": "Matsuzawa Kindergarten",
+        "reading": "まつざわ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1028,7 +1169,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420179762
+        "osmId": 1420179762,
+        "nameEn": "Sakurai Nursery",
+        "reading": "さくらい"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1045,7 +1188,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420180069
+        "osmId": 1420180069,
+        "nameEn": "Fukada Nursery",
+        "reading": "ふかだ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1062,7 +1207,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420198799
+        "osmId": 1420198799,
+        "nameEn": "Shojo-in Kindergarten",
+        "reading": "しょうじょういん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1079,7 +1226,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420180323
+        "osmId": 1420180323,
+        "nameEn": "Seimon Kindergarten",
+        "reading": "せいもん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1096,7 +1245,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420180360
+        "osmId": 1420180360,
+        "nameEn": "Shoren-in Sakura Kindergarten",
+        "reading": "しょうれんいんさくら"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1113,7 +1264,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420181680
+        "osmId": 1420181680,
+        "nameEn": "Noborito Nursery",
+        "reading": "のぼりと"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1130,7 +1283,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 628697555
+        "osmId": 628697555,
+        "nameEn": "Daini Otake Nursery",
+        "reading": "だいにおおたけ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1147,7 +1302,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420184501
+        "osmId": 1420184501,
+        "nameEn": "Daini Airin Kindergarten",
+        "reading": "だいにあいりん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1164,7 +1321,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420184516
+        "osmId": 1420184516,
+        "nameEn": "Daini Koshigaya Nursery",
+        "reading": "だいにこしがや"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1181,7 +1340,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420202507
+        "osmId": 1420202507,
+        "nameEn": "Seika Kindergarten",
+        "reading": "せいか"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1198,7 +1359,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420202785
+        "osmId": 1420202785,
+        "nameEn": "Soka Hinode Kindergarten",
+        "reading": "そうかひので"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1215,7 +1378,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 550433994
+        "osmId": 550433994,
+        "nameEn": "Soka Himawari Kindergarten",
+        "reading": "そうかひまわり"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1232,7 +1397,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 710036919
+        "osmId": 710036919,
+        "nameEn": "Soka Midori Kindergarten",
+        "reading": "そうかみどり"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1249,7 +1416,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185185
+        "osmId": 1420185185,
+        "nameEn": "Soka Hikawa Kindergarten",
+        "reading": "そうかひかわ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1266,7 +1435,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1174008686
+        "osmId": 1174008686,
+        "nameEn": "Soka Fuji Kindergarten",
+        "reading": "そうかふじ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1283,7 +1454,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185212
+        "osmId": 1420185212,
+        "nameEn": "Ogishima Nursery",
+        "reading": "おぎしま"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1300,7 +1473,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185224
+        "osmId": 1420185224,
+        "nameEn": "Hagiwara Daiichi Kindergarten",
+        "reading": "はぎわらだいいち"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1317,7 +1492,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 493827429
+        "osmId": 493827429,
+        "nameEn": "Hagiwara Daini Kindergarten",
+        "reading": "はぎわらだいに"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1334,7 +1511,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420202951
+        "osmId": 1420202951,
+        "nameEn": "Gamo Nursery",
+        "reading": "がもう"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1351,7 +1530,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185228
+        "osmId": 1420185228,
+        "nameEn": "Gamo Minami Nursery",
+        "reading": "がもうみなみ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1368,7 +1549,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420202954
+        "osmId": 1420202954,
+        "nameEn": "Gamo Daisan Nursery",
+        "reading": "がもうだいさん"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1385,7 +1568,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203413
+        "osmId": 1420203413,
+        "nameEn": "Fukuroyama Nursery",
+        "reading": "ふくろやま"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1402,7 +1587,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185888
+        "osmId": 1420185888,
+        "nameEn": "Yatsuka Ozawa Kindergarten",
+        "reading": "やつかおざわ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1419,7 +1606,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185889
+        "osmId": 1420185889,
+        "nameEn": "Yatsuka Kindergarten",
+        "reading": "やつか"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1436,7 +1625,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203541
+        "osmId": 1420203541,
+        "nameEn": "Akayama Nursery",
+        "reading": "あかやま"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1453,7 +1644,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420185905
+        "osmId": 1420185905,
+        "nameEn": "Akayama Daini Nursery",
+        "reading": "あかやまだいに"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1470,7 +1663,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203559
+        "osmId": 1420203559,
+        "nameEn": "Koshigaya Nursery",
+        "reading": "こしがや"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1487,7 +1682,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203570
+        "osmId": 1420203570,
+        "nameEn": "Koshigaya Kurumi Kindergarten",
+        "reading": "こしがやくるみ"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1504,7 +1701,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203571
+        "osmId": 1420203571,
+        "nameEn": "Koshigaya Kobato Kindergarten",
+        "reading": "こしがやこばと"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1521,7 +1720,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203573
+        "osmId": 1420203573,
+        "nameEn": "Koshigaya Wakaba Kindergarten",
+        "reading": "こしがやわかば"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1538,7 +1739,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 1182607469
+        "osmId": 1182607469,
+        "nameEn": "Koshigaya Lake Town Sakura Nursery",
+        "reading": "こしがやれいくたうんさくら"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1572,7 +1775,9 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420203632
+        "osmId": 1420203632,
+        "nameEn": "Koshigaya Kindergarten",
+        "reading": "こしがや"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1589,7 +1794,9 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "node",
-        "osmId": 1420204915
+        "osmId": 1420204915,
+        "nameEn": "Seitoku Kindergarten",
+        "reading": "せいとく"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"
@@ -1604,10 +1811,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 832848569
+        "osmId": 832848569,
+        "nameEn": "Osawa Elementary School",
+        "reading": "おおさわ",
+        "postalCode": "343-0025",
+        "phone": "048-974-8522",
+        "website": "http://school.city.koshigaya.saitama.jp/osawa_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害、発達障害・情緒障害",
+        "pupils": 355,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_osawa.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市大沢二丁目13番21号"
     },
     {
       "id": "school:osm-way-596581564",
@@ -1619,10 +1840,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 596581564
+        "osmId": 596581564,
+        "nameEn": "Ryoshinden Elementary School",
+        "reading": "りょうしんでん",
+        "phone": "048-927-8411",
+        "website": "https://www.soka-stm.ed.jp/ryoshinden-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 450,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市両新田西町55"
     },
     {
       "id": "school:osm-way-204625253",
@@ -1634,10 +1867,23 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 204625253
+        "osmId": 204625253,
+        "nameEn": "Yahata Kita Elementary School",
+        "reading": "やはたきた",
+        "phone": "048-936-0773",
+        "website": "https://www.soka-stm.ed.jp/yahatakita-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害",
+        "pupils": 396,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市八幡町1148"
     },
     {
       "id": "school:osm-way-199319998",
@@ -1649,10 +1895,23 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 199319998
+        "osmId": 199319998,
+        "nameEn": "Yahata Elementary School",
+        "reading": "やはた",
+        "phone": "048-936-6293",
+        "website": "https://www.soka-stm.ed.jp/yahata-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 561,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市八幡町65"
     },
     {
       "id": "school:osm-way-127348833",
@@ -1664,10 +1923,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 127348833
+        "osmId": 127348833,
+        "nameEn": "Koyama Elementary School",
+        "reading": "こやま",
+        "phone": "048-941-1701",
+        "website": "https://www.soka-stm.ed.jp/koyama-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 413,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市小山2-8-1"
     },
     {
       "id": "school:osm-way-766748784",
@@ -1679,10 +1950,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 766748784
+        "osmId": 766748784,
+        "nameEn": "Kawayanagi Elementary School",
+        "reading": "かわやなぎ",
+        "phone": "048-931-5025",
+        "website": "https://www.soka-stm.ed.jp/kawayanagi-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 478,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市青柳7-27-10"
     },
     {
       "id": "school:osm-way-215012683",
@@ -1694,10 +1977,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 215012683
+        "osmId": 215012683,
+        "nameEn": "Shinei Elementary School",
+        "reading": "しんえい",
+        "phone": "048-941-2189",
+        "website": "https://www.soka-stm.ed.jp/shinei-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 334,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市新栄4-959"
     },
     {
       "id": "school:osm-way-335846965",
@@ -1709,10 +2004,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 335846965
+        "osmId": 335846965,
+        "nameEn": "Shinden Elementary School",
+        "reading": "しんでん",
+        "phone": "048-941-3087",
+        "website": "https://www.soka-stm.ed.jp/shinden-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 396,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市旭町6-12-11"
     },
     {
       "id": "school:osm-way-249496267",
@@ -1724,10 +2031,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 249496267
+        "osmId": 249496267,
+        "nameEn": "Nissato Elementary School",
+        "reading": "にっさと",
+        "phone": "048-924-7248",
+        "website": "https://www.soka-stm.ed.jp/nissato-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 574,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市新里町759"
     },
     {
       "id": "school:osm-way-155235546",
@@ -1739,10 +2058,23 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 155235546
+        "osmId": 155235546,
+        "nameEn": "Matsubara Elementary School",
+        "reading": "まつばら",
+        "phone": "048-941-3214",
+        "website": "https://www.soka-stm.ed.jp/matsubara-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害",
+        "pupils": 585,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市松原4-2-1"
     },
     {
       "id": "school:osm-way-708465075",
@@ -1754,10 +2086,23 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 708465075
+        "osmId": 708465075,
+        "nameEn": "Sakae Elementary School",
+        "reading": "さかえ",
+        "phone": "048-941-2164",
+        "website": "https://www.soka-stm.ed.jp/sakae-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 605,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市松原1-3-2"
     },
     {
       "id": "school:osm-way-692513288",
@@ -1769,10 +2114,23 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 692513288
+        "osmId": 692513288,
+        "nameEn": "Hikawa Elementary School",
+        "reading": "ひかわ",
+        "phone": "048-928-6771",
+        "website": "https://www.soka-stm.ed.jp/hikawa-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害、発達障害・情緒障害",
+        "pupils": 493,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市氷川町448"
     },
     {
       "id": "school:osm-way-844452403",
@@ -1784,10 +2142,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 844452403
+        "osmId": 844452403,
+        "nameEn": "Seimon Elementary School",
+        "reading": "せいもん",
+        "phone": "048-941-6755",
+        "website": "https://www.soka-stm.ed.jp/seimon-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 638,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市清門3-37-1"
     },
     {
       "id": "school:osm-way-135980205",
@@ -1799,10 +2169,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 135980205
+        "osmId": 135980205,
+        "nameEn": "Sezaki Elementary School",
+        "reading": "せざき",
+        "phone": "048-924-9656",
+        "website": "https://www.soka-stm.ed.jp/sezaki-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 479,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市瀬崎2-32-1"
     },
     {
       "id": "school:osm-way-351768785",
@@ -1814,10 +2196,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 351768785
+        "osmId": 351768785,
+        "nameEn": "Inari Elementary School",
+        "reading": "いなり",
+        "phone": "048-936-5855",
+        "website": "https://www.soka-stm.ed.jp/inari-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 458,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市稲荷5-11-1"
     },
     {
       "id": "school:osm-way-155229384",
@@ -1829,10 +2223,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 155229384
+        "osmId": 155229384,
+        "nameEn": "Hanaguri Minami Elementary School",
+        "reading": "はなぐりみなみ",
+        "phone": "048-941-2854",
+        "website": "https://www.soka-stm.ed.jp/hanaminami-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 473,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市花栗4-3-1"
     },
     {
       "id": "school:osm-way-155228505",
@@ -1844,10 +2250,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 155228505
+        "osmId": 155228505,
+        "nameEn": "Soka Elementary School",
+        "reading": "そうか",
+        "phone": "048-927-3568",
+        "website": "https://www.soka-stm.ed.jp/soka-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 653,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市住吉1-11-64"
     },
     {
       "id": "school:osm-way-351768787",
@@ -1859,10 +2277,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 351768787
+        "osmId": 351768787,
+        "nameEn": "Nishicho Elementary School",
+        "reading": "にしちょう",
+        "phone": "048-924-7245",
+        "website": "https://www.soka-stm.ed.jp/nishicyo-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 569,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市西町270"
     },
     {
       "id": "school:osm-way-692513315",
@@ -1874,10 +2304,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 692513315
+        "osmId": 692513315,
+        "nameEn": "Yatsuka Elementary School",
+        "reading": "やつか",
+        "phone": "048-925-2422",
+        "website": "https://www.soka-stm.ed.jp/yatuka-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 604,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市谷塚仲町440"
     },
     {
       "id": "school:osm-way-844452414",
@@ -1889,10 +2331,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 844452414
+        "osmId": 844452414,
+        "nameEn": "Choei Elementary School",
+        "reading": "ちょうえい",
+        "phone": "048-942-9874",
+        "website": "https://www.soka-stm.ed.jp/tyoei-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 437,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市長栄1-762"
     },
     {
       "id": "school:osm-way-849665087",
@@ -1904,10 +2358,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 849665087
+        "osmId": 849665087,
+        "nameEn": "Aoyagi Elementary School",
+        "reading": "あおやぎ",
+        "phone": "048-931-0899",
+        "website": "https://www.soka-stm.ed.jp/aoyagi-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 329,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市青柳3-17-1"
     },
     {
       "id": "school:osm-way-351764138",
@@ -1919,10 +2385,22 @@
         "cityId": "city:soka",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 351764138
+        "osmId": 351764138,
+        "nameEn": "Takasago Elementary School",
+        "reading": "たかさご",
+        "phone": "048-924-3425",
+        "website": "https://www.soka-stm.ed.jp/takasago-syo/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 685,
+        "pupilsYear": "2026",
+        "detailSource": "https://www.city.soka.saitama.jp/cont/s2102/020/010/020/030/school_by_district.html",
+        "japaneseSupport": "草加市は編入直後の児童向けに日本語指導教室「SOKAいっぽ」（通級・場所は非公表）を開き、在籍校へ国際理解教育補助員（市全体で8人）を配置。学校別の日本語教室は公表されていません。",
+        "japaneseSupportEn": "Soka runs one central beginners' Japanese room, SOKA Ippo, for newly arrived pupils (location not published) and places 8 international-education assistants at the schools those pupils attend. No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県草加市中央1-2-5"
     },
     {
       "id": "school:osm-way-155374368",
@@ -1934,10 +2412,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 155374368
+        "osmId": 155374368,
+        "nameEn": "Dewa Elementary School",
+        "reading": "でわ",
+        "postalCode": "343-0856",
+        "phone": "048-962-2029",
+        "website": "http://school.city.koshigaya.saitama.jp/dewa_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 646,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_dewa.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市谷中町二丁目69番地"
     },
     {
       "id": "school:osm-way-592532765",
@@ -1949,10 +2441,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 592532765
+        "osmId": 592532765,
+        "nameEn": "Kita-Koshigaya Elementary School",
+        "reading": "きたこしがや",
+        "postalCode": "343-0026",
+        "phone": "048-975-6931",
+        "website": "http://school.city.koshigaya.saitama.jp/kitakoshigaya_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "pupils": 291,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_kitakoshi.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市北越谷三丁目10番38号"
     },
     {
       "id": "school:osm-way-165501871",
@@ -1964,10 +2469,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 165501871
+        "osmId": 165501871,
+        "nameEn": "Sengendai Elementary School",
+        "reading": "せんげんだい",
+        "postalCode": "343-0041",
+        "phone": "048-976-1001",
+        "website": "http://school.city.koshigaya.saitama.jp/sengendai_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 868,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_sengendai.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市千間台西五丁目4番地"
     },
     {
       "id": "school:osm-way-846996704",
@@ -1979,10 +2497,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 846996704
+        "osmId": 846996704,
+        "nameEn": "Minami-Koshigaya Elementary School",
+        "reading": "みなみこしがや",
+        "postalCode": "343-0845",
+        "phone": "048-988-5582",
+        "website": "http://school.city.koshigaya.saitama.jp/mkoshigaya_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 838,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_nankoshi.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市南越谷四丁目21番地1"
     },
     {
       "id": "school:osm-way-592742268",
@@ -1994,10 +2526,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 592742268
+        "osmId": 592742268,
+        "nameEn": "Shironoue Elementary School",
+        "reading": "しろのうえ",
+        "postalCode": "343-0011",
+        "phone": "048-960-3000",
+        "website": "http://school.city.koshigaya.saitama.jp/shironoue_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 541,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_shironoue.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市増林6066番地1"
     },
     {
       "id": "school:osm-way-871532770",
@@ -2009,10 +2554,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 871532770
+        "osmId": 871532770,
+        "nameEn": "Mashibayashi Elementary School",
+        "reading": "ましばやし",
+        "postalCode": "343-0011",
+        "phone": "048-962-2740",
+        "website": "http://school.city.koshigaya.saitama.jp/mashibayashi_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害",
+        "pupils": 171,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_mashibayashi.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市増林二丁目512番地"
     },
     {
       "id": "school:osm-way-592870288",
@@ -2024,10 +2582,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 592870288
+        "osmId": 592870288,
+        "nameEn": "Osawa Kita Elementary School",
+        "reading": "おおさわきた",
+        "postalCode": "343-0021",
+        "phone": "048-976-4384",
+        "website": "http://school.city.koshigaya.saitama.jp/osawakita_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害、肢体不自由",
+        "pupils": 530,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shoggakko_sawakita.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市大林580番地"
     },
     {
       "id": "school:osm-way-213435178",
@@ -2039,10 +2610,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 213435178
+        "osmId": 213435178,
+        "nameEn": "Osagami Elementary School",
+        "reading": "おおさがみ",
+        "postalCode": "343-0825",
+        "phone": "048-985-2362",
+        "website": "http://school.city.koshigaya.saitama.jp/osagami_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害、難聴",
+        "pupils": 1060,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_osagami.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市大成町二丁目1番地"
     },
     {
       "id": "school:osm-way-837277810",
@@ -2054,10 +2638,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 837277810
+        "osmId": 837277810,
+        "nameEn": "Obukuro Kita Elementary School",
+        "reading": "おおぶくろきた",
+        "postalCode": "343-0032",
+        "phone": "048-975-3211",
+        "website": "http://school.city.koshigaya.saitama.jp/obukurokita_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 489,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_obukurokita.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市袋山515番地"
     },
     {
       "id": "school:osm-way-268014449",
@@ -2069,10 +2666,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 268014449
+        "osmId": 268014449,
+        "nameEn": "Obukuro Elementary School",
+        "reading": "おおぶくろ",
+        "postalCode": "343-0034",
+        "phone": "048-974-7756",
+        "website": "http://school.city.koshigaya.saitama.jp/obukuro_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 493,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_obukuro.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市大竹147番地"
     },
     {
       "id": "school:osm-way-268014450",
@@ -2084,10 +2695,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 268014450
+        "osmId": 268014450,
+        "nameEn": "Obukuro Higashi Elementary School",
+        "reading": "おおぶくろひがし",
+        "postalCode": "343-0032",
+        "phone": "048-975-4918",
+        "website": "http://school.city.koshigaya.saitama.jp/obukuroh_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "pupils": 464,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_obukurohigashi.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市袋山1750番地"
     },
     {
       "id": "school:osm-way-205058105",
@@ -2099,10 +2723,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 205058105
+        "osmId": 205058105,
+        "nameEn": "Omano Elementary School",
+        "reading": "おおまの",
+        "postalCode": "343-0844",
+        "phone": "048-985-3382",
+        "website": "http://school.city.koshigaya.saitama.jp/omano_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 494,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_omano.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市大間野町二丁目115番地"
     },
     {
       "id": "school:osm-way-846996703",
@@ -2114,10 +2751,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 846996703
+        "osmId": 846996703,
+        "nameEn": "Miyamoto Elementary School",
+        "reading": "みやもと",
+        "postalCode": "343-0806",
+        "phone": "048-965-2273",
+        "website": "http://school.city.koshigaya.saitama.jp/miyamoto_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 544,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_miyamoto.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市宮本町五丁目85番地"
     },
     {
       "id": "school:osm-way-204337336",
@@ -2129,10 +2779,25 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 204337336
+        "osmId": 204337336,
+        "nameEn": "Kawayanagi Elementary School",
+        "reading": "かわやなぎ",
+        "postalCode": "343-0827",
+        "phone": "048-986-3243",
+        "website": "http://school.city.koshigaya.saitama.jp/kawayanagi_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 1234,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_kawayanagi.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom.",
+        "note": "校舎は低学年棟と高学年棟の2か所。特別支援学級は令和8年度に新設。",
+        "noteEn": "Two buildings: one for the lower grades and one for the upper grades. Its special-support classes opened in the 2026 school year."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市川柳町一丁目471番地1（低学年棟）／川柳町一丁目198番地（高学年棟）"
     },
     {
       "id": "school:osm-way-840529367",
@@ -2144,10 +2809,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 840529367
+        "osmId": 840529367,
+        "nameEn": "Hirakata Elementary School",
+        "reading": "ひらかた",
+        "postalCode": "343-0002",
+        "phone": "048-976-1586",
+        "website": "http://school.city.koshigaya.saitama.jp/hirakata_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 332,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_hirakata.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市平方2784番地"
     },
     {
       "id": "school:osm-way-833095530",
@@ -2159,10 +2837,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 833095530
+        "osmId": 833095530,
+        "nameEn": "Yasaka Elementary School",
+        "reading": "やさか",
+        "postalCode": "343-0006",
+        "phone": "048-976-1588",
+        "website": "http://school.city.koshigaya.saitama.jp/yasaka_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 426,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_yasaka.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市北川崎725番地"
     },
     {
       "id": "school:osm-way-155765870",
@@ -2174,10 +2866,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 155765870
+        "osmId": 155765870,
+        "nameEn": "Niigata Elementary School",
+        "reading": "にいがた",
+        "postalCode": "343-0006",
+        "phone": "048-974-6779",
+        "website": "http://school.city.koshigaya.saitama.jp/niigata_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "pupils": 160,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_niigata.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市北川崎178番地"
     },
     {
       "id": "school:osm-way-204337335",
@@ -2189,10 +2894,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 204337335
+        "osmId": 204337335,
+        "nameEn": "Meisei Elementary School",
+        "reading": "めいせい",
+        "postalCode": "343-0827",
+        "phone": "048-987-7560",
+        "website": "http://school.city.koshigaya.saitama.jp/meisei_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 887,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_meisei.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市川柳町一丁目401番地"
     },
     {
       "id": "school:osm-way-592870291",
@@ -2204,10 +2923,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 592870291
+        "osmId": 592870291,
+        "nameEn": "Higashi-Koshigaya Elementary School",
+        "reading": "ひがしこしがや",
+        "postalCode": "343-0023",
+        "phone": "048-964-0675",
+        "website": "http://school.city.koshigaya.saitama.jp/hkoshigaya_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害、病弱・身体虚弱（院内学級）",
+        "pupils": 542,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_higashikoshi.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市東越谷六丁目1040番地"
     },
     {
       "id": "school:osm-way-844685479",
@@ -2219,10 +2951,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 844685479
+        "osmId": 844685479,
+        "nameEn": "Sakurai Minami Elementary School",
+        "reading": "さくらいみなみ",
+        "postalCode": "343-0045",
+        "phone": "048-976-6614",
+        "website": "http://school.city.koshigaya.saitama.jp/sakuraiminami_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害、発達障害・情緒障害",
+        "pupils": 527,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_sakuraiminami.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市下間久里226番地"
     },
     {
       "id": "school:osm-way-229032372",
@@ -2234,10 +2980,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 229032372
+        "osmId": 229032372,
+        "nameEn": "Sakurai Elementary School",
+        "reading": "さくらい",
+        "postalCode": "343-0044",
+        "phone": "048-974-5397",
+        "website": "http://school.city.koshigaya.saitama.jp/sakurai_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 443,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_sakurai.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市大泊1140番地"
     },
     {
       "id": "school:osm-way-871532778",
@@ -2249,10 +3008,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 871532778
+        "osmId": 871532778,
+        "nameEn": "Hanata Elementary School",
+        "reading": "はなた",
+        "postalCode": "343-0015",
+        "phone": "048-966-7273",
+        "website": "http://school.city.koshigaya.saitama.jp/hanata_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "自閉症・情緒障害",
+        "pupils": 685,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_hanata.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市花田四丁目14番地1"
     },
     {
       "id": "school:osm-way-597540513",
@@ -2264,10 +3036,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 597540513
+        "osmId": 597540513,
+        "nameEn": "Ogishima Elementary School",
+        "reading": "おぎしま",
+        "postalCode": "343-0804",
+        "phone": "048-976-5974",
+        "website": "http://school.city.koshigaya.saitama.jp/ogishima_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 474,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_ogishima.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市南荻島902番地"
     },
     {
       "id": "school:osm-way-766730620",
@@ -2279,10 +3064,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 766730620
+        "osmId": 766730620,
+        "nameEn": "Gamo Minami Elementary School",
+        "reading": "がもうみなみ",
+        "postalCode": "343-0832",
+        "phone": "048-985-8281",
+        "website": "http://school.city.koshigaya.saitama.jp/gamouminami_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 538,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_gamonan.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市南町一丁目8番1号"
     },
     {
       "id": "school:osm-way-204627612",
@@ -2294,10 +3093,26 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 204627612
+        "osmId": 204627612,
+        "nameEn": "Gamo Elementary School",
+        "reading": "がもう",
+        "postalCode": "343-0842",
+        "phone": "048-985-6812",
+        "website": "http://school.city.koshigaya.saitama.jp/gamou_es/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害、発達障害・情緒障害",
+        "pupils": 910,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_gamou.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom.",
+        "note": "令和4年4月に蒲生第二小学校と合併。令和8年9月から新設の小中一体型校舎を使用（越谷蒲生学園は令和9年4月開校予定）。",
+        "noteEn": "Merged with Gamo Daini Elementary in April 2022. In a new combined elementary and junior-high building since September 2026; Koshigaya Gamo Gakuen is due to open in April 2027."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市蒲生旭町1番75号"
     },
     {
       "id": "school:osm-way-204627610",
@@ -2311,8 +3126,10 @@
         "osmType": "way",
         "osmId": 204627610
       },
-      "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "status": "retired",
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "retiredAt": "2022-04-01T00:00:00.000Z",
+      "retirementReason": "蒲生小学校と蒲生第二小学校は令和4年4月1日に合併して蒲生小学校になった（越谷市教育委員会 小中一貫校だより 蒲生版 令和4年6月）。OpenStreetMap still maps the old school."
     },
     {
       "id": "school:osm-way-866555106",
@@ -2324,10 +3141,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 866555106
+        "osmId": 866555106,
+        "nameEn": "Nishikata Elementary School",
+        "reading": "にしかた",
+        "postalCode": "343-0822",
+        "phone": "048-965-2275",
+        "website": "http://school.city.koshigaya.saitama.jp/nishikata_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "難聴・言語障害",
+        "pupils": 617,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_nishikata.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市西方二丁目12番地1"
     },
     {
       "id": "school:osm-way-846996702",
@@ -2339,10 +3170,24 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 846996702
+        "osmId": 846996702,
+        "nameEn": "Koshigaya Elementary School",
+        "reading": "こしがや",
+        "postalCode": "343-0817",
+        "phone": "048-963-0180",
+        "website": "http://school.city.koshigaya.saitama.jp/koshigaya_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "resourceRoom": "発達障害・情緒障害",
+        "pupils": 685,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_koshigaya.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市中町1番41号"
     },
     {
       "id": "school:osm-way-321226544",
@@ -2354,10 +3199,23 @@
         "cityId": "city:koshigaya",
         "source": "OpenStreetMap",
         "osmType": "way",
-        "osmId": 321226544
+        "osmId": 321226544,
+        "nameEn": "Sagishiro Elementary School",
+        "reading": "さぎしろ",
+        "postalCode": "343-0022",
+        "phone": "048-977-3454",
+        "website": "http://school.city.koshigaya.saitama.jp/sagishiro_e/",
+        "specialSupportClass": true,
+        "specialSupportKinds": "知的障害、自閉症・情緒障害",
+        "pupils": 705,
+        "pupilsYear": "2025",
+        "detailSource": "https://www.city.koshigaya.saitama.jp/gigakoshigaya/gakkoulink/shogakko_sagishiro.html",
+        "japaneseSupport": "越谷市は申請に応じて日本語指導員を学校へ派遣（児童1人あたり週1回2時間程度）。日本語指導教室の設置校は公表されていません。",
+        "japaneseSupportEn": "Koshigaya sends a Japanese-language instructor to the school on request (about 2 hours a week per pupil). No school is published as hosting a Japanese-language classroom."
       },
       "status": "active",
-      "updatedAt": "2026-11-18T03:44:49Z"
+      "updatedAt": "2026-11-18T03:44:49Z",
+      "address": "埼玉県越谷市東大沢二丁目1番地1"
     },
     {
       "id": "childcare:koshigaya-wakabanomori-nursery",
@@ -2371,7 +3229,9 @@
         "facilityType": "kodomoen",
         "cityId": "city:koshigaya",
         "source": "https://www.city.koshigaya.saitama.jp/kosodate-net/maps/shisetsu_kodomoen.html",
-        "geocoder": "GSI AddressSearch (埼玉県越谷市新越谷一丁目３１番地)"
+        "geocoder": "GSI AddressSearch (埼玉県越谷市新越谷一丁目３１番地)",
+        "nameEn": "Wakaba no Mori Nursery",
+        "reading": "わかばのもりなーさりー"
       },
       "status": "active",
       "updatedAt": "2026-11-18T03:44:49Z"

@@ -7,7 +7,8 @@
  * The list is a saved OpenStreetMap extract for some cities, by default
  * `data/reference/imports/osm-schools-koshigaya-soka.json`; its provenance
  * records the Overpass query. Entries the catalog already has (same category
- * and name, at the same spot) are skipped; the rest become `school` and
+ * and name, at the same spot) only add their attributes to that place (the
+ * English name, the school's details); the rest become `school` and
  * `childcare` places, so the nearest-school and nearest-kindergarten scores
  * count them. Re-running is a no-op.
  * Next: `npm run data:web`.
@@ -39,14 +40,16 @@ async function main(): Promise<void> {
   const cities = saved.provenance.cities.join(", ");
 
   console.log(`${saved.provenance.source} (${cities}), captured ${saved.provenance.capturedAt}: ${saved.records.length} schools and childcare facilities`);
-  console.log(`  already in the catalog: ${plan.matched.length}`);
-  for (const record of plan.places.upsert) console.log(`  + ${record.category}: ${record.name}`);
-  console.log(`Plan: places +${plan.places.upsert.length}`);
+  console.log(`  already in the catalog: ${plan.matched.length} (${plan.enriched} gain attributes)`);
+  const known = new Set(snapshot.places.records.map((place) => place.id));
+  for (const record of plan.places.upsert) if (!known.has(record.id)) console.log(`  + ${record.category}: ${record.name}`);
+  console.log(`Plan: places +${plan.places.upsert.filter((record) => !known.has(record.id)).length} new, ${plan.places.upsert.filter((record) => known.has(record.id)).length} updated`);
+  for (const retirement of plan.places.retire ?? []) console.log(`  − ${retirement.id}: ${retirement.reason}`);
   if (dryRun) {
     console.log("Dry run: the catalog was not changed");
     return;
   }
-  if (plan.places.upsert.length === 0) {
+  if (plan.places.upsert.length === 0 && !plan.places.retire?.length) {
     console.log(`The list is already in ${catalog}`);
     return;
   }

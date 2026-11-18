@@ -319,8 +319,9 @@ listing as a score-coloured dot. **⚙ Areas** (bottom-left) opens the area
 picker: a small overview map of Kanto where clicking a municipality shows or
 hides it, a checkbox list by prefecture (a prefecture's box takes all its
 cities), search, *Search area* / *All* / *None*, and an **EN / 日本語** switch
-for city, prefecture and scored-station names (the region's other stations are
-named in Japanese only). The choice is remembered in the browser. Names appear
+for city, prefecture and scored-station names, and for the schools, kindergartens
+and shops of Koshigaya and Soka (the region's other stations, and schools and
+childcare outside those two cities, are named in Japanese only). The choice is remembered in the browser. Names appear
 as you zoom in and never overlap. Only the 20 scored stations around the search
 area count for the station score; the others are map context. **Hovering a dot
 highlights the matching table row; clicking a dot pins it and scrolls that row
@@ -329,7 +330,16 @@ preview card with the home's photo, rent, layout and score. Scroll to zoom, drag
 to pan, use +/− to zoom, ◎ to fit the listings currently shown, and ⤢ to show
 all the chosen areas.
 The chips at the top toggle stations, schools, kindergartens, mosques, car auctions, shops and the green "new"
-rings; school and kindergarten names appear once zoomed in to a neighbourhood; the legend holds the score scale and a distance scale bar. The map keeps
+rings. Those places are pictogram badges (a schoolhouse, a tulip, a dome, a car,
+a cart) on rounded squares, so they never read as a home, which is a round dot;
+schools and kindergartens are small dots until the map is zoomed in far enough
+for badges, and are named once zoomed in to a neighbourhood. A school with a
+Japanese-language class or a resource room (通級) carries a small tag beside its
+name. Hovering a badge shows the place's card (kind, address, and for a school
+its support classes); clicking pins the card with links to its website and
+Google Maps. Pinning a home joins it with dashed lines to the school,
+kindergarten, shop and mosque its score measured to, each named with the travel
+time. The legend holds the score scale and a distance scale bar. The map keeps
 true proportions (longitude is scaled by cos latitude).
 
 ### Photos
