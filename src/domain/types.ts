@@ -271,6 +271,8 @@ export interface EnrichedListing extends RawListing {
   poi2?: Proximity;
   /** Nearest car auction venue (USS…). */
   carAuction?: Proximity;
+  /** Nearest listed shop (Super19…). */
+  shop?: Proximity;
   station?: Proximity;
   busStop?: Proximity;
   school?: Proximity;
@@ -333,6 +335,7 @@ export type ScoreParameterKey =
   | "poi1"
   | "poi2"
   | "carAuction"
+  | "shop"
   | "station"
   | "busStop"
   | "kindergarten"

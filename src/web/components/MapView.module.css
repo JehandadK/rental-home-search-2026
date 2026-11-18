@@ -388,15 +388,19 @@
 
 .layerOn.layer_stations i { background: var(--rs-map-station); }
 .layerOn.layer_schools i { background: var(--rs-map-school); border-radius: 50%; }
+.layerOn.layer_kindergartens i { background: var(--rs-map-kindergarten); border-radius: 50%; }
 .layerOn.layer_mosques i { background: var(--rs-map-mosque); transform: rotate(45deg) scale(0.85); }
 .layerOn.layer_carAuctions i { background: var(--rs-map-car-auction); }
+.layerOn.layer_shops i { background: var(--rs-map-shop); }
 .layer_newRings i { background: transparent; border: 1.5px solid var(--rs-slate-300); border-radius: 50%; }
 .layerOn.layer_newRings i { border-color: var(--rs-map-new-ring); }
 .layer_rings i { background: transparent; border: 1.5px dashed var(--rs-slate-300); border-radius: 50%; }
 .layerOn.layer_rings i { border-color: var(--rs-map-ring); }
 .layer_schools i { border-radius: 50%; }
+.layer_kindergartens i { border-radius: 50%; }
 .layer_mosques i { transform: rotate(45deg) scale(0.85); }
 .layer_carAuctions i { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.layer_shops i { clip-path: polygon(50% 0, 100% 40%, 82% 100%, 18% 100%, 0 40%); }
 .layer_urEstates i { border-radius: 2px; }
 .layerOn.layer_urEstates i { background: var(--rs-map-ur); }
 
@@ -497,10 +501,12 @@
 
 .keyMosque { background: var(--rs-map-mosque); transform: rotate(45deg) scale(0.85); }
 .keyCarAuction { background: var(--rs-map-car-auction); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.keyShop { background: var(--rs-map-shop); clip-path: polygon(50% 0, 100% 40%, 82% 100%, 18% 100%, 0 40%); }
 .keyStation { background: var(--rs-map-station); }
 .keyRailStation { background: var(--rs-map-rail-station); transform: scale(0.6); }
 .keyPrefecture { height: 0 !important; border-top: 1.5px solid var(--rs-map-prefecture-line); }
 .keySchool { background: var(--rs-map-school); border-radius: 50%; transform: scale(0.65); }
+.keyKindergarten { background: var(--rs-map-kindergarten); border-radius: 50%; transform: scale(0.65); }
 .keyNew { border: 1.5px solid var(--rs-map-new-ring); border-radius: 50%; }
 .legendKeys .keyCandidate,
 .legendKeys .keyRuledOut {

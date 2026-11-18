@@ -140,6 +140,7 @@ Service Review first; it calls no outside service itself.
 | Nearest private school | 8 | Nearest of Al Sanad School Japan (原町2-3-1) and Tokyo IQRA Int'l School (お花茶屋); doorstep → 100; 12 min → 0 |
 | Nearest mosque / masjid / musalla | 8 | Nearest of Baitul Aman, Baitul Aqsa, Mizumoto Musalla, Yashio Masjid, Yashio Gujarati Masjid, etc.; doorstep → 100; 12 min → 0 |
 | Nearest car auction | 0 | Nearest of USS Tokyo (野田市木間ケ瀬); off until given a weight; doorstep → 100; 120 min → 0 |
+| Nearest shop | 0 | Nearest listed shop (Super19, 越谷市大間野町); off until given a weight; doorstep → 100; 20 min → 0 |
 | Nearest station | 9 | doorstep → 100; 20 min walk → 0 |
 | Nearest bus stop | 4 | doorstep → 100; 10 min walk → 0 |
 | Nearest kindergarten | 6 | doorstep → 100; 15 min walk → 0 |
@@ -242,6 +243,7 @@ That means the **Places** panel is pure selection, never a pipeline re-run:
 - **Nearest private school** — automatically uses the nearest private school from the catalog (Al Sanad, Tokyo IQRA); optionally restrict it to a subset.
 - **Nearest mosque** — automatically uses the nearest mosque, masjid or musalla from the catalog; optionally restrict it to a trusted subset.
 - **Nearest car auction** — the nearest car auction venue (USS Tokyo); scored only once you give it a weight.
+- **Nearest shop** — the nearest listed shop (Super19 in Koshigaya); scored only once you give it a weight.
 - **Station** — "nearest of all", or restrict it to the stations you would
   really commute from (e.g. only 獨協大学前〈草加松原〉).
 - **Elementary school / childcare / bus stop** — same: keep all, or hand-pick
@@ -296,11 +298,14 @@ The **Filters** panel narrows the listing set before scoring/ranking:
 - **Rooms** — layout-family chips (2+, 3+, …).
 - **Min score** — a 0–100 slider gating on the current weighted score.
 - **Reach (max minutes)** — hide homes further than this from the nearest
-  counted private school and/or mosque, in the travel mode set with the weights
-  (walk or bicycle). A weight only nudges the score, so a cheap, large home an
+  counted private school, mosque, elementary school and/or kindergarten, in the
+  travel mode set with the weights (walk or bicycle). Schools and kindergartens
+  are complete for Koshigaya and Soka only, so those two caps also drop homes
+  in cities whose schools are not collected. A weight only nudges the score, so a cheap, large home an
   hour away can still rank first; a cap removes it. Applied after scoring, like
   the minimum score; a home with no measured distance is kept. In the API:
-  `filters.poi1MaxMinutes`, `filters.poi2MaxMinutes`.
+  `filters.poi1MaxMinutes`, `filters.poi2MaxMinutes`, `filters.schoolMaxMinutes`,
+  `filters.kindergartenMaxMinutes`.
 
 Filters persist in `localStorage`; the map, table, count line and CSV/Markdown
 exports all reflect the filtered set live.
@@ -323,8 +328,8 @@ into view; hovering a table row highlights its dot on the map.** Hovering also s
 preview card with the home's photo, rent, layout and score. Scroll to zoom, drag
 to pan, use +/− to zoom, ◎ to fit the listings currently shown, and ⤢ to show
 all the chosen areas.
-The chips at the top toggle stations, schools, mosques, car auctions and the green "new"
-rings; the legend holds the score scale and a distance scale bar. The map keeps
+The chips at the top toggle stations, schools, kindergartens, mosques, car auctions, shops and the green "new"
+rings; school and kindergarten names appear once zoomed in to a neighbourhood; the legend holds the score scale and a distance scale bar. The map keeps
 true proportions (longitude is scaled by cos latitude).
 
 ### Photos

@@ -18,7 +18,7 @@ import {
 } from "./decoders";
 
 const DEFAULT_SELECTION: PlaceSelection = {
-  byParameter: { poi1: null, poi2: null, carAuction: null, station: null, busStop: null, kindergarten: null, school: null },
+  byParameter: { poi1: null, poi2: null, carAuction: null, shop: null, station: null, busStop: null, kindergarten: null, school: null },
 };
 
 /** Values the app itself could have saved before M6. */
@@ -81,7 +81,8 @@ describe("user-state decoders", () => {
   it("keep the saved new-listing window within 1–14 days", () => {
     expect(decodeFilters({ newOnly: true, newWithinDays: 5 })).toMatchObject({ newOnly: true, newWithinDays: 5 });
     expect(decodeFilters({ newWithinDays: 0 }).newWithinDays).toBe(1);
-    expect(decodeFilters({})).toMatchObject({ poi1MaxMinutes: null, poi2MaxMinutes: null });
+    expect(decodeFilters({})).toMatchObject({ poi1MaxMinutes: null, poi2MaxMinutes: null, schoolMaxMinutes: null, kindergartenMaxMinutes: null });
+    expect(decodeFilters({ schoolMaxMinutes: 10, kindergartenMaxMinutes: -3 })).toMatchObject({ schoolMaxMinutes: 10, kindergartenMaxMinutes: null });
     expect(decodeFilters({ poi1MaxMinutes: 20, poi2MaxMinutes: "soon" })).toMatchObject({ poi1MaxMinutes: 20, poi2MaxMinutes: null });
     expect(decodeFilters({ poi1MaxMinutes: 0 }).poi1MaxMinutes).toBeNull();
     expect(decodeFilters({ newWithinDays: 99 }).newWithinDays).toBe(14);

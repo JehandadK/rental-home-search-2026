@@ -13,10 +13,12 @@ import { DATA_DIR, REFERENCE_CATALOG_DIR } from "./dataStore";
 import { JsonReferenceDataRepository } from "./jsonReferenceDataRepository";
 import { CHECKED_IN_DATA_TIMEOUT_MS } from "./checkedInData.contract";
 
-// Baked poi2 is the nearest mosque at the last enrichment; the catalog gains
-// mosques without re-enriching (the masjid list import), and the recorded
-// values stay as they are, so poi2 is not expected to match.
-const PROXIMITY_FIELDS = ["poi1", "station", "busStop", "school", "kindergarten", "childcareAny"] as const;
+// Baked poi2, school, kindergarten and childcareAny are the nearest mosque,
+// school and childcare at the last enrichment; the catalog gains those places
+// without re-enriching (the masjid list and school imports), and the recorded
+// values stay as they are, so they are not expected to match. The app and the
+// API measure against the current catalog, never the baked values.
+const PROXIMITY_FIELDS = ["poi1", "station", "busStop"] as const;
 
 describe("enrichment against the managed reference catalog", () => {
   it("reproduces every baked proximity in listings.json", { timeout: CHECKED_IN_DATA_TIMEOUT_MS }, async () => {

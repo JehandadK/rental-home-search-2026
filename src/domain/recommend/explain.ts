@@ -67,6 +67,7 @@ const DESTINATIONS: Partial<Record<ScoringCriterionKey, string>> = {
   poi1: "private school",
   poi2: "mosque",
   carAuction: "car auction",
+  shop: "shop",
   station: "station",
   busStop: "bus stop",
   kindergarten: "kindergarten",

@@ -17,7 +17,7 @@
  */
 import { withAvailability, type AvailabilityMap } from "../availability";
 import { relaxationHints, type RelaxationHint } from "../filterRelaxation";
-import { matchesListing, type ListingFilters } from "../filters";
+import { hasReachCap, matchesListing, REACH_CAPS, type ListingFilters, type ReachCaps } from "../filters";
 import { listingKey } from "../listingKey";
 import { matchesMarkFilter, type MarkMap } from "../marks";
 import { SCORED_CATEGORIES, type PlaceCatalog } from "../places";
@@ -95,20 +95,18 @@ export function meetsMinScore(rows: ScoredRow[], minScore: number): ScoredRow[] 
   return minScore > 0 ? rows.filter(({ score }) => (score.total ?? -1) >= minScore) : rows;
 }
 
-type ReachCaps = Pick<ListingFilters, "poi1MaxMinutes" | "poi2MaxMinutes">;
-
-/** True when the home is within both travel-time caps; a distance that was not measured passes. */
+/** True when the home is within every travel-time cap; a distance that was not measured passes. */
 export function isWithinReach(score: ScoredRow["score"], caps: ReachCaps): boolean {
-  const within = (key: "poi1" | "poi2", cap: number | null) => {
-    const minutes = cap == null ? null : score.parts.find((part) => part.key === key)?.value;
+  return REACH_CAPS.every(({ field, parameter }) => {
+    const cap = caps[field];
+    const minutes = cap == null ? null : score.parts.find((part) => part.key === parameter)?.value;
     return minutes == null || minutes <= cap!;
-  };
-  return within("poi1", caps.poi1MaxMinutes) && within("poi2", caps.poi2MaxMinutes);
+  });
 }
 
-/** Rows within the travel-time caps (filters.poi1MaxMinutes / poi2MaxMinutes). Returns the input when there is no cap. */
+/** Rows within the travel-time caps (filters.*MaxMinutes, see REACH_CAPS). Returns the input when there is no cap. */
 export function withinReach(rows: ScoredRow[], caps: ReachCaps): ScoredRow[] {
-  return caps.poi1MaxMinutes == null && caps.poi2MaxMinutes == null ? rows : rows.filter(({ score }) => isWithinReach(score, caps));
+  return hasReachCap(caps) ? rows.filter(({ score }) => isWithinReach(score, caps)) : rows;
 }
 
 /** Best score first; unscoreable rows last. Stable, so ties keep their input order. */
@@ -138,7 +136,7 @@ export function emptyResultHints(
     if (!scores.has(listing)) scores.set(listing, scoreListing(listing, config));
     return scores.get(listing)!;
   };
-  const scoreCuts = (relaxed: ListingFilters) => relaxed.minScore > 0 || relaxed.poi1MaxMinutes != null || relaxed.poi2MaxMinutes != null;
+  const scoreCuts = (relaxed: ListingFilters) => relaxed.minScore > 0 || hasReachCap(relaxed);
   const countMatching = (relaxed: ListingFilters) => available.filter((listing) =>
     matchesListing(listing, relaxed)
     && matchesMarkFilter(marks[listingKey(listing)], relaxed.markFilter)

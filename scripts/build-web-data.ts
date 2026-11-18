@@ -51,6 +51,7 @@ const compact = uniqueListings.map((listing) => {
     poi1: _poi1,
     poi2: _poi2,
     carAuction: _carAuction,
+    shop: _shop,
     station: _station,
     busStop: _busStop,
     school: _school,

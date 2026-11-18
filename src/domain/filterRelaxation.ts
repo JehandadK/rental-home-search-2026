@@ -3,7 +3,7 @@
  * "0 match" alone sends the user hunting through every control; "relaxing
  * max rent would give 14" points at the one that matters.
  */
-import { EMPTY_FILTERS, type ListingFilters } from "./filters";
+import { EMPTY_FILTERS, REACH_CAPS, type ListingFilters } from "./filters";
 
 /** One filter that could be cleared, and what clearing it would leave. */
 export interface RelaxationHint {
@@ -34,7 +34,7 @@ const RELAXATIONS: readonly Relaxation[] = [
   { id: "minScore", label: "minimum score", fields: ["minScore"] },
   { id: "parking", label: "parking requirement", fields: ["parking"] },
   { id: "parkingMaxYen", label: "parking price cap", fields: ["parkingMaxYen"] },
-  { id: "reach", label: "travel-time cap", fields: ["poi1MaxMinutes", "poi2MaxMinutes"] },
+  { id: "reach", label: "travel-time cap", fields: REACH_CAPS.map(({ field }) => field) },
   { id: "status", label: "listing status", fields: ["status"] },
   { id: "newOnly", label: "new only", fields: ["newOnly"] },
   { id: "rentedOut", label: "rented-out filter", fields: ["rentedOut"] },

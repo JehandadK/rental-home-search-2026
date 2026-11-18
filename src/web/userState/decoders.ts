@@ -4,7 +4,7 @@
  * a hand-edited or corrupt value) falls back to the defaults, field by field
  * where that is safe.
  */
-import { EMPTY_FILTERS, type ListingFilters } from "../../domain/filters";
+import { EMPTY_FILTERS, REACH_CAPS, type ListingFilters } from "../../domain/filters";
 import { clampNewWindowDays } from "../../domain/lifecycle";
 import { LISTING_MARKS, type MarkMap } from "../../domain/marks";
 import { isViewingTime, type ListingNote, type NoteMap } from "../../domain/notes";
@@ -58,7 +58,7 @@ export function decodeFilters(raw: unknown): ListingFilters {
   const cap = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null);
   return {
     ...filters, agencies, agencyMode, ur, likelyRented, newWithinDays: clampNewWindowDays(filters.newWithinDays),
-    poi1MaxMinutes: cap(filters.poi1MaxMinutes), poi2MaxMinutes: cap(filters.poi2MaxMinutes),
+    ...Object.fromEntries(REACH_CAPS.map(({ field }) => [field, cap(filters[field])])),
   };
 }
 

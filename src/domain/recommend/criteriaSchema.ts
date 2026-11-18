@@ -118,7 +118,7 @@ export const GROUP_DESCRIPTIONS: Record<FieldGroup, string> = {
 };
 
 const LOWER_IS_BETTER = new Set<ScoreParameterKey>([
-  "rent", "rentPerM2", "moveInCost", "yearBuilt", "poi1", "poi2", "carAuction", "station", "busStop", "kindergarten", "school",
+  "rent", "rentPerM2", "moveInCost", "yearBuilt", "poi1", "poi2", "carAuction", "shop", "station", "busStop", "kindergarten", "school",
 ]);
 
 /** "lower-is-better" for costs, age and travel times; "higher-is-better" for size. */
@@ -135,6 +135,7 @@ export const PARAMETER_LABELS_JA: Record<ScoreParameterKey, string> = {
   poi1: "最寄りの私立学校",
   poi2: "最寄りのモスク",
   carAuction: "最寄りの自動車オークション会場",
+  shop: "最寄りの店舗",
   station: "最寄駅",
   busStop: "最寄りバス停",
   kindergarten: "最寄りの幼稚園",
@@ -153,6 +154,7 @@ export const PARAMETER_ANCHORS: Record<ScoreParameterKey, { full: string | numbe
   poi1: { full: 0, zero: "anchors.walkZeroMinutes.poi1" },
   poi2: { full: 0, zero: "anchors.walkZeroMinutes.poi2" },
   carAuction: { full: 0, zero: "anchors.walkZeroMinutes.carAuction" },
+  shop: { full: 0, zero: "anchors.walkZeroMinutes.shop" },
   station: { full: 0, zero: "anchors.walkZeroMinutes.station" },
   busStop: { full: 0, zero: "anchors.walkZeroMinutes.busStop" },
   kindergarten: { full: 0, zero: "anchors.walkZeroMinutes.kindergarten" },
@@ -327,6 +329,8 @@ export const FIELD_SPECS: readonly FieldSpec[] = [
   filter("parkingMaxYen", "Parking price cap", "Drop homes whose parking costs more (null = no cap)", { kind: "nullableNumber", min: 0, max: 200_000 }, "¥/mo"),
   filter("poi1MaxMinutes", "Private school reach", "Drop homes more than this many travel minutes (travel.mode) from the nearest counted private school (null = no cap)", { kind: "nullableNumber", min: 1, max: 600 }, "min"),
   filter("poi2MaxMinutes", "Mosque reach", "Drop homes more than this many travel minutes (travel.mode) from the nearest counted mosque (null = no cap)", { kind: "nullableNumber", min: 1, max: 600 }, "min"),
+  filter("schoolMaxMinutes", "Elementary school reach", "Drop homes more than this many travel minutes (travel.mode) from the nearest counted public elementary school (null = no cap)", { kind: "nullableNumber", min: 1, max: 600 }, "min"),
+  filter("kindergartenMaxMinutes", "Kindergarten reach", "Drop homes more than this many travel minutes (travel.mode) from the nearest counted kindergarten, or childcare of any type with travel.includeHoikuen (null = no cap)", { kind: "nullableNumber", min: 1, max: 600 }, "min"),
   filter("status", "Listing status", "all, only active, or only sold", enumOf(["all", "active", "sold"])),
   filter("rentedOut", "Rented out everywhere", "Homes every portal shows as gone: hide, show, or only those", enumOf(["hide", "show", "only"])),
   filter("likelyRented", "Likely rented", "Homes whose SUUMO and AtHome ads are all gone, even if another portal still lists them: hide, show, or only those", enumOf(["hide", "show", "only"])),

@@ -175,9 +175,10 @@ describe("UR filter", () => {
     expect(activeFilterCount({ ...EMPTY_FILTERS, ur: "only" })).toBe(1);
   });
 
-  it("counts the two travel-time caps as one filter, and leaves them to the score stage", () => {
-    const capped = { ...EMPTY_FILTERS, poi1MaxMinutes: 20, poi2MaxMinutes: 15 };
+  it("counts the travel-time caps as one filter, and leaves them to the score stage", () => {
+    const capped = { ...EMPTY_FILTERS, poi1MaxMinutes: 20, poi2MaxMinutes: 15, schoolMaxMinutes: 10 };
     expect(activeFilterCount(capped)).toBe(1);
+    expect(activeFilterCount({ ...EMPTY_FILTERS, kindergartenMaxMinutes: 10 })).toBe(1);
     expect(matchesListing(make({}), capped)).toBe(true);
   });
 });

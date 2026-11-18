@@ -1,0 +1,2380 @@
+{
+  "provenance": {
+    "source": "OpenStreetMap",
+    "license": "ODbL (© OpenStreetMap contributors)",
+    "capturedAt": "2026-11-18T03:44:49Z",
+    "capturedWith": "Overpass API (overpass-api.de/api/interpreter)",
+    "cities": [
+      "city:koshigaya",
+      "city:soka"
+    ],
+    "query": "[out:json][timeout:90];\n(area[\"name\"=\"越谷市\"][\"admin_level\"=\"7\"]; area[\"name\"=\"草加市\"][\"admin_level\"=\"7\"];)->.a;\n(nwr[\"amenity\"=\"school\"](area.a); nwr[\"amenity\"=\"kindergarten\"](area.a); nwr[\"amenity\"=\"childcare\"](area.a););\nout center tags;",
+    "notes": "Public elementary schools (amenity=school named …小学校) and childcare (amenity=kindergarten|childcare) inside the catalog boundaries of 越谷市 and 草加市. Records follow ReferencePlaceRecord. OSM tags 幼稚園, 認定こども園 and 保育園 alike, so facilityType comes from the name: 幼稚園 = kindergarten, こども園 = kodomoen, otherwise hoikuen. Checked against the cities' own lists: all 30 越谷市立 and 21 草加市立 elementary schools, all 18 越谷 and 15 草加 private kindergartens, and the 認定こども園 of both cities are covered; しらとり保育園 is しらとりこども園 on 越谷市's list, and わかばの森ナーサリー (not in OSM) is added from that list at its GSI-geocoded address. A facility OSM maps as both a node and a way is kept once."
+  },
+  "records": [
+    {
+      "id": "childcare:osm-node-1420166116",
+      "category": "childcare",
+      "name": "あおい保育園",
+      "lat": 35.898988,
+      "lon": 139.788645,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166116
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166119",
+      "category": "childcare",
+      "name": "あおやぎ保育園",
+      "lat": 35.853689,
+      "lon": 139.8207,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166119
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-709511483",
+      "category": "childcare",
+      "name": "あさひ保育園",
+      "lat": 35.851554,
+      "lon": 139.793373,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 709511483
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420188797",
+      "category": "childcare",
+      "name": "あずま保育園",
+      "lat": 35.825444,
+      "lon": 139.812535,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420188797
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166145",
+      "category": "childcare",
+      "name": "あずま幼稚園",
+      "lat": 35.819721,
+      "lon": 139.775621,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166145
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-213435168",
+      "category": "childcare",
+      "name": "あやの幼稚園",
+      "lat": 35.891443,
+      "lon": 139.82074,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 213435168
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420188815",
+      "category": "childcare",
+      "name": "あゆみ幼稚園",
+      "lat": 35.939925,
+      "lon": 139.756062,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420188815
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166170",
+      "category": "childcare",
+      "name": "いなり幼稚園",
+      "lat": 35.834697,
+      "lon": 139.823826,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166170
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420188947",
+      "category": "childcare",
+      "name": "おおたけ保育園",
+      "lat": 35.926057,
+      "lon": 139.765306,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420188947
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189022",
+      "category": "childcare",
+      "name": "かおり幼稚園",
+      "lat": 35.829332,
+      "lon": 139.797008,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189022
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-10065631408",
+      "category": "childcare",
+      "name": "かばさん保育園",
+      "lat": 35.813525,
+      "lon": 139.801679,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 10065631408
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-155229383",
+      "category": "childcare",
+      "name": "きたうら保育園",
+      "lat": 35.833846,
+      "lon": 139.801835,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 155229383
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189137",
+      "category": "childcare",
+      "name": "こやま保育園",
+      "lat": 35.837885,
+      "lon": 139.783842,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189137
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-335533970",
+      "category": "childcare",
+      "name": "さかえ保育園",
+      "lat": 35.843936,
+      "lon": 139.798166,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 335533970
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1374364517",
+      "category": "childcare",
+      "name": "さなえ幼稚園",
+      "lat": 35.878774,
+      "lon": 139.834611,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1374364517
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166511",
+      "category": "childcare",
+      "name": "しのは保育園",
+      "lat": 35.844829,
+      "lon": 139.811201,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166511
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166521",
+      "category": "childcare",
+      "name": "しらこばと幼稚園",
+      "lat": 35.930706,
+      "lon": 139.774311,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166521
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189381",
+      "category": "childcare",
+      "name": "しらとり保育園",
+      "lat": 35.925761,
+      "lon": 139.792588,
+      "subtitle": "kodomoen",
+      "attributes": {
+        "facilityType": "kodomoen",
+        "officialName": "しらとりこども園",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189381
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189384",
+      "category": "childcare",
+      "name": "しんえい保育園",
+      "lat": 35.863075,
+      "lon": 139.768204,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189384
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1574905003",
+      "category": "childcare",
+      "name": "しんぜん保育園",
+      "lat": 35.849738,
+      "lon": 139.786237,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1574905003
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166611",
+      "category": "childcare",
+      "name": "せざき保育園",
+      "lat": 35.813918,
+      "lon": 139.812757,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166611
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189399",
+      "category": "childcare",
+      "name": "たかさご保育園",
+      "lat": 35.822944,
+      "lon": 139.80448,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189399
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1120251455",
+      "category": "childcare",
+      "name": "どろんこ保育園",
+      "lat": 35.875338,
+      "lon": 139.827823,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1120251455
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189446",
+      "category": "childcare",
+      "name": "にしまち保育園",
+      "lat": 35.829776,
+      "lon": 139.794508,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189446
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166930",
+      "category": "childcare",
+      "name": "のーびる保育園",
+      "lat": 35.886462,
+      "lon": 139.802117,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166930
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-550432985",
+      "category": "childcare",
+      "name": "ひかり幼稚園",
+      "lat": 35.843154,
+      "lon": 139.797434,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 550432985
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420166973",
+      "category": "childcare",
+      "name": "ひかわ保育園",
+      "lat": 35.821111,
+      "lon": 139.799536,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420166973
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420167030",
+      "category": "childcare",
+      "name": "ぶどうぞの幼稚園",
+      "lat": 35.91879,
+      "lon": 139.768229,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420167030
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420167046",
+      "category": "childcare",
+      "name": "まどか幼稚園",
+      "lat": 35.956506,
+      "lon": 139.780532,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420167046
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189665",
+      "category": "childcare",
+      "name": "みのべ幼稚園",
+      "lat": 35.844606,
+      "lon": 139.780426,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189665
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1574048227",
+      "category": "childcare",
+      "name": "めぇめぇこやぎこども園",
+      "lat": 35.845868,
+      "lon": 139.782423,
+      "subtitle": "kodomoen",
+      "attributes": {
+        "facilityType": "kodomoen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1574048227
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189810",
+      "category": "childcare",
+      "name": "やつかかみ保育園",
+      "lat": 35.811306,
+      "lon": 139.78837,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189810
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189811",
+      "category": "childcare",
+      "name": "やつか保育園",
+      "lat": 35.812279,
+      "lon": 139.796925,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189811
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189815",
+      "category": "childcare",
+      "name": "やなぎしの保育園",
+      "lat": 35.819999,
+      "lon": 139.786509,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189815
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189819",
+      "category": "childcare",
+      "name": "やはた保育園",
+      "lat": 35.852245,
+      "lon": 139.805812,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189819
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420189861",
+      "category": "childcare",
+      "name": "アスナロ幼稚園",
+      "lat": 35.919957,
+      "lon": 139.791144,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420189861
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-6433501913",
+      "category": "childcare",
+      "name": "イオンゆめみらい保育園レイクタウン",
+      "lat": 35.880635,
+      "lon": 139.827588,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 6433501913
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-986211928",
+      "category": "childcare",
+      "name": "スマートスマイル保育園",
+      "lat": 35.933548,
+      "lon": 139.766659,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 986211928
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420167255",
+      "category": "childcare",
+      "name": "フラワー幼稚園",
+      "lat": 35.833331,
+      "lon": 139.789259,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420167255
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420167277",
+      "category": "childcare",
+      "name": "ルミ幼稚園",
+      "lat": 35.830582,
+      "lon": 139.804229,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420167277
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1120241096",
+      "category": "childcare",
+      "name": "レイクアスナロ幼稚園",
+      "lat": 35.876852,
+      "lon": 139.815642,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1120241096
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420167295",
+      "category": "childcare",
+      "name": "七左保育所",
+      "lat": 35.868186,
+      "lon": 139.782869,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420167295
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420190318",
+      "category": "childcare",
+      "name": "中央保育所",
+      "lat": 35.891655,
+      "lon": 139.78709,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420190318
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420191187",
+      "category": "childcare",
+      "name": "北越谷幼稚園",
+      "lat": 35.900126,
+      "lon": 139.773952,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420191187
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420169467",
+      "category": "childcare",
+      "name": "南越谷幼稚園",
+      "lat": 35.87252,
+      "lon": 139.80709,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420169467
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420192445",
+      "category": "childcare",
+      "name": "増林保育所",
+      "lat": 35.892711,
+      "lon": 139.804589,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420192445
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420192575",
+      "category": "childcare",
+      "name": "大沢幼稚園",
+      "lat": 35.903848,
+      "lon": 139.78209,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420192575
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420192583",
+      "category": "childcare",
+      "name": "大相模保育所",
+      "lat": 35.89199,
+      "lon": 139.815477,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420192583
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420170949",
+      "category": "childcare",
+      "name": "大袋わかば幼稚園",
+      "lat": 35.930677,
+      "lon": 139.79892,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420170949
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420170951",
+      "category": "childcare",
+      "name": "大袋北保育所",
+      "lat": 35.928651,
+      "lon": 139.771589,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420170951
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420192590",
+      "category": "childcare",
+      "name": "大袋幼稚園",
+      "lat": 35.925233,
+      "lon": 139.76509,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420192590
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420192670",
+      "category": "childcare",
+      "name": "宮本保育所",
+      "lat": 35.891322,
+      "lon": 139.771397,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420192670
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420192803",
+      "category": "childcare",
+      "name": "小牧幼稚園",
+      "lat": 35.86152,
+      "lon": 139.775509,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420192803
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-596677050",
+      "category": "childcare",
+      "name": "市立大沢第一保育所",
+      "lat": 35.901455,
+      "lon": 139.783144,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 596677050
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-592505557",
+      "category": "childcare",
+      "name": "市立大袋保育所",
+      "lat": 35.92349,
+      "lon": 139.771624,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 592505557
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420178787",
+      "category": "childcare",
+      "name": "愛隣幼稚園",
+      "lat": 35.865049,
+      "lon": 139.802784,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420178787
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420179139",
+      "category": "childcare",
+      "name": "新方保育所",
+      "lat": 35.927011,
+      "lon": 139.798059,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420179139
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420196806",
+      "category": "childcare",
+      "name": "新田幼稚園",
+      "lat": 35.853744,
+      "lon": 139.79148,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420196806
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420179720",
+      "category": "childcare",
+      "name": "松沢幼稚園",
+      "lat": 35.881101,
+      "lon": 139.772453,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420179720
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420179762",
+      "category": "childcare",
+      "name": "桜井保育所",
+      "lat": 35.941647,
+      "lon": 139.78931,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420179762
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420180069",
+      "category": "childcare",
+      "name": "深田保育所",
+      "lat": 35.925262,
+      "lon": 139.788421,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420180069
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420198799",
+      "category": "childcare",
+      "name": "清浄院幼稚園",
+      "lat": 35.935232,
+      "lon": 139.812114,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420198799
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420180323",
+      "category": "childcare",
+      "name": "清門幼稚園",
+      "lat": 35.854577,
+      "lon": 139.780953,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420180323
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420180360",
+      "category": "childcare",
+      "name": "照蓮院さくら幼稚園",
+      "lat": 35.887045,
+      "lon": 139.792035,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420180360
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420181680",
+      "category": "childcare",
+      "name": "登戸保育所",
+      "lat": 35.874492,
+      "lon": 139.797118,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420181680
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-628697555",
+      "category": "childcare",
+      "name": "第二おおたけ保育園",
+      "lat": 35.906644,
+      "lon": 139.779714,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 628697555
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420184501",
+      "category": "childcare",
+      "name": "第二愛隣幼稚園",
+      "lat": 35.861664,
+      "lon": 139.804682,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420184501
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420184516",
+      "category": "childcare",
+      "name": "第二越谷保育園",
+      "lat": 35.895561,
+      "lon": 139.820486,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420184516
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420202507",
+      "category": "childcare",
+      "name": "精華幼稚園",
+      "lat": 35.87102,
+      "lon": 139.799951,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420202507
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420202785",
+      "category": "childcare",
+      "name": "草加ひので幼稚園",
+      "lat": 35.84744,
+      "lon": 139.808201,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420202785
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-550433994",
+      "category": "childcare",
+      "name": "草加ひまわり幼稚園",
+      "lat": 35.842838,
+      "lon": 139.794022,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 550433994
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-710036919",
+      "category": "childcare",
+      "name": "草加みどり幼稚園",
+      "lat": 35.845145,
+      "lon": 139.801078,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 710036919
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185185",
+      "category": "childcare",
+      "name": "草加氷川幼稚園",
+      "lat": 35.825666,
+      "lon": 139.797286,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185185
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1174008686",
+      "category": "childcare",
+      "name": "草加藤幼稚園",
+      "lat": 35.842679,
+      "lon": 139.790239,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1174008686
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185212",
+      "category": "childcare",
+      "name": "荻島保育所",
+      "lat": 35.914346,
+      "lon": 139.766979,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185212
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185224",
+      "category": "childcare",
+      "name": "萩原第一幼稚園",
+      "lat": 35.887573,
+      "lon": 139.784702,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185224
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-493827429",
+      "category": "childcare",
+      "name": "萩原第二幼稚園",
+      "lat": 35.874706,
+      "lon": 139.78011,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 493827429
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420202951",
+      "category": "childcare",
+      "name": "蒲生保育所",
+      "lat": 35.868437,
+      "lon": 139.796924,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420202951
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185228",
+      "category": "childcare",
+      "name": "蒲生南保育所",
+      "lat": 35.862827,
+      "lon": 139.80709,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185228
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420202954",
+      "category": "childcare",
+      "name": "蒲生第三保育所",
+      "lat": 35.861021,
+      "lon": 139.799535,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420202954
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203413",
+      "category": "childcare",
+      "name": "袋山保育園",
+      "lat": 35.917096,
+      "lon": 139.7772,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203413
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185888",
+      "category": "childcare",
+      "name": "谷塚おざわ幼稚園",
+      "lat": 35.817584,
+      "lon": 139.797842,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185888
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185889",
+      "category": "childcare",
+      "name": "谷塚幼稚園",
+      "lat": 35.813764,
+      "lon": 139.80353,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185889
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203541",
+      "category": "childcare",
+      "name": "赤山保育所",
+      "lat": 35.880351,
+      "lon": 139.783008,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203541
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185905",
+      "category": "childcare",
+      "name": "赤山第二保育所",
+      "lat": 35.88474,
+      "lon": 139.782952,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185905
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203559",
+      "category": "childcare",
+      "name": "越ヶ谷保育園",
+      "lat": 35.893961,
+      "lon": 139.784562,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203559
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203570",
+      "category": "childcare",
+      "name": "越谷くるみ幼稚園",
+      "lat": 35.896876,
+      "lon": 139.772952,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203570
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203571",
+      "category": "childcare",
+      "name": "越谷こばと幼稚園",
+      "lat": 35.894321,
+      "lon": 139.764342,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203571
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203573",
+      "category": "childcare",
+      "name": "越谷わかば幼稚園",
+      "lat": 35.87052,
+      "lon": 139.786258,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203573
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-way-1182607469",
+      "category": "childcare",
+      "name": "越谷レイクタウンさくら保育園",
+      "lat": 35.878312,
+      "lon": 139.822821,
+      "subtitle": "hoikuen",
+      "attributes": {
+        "facilityType": "hoikuen",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 1182607469
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420185922",
+      "category": "childcare",
+      "name": "越谷保育専門学校附属幼稚園",
+      "lat": 35.901988,
+      "lon": 139.810088,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420185922
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420203632",
+      "category": "childcare",
+      "name": "越谷幼稚園",
+      "lat": 35.896738,
+      "lon": 139.788034,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420203632
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:osm-node-1420204915",
+      "category": "childcare",
+      "name": "青徳幼稚園",
+      "lat": 35.856054,
+      "lon": 139.816957,
+      "subtitle": "kindergarten",
+      "attributes": {
+        "facilityType": "kindergarten",
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "node",
+        "osmId": 1420204915
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-832848569",
+      "category": "school",
+      "name": "市立大沢小学校",
+      "lat": 35.900314,
+      "lon": 139.785013,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 832848569
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-596581564",
+      "category": "school",
+      "name": "草加市立両新田小学校",
+      "lat": 35.811099,
+      "lon": 139.78525,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 596581564
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-204625253",
+      "category": "school",
+      "name": "草加市立八幡北小学校",
+      "lat": 35.85809,
+      "lon": 139.812064,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 204625253
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-199319998",
+      "category": "school",
+      "name": "草加市立八幡小学校",
+      "lat": 35.848718,
+      "lon": 139.813509,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 199319998
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-127348833",
+      "category": "school",
+      "name": "草加市立小山小学校",
+      "lat": 35.83751,
+      "lon": 139.77953,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 127348833
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-766748784",
+      "category": "school",
+      "name": "草加市立川柳小学校",
+      "lat": 35.857434,
+      "lon": 139.821089,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 766748784
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-215012683",
+      "category": "school",
+      "name": "草加市立新栄小学校",
+      "lat": 35.861331,
+      "lon": 139.769241,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 215012683
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-335846965",
+      "category": "school",
+      "name": "草加市立新田小学校",
+      "lat": 35.851327,
+      "lon": 139.789742,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 335846965
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-249496267",
+      "category": "school",
+      "name": "草加市立新里小学校",
+      "lat": 35.818223,
+      "lon": 139.782922,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 249496267
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-155235546",
+      "category": "school",
+      "name": "草加市立松原小学校",
+      "lat": 35.841878,
+      "lon": 139.791001,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 155235546
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-708465075",
+      "category": "school",
+      "name": "草加市立栄小学校",
+      "lat": 35.844789,
+      "lon": 139.797857,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 708465075
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-692513288",
+      "category": "school",
+      "name": "草加市立氷川小学校",
+      "lat": 35.820891,
+      "lon": 139.795457,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 692513288
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-844452403",
+      "category": "school",
+      "name": "草加市立清門小学校",
+      "lat": 35.853784,
+      "lon": 139.778101,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 844452403
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-135980205",
+      "category": "school",
+      "name": "草加市立瀬崎小学校",
+      "lat": 35.815683,
+      "lon": 139.806632,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 135980205
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-351768785",
+      "category": "school",
+      "name": "草加市立稲荷小学校",
+      "lat": 35.837819,
+      "lon": 139.821433,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 351768785
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-155229384",
+      "category": "school",
+      "name": "草加市立花栗南小学校",
+      "lat": 35.83808,
+      "lon": 139.793814,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 155229384
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-155228505",
+      "category": "school",
+      "name": "草加市立草加小学校",
+      "lat": 35.831989,
+      "lon": 139.805088,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 155228505
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-351768787",
+      "category": "school",
+      "name": "草加市立西町小学校",
+      "lat": 35.828006,
+      "lon": 139.794154,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 351768787
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-692513315",
+      "category": "school",
+      "name": "草加市立谷塚小学校",
+      "lat": 35.815765,
+      "lon": 139.794617,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 692513315
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-844452414",
+      "category": "school",
+      "name": "草加市立長栄小学校",
+      "lat": 35.858214,
+      "lon": 139.784023,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 844452414
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-849665087",
+      "category": "school",
+      "name": "草加市立青柳小学校",
+      "lat": 35.847167,
+      "lon": 139.825816,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 849665087
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-351764138",
+      "category": "school",
+      "name": "草加市立高砂小学校",
+      "lat": 35.825746,
+      "lon": 139.808342,
+      "attributes": {
+        "cityId": "city:soka",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 351764138
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-155374368",
+      "category": "school",
+      "name": "越谷市立出羽小学校",
+      "lat": 35.880035,
+      "lon": 139.772837,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 155374368
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-592532765",
+      "category": "school",
+      "name": "越谷市立北越谷小学校",
+      "lat": 35.901968,
+      "lon": 139.771885,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 592532765
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-165501871",
+      "category": "school",
+      "name": "越谷市立千間台小学校",
+      "lat": 35.931739,
+      "lon": 139.764493,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 165501871
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-846996704",
+      "category": "school",
+      "name": "越谷市立南越谷小学校",
+      "lat": 35.87449,
+      "lon": 139.786032,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 846996704
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-592742268",
+      "category": "school",
+      "name": "越谷市立城ノ上小学校",
+      "lat": 35.900543,
+      "lon": 139.807454,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 592742268
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-871532770",
+      "category": "school",
+      "name": "越谷市立増林小学校",
+      "lat": 35.907875,
+      "lon": 139.817859,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 871532770
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-592870288",
+      "category": "school",
+      "name": "越谷市立大沢北小学校",
+      "lat": 35.915707,
+      "lon": 139.788083,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 592870288
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-213435178",
+      "category": "school",
+      "name": "越谷市立大相模小学校",
+      "lat": 35.886427,
+      "lon": 139.820296,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 213435178
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-837277810",
+      "category": "school",
+      "name": "越谷市立大袋北小学校",
+      "lat": 35.930859,
+      "lon": 139.772289,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 837277810
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-268014449",
+      "category": "school",
+      "name": "越谷市立大袋小学校",
+      "lat": 35.9204,
+      "lon": 139.768809,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 268014449
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-268014450",
+      "category": "school",
+      "name": "越谷市立大袋東小学校",
+      "lat": 35.918101,
+      "lon": 139.774587,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 268014450
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-205058105",
+      "category": "school",
+      "name": "越谷市立大間野小学校",
+      "lat": 35.865807,
+      "lon": 139.783053,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 205058105
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-846996703",
+      "category": "school",
+      "name": "越谷市立宮本小学校",
+      "lat": 35.890281,
+      "lon": 139.773542,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 846996703
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-204337336",
+      "category": "school",
+      "name": "越谷市立川柳小学校",
+      "lat": 35.872814,
+      "lon": 139.813175,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 204337336
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-840529367",
+      "category": "school",
+      "name": "越谷市立平方小学校",
+      "lat": 35.94729,
+      "lon": 139.784912,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 840529367
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-833095530",
+      "category": "school",
+      "name": "越谷市立弥栄小学校",
+      "lat": 35.925275,
+      "lon": 139.797535,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 833095530
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-155765870",
+      "category": "school",
+      "name": "越谷市立新方小学校",
+      "lat": 35.931381,
+      "lon": 139.810172,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 155765870
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-204337335",
+      "category": "school",
+      "name": "越谷市立明正小学校",
+      "lat": 35.874764,
+      "lon": 139.811509,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 204337335
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-592870291",
+      "category": "school",
+      "name": "越谷市立東越谷小学校",
+      "lat": 35.898964,
+      "lon": 139.799258,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 592870291
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-844685479",
+      "category": "school",
+      "name": "越谷市立桜井南小学校",
+      "lat": 35.924262,
+      "lon": 139.786036,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 844685479
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-229032372",
+      "category": "school",
+      "name": "越谷市立桜井小学校",
+      "lat": 35.939412,
+      "lon": 139.783752,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 229032372
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-871532778",
+      "category": "school",
+      "name": "越谷市立花田小学校",
+      "lat": 35.905226,
+      "lon": 139.801933,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 871532778
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-597540513",
+      "category": "school",
+      "name": "越谷市立荻島小学校",
+      "lat": 35.905776,
+      "lon": 139.765473,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 597540513
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-766730620",
+      "category": "school",
+      "name": "越谷市立蒲生南小学校",
+      "lat": 35.862963,
+      "lon": 139.805653,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 766730620
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-204627612",
+      "category": "school",
+      "name": "越谷市立蒲生小学校",
+      "lat": 35.869169,
+      "lon": 139.797818,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 204627612
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-204627610",
+      "category": "school",
+      "name": "越谷市立蒲生第二小学校",
+      "lat": 35.868362,
+      "lon": 139.797968,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 204627610
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-866555106",
+      "category": "school",
+      "name": "越谷市立西方小学校",
+      "lat": 35.884642,
+      "lon": 139.797345,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 866555106
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-846996702",
+      "category": "school",
+      "name": "越谷市立越ヶ谷小学校",
+      "lat": 35.891976,
+      "lon": 139.785617,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 846996702
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "school:osm-way-321226544",
+      "category": "school",
+      "name": "越谷市立鷺後小学校",
+      "lat": 35.910653,
+      "lon": 139.787413,
+      "attributes": {
+        "cityId": "city:koshigaya",
+        "source": "OpenStreetMap",
+        "osmType": "way",
+        "osmId": 321226544
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    },
+    {
+      "id": "childcare:koshigaya-wakabanomori-nursery",
+      "category": "childcare",
+      "name": "認定こども園わかばの森ナーサリー",
+      "address": "埼玉県越谷市新越谷1-31-18",
+      "lat": 35.8731,
+      "lon": 139.784012,
+      "subtitle": "kodomoen",
+      "attributes": {
+        "facilityType": "kodomoen",
+        "cityId": "city:koshigaya",
+        "source": "https://www.city.koshigaya.saitama.jp/kosodate-net/maps/shisetsu_kodomoen.html",
+        "geocoder": "GSI AddressSearch (埼玉県越谷市新越谷一丁目３１番地)"
+      },
+      "status": "active",
+      "updatedAt": "2026-11-18T03:44:49Z"
+    }
+  ]
+}

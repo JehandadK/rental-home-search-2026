@@ -224,7 +224,7 @@ export function App({ data }: { data: WebData }) {
 
   const filtered: ScoredRow[] = useMemo(
     () => meetsMinScore(withinReach(scored, filters), filters.minScore),
-    [scored, filters.minScore, filters.poi1MaxMinutes, filters.poi2MaxMinutes],
+    [scored, filters.minScore, filters.poi1MaxMinutes, filters.poi2MaxMinutes, filters.schoolMaxMinutes, filters.kindergartenMaxMinutes],
   );
 
   /**

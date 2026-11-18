@@ -70,12 +70,14 @@ export class ProximityIndex {
 
   /**
    * Nearest of the given places (by id) to a listing. Passing `null` for
-   * `allowedIds` means "any place in the category".
+   * `allowedIds` means "any place in the category"; `accept` narrows the
+   * candidates further (for example to kindergartens among the childcare).
    */
   nearestIn(
     listingIndex: number,
     category: PlaceCategory,
     allowedIds: ReadonlySet<string> | null,
+    accept?: (place: CatalogPlace) => boolean,
   ): Proximity | null {
     const block = this.blocks.get(category);
     if (!block) return null;
@@ -86,6 +88,7 @@ export class ProximityIndex {
     let bestPlace: CatalogPlace | null = null;
     for (let j = 0; j < places.length; j++) {
       if (allowedIds && !allowedIds.has(places[j].id)) continue;
+      if (accept && !accept(places[j])) continue;
       const d = distances[offset + j];
       if (Number.isNaN(d) || d >= bestDist) continue;
       bestDist = d;

@@ -15,7 +15,7 @@ import type { GeoPoint, NamedPlace, ScoreParameterKey } from "./types";
 export type PlaceCategory = string;
 
 /** Categories the scoring parameters and UI know how to use. */
-export type KnownPlaceCategory = "poi" | "mosque" | "carAuction" | "station" | "school" | "childcare" | "busStop" | "railStation" | "urDanchi";
+export type KnownPlaceCategory = "poi" | "mosque" | "carAuction" | "shop" | "station" | "school" | "childcare" | "busStop" | "railStation" | "urDanchi";
 
 type PlaceAttributes = Readonly<Record<string, string | number | boolean | null>>;
 
@@ -160,6 +160,7 @@ export const DISTANCE_PARAMETERS = [
   "poi1",
   "poi2",
   "carAuction",
+  "shop",
   "station",
   "busStop",
   "kindergarten",
@@ -173,6 +174,7 @@ export const CATEGORY_LABELS: Record<KnownPlaceCategory, string> = {
   poi: "Private schools",
   mosque: "Mosques / Masjids / Musallas",
   carAuction: "Car auctions",
+  shop: "Shops",
   station: "Stations",
   school: "Elementary schools",
   childcare: "Childcare",
@@ -200,6 +202,7 @@ export const PARAMETER_SOURCES: Record<DistanceParameterKey, ParameterSource> = 
   poi1: { category: "poi" },
   poi2: { category: "mosque" },
   carAuction: { category: "carAuction" },
+  shop: { category: "shop" },
   station: { category: "station" },
   busStop: { category: "busStop" },
   kindergarten: { category: "childcare" },

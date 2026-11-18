@@ -54,6 +54,7 @@ export function listingDistances(listing: EnrichedListing, options: DistanceOpti
   };
   nearest("mosque", "Mosque", listing.poi2);
   nearest("carAuction", "Car auction", listing.carAuction);
+  nearest("shop", "Shop", listing.shop);
   // A measured 徒歩分 from the ad beats the estimate when it describes this station.
   const station = nearest("station", "Station", listing.station);
   if (station && listing.stationWalkMin != null && advertisesStation(listing, station.place!)) {

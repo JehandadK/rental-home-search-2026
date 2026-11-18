@@ -4,7 +4,7 @@
  * an include/exclude mode, so you can focus on — or rule out — specific
  * neighbourhoods.
  */
-import type { EnrichedListing, ListingAgency } from "./types";
+import type { EnrichedListing, ListingAgency, ScoreParameterKey } from "./types";
 import { agencyIdentity, agencyOf, type AgencyGazetteer } from "./agencyNames";
 import type { ReferenceCity } from "./referenceData";
 import { isNewListing, isSold, NEW_LISTING_WINDOW_DAYS } from "./lifecycle";
@@ -86,13 +86,16 @@ export interface ListingFilters {
   parkingMaxYen: number | null;
   /**
    * Reach: the most travel minutes to the nearest counted private school
-   * (poi1) and mosque (poi2), in the scoring's travel mode — on foot or by
-   * bicycle. null = no cap. A cap needs the measured minutes, so it is applied
-   * after scoring (`withinReach`), like `minScore`; `matchesListing` ignores
-   * it. A home with no measured distance is kept.
+   * (poi1), mosque (poi2), elementary school and kindergarten, in the
+   * scoring's travel mode — on foot or by bicycle. null = no cap. A cap needs
+   * the measured minutes, so it is applied after scoring (`withinReach`), like
+   * `minScore`; `matchesListing` ignores it. A home with no measured distance
+   * is kept.
    */
   poi1MaxMinutes: number | null;
   poi2MaxMinutes: number | null;
+  schoolMaxMinutes: number | null;
+  kindergartenMaxMinutes: number | null;
   /** Lifecycle visibility: show sold listings or not. */
   status: StatusFilter;
   /** Visibility of properties rented out on every portal. */
@@ -135,6 +138,8 @@ export const EMPTY_FILTERS: ListingFilters = {
   parkingMaxYen: null,
   poi1MaxMinutes: null,
   poi2MaxMinutes: null,
+  schoolMaxMinutes: null,
+  kindergartenMaxMinutes: null,
   status: "all",
   rentedOut: "hide",
   likelyRented: "hide",
@@ -143,6 +148,24 @@ export const EMPTY_FILTERS: ListingFilters = {
   newWithinDays: NEW_LISTING_WINDOW_DAYS,
   markFilter: "all",
 };
+
+/**
+ * The reach caps: each filter field and the score parameter whose travel
+ * minutes it limits. The kindergarten cap follows the scoring's childcare
+ * choice (kindergartens only, or 保育園 too).
+ */
+export const REACH_CAPS = [
+  { field: "poi1MaxMinutes", parameter: "poi1", label: "Private school" },
+  { field: "poi2MaxMinutes", parameter: "poi2", label: "Mosque" },
+  { field: "schoolMaxMinutes", parameter: "school", label: "Elementary school" },
+  { field: "kindergartenMaxMinutes", parameter: "kindergarten", label: "Kindergarten" },
+] as const satisfies readonly { field: keyof ListingFilters; parameter: ScoreParameterKey; label: string }[];
+
+export type ReachCapField = (typeof REACH_CAPS)[number]["field"];
+export type ReachCaps = Pick<ListingFilters, ReachCapField>;
+
+/** True when any reach cap is set. */
+export const hasReachCap = (caps: ReachCaps): boolean => REACH_CAPS.some(({ field }) => caps[field] != null);
 
 /**
  * Extract the neighbourhood (町名) from a Japanese address: drop the
@@ -383,7 +406,7 @@ export function activeFilterCount(filters: ListingFilters): number {
   if (filters.minScore > 0) n++;
   if (filters.parking !== "any") n++;
   if (filters.parkingMaxYen != null) n++;
-  if (filters.poi1MaxMinutes != null || filters.poi2MaxMinutes != null) n++;
+  if (hasReachCap(filters)) n++;
   if (filters.status !== "all") n++;
   if (filters.newOnly) n++;
   if (filters.rentedOut !== "hide") n++;

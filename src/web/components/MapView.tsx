@@ -49,7 +49,7 @@ import { urEstateNameEn } from "../../domain/urEstateNames";
 import { isVacant, urEstate, urEstateDetails, urEstateLabel, urEstateName, type UrEstate, type UrVacancy } from "../../domain/urEstates";
 import { isRuledOut, LISTING_MARKS, type ListingMark, type MarkMap } from "../../domain/marks";
 import type { ReferenceBoundary, ReferenceCity, ReferenceModel } from "../../domain/referenceData";
-import type { CatalogPlace } from "../../domain/places";
+import { isKindergarten, type CatalogPlace } from "../../domain/places";
 import {
   areaCentroid,
   borderSegments,
@@ -194,6 +194,9 @@ const MAP_COLOR_PROPERTIES = {
   focusLabel: "--rs-map-focus-label",
   cityLabel: "--rs-map-city-label",
   school: "--rs-map-school",
+  schoolLabel: "--rs-map-school-label",
+  kindergarten: "--rs-map-kindergarten",
+  kindergartenLabel: "--rs-map-kindergarten-label",
   ringStroke: "--rs-map-ring-stroke",
   ringLabel: "--rs-map-ring-label",
   mosqueRingStroke: "--rs-map-mosque-ring-stroke",
@@ -213,6 +216,8 @@ const MAP_COLOR_PROPERTIES = {
   mosqueLabel: "--rs-map-mosque-label",
   carAuction: "--rs-map-car-auction",
   carAuctionLabel: "--rs-map-car-auction-label",
+  shop: "--rs-map-shop",
+  shopLabel: "--rs-map-shop-label",
   ur: "--rs-map-ur",
   urLabel: "--rs-map-ur-label",
   target: "--rs-map-target",
@@ -230,18 +235,26 @@ function readMapColors(element: Element): MapColors {
     .map(([key, property]) => [key, style.getPropertyValue(property).trim()])) as MapColors;
 }
 
-type LayerKey = "stations" | "schools" | "mosques" | "carAuctions" | "urEstates" | "newRings" | "rings";
+type LayerKey = "stations" | "schools" | "kindergartens" | "mosques" | "carAuctions" | "shops" | "urEstates" | "newRings" | "rings";
 
 const LAYERS: readonly { key: LayerKey; label: string; title: string }[] = [
   { key: "stations", label: "Stations", title: "Railway stations in the chosen areas; the scored stations are larger, and names appear as you zoom in" },
-  { key: "schools", label: "Schools", title: "Public elementary schools" },
+  { key: "schools", label: "Schools", title: "Public elementary schools; names appear as you zoom in" },
+  { key: "kindergartens", label: "Kindergartens", title: "Kindergartens (幼稚園, 認定こども園), and 保育園 too when the scoring counts them; names appear as you zoom in" },
   { key: "mosques", label: "Mosques", title: "Mosques and musallas; the nearest one is scored" },
   { key: "carAuctions", label: "Car auctions", title: "Car auction venues; the nearest one is scored once its weight is above zero" },
+  { key: "shops", label: "Shops", title: "Listed shops (Super19); the nearest one is scored once its weight is above zero" },
   { key: "urEstates", label: "UR estates", title: "UR賃貸 estates (団地), whatever the filters: filled when UR advertises a family-size room, outlined otherwise. Hover one for its rents" },
   { key: "newRings", label: "New rings", title: "Green ring around new listings (see Listing status in the filters)" },
   { key: "rings", label: "Travel rings", title: "5/10/15-minute travel rings around the school target and the selected mosques" },
 ];
-const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, mosques: true, carAuctions: true, urEstates: true, newRings: true, rings: true };
+const ALL_LAYERS: Record<LayerKey, boolean> = { stations: true, schools: true, kindergartens: true, mosques: true, carAuctions: true, shops: true, urEstates: true, newRings: true, rings: true };
+
+/** A school's name without its operator: "越谷市立蒲生小学校" → "蒲生小学校", "認定こども園小牧" → "小牧". */
+function schoolName(place: CatalogPlace): string {
+  const short = place.name.replace(/^(?:.+?[市区町村]立|[市区町村]立|私立|(?:幼保連携型)?認定こども園)/u, "");
+  return short || place.name;
+}
 
 /** How many lines serve a station (from the station import), for label priority. */
 function lineCount(place: CatalogPlace): number {
@@ -272,6 +285,8 @@ const SAME_STATION_KM = 1.5;
 /** Zoom (screen pixels per km) at which each kind of name appears. */
 const PREFECTURE_LABEL_MAX_PX_PER_KM = 7;
 const RAIL_STATION_LABEL_MIN_PX_PER_KM = 14;
+/** School and kindergarten names appear later than station names: there are many more of them. */
+const SCHOOL_LABEL_MIN_PX_PER_KM = 40;
 /** UR estate tiles carry their "UR" glyph from this zoom on; below it they are plain squares. */
 const UR_TILE_MIN_PX_PER_KM = 12;
 /** A city is named once its outline is at least this large on screen. */
@@ -450,7 +465,13 @@ export const MapView = memo(function MapView({
     mosques: reference.catalog.inCategory("mosque").filter(inAreas),
     pois: reference.catalog.inCategory("poi").filter(inAreas),
     carAuctions: reference.catalog.inCategory("carAuction").filter(inAreas),
-  }), [reference, inAreas]);
+    shops: reference.catalog.inCategory("shop").filter(inAreas),
+    schools: reference.catalog.inCategory("school").filter(inAreas),
+    // The childcare the kindergarten score counts: 保育園 only when the scoring includes them.
+    kindergartens: reference.catalog.inCategory("childcare")
+      .filter((place) => walking.includeHoikuen || isKindergarten(place))
+      .filter(inAreas),
+  }), [reference, inAreas, walking.includeHoikuen]);
   // Every UR estate in the chosen areas, by its city (like the rail stations) or, without one, by its position.
   // Listing filters never touch them: an estate with no vacancy, or whose rooms the filters hide, is still worth seeing.
   const urEstates = useMemo(() => reference.catalog.inCategory(UR_PLACE_CATEGORY)
@@ -700,16 +721,28 @@ export const MapView = memo(function MapView({
     const neighbours = cityLayers.filter((layer) => !layer.focus);
     const focus = cityLayers.filter((candidate) => candidate.focus);
 
-    // Elementary schools.
-    if (layers.schools) {
-      for (const school of reference.catalog.inCategory("school")) {
-        const { x, y } = toScreen(school.lat, school.lon);
-        ctx.fillStyle = colors.school;
+    // Elementary schools and kindergartens: dots that grow, and gain an outline, as the map zooms in.
+    // Zoomed out they sit under the listings, which they would otherwise speckle; zoomed in, above them.
+    const schoolsAboveListings = pxPerKm >= RAIL_STATION_LABEL_MIN_PX_PER_KM;
+    const schoolRadius = pxPerKm < RAIL_STATION_LABEL_MIN_PX_PER_KM ? 2.5 : pxPerKm < SCHOOL_LABEL_MIN_PX_PER_KM ? 3.5 : 4.5;
+    const schoolDots = (places: readonly CatalogPlace[], color: string) => {
+      ctx.fillStyle = color;
+      ctx.strokeStyle = colors.markerOutline;
+      ctx.lineWidth = 1;
+      for (const place of places) {
+        const { x, y } = toScreen(place.lat, place.lon);
+        if (x < -6 || y < -6 || x > canvasWidth + 6 || y > HEIGHT + 6) continue;
         ctx.beginPath();
-        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.arc(x, y, schoolRadius, 0, Math.PI * 2);
         ctx.fill();
+        if (schoolRadius > 3) ctx.stroke();
       }
-    }
+    };
+    const drawSchools = () => {
+      if (layers.schools) schoolDots(areaPlaces.schools, colors.school);
+      if (layers.kindergartens) schoolDots(areaPlaces.kindergartens, colors.kindergarten);
+    };
+    if (!schoolsAboveListings) drawSchools();
 
     // Travel-time rings under the listings: dashed at 5 and 10 minutes, solid at 15.
     if (layers.rings && ringsDrawable(ringMetresPerMinute)) {
@@ -866,6 +899,7 @@ export const MapView = memo(function MapView({
     let stationLabels = () => {};
 
     // Reference places sit above the listings so they are never buried.
+    if (schoolsAboveListings) drawSchools();
     // Stations: small squares across the region, larger ones for the scored stations.
     if (layers.stations) {
       const half = pxPerKm < 8 ? 1.25 : pxPerKm < 30 ? 2 : 2.75;
@@ -948,6 +982,24 @@ export const MapView = memo(function MapView({
       }
     }
 
+    // Shops as green pentagons.
+    if (layers.shops) {
+      for (const shop of areaPlaces.shops) {
+        const { x, y } = toScreen(shop.lat, shop.lon);
+        ctx.beginPath();
+        ctx.moveTo(x, y - 7);
+        ctx.lineTo(x + 7, y - 1.5);
+        ctx.lineTo(x + 4.5, y + 6);
+        ctx.lineTo(x - 4.5, y + 6);
+        ctx.lineTo(x - 7, y - 1.5);
+        ctx.closePath();
+        ctx.fillStyle = colors.shop;
+        ctx.strokeStyle = colors.markerOutline;
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
     // Private schools left out of the poi1 score as outlined stars.
     const scoredIds = new Set(scoredPois.map((poi) => poi.id));
     const otherPois = areaPlaces.pois.filter((poi) => !scoredIds.has(poi.id));
@@ -997,6 +1049,12 @@ export const MapView = memo(function MapView({
         label(venue.name, x + 10, y + 4, colors.carAuctionLabel);
       }
     }
+    if (layers.shops) {
+      for (const shop of areaPlaces.shops) {
+        const { x, y } = toScreen(shop.lat, shop.lon);
+        label(shop.name, x + 10, y + 4, colors.shopLabel);
+      }
+    }
     const labelCity = (layer: CityLayer, color: string, font: string, force = false) => {
       if (!layer.labelAt || !onScreen(layer.extent)) return;
       const topLeft = toScreen(layer.extent.maxLat, layer.extent.minLon);
@@ -1018,6 +1076,17 @@ export const MapView = memo(function MapView({
     for (const layer of neighbours) labelCity(layer, colors.cityLabel, `600 12px ${FONT}`);
     stationLabels();
     if (pxPerKm >= RAIL_STATION_LABEL_MIN_PX_PER_KM) urLabels(false);
+    // School and kindergarten names last, once zoomed in to a neighbourhood.
+    if (pxPerKm >= SCHOOL_LABEL_MIN_PX_PER_KM) {
+      const schoolLabels = (places: readonly CatalogPlace[], color: string) => {
+        for (const place of places) {
+          const { x, y } = toScreen(place.lat, place.lon);
+          label(schoolName(place), x + schoolRadius + 3, y + 4, color, { font: `10px ${FONT}`, size: 10 });
+        }
+      };
+      if (layers.schools) schoolLabels(areaPlaces.schools, colors.schoolLabel);
+      if (layers.kindergartens) schoolLabels(areaPlaces.kindergartens, colors.kindergartenLabel);
+    }
 
     if (selectedDot) drawEmphasis(ctx, selectedDot, colors.selected, marks[selectedDot.key]);
     if (hoveredDot && hoveredDot.key !== selected) drawEmphasis(ctx, hoveredDot, colors.hovered, marks[hoveredDot.key]);
@@ -1354,6 +1423,9 @@ export const MapView = memo(function MapView({
             {layers.carAuctions && areaPlaces.carAuctions.length > 0 && (
               <span><i className={styles.keyCarAuction} />Car auction</span>
             )}
+            {layers.shops && areaPlaces.shops.length > 0 && (
+              <span><i className={styles.keyShop} />Shop</span>
+            )}
             {layers.urEstates && urEstates.length > 0 && (
               <>
                 <span><i className={styles.keyUrVacant}>UR</i>UR estate · vacancy</span>
@@ -1363,7 +1435,10 @@ export const MapView = memo(function MapView({
             <span><i className={styles.keyStation} />Scored station</span>
             {layers.stations && <span><i className={styles.keyRailStation} />Other station</span>}
             {prefectures.borders.length > 0 && <span><i className={styles.keyPrefecture} />Prefecture border</span>}
-            <span><i className={styles.keySchool} />School</span>
+            {layers.schools && areaPlaces.schools.length > 0 && <span><i className={styles.keySchool} />Elementary school</span>}
+            {layers.kindergartens && areaPlaces.kindergartens.length > 0 && (
+              <span><i className={styles.keyKindergarten} />{walking.includeHoikuen ? "Kindergarten · 保育園" : "Kindergarten"}</span>
+            )}
             <span><i className={styles.keyNew} />New</span>
             <span><i className={styles.keyCandidate}>★</i>Shortlisted · applied</span>
             <span><i className={styles.keyUndecided} />Undecided</span>

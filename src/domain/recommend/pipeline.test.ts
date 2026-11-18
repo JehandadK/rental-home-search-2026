@@ -85,9 +85,20 @@ describe("pipeline stages", () => {
       score: { total: 50, parts: [{ key: "poi1", value: poi1, score: null, weight: 1 }, { key: "poi2", value: poi2, score: null, weight: 1 }] },
     });
     const rows = [at(10, 30), at(25, 5), at(null, 5), at(20, 20)];
-    expect(withinReach(rows, { poi1MaxMinutes: null, poi2MaxMinutes: null })).toBe(rows);
-    expect(withinReach(rows, { poi1MaxMinutes: 20, poi2MaxMinutes: null })).toEqual([rows[0], rows[2], rows[3]]);
-    expect(withinReach(rows, { poi1MaxMinutes: 20, poi2MaxMinutes: 20 })).toEqual([rows[2], rows[3]]);
+    expect(withinReach(rows, EMPTY_FILTERS)).toBe(rows);
+    expect(withinReach(rows, { ...EMPTY_FILTERS, poi1MaxMinutes: 20 })).toEqual([rows[0], rows[2], rows[3]]);
+    expect(withinReach(rows, { ...EMPTY_FILTERS, poi1MaxMinutes: 20, poi2MaxMinutes: 20 })).toEqual([rows[2], rows[3]]);
+  });
+
+  it("cuts on travel minutes to the elementary school and the kindergarten too", () => {
+    const at = (school: number | null, kindergarten: number | null): ScoredRow => ({
+      listing: make(),
+      score: { total: 50, parts: [{ key: "school", value: school, score: null, weight: 1 }, { key: "kindergarten", value: kindergarten, score: null, weight: 1 }] },
+    });
+    const rows = [at(8, 30), at(25, 5), at(null, 5), at(10, 10)];
+    expect(withinReach(rows, { ...EMPTY_FILTERS, schoolMaxMinutes: 10 })).toEqual([rows[0], rows[2], rows[3]]);
+    expect(withinReach(rows, { ...EMPTY_FILTERS, kindergartenMaxMinutes: 10 })).toEqual([rows[1], rows[2], rows[3]]);
+    expect(withinReach(rows, { ...EMPTY_FILTERS, schoolMaxMinutes: 10, kindergartenMaxMinutes: 10 })).toEqual([rows[2], rows[3]]);
   });
 
   it("applies the travel-time caps in a recommendation, and offers to drop them when nothing is left", () => {
@@ -98,7 +109,7 @@ describe("pipeline stages", () => {
     expect(minutes).toBeGreaterThan(1);
     const capped = recommend(input(listings, { filters: { ...EMPTY_FILTERS, poi2MaxMinutes: minutes! - 1 } }));
     expect(capped.ranked).toHaveLength(0);
-    expect(capped.relaxationHints).toEqual([{ id: "reach", label: "travel-time cap", patch: { poi1MaxMinutes: null, poi2MaxMinutes: null }, count: 1 }]);
+    expect(capped.relaxationHints).toEqual([{ id: "reach", label: "travel-time cap", patch: { poi1MaxMinutes: null, poi2MaxMinutes: null, schoolMaxMinutes: null, kindergartenMaxMinutes: null }, count: 1 }]);
     expect(recommend(input(listings, { filters: { ...EMPTY_FILTERS, poi2MaxMinutes: minutes! } })).ranked).toHaveLength(1);
   });
 

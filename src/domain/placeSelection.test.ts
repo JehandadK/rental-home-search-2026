@@ -85,6 +85,21 @@ describe("applySelection", () => {
     expect(out.childcareAny).toBeDefined();
   });
 
+  it("measures the kindergarten to a 幼稚園 or こども園, and any childcare to a 保育園 too", () => {
+    const hoikuen = placesInCategory("childcare").find((p) => p.name === "しんぜん保育園")!;
+    const atHoikuen = listing(hoikuen.lat, hoikuen.lon);
+    const idx = new ProximityIndex([atHoikuen], PLACE_CATALOG);
+    const out = applySelection(atHoikuen, 0, idx, DEFAULT_SELECTION);
+    expect(out.childcareAny).toMatchObject({ name: "しんぜん保育園", distM: 0 });
+    expect(out.kindergarten?.name).not.toBe("しんぜん保育園");
+    expect(out.kindergarten!.distM).toBeGreaterThan(0);
+    // A hand-picked 保育園 counts in both views.
+    const picked = applySelection(atHoikuen, 0, idx, {
+      byParameter: { ...DEFAULT_SELECTION.byParameter, kindergarten: [hoikuen.id] },
+    });
+    expect(picked.kindergarten).toMatchObject({ name: "しんぜん保育園", distM: 0 });
+  });
+
   it("re-targets a parameter without touching the source data", () => {
     const shinden = placesInCategory("station").find((p) => p.name === "新田")!;
     const out = applySelection(SOKA, 0, index, {

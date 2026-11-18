@@ -7,7 +7,7 @@
  * attend, only 幼稚園 rather than every daycare, and so on.
  */
 import type { EnrichedListing } from "./types";
-import { PARAMETER_SOURCES, type DistanceParameterKey, type PlaceCatalog } from "./places";
+import { isKindergarten, PARAMETER_SOURCES, type DistanceParameterKey, type PlaceCatalog } from "./places";
 import type { ProximityIndex } from "./proximityIndex";
 
 export interface PlaceSelection {
@@ -28,6 +28,7 @@ export function defaultSelection(): PlaceSelection {
       poi1: null,
       poi2: null,
       carAuction: null,
+      shop: null,
       station: null,
       busStop: null,
       kindergarten: null,
@@ -66,7 +67,9 @@ export function applySelection(
   const next: EnrichedListing = { ...listing };
 
   for (const key of Object.keys(PARAMETER_SOURCES) as DistanceParameterKey[]) {
-    assign(next, key, index.nearestIn(listingIndex, PARAMETER_SOURCES[key].category, allowedSets[key]));
+    // The kindergarten view leaves out 保育園, unless the user hand-picked the facilities.
+    const accept = key === "kindergarten" && allowedSets[key] == null ? isKindergarten : undefined;
+    assign(next, key, index.nearestIn(listingIndex, PARAMETER_SOURCES[key].category, allowedSets[key], accept));
   }
 
   // Childcare has a second view: "any facility including 保育園". When the
@@ -94,6 +97,9 @@ function assign(
       break;
     case "carAuction":
       listing.carAuction = value;
+      break;
+    case "shop":
+      listing.shop = value;
       break;
     case "station":
       listing.station = value;

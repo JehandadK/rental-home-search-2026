@@ -78,6 +78,18 @@ The map covers all of Kanto. `npm run data:reference:ksj` (`scripts/import-ksj-r
 
 - **Car auctions.** The `carAuction` category lists car auction venues, starting with USS Tokyo (USS東京会場, 千葉県野田市木間ケ瀬5653, from ussnet.co.jp; coordinates from NAVITIME, which agree with ekiten within 20 m, since GSI has no match for the lot number). The `carAuction` score parameter measures the nearest selected venue and weighs 0 by default, so it changes no ranking until the user gives it a weight; its zero-score anchor is 120 minutes. The map draws venues as orange triangles under the "Car auctions" chip. Baked listings carry no `carAuction` proximity yet; the browser computes it.
 
+## Elementary schools and kindergartens of Koshigaya and Soka (2026-11-18)
+
+- **Coverage.** The `school` and `childcare` places migrated from the original files covered a box around Soka only, which cut Koshigaya off at its middle. `data/reference/imports/osm-schools-koshigaya-soka.json` is an OpenStreetMap extract (Overpass; the query is in its provenance) of the public elementary schools and childcare facilities inside the two cities' catalog boundaries, saved as `ReferencePlaceRecord`s with `cityId` and the OSM id. It was checked against the cities' own lists: all 30 越谷市立 and 21 草加市立 elementary schools, all 18 越谷 and 15 草加 private kindergartens, and both cities' 認定こども園. わかばの森ナーサリー, which OSM lacks, is added from 越谷市's list at its GSI-geocoded address. Other cities keep whatever the original box held.
+- **Import.** `npm run data:reference:schools` (`scripts/import-schools.ts`, `src/data-layer/schoolImport.ts`) adds the entries the catalog lacks: one whose category and name match an active catalog place within 300 m is that place already and is skipped, so migrated places keep their ids. Nothing is retired, and re-running is a no-op. `facilityType` comes from the name (幼稚園 = kindergarten, こども園 = kodomoen, otherwise hoikuen), as in the original files.
+- **Baked proximities.** `listings.json` keeps the `school`, `kindergarten` and `childcareAny` values of the last enrichment, like `poi2`; the app and the API measure against the current catalog.
+- **Map and filters.** The map draws elementary schools and, under a "Kindergartens" chip, the childcare the kindergarten score counts (保育園 only when the scoring includes them), with names once zoomed in. The Reach filter gains `schoolMaxMinutes` and `kindergartenMaxMinutes` (`REACH_CAPS` in `src/domain/filters.ts`).
+- **Kindergarten score.** At runtime the `kindergarten` parameter measured the nearest childcare of any type, so "count 保育園" changed nothing. It now measures the nearest 幼稚園/認定こども園 (`isKindergarten`), as the baked value always did, unless the user hand-picked the facilities; `childcareAny` is the view with 保育園.
+
+## Shops (2026-11-18)
+
+- **Shops.** The `shop` category lists shops worth living near, starting with Super19 (埼玉県越谷市大間野町3-56-1, 343-0844; the address is the catalog owner's, placed by GSI at 大間野町三丁目56番地 — no public listing was found under that name). The `shop` score parameter measures the nearest selected shop and weighs 0 by default, so it changes no ranking until the user gives it a weight; its zero-score anchor is 20 minutes. The map draws shops as green pentagons under the "Shops" chip. Baked listings carry no `shop` proximity; the browser computes it.
+
 ## Target layers and dependency rules
 
 Established by M4. Locations are directories inside this one package; converting them to workspace packages is the optional M8.

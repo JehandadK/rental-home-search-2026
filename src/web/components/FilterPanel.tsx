@@ -13,8 +13,10 @@ import {
   type AgencyStoreOption,
   cityOptions,
   layoutOptions,
+  REACH_CAPS,
   roomMinimum,
   type ListingFilters,
+  type ReachCapField,
 } from "../../domain/filters";
 import { MAX_NEW_WINDOW_DAYS, MIN_NEW_WINDOW_DAYS, NEW_LISTING_WINDOW_DAYS } from "../../domain/lifecycle";
 import { MARK_FILTERS, summarizeMarks, type MarkMap } from "../../domain/marks";
@@ -49,6 +51,14 @@ const numberOrNull = (raw: string): number | null => {
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 };
+/** Short enough to read in a half-width input. */
+const REACH_PLACEHOLDERS: Record<ReachCapField, string> = {
+  poi1MaxMinutes: "private school",
+  poi2MaxMinutes: "mosque",
+  schoolMaxMinutes: "elem. school",
+  kindergartenMaxMinutes: "kindergarten",
+};
+
 /** A cap in minutes: empty, zero or negative means no cap. */
 const minutesOrNull = (raw: string): number | null => {
   const n = numberOrNull(raw);
@@ -491,24 +501,19 @@ export function FilterPanel({ listings, cities: referenceCities, filters, onUpda
         >
           Reach (max minutes)
         </div>
-        <div className={styles.range}>
-          <input
-            type="number"
-            min={1}
-            placeholder="school"
-            aria-label="Maximum minutes to the private school"
-            value={filters.poi1MaxMinutes ?? ""}
-            onChange={(e) => onUpdate({ poi1MaxMinutes: minutesOrNull(e.target.value) })}
-          />
-          <span>·</span>
-          <input
-            type="number"
-            min={1}
-            placeholder="mosque"
-            aria-label="Maximum minutes to the mosque"
-            value={filters.poi2MaxMinutes ?? ""}
-            onChange={(e) => onUpdate({ poi2MaxMinutes: minutesOrNull(e.target.value) })}
-          />
+        <div className={styles.reach}>
+          {REACH_CAPS.map(({ field, label }) => (
+            <input
+              key={field}
+              type="number"
+              min={1}
+              placeholder={REACH_PLACEHOLDERS[field]}
+              title={`${label}: at most this many minutes away`}
+              aria-label={`Maximum minutes to the ${label.toLowerCase()}`}
+              value={filters[field] ?? ""}
+              onChange={(e) => onUpdate({ [field]: minutesOrNull(e.target.value) })}
+            />
+          ))}
         </div>
       </div>
 
