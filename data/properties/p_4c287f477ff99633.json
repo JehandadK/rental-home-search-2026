@@ -4104,6 +4104,34 @@
       "data": {
         "reason": "Superseded by a newer athome observation with matching source aliases (exact-row reconciliation); not evidence of delisting"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000110056058|bc_100528959523|2026-11-19T06:35:01.476Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-19T06:35:01.476Z",
+      "recordedAt": "2026-11-19T06:35:18.839Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110056058|bc_100528959523",
+      "url": "https://suumo.jp/chintai/jnc_000110056058/?bc=100528959523",
+      "data": {
+        "state": "gone",
+        "evidence": "redirected off the ad page to the building page /library/tf_11/sc_11203/to_1002719969/",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1174894834|2026-11-19T06:35:04.196Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-19T06:35:04.196Z",
+      "recordedAt": "2026-11-19T06:35:18.839Z",
+      "source": "athome",
+      "adKey": "athome|1174894834",
+      "url": "https://www.athome.co.jp/chintai/1174894834/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -4114,11 +4142,17 @@
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000110056059/?bc=100399258677",
     "lastSeenAt": "2026-10-17T05:38:05.993Z",
     "lastListedAt": "2026-10-17T05:38:05.993Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-17T05:38:05.993Z",
+      "before": "2026-11-19T06:35:04.196Z"
+    },
+    "daysOnMarket": {
+      "min": 18.3,
+      "max": 51.3
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-02",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-09-28T23:28:33.254Z",
@@ -4176,7 +4210,7 @@
         "firstSeenAt": "2026-09-30T10:38:08.885Z",
         "lastSeenAt": "2026-10-17T05:38:05.993Z",
         "lastListedAt": "2026-10-17T05:38:05.993Z",
-        "goneSince": null,
+        "goneSince": "2026-11-19T06:35:04.196Z",
         "relistCount": 0
       },
       "nifty|detail_cc14a6cfab5f3be28807b870eed339d0": {
@@ -4216,7 +4250,7 @@
         "firstSeenAt": "2026-10-15T05:18:55.238Z",
         "lastSeenAt": "2026-10-15T05:18:55.238Z",
         "lastListedAt": "2026-10-15T05:18:55.238Z",
-        "goneSince": null,
+        "goneSince": "2026-11-19T06:35:01.476Z",
         "relistCount": 0
       },
       "suumo|jnc_000110056058|bc_100530233865": {
