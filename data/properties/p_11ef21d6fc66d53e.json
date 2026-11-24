@@ -2397,6 +2397,34 @@
           "roomspot|1139288674810000039492"
         ]
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109129447|bc_100521499641|2026-11-24T10:23:42.817Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-24T10:23:42.817Z",
+      "recordedAt": "2026-11-24T10:25:42.428Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109129447|bc_100521499641",
+      "url": "https://suumo.jp/chintai/jnc_000109129447/?bc=100521499641",
+      "data": {
+        "state": "gone",
+        "evidence": "redirected off the ad page to the building page /library/tf_11/sc_11203/to_1000576001/",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1051785299|2026-11-24T10:23:45.386Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-24T10:23:45.386Z",
+      "recordedAt": "2026-11-24T10:25:42.428Z",
+      "source": "athome",
+      "adKey": "athome|1051785299",
+      "url": "https://www.athome.co.jp/chintai/1051785299/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2407,11 +2435,17 @@
     "firstSeenUrl": "https://www.roomspot.net/rent/1139288674810000039492",
     "lastSeenAt": "2026-10-10T02:38:19.226Z",
     "lastListedAt": "2026-10-10T02:38:19.226Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-10T02:38:19.226Z",
+      "before": "2026-11-24T10:23:45.386Z"
+    },
+    "daysOnMarket": {
+      "min": 20.9,
+      "max": 66.2
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-03",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": null,
     "relistCount": 0,
     "sources": [
@@ -2425,7 +2459,7 @@
         "firstSeenAt": "2026-09-23T05:40:23.719Z",
         "lastSeenAt": "2026-09-23T05:40:23.719Z",
         "lastListedAt": "2026-09-23T05:40:23.719Z",
-        "goneSince": null,
+        "goneSince": "2026-11-24T10:23:45.386Z",
         "relistCount": 0
       },
       "roomspot|1139288674810000039492": {
@@ -2441,7 +2475,7 @@
         "firstSeenAt": "2026-09-28T22:39:05.214Z",
         "lastSeenAt": "2026-10-04T09:38:26.000Z",
         "lastListedAt": "2026-10-04T09:38:26.000Z",
-        "goneSince": null,
+        "goneSince": "2026-11-24T10:23:42.817Z",
         "relistCount": 0
       }
     },

@@ -2183,6 +2183,20 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000110224655|bc_100530071311|2026-11-24T10:23:48.247Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-24T10:23:48.247Z",
+      "recordedAt": "2026-11-24T10:25:42.428Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000110224655|bc_100530071311",
+      "url": "https://suumo.jp/chintai/jnc_000110224655/?bc=100530071311",
+      "data": {
+        "state": "gone",
+        "evidence": "redirected off the ad page to the building page /library/tf_13/sc_13122/to_1000081363/",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2193,11 +2207,17 @@
     "firstSeenUrl": "https://myhome.nifty.com/rent/tokyo/katsushikaku_ct/detail_b49b832c53ef3174a2e1969c4f56401a/",
     "lastSeenAt": "2026-10-10T11:31:44.396Z",
     "lastListedAt": "2026-10-10T11:31:44.396Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-10T11:31:44.396Z",
+      "before": "2026-11-24T10:23:48.247Z"
+    },
+    "daysOnMarket": {
+      "min": 6,
+      "max": 51
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-08",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-04T12:12:32.837Z",
@@ -2222,7 +2242,7 @@
         "firstSeenAt": "2026-10-04T11:20:27.006Z",
         "lastSeenAt": "2026-10-10T11:31:44.396Z",
         "lastListedAt": "2026-10-10T11:31:44.396Z",
-        "goneSince": null,
+        "goneSince": "2026-11-24T10:23:48.247Z",
         "relistCount": 0
       }
     },

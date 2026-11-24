@@ -2315,6 +2315,34 @@
         "status": "active",
         "via": "data:build"
       }
+    },
+    {
+      "id": "ad.checked|suumo|jnc_000109567719|bc_100525049466|2026-11-24T10:23:31.665Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-24T10:23:31.665Z",
+      "recordedAt": "2026-11-24T10:25:42.428Z",
+      "source": "suumo",
+      "adKey": "suumo|jnc_000109567719|bc_100525049466",
+      "url": "https://suumo.jp/chintai/jnc_000109567719/?bc=100525049466",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · エラー｜SUUMO(スーモ)",
+        "method": "probe"
+      }
+    },
+    {
+      "id": "ad.checked|athome|1138046333|2026-11-24T10:23:34.226Z|gone|probe",
+      "type": "ad.checked",
+      "at": "2026-11-24T10:23:34.226Z",
+      "recordedAt": "2026-11-24T10:25:42.428Z",
+      "source": "athome",
+      "adKey": "athome|1138046333",
+      "url": "https://www.athome.co.jp/chintai/1138046333/",
+      "data": {
+        "state": "gone",
+        "evidence": "HTTP 404 · お探しのページが見つかりません【アットホーム】｜不動産・物件・住宅情報",
+        "method": "probe"
+      }
     }
   ],
   "summary": {
@@ -2325,11 +2353,17 @@
     "firstSeenUrl": "https://suumo.jp/chintai/jnc_000109567719/?bc=100525049466",
     "lastSeenAt": "2026-10-31T23:10:55.756Z",
     "lastListedAt": "2026-10-31T23:10:55.756Z",
-    "offMarket": null,
-    "daysOnMarket": null,
+    "offMarket": {
+      "after": "2026-10-31T23:10:55.756Z",
+      "before": "2026-11-24T10:23:34.226Z"
+    },
+    "daysOnMarket": {
+      "min": 27.5,
+      "max": 51
+    },
     "portalPublishedOn": null,
     "portalUpdatedOn": "2026-10-07",
-    "status": "listed",
+    "status": "gone",
     "buildStatus": {
       "status": "active",
       "since": "2026-10-04T12:12:32.837Z",
@@ -2347,7 +2381,7 @@
         "firstSeenAt": "2026-10-04T12:00:50.684Z",
         "lastSeenAt": "2026-10-04T12:00:50.684Z",
         "lastListedAt": "2026-10-04T12:00:50.684Z",
-        "goneSince": null,
+        "goneSince": "2026-11-24T10:23:34.226Z",
         "relistCount": 0
       },
       "nifty|detail_2318fb956f2736c693a79f6336832e8d": {
@@ -2363,7 +2397,7 @@
         "firstSeenAt": "2026-10-04T11:21:53.789Z",
         "lastSeenAt": "2026-10-28T01:51:50.616Z",
         "lastListedAt": "2026-10-28T01:51:50.616Z",
-        "goneSince": null,
+        "goneSince": "2026-11-24T10:23:31.665Z",
         "relistCount": 0
       }
     },

@@ -643,6 +643,26 @@ removed, and every collector now uses the headed Playwright browser.
   Katsushika 11), all ≥60㎡, 50 ≥70㎡, 47 at ≤¥150,000. **5497** archival rows,
   all geocoded; none SOLD.
 
+## 2026-11-24 refresh with the 60㎡ minimum (Playwright)
+
+- Run `2026-11-24T10-04-49-494Z-c4a497e2`: **SUCCESS** after one resume, in the
+  shared browser on the main checkout's `.context/athome-profile` (run from a
+  worktree, `ATHOME_VERIFY_WAIT_SECONDS=300`; AtHome passed with no
+  verification prompt). In the first pass UR failed after 924s with
+  `UR API bukken/detail/detail_room/ failed: HTTP 500 error` and was kept as
+  its saved snapshot; every other stage succeeded. `--resume` re-ran UR (1068s)
+  and then merge, geocode and web payload; the run took about 40 minutes.
+- **Availability stage** (first pass): 61 page loads, **42 homes checked: 27
+  gone, 14 still listed, 1 unresolved**.
+- Source additions: SUUMO **70**, AtHome **159**, RoomSpot **7**, Nifty **67**
+  (Kawaguchi 24, Katsushika 22, Koshigaya 8, Noda 7, Soka 6). UR ran with no
+  minimum, as configured.
+- **69 unique properties added after dedup** (63 on the first pass, 6 after
+  UR); **6866** archival rows; 7512 source duplicates merged.
+- Checks: `npm test` passes (1406 tests; the 4 in `gzip.test.ts` need local
+  port binding, which the sandbox blocks, and pass when run outside it) and
+  `npm run typecheck` is clean.
+
 ## 2026-11-19 refresh with the 60㎡ minimum (Playwright)
 
 - Run `2026-11-19T06-29-36-358Z-cc580084`: **SUCCESS** after one resume, in the
